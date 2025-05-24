@@ -3,10 +3,30 @@
     "wii_extension": "Wii Extension",
     "band_hero_drums": "Band Hero Drums",
     "adxl345": "ADXL345 Accelerometer",
-    "world_tour_drums": "World Tour Drums"
+    "mpu6050": "MPU6050 Accelerometer",
+    "lis3dh": "LIS3DH Accelerometer",
+    "world_tour_drums": "World Tour Drums",
+    "usb_host": "USB Host",
+    "max1704x": "MAX1704X",
+    "multiplexer": "Multiplexer",
+    "psx": "PS1/PS2 Controller",
+    "midi_serial": "MIDI Serial (DIN)",
+    "snes": "NES/SNES Controller",
+    "joybus": "N64 / Gamecube Controller",
+    "mpr121": "MPR121",
+    "peripheral": "Peripheral",
+    "gh5_neck": "Guitar Hero 5 Guitar Neck",
+    "crazy_guitar_neck": "Crazy Guitar Neck",
+    "djh_turntable": "DJ Hero Turntable Platter",
+    "wii_emulation": "Wii Extension Emulation",
+    "psx_emulation": "PS1/PS2 Controller Emulation",
+    "joybus_emulation": "N64 / Gamecube Controller Emulation"
   },
   "disconnected": "Disconnected",
   "connected": "Connected",
+  "invalid_pin": "None",
+  "invalid_pin_message": "No pin selected",
+  "pin": "GP{{pin}}",
   "mapping_mode": {
     "label": "Mapping Mode",
     "per_input": "Per Input",
@@ -30,7 +50,89 @@
     },
     "incorrect_group": "I2C Pins are not from the same group"
   },
-  "spi" : {
+  "mpr121": {
+    "touchpad_count": "Touchpad Count"
+  },
+  "snes": {
+    "clock_pin": "Clock Pin",
+    "data_pin": "Data Pin",
+    "latch_pin": "Latch Pin"
+  },
+  "joybus": {
+    "data_pin": "Data Pin"
+  },
+  "usb": {
+    "dp": {
+      "label": "D+ Pin"
+    },
+    "dm": {
+      "label": "D- Pin"
+    },
+    "selector": {
+      "label": "Pin order",
+      "dmFirst": "D- First",
+      "dpFirst": "D+ First",
+      "description": "D+ and D- need to be next to each other, but you can choose if D+ is first or D- is first."
+    }
+  },
+  "peripheral": {
+    "address": {
+      "label": "Address",
+      "description": "You can use different addresses to read inputs from multiple peripherals at once."
+    }
+  },
+  "multiplexer": {
+    "input": {
+      "label": "Input Pin"
+    },
+    "s0": {
+      "label": "S0 Pin"
+    },
+    "s1": {
+      "label": "S1 Pin"
+    },
+    "s2": {
+      "label": "S2 Pin"
+    },
+    "s3": {
+      "label": "S3 Pin"
+    },
+    "selector": {
+      "label": "Channel count",
+      "description": "How many channels does your multiplexer have?",
+      "eightChannel": "Eight Channels",
+      "sixteenChannel": "Sixteen Channels"
+    }
+  },
+  "uart": {
+    "tx": {
+      "label": "TX Pin",
+      "pin": "GP{{pin}} - TX, UART Channel {{channel}}"
+    },
+    "rx": {
+      "label": "RX Pin",
+      "pin": "GP{{pin}} - RX, UART Channel {{channel}}"
+    },
+    "incorrect_group": "I2C Pins are not from the same group"
+  },
+  "psx": {
+    "data": {
+      "pin": "Data"
+    },
+    "command": {
+      "pin": "Command"
+    },
+    "clock": {
+      "pin": "Clock"
+    },
+    "attention": {
+      "pin": "Attention"
+    },
+    "acknowledge": {
+      "pin": "Acknowledge"
+    }
+  },
+  "spi": {
     "mosi": {
       "label": "MOSI Pin",
       "pin": "GP{{pin}} - MOSI, SPI Channel {{channel}}"
