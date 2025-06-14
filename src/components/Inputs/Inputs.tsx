@@ -1,9 +1,207 @@
-import { useState } from 'react';
-import { TextInput, Space, Menu, Anchor, Text, Title, Card, Center, Image, Badge, Button, InputBase, Input, Tabs, Group, SimpleGrid, NumberInput, useCombobox, Combobox, ActionIcon, Affix } from '@mantine/core';
+import { useContext, useState } from 'react';
+import { TextInput, Space, Menu, Text, Title, Card, Center, Image, InputBase, Input, Tabs, Group, SimpleGrid, useCombobox, Combobox, ActionIcon, Affix } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import classes from './Inputs.module.css';
-import { IconPhoto, IconMessageCircle, IconSettings, IconPlus, IconRestore, IconTrash, IconPencil } from '@tabler/icons-react';
-import { SantrollerInput } from '../Input/SantrollerInput';
+import { IconPlus, IconRestore, IconTrash, IconPencil } from '@tabler/icons-react';
+import { proto } from '../SettingsContext/config';
+import { DeviceStatus, useConfigStore } from '../SettingsContext/SettingsContext';
+import { useTranslation } from 'react-i18next';
+const validDevices = ["adxl", "wii", "bhdrum", "worldTourDrum", "mpu6050", "mpr121", "crazyGuitarNeck", "gh5Neck", "djhTurntable", "usbHost", "multiplexer", "psx", "snes", "joybus", "peripheral"]
+const standardDevices = ["gpio", "midi"]
+export function SantrollerInput({ mapping, id }: { mapping: proto.IMapping, id: string }) {
+  const { t } = useTranslation();
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
+  const inputCombobox = useCombobox({
+    onDropdownClose: () => inputCombobox.resetSelectedOption(),
+  });
+  let deviceValue = ""
+  let img = ""
+  let device: DeviceStatus | null = null
+  if (mapping.input.digitalDevice) {
+    device = deviceStatus[mapping.input.digitalDevice.deviceid];
+  } else if (mapping.input.analogDevice) {
+    device = deviceStatus[mapping.input.analogDevice.deviceid];
+  } else if (mapping.input.mpr121) {
+    device = deviceStatus[mapping.input.mpr121.deviceid];
+  } else if (mapping.input.gpio) {
+    deviceValue = t(`devices.gpio`)
+  } else if (mapping.input.midi) {
+    deviceValue = t(`devices.midi`)
+  } else if (mapping.input.mouseAxis) {
+    deviceValue = t(`devices.mouseAxis`)
+  } else if (mapping.input.mouseButton) {
+    deviceValue = t(`devices.mouseButton`)
+  } else if (mapping.input.key) {
+    deviceValue = t(`devices.key`)
+  }
+  if (device) {
+    deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.pins(device)?.join(", ")})`
+    img = device.type
+  }
+  return (
+    <>
+      <Card shadow="sm" padding="lg" radius="md" withBorder>
+        {img && <Card.Section>
+          <Center>
+            <Image
+              src={img}
+              height={160}
+              w="auto"
+              fit="contain"
+              alt={deviceValue}
+            />
+          </Center>
+        </Card.Section>}
+
+
+        <Group justify="space-between" mt="md" mb="xs">
+          <Text fw={500}>{deviceValue}</Text>
+        </Group>
+
+        <Combobox
+          store={combobox}
+          onOptionSubmit={(val) => {
+            // setDeviceValue(val);
+            combobox.closeDropdown();
+          }}
+        >
+          <Combobox.Target>
+            <InputBase
+              label="Device"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => combobox.toggleDropdown()}
+            >
+              {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
+            </InputBase>
+          </Combobox.Target>
+
+          <Combobox.Dropdown
+            mah="300px"
+            style={{ "overflow": 'auto' }}
+          >
+            <Combobox.Options>
+              {Object.values(deviceStatus).filter(x => validDevices.includes(x.type)).map((item) => (
+                <Combobox.Option value={item.id} key={item.id}>
+                  {t(`devices.${item.type}`)} ({DeviceStatus.pins(item)?.join(", ")})
+                </Combobox.Option>
+              ))}
+              {standardDevices.map((item) => (
+                <Combobox.Option value={item} key={item}>
+                  {t(`devices.${item}`)}
+                </Combobox.Option>
+              ))}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox>
+        {/* <Combobox
+          store={inputCombobox}
+          onOptionSubmit={(val) => {
+            // setInputValue(val);
+            inputCombobox.closeDropdown();
+          }}
+        >
+          <Combobox.Target>
+            <InputBase
+              label="Input"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => inputCombobox.toggleDropdown()}
+            >
+              {inputValue || <Input.Placeholder>Pick value</Input.Placeholder>}
+            </InputBase>
+          </Combobox.Target>
+
+          <Combobox.Dropdown
+            mah="300px"
+            style={{ "overflow": 'auto' }}
+          >
+            <Combobox.Options>
+              {Object.keys(proto.AxisType).concat(Object.keys(proto.ButtonType)).map((item) => (
+                <Combobox.Option value={item} key={item}>
+                  {item}
+                </Combobox.Option>
+              ))}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox> */}
+      </Card>
+
+
+    </>
+  );
+}
+
+export function AxisSantrollerMapping({ mapping, id }: { mapping: proto.IAxisMapping, id: string }) {
+  const { t } = useTranslation();
+  const inputCombobox = useCombobox({
+    onDropdownClose: () => inputCombobox.resetSelectedOption(),
+  });
+  return (
+    <Combobox
+      store={inputCombobox}
+      onOptionSubmit={(val) => {
+        // setInputValue(val);
+        // TODO: the setter in config would have to change this to button if a button is picked
+        inputCombobox.closeDropdown();
+      }}
+    >
+      <Combobox.Target>
+        <InputBase
+          label="Output"
+          component="button"
+          type="button"
+          pointer
+          rightSection={<Combobox.Chevron />}
+          rightSectionPointerEvents="none"
+          onClick={() => inputCombobox.toggleDropdown()}
+        >
+          {t(`axis.${proto.AxisType[mapping.axis]}`) || <Input.Placeholder>Pick value</Input.Placeholder>}
+        </InputBase>
+      </Combobox.Target>
+
+      <Combobox.Dropdown
+        mah="300px"
+        style={{ "overflow": 'auto' }}
+      >
+        <Combobox.Options>
+          {Object.keys(proto.AxisType).map((item) => (
+            <Combobox.Option value={item} key={item}>
+              {t(`axis.${item}`)}
+            </Combobox.Option>
+          ))}
+          {Object.keys(proto.ButtonType).map((item) => (
+            <Combobox.Option value={item} key={item}>
+              {t(`button.${item}`)}
+            </Combobox.Option>
+          ))}
+        </Combobox.Options>
+      </Combobox.Dropdown>
+    </Combobox>
+  )
+}
+export function ButtonSantrollerMapping({ mapping, id }: { mapping: proto.IButtonMapping, id: string }) {
+  return <></>
+}
+
+export function SantrollerMapping({ mapping, id }: { mapping: proto.Mapping, id: string }) {
+  if (mapping.axis) {
+    return <AxisSantrollerMapping mapping={mapping.axis} id={id} />
+  }
+  if (mapping.button) {
+    return <ButtonSantrollerMapping mapping={mapping.button} id={id} />
+  }
+  return <></>
+}
+
 
 export function InputsTab({ value }: { value: string }) {
   const [editing, { toggle }] = useDisclosure();
@@ -25,82 +223,74 @@ export function InputsTab({ value }: { value: string }) {
     </Tabs.Tab>
   )
 }
-const devices = ['Guitar Hero Guitar'];
+const devicesToEmulate = ['Guitar Hero Guitar'];
 export function Inputs() {
-  const [deviceValue, setDeviceValue] = useState<string>("Guitar Hero Guitar");
+  const profiles = useConfigStore((state) => state.config.profiles!);
+  const [deviceValue, setDeviceValue] = useState<string>(devicesToEmulate[0]);
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const options = devices.map((item) => (
-    <Combobox.Option value={item} key={item}>
-      {item}
-    </Combobox.Option>
-  ));
   return (
     <>
-      <Tabs defaultValue="Guitar Hero Guitar">
+      <Tabs defaultValue={profiles[0].name}>
         <Tabs.List>
-          <InputsTab value="Guitar Hero Guitar" />
-          <InputsTab value="Rock Band Guitar" />
-          <InputsTab value="Guitar Hero Drums" />
-          <InputsTab value="Fortnite Festival Keyboard" />
+          {profiles.map(x => <InputsTab value={x.name} key={x.name} />)}
           <Tabs.Tab value="add">
             <IconPlus size={14} />
           </Tabs.Tab>
         </Tabs.List>
-
-        <Tabs.Panel value="Guitar Hero Guitar">
-        <Space h="md" />
-        <Title order={2}>Settings</Title>
-        <Combobox
-          store={combobox}
-          onOptionSubmit={(val) => {
-            setDeviceValue(val);
-            combobox.closeDropdown();
-          }}
-        >
-          <Combobox.Target>
-            <InputBase
-              label="Device to emulate"
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => combobox.toggleDropdown()}
+        {profiles.map(x => (
+          <Tabs.Panel value={x.name} key={x.name}>
+            <Space h="md" />
+            <Title order={2}>Settings</Title>
+            <Combobox
+              store={combobox}
+              onOptionSubmit={(val) => {
+                setDeviceValue(val);
+                combobox.closeDropdown();
+              }}
             >
-              {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
-            </InputBase>
-          </Combobox.Target>
+              <Combobox.Target>
+                <InputBase
+                  label="Device to emulate"
+                  component="button"
+                  type="button"
+                  pointer
+                  rightSection={<Combobox.Chevron />}
+                  rightSectionPointerEvents="none"
+                  onClick={() => combobox.toggleDropdown()}
+                >
+                  {proto.SubType[x.deviceToEmulate] || <Input.Placeholder>Pick value</Input.Placeholder>}
+                </InputBase>
+              </Combobox.Target>
 
-          <Combobox.Dropdown>
-            <Combobox.Options>{options}</Combobox.Options>
-          </Combobox.Dropdown>
-        </Combobox>
-          <Space h="md" />
-          <Title order={3}>Activation method</Title>
-          <SimpleGrid cols={3}>
-            <SantrollerInput name="Activation Method" device="Wii Extension" input="Green Fret Held" />
-            <SantrollerInput name="Activation Method" device="Wii Extension" input="Guitar Plugged in" />
-            <SantrollerInput name="Activation Method" device="USB Host" input="Guitar Plugged in" />
-          </SimpleGrid>
-          <Space h="md" />
-          <Title order={3}>Inputs</Title>
-          <SimpleGrid cols={3}>
-            <SantrollerInput name="Green Fret" device="Wii Extension" input="Green Fret" img="Icons/GuitarHeroGuitar/Green.png" />
-            <SantrollerInput name="Red Fret" device="Wii Extension" input="Red Fret" img="Icons/GuitarHeroGuitar/Red.png" />
-            <SantrollerInput name="Yellow Fret" device="Wii Extension" input="Yellow Fret" img="Icons/GuitarHeroGuitar/Yellow.png" />
+              <Combobox.Dropdown>
+                <Combobox.Options>
+                  {Object.entries(proto.SubType).map(([k, v]) => (
+                    <Combobox.Option value={v.toString()} key={v}>
+                      {k}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+            <Space h="md" />
+            <Title order={3}>Activation method</Title>
+            <SimpleGrid cols={3}>
+              {x.activationMethod?.map((mapping, i) => (
+                <SantrollerInput key={i} mapping={mapping} />
+              ))}
+            </SimpleGrid>
+            <Space h="md" />
+            <Title order={3}>Inputs</Title>
+            <SimpleGrid cols={3}>
+              {x.mappings?.map((mapping, i) => (
+                <SantrollerInput key={i} mapping={mapping} />
+              ))}
 
-          </SimpleGrid>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="messages">
-          Messages tab content
-        </Tabs.Panel>
-
-        <Tabs.Panel value="settings">
-          Settings tab content
-        </Tabs.Panel>
+            </SimpleGrid>
+          </Tabs.Panel>
+        ))}
       </Tabs>
       <Affix position={{ bottom: 40, right: 40 }}>
         <Menu shadow="md" width={150}>

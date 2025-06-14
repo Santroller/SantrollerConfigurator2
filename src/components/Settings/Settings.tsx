@@ -1,6 +1,5 @@
-import { useContext } from 'react';
 import { SegmentedControl, Input } from '@mantine/core';
-import { SettingsContext, SettingsDispatchContext, proto } from '../SettingsContext/SettingsContext';
+import { proto, useConfigStore } from '../SettingsContext/SettingsContext';
 import '../../i18n/config';
 import { useTranslation } from 'react-i18next';
 
@@ -23,11 +22,11 @@ function FaceButtonMappingMode({ mode, dispatch }: { mode: proto.FaceButtonMappi
   )
 }
 export function Settings() {
-  const dispatch = useContext(SettingsDispatchContext);
-  const config = useContext(SettingsContext);
+  const faceButtonMappingMode = useConfigStore((state) => state.config.faceButtonMappingMode);
+  const updateConfig = useConfigStore((state) => state.updateConfig);
   return (
     <>
-      <FaceButtonMappingMode mode={config.config.faceButtonMappingMode} dispatch={(val) => dispatch({ type: "updateConfig", config: { ...config.config, faceButtonMappingMode: val }})} />
+      <FaceButtonMappingMode mode={faceButtonMappingMode} dispatch={(val) => updateConfig({ faceButtonMappingMode: val })} />
     </>
   );
 }
