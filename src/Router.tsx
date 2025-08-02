@@ -1,12 +1,12 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { SettingsPage } from './pages/Settings.page';
+import { ConnectPage } from './pages/Connect.page';
 import { DevicesPage } from './pages/Devices.page';
 import { InputsPage } from './pages/Inputs.page';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <SettingsPage />,
+    element: <ConnectPage />,
   },{
     path: '/devices',
     element: <DevicesPage />,

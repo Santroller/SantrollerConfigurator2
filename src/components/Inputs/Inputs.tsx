@@ -1,5 +1,5 @@
-import { useContext, useState } from 'react';
-import { TextInput, Space, Menu, Text, Title, Card, Center, Image, InputBase, Input, Tabs, Group, SimpleGrid, useCombobox, Combobox, ActionIcon, Affix } from '@mantine/core';
+import { useState } from 'react';
+import { SegmentedControl, TextInput, Space, Menu, Text, Title, Card, Center, Image, InputBase, Input, Tabs, Group, SimpleGrid, useCombobox, Combobox, ActionIcon, Affix } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconPlus, IconRestore, IconTrash, IconPencil } from '@tabler/icons-react';
 import { proto } from '../SettingsContext/config';
@@ -223,6 +223,23 @@ export function InputsTab({ value }: { value: string }) {
     </Tabs.Tab>
   )
 }
+function FaceButtonMappingMode({ mode, dispatch }: { mode: proto.FaceButtonMappingMode, dispatch: (device: proto.FaceButtonMappingMode) => void }) {
+  const { t } = useTranslation();
+  const data = [
+    { label: t("face_button_mapping_mode.legend_based"), value: proto.FaceButtonMappingMode.LegendBased.toString() },
+    { label: t("face_button_mapping_mode.position_based"), value: proto.FaceButtonMappingMode.PositionBased.toString() }
+  ]
+  return (
+    <Input.Wrapper label={t("face_button_mapping_mode.label")} description={t("face_button_mapping_mode.description")}>
+      <SegmentedControl
+        fullWidth
+        data={data}
+        value={mode.toString()}
+        onChange={(val) => dispatch(Number(val))}
+      />
+    </Input.Wrapper>
+  )
+}
 const devicesToEmulate = ['Guitar Hero Guitar'];
 export function Inputs() {
   const profiles = useConfigStore((state) => state.config.profiles!);
@@ -274,6 +291,8 @@ export function Inputs() {
                 </Combobox.Options>
               </Combobox.Dropdown>
             </Combobox>
+            <Space h="md" />
+            <FaceButtonMappingMode mode={x.faceButtonMappingMode} dispatch={(val) => updateConfig({ faceButtonMappingMode: val })} />
             <Space h="md" />
             <Title order={3}>Activation method</Title>
             <SimpleGrid cols={3}>

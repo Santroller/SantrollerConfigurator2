@@ -1,12 +1,22 @@
-import { AppShell, Burger, Group, Skeleton, Badge, NavLink, Image } from '@mantine/core';
+import { useReducer, useState } from 'react';
+import {
+  IconActivity,
+  IconChevronRight,
+  IconCircleOff,
+  IconDeviceGamepad3,
+  IconGauge,
+  IconHome2,
+  IconSettings,
+} from '@tabler/icons-react';
+import { NavLink as RouterLink } from 'react-router-dom';
+import { AppShell, Badge, Burger, Group, Image, NavLink, Skeleton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { useConfigStore } from '../SettingsContext/SettingsContext';
 import classes from './Layout.module.css';
-import { NavLink as RouterLink } from "react-router-dom"
-import { IconHome2, IconGauge, IconChevronRight, IconActivity, IconCircleOff, IconSettings, IconDeviceGamepad3 } from '@tabler/icons-react';
-import { useState, useReducer } from 'react';
 
 export function Layout({ children }) {
   const [opened, { toggle }] = useDisclosure();
+  const connected = useConfigStore((state) => state.connected);
   return (
     <>
       <AppShell
@@ -16,12 +26,7 @@ export function Layout({ children }) {
       >
         <AppShell.Header>
           <Group h="100%" px="md">
-            <Image
-              src="Icons/logoSide.png"
-              height={40}
-              fit="scale-down"
-              alt="Norway"
-            />
+            <Image src="Icons/logoSide.png" height={40} fit="scale-down" alt="Norway" />
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           </Group>
         </AppShell.Header>
@@ -29,21 +34,25 @@ export function Layout({ children }) {
           <NavLink
             component={RouterLink}
             to="/"
-            label="Settings"
+            label="Main"
             leftSection={<IconSettings size={16} stroke={1.5} />}
           />
-          <NavLink
-            component={RouterLink}
-            to="/devices"
-            label="Devices"
-            leftSection={<IconSettings size={16} stroke={1.5} />}
-          />
-          <NavLink
-            component={RouterLink}
-            to="/profiles"
-            label="Profiles"
-            leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
-          />
+          {connected && (
+            <>
+              <NavLink
+                component={RouterLink}
+                to="/devices"
+                label="Devices"
+                leftSection={<IconSettings size={16} stroke={1.5} />}
+              />
+              <NavLink
+                component={RouterLink}
+                to="/profiles"
+                label="Profiles"
+                leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
+              />
+            </>
+          )}
         </AppShell.Navbar>
         <AppShell.Main>{children}</AppShell.Main>
       </AppShell>

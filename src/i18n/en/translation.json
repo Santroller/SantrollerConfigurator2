@@ -152,5 +152,15 @@
       "pin": "GP{{pin}} - CSn, SPI Channel {{channel}}"
     },
     "incorrect_group": "SPI Pins are not from the same group"
+  },
+  "delete_device_dialog": {
+    "title": "Deleting device",
+    "desc": "Are you sure you wish to delete this device?",
+    "confirm": "Delete device",
+    "cancel": "Cancel"
+  },
+  "add_device_dialog": {
+    "title": "Add device",
+    "confirm": "Add device"
   }
 }
