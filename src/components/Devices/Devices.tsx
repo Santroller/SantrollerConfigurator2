@@ -44,7 +44,7 @@ import {
   UARTGroups,
 } from '@/devices/pico/pins';
 
-function PinBox({
+export function PinBox({
   pin,
   valid,
   error,
@@ -258,7 +258,13 @@ function DeviceCard({
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
-            <Button onClick={deleteDevice} color="red">
+            <Button
+              onClick={() => {
+                deleteDevice();
+                close();
+              }}
+              color="red"
+            >
               {t('delete_device_dialog.confirm')}
             </Button>
             <Button onClick={close}>{t('delete_device_dialog.cancel')}</Button>
@@ -316,28 +322,6 @@ function LabeledSegmentedControl({
   );
 }
 
-const mappingModeLabels = [
-  { label: 'mapping_mode.per_input', value: proto.MappingMode.PerInput.toString() },
-  { label: 'mapping_mode.per_extension', value: proto.MappingMode.PerExtension.toString() },
-];
-function MappingMode({
-  mode,
-  dispatch,
-}: {
-  mode: proto.MappingMode;
-  dispatch: (device: proto.MappingMode) => void;
-}) {
-  return (
-    <LabeledSegmentedControl
-      data={mappingModeLabels}
-      value={mode.toString()}
-      dispatch={(val) => dispatch(Number(val))}
-      label="mapping_mode.label"
-      description="mapping_mode.description"
-    />
-  );
-}
-
 function WiiExtensionDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -351,16 +335,12 @@ function WiiExtensionDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.wii"
-      image="covers/Wii.svg.png"
+      image="covers/devices/wii.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
         device={wii.i2c}
         dispatch={(val) => updateDevice({ wii: { ...wii, i2c: val } }, id)}
-      />
-      <MappingMode
-        mode={wii.mappingMode}
-        dispatch={(val) => updateDevice({ wii: { ...wii, mappingMode: val } }, id)}
       />
     </DeviceCard>
   );
@@ -379,7 +359,7 @@ function BandHeroDrumDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.bhDrum"
-      image="covers/bandhero.png"
+      image="covers/devices/bandhero.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -402,7 +382,7 @@ function WorldTourDrumDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.worldTourDrum"
-      image="covers/ghwt.jpg"
+      image="covers/devices/ghwt.jpg"
       deleteDevice={() => deleteDevice(id)}
     >
       <SPIDevice
@@ -425,7 +405,7 @@ function MPU6050Device({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.mpu6050"
-      image="covers/mpu6050.png"
+      image="covers/devices/mpu6050.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -448,7 +428,7 @@ function ADXL345Device({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.adxl"
-      image="covers/adxl.png"
+      image="covers/devices/adxl.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -471,7 +451,7 @@ function LIS3DHDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.lis3dh"
-      image="covers/lis3dh.png"
+      image="covers/devices/lis3dh.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -495,7 +475,7 @@ function MPR121Device({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.mpr121"
-      image="covers/mpr121.png"
+      image="covers/devices/mpr121.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -523,7 +503,7 @@ function CrazyGuitarNeckDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.crazyGuitarNeck"
-      image="covers/crazyGuitarNeck.png"
+      image="covers/devices/crazyGuitarNeck.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -546,7 +526,7 @@ function GH5NeckDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.gh5Neck"
-      image="covers/gh5Neck.png"
+      image="covers/devices/gh5Neck.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -569,7 +549,7 @@ function DJHeroTurntableDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.djhTurntable"
-      image="covers/djhTurntable.png"
+      image="covers/devices/djhTurntable.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -598,7 +578,7 @@ function PeripheralDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.peripheral"
-      image="covers/peripheral.png"
+      image="covers/devices/peripheral.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -631,7 +611,7 @@ function MidiSerialDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.midiSerial"
-      image="covers/midiSerial.png"
+      image="covers/devices/midiSerial.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <UARTDevice
@@ -654,7 +634,7 @@ function Max1704XDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.max1704x"
-      image="covers/max1704x.png"
+      image="covers/devices/max1704x.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -678,7 +658,7 @@ function PSXDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.psx"
-      image="covers/psx.png"
+      image="covers/devices/psx.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <SPIDevice
@@ -700,10 +680,6 @@ function PSXDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) => updateDevice({ psx: { ...psx, ackPin: pin } }, id)}
       />
-      <MappingMode
-        mode={psx.mappingMode}
-        dispatch={(val) => updateDevice({ psx: { ...psx, mappingMode: val } }, id)}
-      />
     </DeviceCard>
   );
 }
@@ -724,7 +700,7 @@ function MultiplexerDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.multiplexer"
-      image="covers/multiplexer.png"
+      image="covers/devices/multiplexer.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <LabeledSegmentedControl
@@ -784,7 +760,7 @@ function SNESDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.snes"
-      image="covers/snes.png"
+      image="covers/devices/snes.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <PinBox
@@ -805,10 +781,6 @@ function SNESDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) => updateDevice({ snes: { ...snes, latchPin: pin } }, id)}
       />
-      <MappingMode
-        mode={snes.mappingMode}
-        dispatch={(val) => updateDevice({ snes: { ...snes, mappingMode: val } }, id)}
-      />
     </DeviceCard>
   );
 }
@@ -826,7 +798,7 @@ function JoybusDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.joybus"
-      image="covers/joybus.png"
+      image="covers/devices/joybus.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <PinBox
@@ -834,10 +806,6 @@ function JoybusDevice({ id }: { id: string }) {
         pin={joybus.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) => updateDevice({ joybus: { ...joybus, dataPin: pin } }, id)}
-      />
-      <MappingMode
-        mode={joybus.mappingMode}
-        dispatch={(val) => updateDevice({ joybus: { ...joybus, mappingMode: val } }, id)}
       />
     </DeviceCard>
   );
@@ -862,7 +830,7 @@ function USBHostDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.usbHost"
-      image="covers/usbHost.png"
+      image="covers/devices/usbHost.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <PinBox
@@ -883,10 +851,6 @@ function USBHostDevice({ id }: { id: string }) {
         label="usb.selector.label"
         description="usb.selector.description"
       />
-      <MappingMode
-        mode={usbHost.mappingMode}
-        dispatch={(val) => updateDevice({ usbHost: { ...usbHost, mappingMode: val } }, id)}
-      />
     </DeviceCard>
   );
 }
@@ -903,7 +867,7 @@ function WiiEmulationDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.wiiEmulation"
-      image="covers/wii.png"
+      image="covers/devices/wii.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
@@ -926,7 +890,7 @@ function JoybusEmulationDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.joybusEmulation"
-      image="covers/joybus.png"
+      image="covers/devices/joybus.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <PinBox
@@ -954,7 +918,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.connected}
       title="devices.psxEmulation"
-      image="covers/psx.png"
+      image="covers/devices/psx.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <PinBox

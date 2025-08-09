@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "npm run build_proto && vite",
-    "build_proto": "pbjs -w es6 -t static-module Santroller/proto/config.proto -o src/components/SettingsContext/config.js && pbts -o src/components/SettingsContext/config.d.ts src/components/SettingsContext/config.js",
+    "build_proto": "pbjs -w es6 -t static-module Santroller/proto/config.proto Santroller/proto/events.proto -o src/components/SettingsContext/config.js && pbts -o src/components/SettingsContext/config.d.ts src/components/SettingsContext/config.js",
     "build": "npm run build_proto && tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

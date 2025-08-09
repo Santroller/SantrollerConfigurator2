@@ -37,9 +37,9 @@
   },
   "face_button_mapping_mode": {
     "label": "Face Button Mapping Mode",
-    "legend_based": "Legend Based",
+    "legend_based": "Label Based",
     "position_based": "Position Based",
-    "description": "Face buttons are in different positions on different controllers. You can map buttons based on their name or by their location. For example, if you were to use a classic controller on an xbox location based mappings would swap A with B and X with Y."
+    "description": "Face buttons are in different positions on different controllers. For example, if you were to use a Wii Classic controller on an Xbox 360, label based mode will map A to A and B to B, while position based mode would swap A with B and X with Y."
   },
   "i2c": {
     "sda": {
@@ -162,5 +162,15 @@
   "add_device_dialog": {
     "title": "Add device",
     "confirm": "Add device"
+  },
+  "inputs": {
+    "wii": {
+      "gamepad": {
+        "North": "X",
+        "South": "B",
+        "East": "Y",
+        "West": "A"
+      }
+    }
   }
 }

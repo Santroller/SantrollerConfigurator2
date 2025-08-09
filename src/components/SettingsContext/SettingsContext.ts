@@ -6,10 +6,26 @@ import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
 
+import { config } from 'process';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
 export * from './config.js';
+export class MappingStatus {
+  [immerable] = true;
+  constructor(id: number, mapping: proto.IMapping) {
+    this.id = id;
+    this.mapping = mapping;
+    this.state = 0;
+    this.lastUpdate = +new Date();
+    this.fastCallCount = 0;
+  }
+  lastUpdate: number;
+  fastCallCount: number;
+  id: number;
+  mapping: proto.IMapping;
+  state: number;
+}
 export class DeviceStatus {
   [immerable] = true;
   constructor(id: string, type: string, device: proto.IDevice) {
@@ -94,18 +110,23 @@ export class DeviceStatus {
 }
 export interface ConfigState {
   deviceStatus: { [id: string]: DeviceStatus };
+  mappingStatus: { [id: number]: MappingStatus }[];
   config: proto.IConfig;
   connected: boolean;
   hidDevice?: HIDDevice;
+  crc: number;
 }
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
+  updateProfile: (profile: proto.IProfile, id: number) => void;
+  addProfile: () => void;
   updateConfig: (config: proto.IConfig) => void;
   deleteDevice: (id: string) => void;
   connect: () => void;
   disconnect: () => void;
   deleteAllDevices: () => void;
   addDevice: (type: string) => void;
+  onReport: (evt: HIDInputReportEvent) => void;
 }
 
 function InitState(config: proto.Config): ConfigState {
@@ -115,7 +136,10 @@ function InitState(config: proto.Config): ConfigState {
       new DeviceStatus(i.toString(10), Object.entries(x).find((x) => x[1])![0], x),
     ])
   );
-  return { deviceStatus, config, connected: false };
+  const mappingStatus = config.profiles!.map((profile) =>
+    Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
+  );
+  return { deviceStatus, mappingStatus, config, connected: false, crc: 0 };
 }
 
 export const initialConfig = InitState(
@@ -176,14 +200,29 @@ function createDefault(type: string, id: string) {
   return new DeviceStatus(id, type, { [type]: { ...device, mappingMode } });
 }
 
+const magic = 0xd2f1e365;
 export const useConfigStore = create<ConfigState & Actions>()(
   immer(
     devtools(
-      (set) => ({
+      (set, get) => ({
         ...initialConfig,
         updateDevice: (device: proto.IDevice, id: string) =>
           set((config) => {
             config.deviceStatus[id].device = device;
+          }),
+        updateProfile: (profile: proto.IProfile, id: number) =>
+          set((config) => {
+            config.config = {
+              ...config.config,
+              profiles: [
+                ...config.config.profiles!.map((prevProfile, prevIndex) =>
+                  prevIndex == id ? profile : prevProfile
+                ),
+              ],
+            };
+            config.mappingStatus[id] = Object.fromEntries(
+              profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+            );
           }),
         updateConfig: (config: proto.IConfig) =>
           set((state) => {
@@ -195,15 +234,62 @@ export const useConfigStore = create<ConfigState & Actions>()(
           }),
         addDevice: (type: string) =>
           set((state) => {
-            const id = (
-              Math.max(...Object.keys(state.deviceStatus).map((x) => parseInt(x))) + 1
-            ).toString();
+            let id = '0';
+            if (Object.keys(state.deviceStatus).length) {
+              id = (
+                Math.max(...Object.keys(state.deviceStatus).map((x) => parseInt(x))) + 1
+              ).toString();
+            }
             state.deviceStatus[id] = createDefault(type, id);
+          }),
+        onReport: (evt: HIDInputReportEvent) => {
+          if (evt.reportId != 0x22) {
+            return;
+          }
+          const deviceEvent = proto.Event.decode(
+            new Uint8Array(evt.data.buffer),
+            evt.data.byteLength
+          );
+          // TODO: need to keep track of the currently loaded preset and use that here instead of 0
+          if (deviceEvent.button) {
+            set((state) => {
+              if (state.mappingStatus.length) {
+                const mapping = state.mappingStatus[0][deviceEvent.button!.id];
+                mapping.state = deviceEvent.button?.state ? 32767 : 0;
+              }
+            });
+          }
+          if (deviceEvent.axis) {
+            set((state) => {
+              if (state.mappingStatus.length) {
+                const mapping = state.mappingStatus[0][deviceEvent.axis!.id];
+                const now = +new Date();
+                // limit updates from analog sensors if they change rapidly
+                if (now - mapping.lastUpdate > 100) {
+                  mapping.lastUpdate = now;
+                  mapping.state = deviceEvent.axis?.state!;
+                }
+              }
+            });
+          }
+        },
+        addProfile: () =>
+          set((state) => {
+            if (!state.config.profiles) {
+              state.config.profiles = [];
+            }
+            state.config.profiles.push({
+              faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
+              deviceToEmulate: proto.SubType.Gamepad,
+              name: 'Device',
+              activationMethod: [],
+              mappings: [],
+            });
+            state.mappingStatus[state.config.profiles.length] = [];
           }),
         deleteAllDevices: () =>
           set((state) => {
             state.deviceStatus = {};
-            state.config.devices = [];
           }),
         disconnect: () =>
           set((state) => {
@@ -219,12 +305,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
             if (!device.opened) {
               await device.open();
             }
-            device.addEventListener('inputreport', console.log);
+            device.addEventListener('inputreport', get().onReport);
             const infoData = await device.receiveFeatureReport(0x23);
             const info = proto.ConfigInfo.decode(
               new Uint8Array(infoData.buffer).slice(1),
               infoData.byteLength - 1
             );
+            if (info.magic >>> 0 != magic) {
+              console.log('magic didnt match!');
+            }
             let data = new Uint8Array(info.dataSize);
             let start = 0;
             while (start < info.dataSize) {
@@ -235,13 +324,31 @@ export const useConfigStore = create<ConfigState & Actions>()(
             if (new CRC32().calculate(data) != info.dataCrc) {
               console.log('CRC didnt match!');
             }
-            const config = proto.Config.decode(data, info.dataSize);
-            set(
-              (old) => ({ ...old, ...InitState(config), connected: true, hidDevice: device }),
-              true
-            );
+            try {
+              const config = proto.Config.decode(data, info.dataSize);
+              set(
+                (old) => ({
+                  ...old,
+                  ...InitState(config),
+                  connected: true,
+                  hidDevice: device,
+                  crc: info.dataCrc,
+                }),
+                true
+              );
+            } catch (e) {
+              set(
+                (old) => ({
+                  ...old,
+                  connected: true,
+                  hidDevice: device,
+                  crc: 0,
+                }),
+                true
+              );
+            }
           }
-        }
+        },
       }),
       {
         name: 'config',
@@ -250,11 +357,41 @@ export const useConfigStore = create<ConfigState & Actions>()(
   )
 );
 
-navigator.hid.addEventListener("disconnect", e=>{
-  if ((useConfigStore.getState().hidDevice == e.device)) {
-    useConfigStore.setState(state=>{
-      state.connected = false
-      state.hidDevice = undefined
-    })
+navigator.hid.addEventListener('disconnect', (e) => {
+  if (useConfigStore.getState().hidDevice == e.device) {
+    useConfigStore.setState((state) => {
+      state.connected = false;
+      state.hidDevice = undefined;
+    });
   }
-})
+});
+useConfigStore.subscribe(async (state) => {
+  if (state.connected && state.hidDevice) {
+    const config = { ...state.config };
+    config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+    config.profiles = state.mappingStatus.map((x, i) => ({
+      ...config.profiles![i],
+      mappings: Object.values(x).map((x) => x.mapping),
+    }));
+    const buffer = proto.Config.encode(config).finish();
+    const crc = new CRC32().calculate(buffer);
+    // Don't write if nothing has changed
+    if (crc == state.crc) {
+      return;
+    }
+    state.crc = crc;
+    const infoBuffer = proto.ConfigInfo.encode(
+      proto.ConfigInfo.create({ dataSize: buffer.length, dataCrc: crc, magic })
+    ).finish();
+    console.log(infoBuffer);
+    await state.hidDevice.sendFeatureReport(0x23, infoBuffer);
+    let start = 0;
+    const len = 63;
+    while (start <= buffer.length) {
+      console.log(start, buffer.length);
+      const slice = buffer.slice(start, start + len);
+      start += len;
+      await state.hidDevice.sendFeatureReport(0x22, slice);
+    }
+  }
+});
