@@ -100,9 +100,7 @@ export function SantrollerInput({
     deviceValue = t(`devices.key`);
   }
   if (device) {
-    deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.pins(device)
-      ?.map((x) => `GP${x}`)
-      .join(', ')})`;
+    deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
     // img = `covers/devices/${device.type}.png`;
   }
   const inputDevice = mapping.input.digitalDevice || mapping.input.analogDevice;
@@ -111,7 +109,6 @@ export function SantrollerInput({
   // then that way its much more clear exactly what input is being modified.
   // in gamepad mode we still need a way to display what console is being mapped for, probably just have a legend mode toggle somewhere
   // we can just rely on translations for translating the input labels around
-
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_device_dialog.title')} centered>
@@ -228,7 +225,7 @@ export function SantrollerInput({
                 } else if (mapping.button) {
                   dispatch({
                     ...mapping,
-                    input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullDown } },
+                    input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
                   });
                 }
                 break;
@@ -255,11 +252,7 @@ export function SantrollerInput({
                 .filter((x) => validDevices.includes(x.type))
                 .map((item) => (
                   <Combobox.Option value={item.id} key={item.id}>
-                    {t(`devices.${item.type}`)} (
-                    {DeviceStatus.pins(item)
-                      ?.map((x) => `GP${x}`)
-                      .join(', ')}
-                    )
+                    {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
                   </Combobox.Option>
                 ))}
               <Combobox.Option value="gpio">{t('devices.gpio')}</Combobox.Option>
@@ -453,26 +446,9 @@ export function SantrollerMapping({ mapping, id }: { mapping: proto.Mapping; id:
 }
 
 export function InputsTab({ value, idx }: { value: string; idx: number }) {
-  const [editing, { toggle }] = useDisclosure();
-
   return (
     <Tabs.Tab value={idx.toString()}>
-      <Group justify="center" gap="xs">
-        {editing && <TextInput value={value} />}
-        {!editing && <Text>{value}</Text>}
-        <ActionIcon color="gray" variant="filled" aria-label="Edit" component="a" onClick={toggle}>
-          <IconPencil style={{ width: '70%', height: '70%' }} stroke={1.5} />
-        </ActionIcon>
-        <ActionIcon
-          color="gray"
-          variant="filled"
-          aria-label="Delete"
-          component="a"
-          onClick={toggle}
-        >
-          <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5} />
-        </ActionIcon>
-      </Group>
+      <Text>{value}</Text>
     </Tabs.Tab>
   );
 }
@@ -511,27 +487,37 @@ function FaceButtonMappingMode({
 export function Inputs() {
   const profiles = useConfigStore((state) => state.config.profiles!);
   const mappingStatus = useConfigStore((state) => state.mappingStatus);
-  const [activeProfile, setActiveProfile] = useState<string | null>('0');
+  const activeProfile = useConfigStore((state) => state.config.currentProfile);
+  const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const updateProfile = useConfigStore((state) => state.updateProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
+  const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
   return (
     <>
-      <Tabs value={activeProfile} onChange={setActiveProfile}>
+      <Tabs value={(activeProfile ?? 0).toString()} onChange={setActiveProfile}>
         <Tabs.List>
           {profiles.map((x, i) => (
             <InputsTab value={x.name} idx={i} key={i} />
           ))}
-          <Tabs.Tab value="add">
-            <IconPlus size={14} onClick={addProfile} />
+          <Tabs.Tab value="add" onClick={addProfile}>
+            <IconPlus size={14} />
           </Tabs.Tab>
         </Tabs.List>
         {profiles.map((x, profileIdx) => (
           <Tabs.Panel value={profileIdx.toString()} key={profileIdx}>
             <Space h="md" />
             <Title order={2}>Settings</Title>
+            <TextInput
+              value={x.name}
+              onChange={(e) => updateProfile({ ...x, name: e.currentTarget.value }, profileIdx)}
+              label="Profile name"
+            />
+            <Button variant="filled" color="red" onClick={() => deleteProfile(profileIdx)}>
+              Delete profile
+            </Button>
             <Combobox
               store={combobox}
               onOptionSubmit={(val) => {
@@ -651,40 +637,38 @@ export function Inputs() {
           </Tabs.Panel>
         ))}
       </Tabs>
-      <Affix position={{ bottom: 40, right: 40 }}>
-        <Menu shadow="md" width={150}>
-          <Menu.Target>
-            <ActionIcon color="blue" radius="xl" size={60}>
-              <IconPlus stroke={1.5} size={30} />
-            </ActionIcon>
-          </Menu.Target>
+      {activeProfile !== undefined && (
+        <Affix position={{ bottom: 40, right: 40 }}>
+          <Menu shadow="md" width={150}>
+            <Menu.Target>
+              <ActionIcon color="blue" radius="xl" size={60}>
+                <IconPlus stroke={1.5} size={30} />
+              </ActionIcon>
+            </Menu.Target>
 
-          <Menu.Dropdown>
-            <Menu.Item leftSection={<IconPlus size={14} />}>Add Activation Method</Menu.Item>
-            <Menu.Item
-              leftSection={<IconPlus size={14} />}
-              onClick={() => {
-                if (!activeProfile) {
-                  return;
-                }
-                const idx = parseInt(activeProfile);
-                const profile = profiles[idx];
-                updateProfile(
-                  {
-                    ...profile,
-                    mappings: [...profile.mappings!, { input: {} }],
-                  },
-                  idx
-                );
-              }}
-            >
-              Add Input
-            </Menu.Item>
-            <Menu.Item leftSection={<IconRestore size={14} />}>Load Defaults</Menu.Item>
-            <Menu.Item leftSection={<IconTrash size={14} />}>Clear all</Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </Affix>
+            <Menu.Dropdown>
+              <Menu.Item leftSection={<IconPlus size={14} />}>Add Activation Method</Menu.Item>
+              <Menu.Item
+                leftSection={<IconPlus size={14} />}
+                onClick={() => {
+                  const profile = profiles[activeProfile!];
+                  updateProfile(
+                    {
+                      ...profile,
+                      mappings: [...profile.mappings!, { input: {} }],
+                    },
+                    activeProfile!
+                  );
+                }}
+              >
+                Add Input
+              </Menu.Item>
+              <Menu.Item leftSection={<IconRestore size={14} />}>Load Defaults</Menu.Item>
+              <Menu.Item leftSection={<IconTrash size={14} />}>Clear all</Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Affix>
+      )}
     </>
   );
 }
