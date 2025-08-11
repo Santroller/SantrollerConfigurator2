@@ -309,6 +309,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
               }
             });
           }
+          if (deviceEvent.device) {
+            set((state) => {
+              if (deviceEvent.device!.id in state.deviceStatus) {
+                state.deviceStatus[deviceEvent.device!.id].connected = deviceEvent.device!.connected;
+              }
+            });
+          }
           if (deviceEvent.button) {
             set((state) => {
               if (state.mappingStatus.length) {
