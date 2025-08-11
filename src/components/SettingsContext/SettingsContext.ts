@@ -31,11 +31,13 @@ export class DeviceStatus {
     this.id = id;
     this.type = type;
     this.device = device;
+    this.wiiExtType = proto.WiiExtType.WiiNoExtension;
   }
   id: string;
   type: string;
   connected: boolean = false;
   device: proto.IDevice;
+  wiiExtType: proto.WiiExtType;
   static label(status: DeviceStatus) {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
@@ -53,7 +55,7 @@ export class DeviceStatus {
       case 'bhDrum':
         return [status.device.bhDrum?.i2c.sda, status.device.bhDrum?.i2c.scl];
       case 'mpu6050':
-        return [status.device.mpu6050?.i2c.sda, status.device.mpu6050?.i2c.scl];
+        return [status.device.accelerometer?.i2c.sda, status.device.accelerometer?.i2c.scl];
       case 'worldTourDrum':
         return [
           status.device.worldTourDrum?.spi.mosi,
@@ -62,10 +64,6 @@ export class DeviceStatus {
         ];
       case 'usbHost':
         return [status.device.usbHost!.firstPin, status.device.usbHost!.firstPin + 1];
-      case 'adxl':
-        return [status.device.adxl?.i2c.sda, status.device.adxl?.i2c.scl];
-      case 'lis3dh':
-        return [status.device.lis3dh?.i2c.sda, status.device.lis3dh?.i2c.scl];
       case 'mpr121':
         return [status.device.mpr121?.i2c.sda, status.device.mpr121?.i2c.scl];
       case 'crazyGuitarNeck':
@@ -297,13 +295,20 @@ export const useConfigStore = create<ConfigState & Actions>()(
           get().saveConfig();
         },
         onReport: (evt: HIDInputReportEvent) => {
-          if (evt.reportId != 0x22) {
+          if (evt.reportId != proto.ReportId.ReportIdConfig) {
             return;
           }
           const deviceEvent = proto.Event.decode(
             new Uint8Array(evt.data.buffer),
             evt.data.byteLength
           );
+          if (deviceEvent.wii) {
+            set((state) => {
+              if (deviceEvent.wii!.id in state.deviceStatus) {
+                state.deviceStatus[deviceEvent.wii!.id].wiiExtType = deviceEvent.wii!.extension;
+              }
+            });
+          }
           if (deviceEvent.button) {
             set((state) => {
               if (state.mappingStatus.length) {
@@ -405,13 +410,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
           const infoBuffer = proto.ConfigInfo.encode(
             proto.ConfigInfo.create({ dataSize: buffer.length, dataCrc: crc, magic })
           ).finish();
-          await state.hidDevice.sendFeatureReport(0x23, infoBuffer);
+          await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfigInfo, infoBuffer);
           let start = 0;
           const len = 63;
           while (start <= buffer.length) {
             const slice = buffer.slice(start, start + len);
             start += len;
-            await state.hidDevice.sendFeatureReport(0x22, slice);
+            await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
           }
           set((state) => {
             state.writing = false;
@@ -427,7 +432,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               await device.open();
             }
             device.addEventListener('inputreport', get().onReport);
-            const infoData = await device.receiveFeatureReport(0x23);
+            const infoData = await device.receiveFeatureReport(proto.ReportId.ReportIdConfigInfo);
             const info = proto.ConfigInfo.decode(
               new Uint8Array(infoData.buffer).slice(1),
               infoData.byteLength - 1
@@ -438,7 +443,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             let data = new Uint8Array(info.dataSize);
             let start = 0;
             while (start < info.dataSize) {
-              const slice = await device.receiveFeatureReport(0x22);
+              const slice = await device.receiveFeatureReport(proto.ReportId.ReportIdConfig);
               data.set(new Uint8Array(slice.buffer).slice(1), start);
               start += slice.byteLength - 1;
             }
@@ -457,6 +462,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 }),
                 true
               );
+              await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
             } catch (e) {
               set(
                 (old) => ({
@@ -490,6 +496,6 @@ navigator.hid.addEventListener('disconnect', (e) => {
 // make sure we disconnect from the device when using HMR in development
 if (import.meta.hot) {
   import.meta.hot.on('vite:beforeUpdate', () => {
-    useConfigStore.getState().disconnect()
+    useConfigStore.getState().disconnect();
   });
 }

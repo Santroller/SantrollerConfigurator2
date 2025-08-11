@@ -5,8 +5,8 @@ export const I2CPins = {
         "sda": [0, 4, 8, 12, 16, 20],
         "scl": [1, 5, 9, 13, 17, 21]
     }, 1: {
-        "sda": [2, 6, 10, 14, 19, 26],
-        "scl": [3, 7, 11, 15, 20, 27]
+        "sda": [2, 6, 10, 14, 18, 26],
+        "scl": [3, 7, 11, 15, 19, 27]
     }
 };
 export const I2CGroups = Object.fromEntries(

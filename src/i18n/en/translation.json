@@ -24,8 +24,15 @@
     "gpio": "GPIO",
     "midi": "MIDI"
   },
+  "wii": {
+    "extensions": {
+      "WiiClassicController": "Classic Controller",
+      "WiiGuitarHeroGuitar": "Guitar Hero Guitar"
+    }
+  },
   "disconnected": "Disconnected",
   "connected": "Connected",
+  "connected_with_type": "Connected ({{type}})",
   "invalid_pin": "None",
   "invalid_pin_message": "No pin selected",
   "pin": "GP{{pin}}",

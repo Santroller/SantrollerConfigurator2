@@ -136,14 +136,14 @@ function I2CDevice({
         error={error}
         pin={device.sda}
         valid={SdaPins}
-        dispatch={(pin) => dispatch({ ...device, sda: pin })}
+        dispatch={(pin) => dispatch({ ...device, sda: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })}
       />
       <PinBox
         label="i2c.scl.label"
         error={error}
         pin={device.scl}
         valid={SclPins}
-        dispatch={(pin) => dispatch({ ...device, scl: pin })}
+        dispatch={(pin) => dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })}
       />
     </>
   );
@@ -225,12 +225,14 @@ function UARTDevice({
 
 function DeviceCard({
   connected,
+  type,
   title,
   image,
   children,
   deleteDevice,
 }: {
   connected: boolean;
+  type?: string;
   title: string;
   image: string;
   children: React.ReactNode;
@@ -242,14 +244,14 @@ function DeviceCard({
     () =>
       connected ? (
         <Badge size="md" color="blue">
-          {t('connected')}
+          {type?t('connected_with_type',{type:t(`wii.extensions.${type}`)}):t('connected')}
         </Badge>
       ) : (
         <Badge size="md" color="red">
           {t('disconnected')}
         </Badge>
       ),
-    [connected]
+    [connected, type]
   );
   return (
     <>
@@ -333,8 +335,9 @@ function WiiExtensionDevice({ id }: { id: string }) {
   const wii = device.wii;
   return (
     <DeviceCard
-      connected={status.connected}
+      connected={status.wiiExtType != proto.WiiExtType.WiiNoExtension && status.wiiExtType != proto.WiiExtType.WiiNotInitialised}
       title="devices.wii"
+      type={proto.WiiExtType[status.wiiExtType]}
       image="covers/devices/wii.png"
       deleteDevice={() => deleteDevice(id)}
     >
