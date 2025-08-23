@@ -20,10 +20,11 @@ import {
   SimpleGrid,
   Space,
   Title,
+  Loader,
   UnstyledButton,
   useCombobox,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMounted } from '@mantine/hooks';
 import { proto, useConfigStore } from '../SettingsContext/SettingsContext';
 
 import '../../i18n/config';
@@ -136,14 +137,18 @@ function I2CDevice({
         error={error}
         pin={device.sda}
         valid={SdaPins}
-        dispatch={(pin) => dispatch({ ...device, sda: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })}
+        dispatch={(pin) =>
+          dispatch({ ...device, sda: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })
+        }
       />
       <PinBox
         label="i2c.scl.label"
         error={error}
         pin={device.scl}
         valid={SclPins}
-        dispatch={(pin) => dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })}
+        dispatch={(pin) =>
+          dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin]), clock: 400000 })
+        }
       />
     </>
   );
@@ -244,7 +249,7 @@ function DeviceCard({
     () =>
       connected ? (
         <Badge size="md" color="blue">
-          {type?t('connected_with_type',{type:t(`wii.extensions.${type}`)}):t('connected')}
+          {type ? t('connected_with_type', { type: t(`wii.extensions.${type}`) }) : t('connected')}
         </Badge>
       ) : (
         <Badge size="md" color="red">
@@ -288,8 +293,8 @@ function DeviceCard({
           <Title order={2} fw={500}>
             {t(title)}
           </Title>{' '}
-          {badge}
         </Flex>
+        <Center>{badge}</Center>
         {children}
       </Card>
     </>
@@ -335,7 +340,10 @@ function WiiExtensionDevice({ id }: { id: string }) {
   const wii = device.wii;
   return (
     <DeviceCard
-      connected={status.wiiExtType != proto.WiiExtType.WiiNoExtension && status.wiiExtType != proto.WiiExtType.WiiNotInitialised}
+      connected={
+        status.wiiExtType != proto.WiiExtType.WiiNoExtension &&
+        status.wiiExtType != proto.WiiExtType.WiiNotInitialised
+      }
       title="devices.wii"
       type={proto.WiiExtType[status.wiiExtType]}
       image="covers/devices/wii.png"
@@ -642,7 +650,9 @@ function CrkdNeckDevice({ id }: { id: string }) {
     >
       <UARTDevice
         device={crkdNeck.uart}
-        dispatch={(val) => updateDevice({ crkdNeck: { ...crkdNeck, uart: {...val, baudrate: 460800} } }, id)}
+        dispatch={(val) =>
+          updateDevice({ crkdNeck: { ...crkdNeck, uart: { ...val, baudrate: 460800 } } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -1023,6 +1033,10 @@ export function Devices() {
   );
   const deleteAllDevices = useConfigStore((state) => state.deleteAllDevices);
   const addDevice = useConfigStore((state) => state.addDevice);
+  const mounted = useMounted();
+  if (!mounted) {
+    return <Loader></Loader>;
+  }
   const mainElement = (
     <InputBase
       component="button"
@@ -1076,7 +1090,7 @@ export function Devices() {
         {Object.entries(config).map(([id, type]) => createElement(types[type], { id, key: id }))}
       </SimpleGrid>
       <Affix position={{ bottom: 40, right: 40 }}>
-        <Menu shadow="md" width={150}>
+        <Menu trigger="click-hover" shadow="md" width={150}>
           <Menu.Target>
             <ActionIcon color="blue" radius="xl" size={60}>
               <IconPlus stroke={1.5} size={30} />

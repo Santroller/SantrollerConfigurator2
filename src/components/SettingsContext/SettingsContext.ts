@@ -16,10 +16,12 @@ export class MappingStatus {
     this.id = id;
     this.mapping = mapping;
     this.state = 0;
+    this.stateRaw = 0;
   }
   id: number;
   mapping: proto.IMapping;
   state: number;
+  stateRaw: number;
 }
 export class DeviceStatus {
   [immerable] = true;
@@ -121,6 +123,7 @@ export interface ConfigState {
   hidDevice?: HIDDevice;
   crc: number;
   writing: boolean;
+  polling: boolean;
   lastUpdate: number;
   writeTimeout?: NodeJS.Timeout;
   keepaliveTimeout?: NodeJS.Timeout;
@@ -140,6 +143,7 @@ export interface Actions {
   setActiveProfile: (id: string | null) => void;
   sendKeepAlive: () => void;
   saveConfig: () => void;
+  pollInputs: (poll: boolean) => void;
 }
 
 function InitState(config: proto.Config): ConfigState {
@@ -160,6 +164,7 @@ function InitState(config: proto.Config): ConfigState {
     crc: 0,
     lastUpdate: 0,
     writing: false,
+    polling: false
   };
 }
 
@@ -167,7 +172,7 @@ export const initialConfig = InitState(
   proto.Config.create({
     devices: [],
     profiles: [],
-    currentProfile: 0
+    currentProfile: 0,
   })
 );
 
@@ -280,10 +285,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         sendKeepAlive: async () => {
           const dev = get().hidDevice;
           if (!dev) return;
-          await dev.sendFeatureReport(
-            proto.ReportId.ReportIdKeepalive,
-            new Uint8Array([0])
-          );
+          await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
         },
         updateConfig: (config: proto.IConfig) => {
           set((state) => {
@@ -335,24 +337,26 @@ export const useConfigStore = create<ConfigState & Actions>()(
               }
             });
           }
-          if (deviceEvent.button) {
+          if (deviceEvent.button && get().polling) {
             set((state) => {
               if (state.mappingStatus.length) {
                 const mappings = state.mappingStatus[state.config.currentProfile ?? 0];
                 if (deviceEvent.button!.id in mappings) {
                   const mapping = mappings[deviceEvent.button!.id];
-                  mapping.state = deviceEvent.button?.state ? 32767 : 0;
+                  mapping.state = deviceEvent.button?.state ? 65535 : 0;
+                  mapping.stateRaw = deviceEvent.button?.stateRaw ? 65535 : 0;
                 }
               }
             });
           }
-          if (deviceEvent.axis) {
+          if (deviceEvent.axis && get().polling) {
             set((state) => {
               if (state.mappingStatus.length) {
                 const mappings = state.mappingStatus[state.config.currentProfile ?? 0];
                 if (deviceEvent.axis!.id in mappings) {
                   const mapping = mappings[deviceEvent.axis!.id];
                   mapping.state = deviceEvent.axis?.state!;
+                  mapping.stateRaw = deviceEvent.axis?.stateRaw!;
                 }
               }
             });
@@ -393,6 +397,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
             state.connected = false;
           }),
+        pollInputs: (poll) => 
+          set((state) => {
+            state.polling = poll
+          }),
         saveConfig: async () => {
           const state = get();
           if (state.hidDevice == null || !state.connected) {
@@ -404,7 +412,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
             if (state.writeTimeout) {
               clearTimeout(state.writeTimeout);
             }
-            state.writeTimeout = setTimeout(() => get().saveConfig(), 500);
+            set((state) => {
+              state.writeTimeout = setTimeout(() => get().saveConfig(), 500);
+            });
             return;
           }
           set((state) => {

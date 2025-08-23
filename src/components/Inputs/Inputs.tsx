@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconPencil, IconPlus, IconRestore, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 import {
   ActionIcon,
@@ -9,6 +10,7 @@ import {
   Button,
   Card,
   Center,
+  Checkbox,
   Combobox,
   Flex,
   Group,
@@ -16,10 +18,15 @@ import {
   Input,
   InputBase,
   isNumberLike,
+  Loader,
   Menu,
   Modal,
+  Overlay,
+  Progress,
+  ProgressLabel,
   SegmentedControl,
   SimpleGrid,
+  Slider,
   Space,
   Tabs,
   Text,
@@ -27,7 +34,7 @@ import {
   Title,
   useCombobox,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMounted, useTimeout } from '@mantine/hooks';
 import { AllPinsNamed } from '@/devices/pico/pins';
 import { PinBox } from '../Devices/Devices';
 import { proto } from '../SettingsContext/config';
@@ -59,6 +66,106 @@ export function StateBadge({ profileIdx, mappingIdx }: { profileIdx: number; map
     </Badge>
   );
 }
+export function StateLabel({
+  profileIdx,
+  mappingIdx,
+  raw,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  raw?: boolean;
+}) {
+  const state = useConfigStore((state) => state.mappingStatus[profileIdx][mappingIdx].state);
+  const stateRaw = useConfigStore((state) => state.mappingStatus[profileIdx][mappingIdx].stateRaw);
+  return <Center h="100%">{raw ? stateRaw : state}</Center>;
+}
+export function StateSection({
+  profileIdx,
+  mappingIdx,
+  min,
+  max,
+  center,
+  deadzone,
+  raw,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  min: number;
+  max: number;
+  center: number;
+  deadzone: number;
+  raw?: boolean;
+}) {
+  const stateRaw = useConfigStore((state) => state.mappingStatus[profileIdx][mappingIdx].stateRaw);
+  const state = useConfigStore((state) => state.mappingStatus[profileIdx][mappingIdx].state);
+  if (raw) {
+    const minPerc = (min / 65535) * 100;
+    const maxPerc = (max / 65535) * 100;
+    const deadZoneStartPerc = ((center - deadzone) / 65535) * 100;
+    const deadZoneEndPerc = ((center + deadzone) / 65535) * 100;
+    return (
+      <>
+        <Progress.Section value={(stateRaw / 65535) * 100}></Progress.Section>
+        <Overlay
+          gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(0, 0, 0, 0) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneEndPerc}%,  rgba(255, 0, 0, 0) ${deadZoneEndPerc}%, rgba(0, 0, 0, 0) ${maxPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%)`}
+          opacity={0.85}
+        />
+      </>
+    );
+  }
+  return <Progress.Section value={(state / 65535) * 100}></Progress.Section>;
+}
+function StateBox({ profileIdx, mappingIdx }: { profileIdx: number; mappingIdx: number }) {
+  const state = useConfigStore((state) => state.mappingStatus[profileIdx][mappingIdx].state);
+  return <Checkbox checked={state > 0} readOnly></Checkbox>;
+}
+export function StateSlider({
+  profileIdx,
+  mappingIdx,
+  center,
+  min,
+  max,
+  deadzone,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  center: number;
+  min: number;
+  max: number;
+  deadzone: number;
+}) {
+  return (
+    <div>
+      <Progress.Root size={40} transitionDuration={0}>
+        <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
+          <StateLabel mappingIdx={mappingIdx} profileIdx={profileIdx}></StateLabel>
+        </Progress.Label>
+        <StateSection
+          mappingIdx={mappingIdx}
+          profileIdx={profileIdx}
+          center={center}
+          min={min}
+          max={max}
+          deadzone={deadzone}
+        ></StateSection>
+      </Progress.Root>
+      <Progress.Root size={40} transitionDuration={0}>
+        <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
+          <StateLabel mappingIdx={mappingIdx} profileIdx={profileIdx} raw></StateLabel>
+        </Progress.Label>
+        <StateSection
+          mappingIdx={mappingIdx}
+          profileIdx={profileIdx}
+          center={center}
+          min={min}
+          max={max}
+          deadzone={deadzone}
+          raw
+        ></StateSection>
+      </Progress.Root>
+    </div>
+  );
+}
 export function SantrollerInput({
   mapping,
   type,
@@ -75,6 +182,7 @@ export function SantrollerInput({
   deleteInput: () => void;
 }) {
   const [opened, { open, close }] = useDisclosure(false);
+  const mounted = useMounted();
   const { t } = useTranslation();
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const combobox = useCombobox({
@@ -90,15 +198,12 @@ export function SantrollerInput({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
   });
   const label =
-    proto.ButtonType[mapping.button?.button ?? -1] || proto.AxisType[mapping.axis?.axis ?? -1];
+    proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
+    proto.GamepadAxisType[mapping.gamepadAxis ?? -1];
   let deviceValue = '';
   let img = '';
   let device: DeviceStatus | null = null;
-  if (mapping.input.digitalDevice) {
-    device = deviceStatus[mapping.input.digitalDevice.deviceid];
-  } else if (mapping.input.analogDevice) {
-    device = deviceStatus[mapping.input.analogDevice.deviceid];
-  } else if (mapping.input.mpr121) {
+  if (mapping.input.mpr121) {
     device = deviceStatus[mapping.input.mpr121.deviceid];
   } else if (mapping.input.wiiAxis) {
     device = deviceStatus[mapping.input.wiiAxis.deviceid];
@@ -108,8 +213,6 @@ export function SantrollerInput({
     device = deviceStatus[mapping.input.wiiButton.deviceid];
   } else if (mapping.input.gpio) {
     deviceValue = t(`devices.gpio`);
-  } else if (mapping.input.midi) {
-    deviceValue = t(`devices.midi`);
   } else if (mapping.input.mouseAxis) {
     deviceValue = t(`devices.mouseAxis`);
   } else if (mapping.input.mouseButton) {
@@ -121,12 +224,12 @@ export function SantrollerInput({
     deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
     // img = `covers/devices/${device.type}.png`;
   }
-  const inputDevice = mapping.input.digitalDevice || mapping.input.analogDevice;
   // TODO: filter outputs so only the ones relevant to the "device to emulate" show
   // for the image, can we get a wireframe of the device to emulate, and then just highlight the input being selected?
   // then that way its much more clear exactly what input is being modified.
   // in gamepad mode we still need a way to display what console is being mapped for, probably just have a legend mode toggle somewhere
   // we can just rely on translations for translating the input labels around
+  // figure out some way to delay input updates until after the page has loaded
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_device_dialog.title')} centered>
@@ -147,13 +250,12 @@ export function SantrollerInput({
           </Group>
         </Flex>
       </Modal>
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card shadow="sm" padding="lg" radius="md" withBorder w="400px">
         <Flex justify="flex-end">
           <ActionIcon color="red">
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
           </ActionIcon>
         </Flex>
-        <StateBadge mappingIdx={mappingIdx} profileIdx={profileIdx}></StateBadge>
         {img && (
           <Card.Section>
             <Center>
@@ -165,174 +267,86 @@ export function SantrollerInput({
         <Group justify="space-between" mt="md" mb="xs">
           <Text fw={500}>{label}</Text>
         </Group>
-
-        <Combobox
-          store={outputCombobox}
-          onOptionSubmit={(val) => {
-            const button = proto.ButtonType[val as keyof typeof proto.ButtonType];
-            const axis = proto.AxisType[val as keyof typeof proto.AxisType];
-            if (button !== undefined) {
-              dispatch({ ...mapping, button: { button, inverted: false }, axis: null });
-            }
-            if (axis !== undefined) {
-              dispatch({ ...mapping, axis: { axis }, button: null });
-            }
-            outputCombobox.closeDropdown();
-          }}
-        >
-          <Combobox.Target>
-            <InputBase
-              label="Output"
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => outputCombobox.toggleDropdown()}
-            >
-              {proto.ButtonType[mapping.button?.button ?? -1] ||
-                proto.AxisType[mapping.axis?.axis ?? -1] || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
-                )}
-            </InputBase>
-          </Combobox.Target>
-
-          <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-            <Combobox.Options>
-              {Object.keys(proto.AxisType)
-                .concat(Object.keys(proto.ButtonType))
-                .map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {item}
-                  </Combobox.Option>
-                ))}
-            </Combobox.Options>
-          </Combobox.Dropdown>
-        </Combobox>
-
-        <Combobox
-          store={combobox}
-          onOptionSubmit={(val) => {
-            combobox.closeDropdown();
-            // setDeviceValue(val);
-            if (isNumberLike(val)) {
-              switch (deviceStatus[parseInt(val)].type) {
-                case 'wii':
-                  if (mapping.axis) {
-                    dispatch({
-                      ...mapping,
-                      input: {
-                        wiiAxis: {
-                          axis: proto.WiiAxisType.WiiAxisClassicLeftStickX,
-                          deviceid: parseInt(val),
-                        },
-                      },
-                    });
-                  } else if (mapping.button) {
-                    dispatch({
-                      ...mapping,
-                      input: {
-                        wiiButton: {
-                          button: proto.WiiButtonType.WiiButtonClassicA,
-                          deviceid: parseInt(val),
-                        },
-                      },
-                    });
-                  }
-                  break;
-                case 'crkdNeck':
-                  if (mapping.button) {
-                    dispatch({
-                      ...mapping,
-                      input: {
-                        crkd: {
-                          button: proto.CrkdNeckButtonType.CrkdGreen,
-                          deviceid: parseInt(val),
-                        },
-                      },
-                    });
-                  }
-                  break;
-              }
-              return;
-            }
-            switch (val) {
-              case 'gpio':
-                if (mapping.axis) {
-                  dispatch({
-                    ...mapping,
-                    input: { gpio: { pin: -1, analog: true, pinMode: proto.PinMode.Floating } },
-                  });
-                } else if (mapping.button) {
-                  dispatch({
-                    ...mapping,
-                    input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                  });
-                }
-                break;
-            }
-          }}
-        >
-          <Combobox.Target>
-            <InputBase
-              label="Device"
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => combobox.toggleDropdown()}
-            >
-              {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
-            </InputBase>
-          </Combobox.Target>
-
-          <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-            <Combobox.Options>
-              {Object.values(deviceStatus)
-                .filter((x) => validDevices.includes(x.type))
-                .map((item) => (
-                  <Combobox.Option value={item.id} key={item.id}>
-                    {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
-                  </Combobox.Option>
-                ))}
-              <Combobox.Option value="gpio">{t('devices.gpio')}</Combobox.Option>
-            </Combobox.Options>
-          </Combobox.Dropdown>
-        </Combobox>
-        {inputDevice && (
+        {mapping.gamepadButton && (
+          <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx}></StateBox>
+        )}
+        {mapping.gamepadAxis && (
+          <>
+            <StateSlider
+              mappingIdx={mappingIdx}
+              profileIdx={profileIdx}
+              center={mapping.center!}
+              min={mapping.min!}
+              max={mapping.max!}
+              deadzone={mapping.deadzone!}
+            ></StateSlider>
+            {mapping.gamepadAxis != proto.GamepadAxisType.GamepadLeftTrigger &&
+              mapping.gamepadAxis != proto.GamepadAxisType.GamepadRightTrigger && (
+                <Slider
+                  value={mapping.center!}
+                  min={0}
+                  max={65535}
+                  onChange={(val) => dispatch({ ...mapping, center: val })}
+                />
+              )}
+            <Slider
+              value={mapping.min!}
+              min={0}
+              max={65535}
+              onChange={(val) => dispatch({ ...mapping, min: val })}
+            />
+            <Slider
+              value={mapping.max!}
+              min={0}
+              max={65535}
+              onChange={(val) => dispatch({ ...mapping, max: val })}
+            />
+            <Slider
+              value={mapping.deadzone!}
+              min={0}
+              max={65535}
+              onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+            />
+          </>
+        )}
+        {(outputCombobox.dropdownOpened && (
           <Combobox
-            store={inputCombobox}
+            store={outputCombobox}
             onOptionSubmit={(val) => {
-              const button = proto.ButtonType[val as keyof typeof proto.ButtonType];
-              const axis = proto.AxisType[val as keyof typeof proto.AxisType];
+              const button = proto.GamepadButtonType[val as keyof typeof proto.GamepadButtonType];
+              const axis = proto.GamepadAxisType[val as keyof typeof proto.GamepadAxisType];
               if (button !== undefined) {
-                dispatch({
-                  ...mapping,
-                  input: { digitalDevice: { button, deviceid: inputDevice!.deviceid } },
-                });
+                dispatch({ ...mapping, gamepadButton: button, gamepadAxis: null });
               }
               if (axis !== undefined) {
                 dispatch({
                   ...mapping,
-                  input: { analogDevice: { axis, deviceid: inputDevice!.deviceid } },
+                  gamepadAxis: axis,
+                  gamepadButton: null,
+                  center:
+                    axis == proto.GamepadAxisType.GamepadLeftTrigger ||
+                    axis == proto.GamepadAxisType.GamepadRightTrigger
+                      ? 0
+                      : 32767,
+                  min: 0,
+                  max: 65535,
                 });
               }
-              inputCombobox.closeDropdown();
+              outputCombobox.closeDropdown();
             }}
           >
             <Combobox.Target>
               <InputBase
-                label="Input"
+                label="Output"
                 component="button"
                 type="button"
                 pointer
                 rightSection={<Combobox.Chevron />}
                 rightSectionPointerEvents="none"
-                onClick={() => inputCombobox.toggleDropdown()}
+                onClick={() => outputCombobox.toggleDropdown()}
               >
-                {proto.ButtonType[mapping.input.digitalDevice?.button ?? -1] ||
-                  proto.AxisType[mapping.input.analogDevice?.axis ?? -1] || (
+                {proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
+                  proto.GamepadAxisType[mapping.gamepadAxis ?? -1] || (
                     <Input.Placeholder>Pick value</Input.Placeholder>
                   )}
               </InputBase>
@@ -340,8 +354,8 @@ export function SantrollerInput({
 
             <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
               <Combobox.Options>
-                {Object.keys(proto.AxisType)
-                  .concat(Object.keys(proto.ButtonType))
+                {Object.keys(proto.GamepadAxisType)
+                  .concat(Object.keys(proto.GamepadButtonType))
                   .map((item) => (
                     <Combobox.Option value={item} key={item}>
                       {item}
@@ -350,130 +364,296 @@ export function SantrollerInput({
               </Combobox.Options>
             </Combobox.Dropdown>
           </Combobox>
+        )) || (
+          <InputBase
+            label="Output"
+            component="button"
+            type="button"
+            pointer
+            rightSection={<Combobox.Chevron />}
+            rightSectionPointerEvents="none"
+            onClick={() => outputCombobox.toggleDropdown()}
+          >
+            {proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
+              proto.GamepadAxisType[mapping.gamepadAxis ?? -1] || (
+                <Input.Placeholder>Pick value</Input.Placeholder>
+              )}
+          </InputBase>
         )}
-        {mapping.input.wiiAxis && (
+
+        {(combobox.dropdownOpened && (
           <Combobox
-            store={inputCombobox}
+            store={combobox}
             onOptionSubmit={(val) => {
-              const axis = proto.WiiAxisType[val as keyof typeof proto.WiiAxisType];
-              if (axis !== undefined) {
-                dispatch({
-                  ...mapping,
-                  input: { wiiAxis: { axis, deviceid: inputDevice!.deviceid } },
-                });
+              combobox.closeDropdown();
+              // setDeviceValue(val);
+              if (isNumberLike(val)) {
+                switch (deviceStatus[parseInt(val)].type) {
+                  case 'wii':
+                    if (mapping.gamepadAxis) {
+                      dispatch({
+                        ...mapping,
+                        input: {
+                          wiiAxis: {
+                            axis: proto.WiiAxisType.WiiAxisClassicLeftStickX,
+                            deviceid: parseInt(val),
+                          },
+                        },
+                      });
+                    } else if (mapping.gamepadButton) {
+                      dispatch({
+                        ...mapping,
+                        input: {
+                          wiiButton: {
+                            button: proto.WiiButtonType.WiiButtonClassicA,
+                            deviceid: parseInt(val),
+                          },
+                        },
+                      });
+                    }
+                    break;
+                  case 'crkdNeck':
+                    if (mapping.gamepadButton) {
+                      dispatch({
+                        ...mapping,
+                        input: {
+                          crkd: {
+                            button: proto.CrkdNeckButtonType.CrkdGreen,
+                            deviceid: parseInt(val),
+                          },
+                        },
+                      });
+                    }
+                    break;
+                }
+                return;
               }
-              inputCombobox.closeDropdown();
+              switch (val) {
+                case 'gpio':
+                  if (mapping.gamepadAxis) {
+                    dispatch({
+                      ...mapping,
+                      input: { gpio: { pin: -1, analog: true, pinMode: proto.PinMode.Floating } },
+                    });
+                  } else if (mapping.gamepadButton) {
+                    dispatch({
+                      ...mapping,
+                      input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
+                    });
+                  }
+                  break;
+              }
             }}
           >
             <Combobox.Target>
               <InputBase
-                label="Input"
+                label="Device"
                 component="button"
                 type="button"
                 pointer
                 rightSection={<Combobox.Chevron />}
                 rightSectionPointerEvents="none"
-                onClick={() => inputCombobox.toggleDropdown()}
+                onClick={() => combobox.toggleDropdown()}
               >
-                {proto.WiiAxisType[mapping.input.wiiAxis?.axis ?? -1] || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
-                )}
+                {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
               </InputBase>
             </Combobox.Target>
 
             <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
               <Combobox.Options>
-                {Object.keys(proto.WiiAxisType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {item}
-                  </Combobox.Option>
-                ))}
+                {Object.values(deviceStatus)
+                  .filter((x) => validDevices.includes(x.type))
+                  .map((item) => (
+                    <Combobox.Option value={item.id} key={item.id}>
+                      {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                    </Combobox.Option>
+                  ))}
+                <Combobox.Option value="gpio">{t('devices.gpio')}</Combobox.Option>
               </Combobox.Options>
             </Combobox.Dropdown>
           </Combobox>
-        )}
-        {mapping.input.wiiButton && (
-          <Combobox
-            store={inputCombobox}
-            onOptionSubmit={(val) => {
-              const button = proto.WiiButtonType[val as keyof typeof proto.WiiButtonType];
-              if (button !== undefined) {
-                dispatch({
-                  ...mapping,
-                  input: { wiiButton: { ...mapping.input.wiiButton!, button } },
-                });
-              }
-              inputCombobox.closeDropdown();
-            }}
+        )) || (
+          <InputBase
+            label="Device"
+            component="button"
+            type="button"
+            pointer
+            rightSection={<Combobox.Chevron />}
+            rightSectionPointerEvents="none"
+            onClick={() => combobox.toggleDropdown()}
           >
-            <Combobox.Target>
-              <InputBase
-                label="Input"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => inputCombobox.toggleDropdown()}
-              >
-                {proto.WiiButtonType[mapping.input.wiiButton?.button ?? -1] || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.WiiButtonType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {item}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
+            {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
+          </InputBase>
         )}
-        {mapping.input.crkd && (
-          <Combobox
-            store={inputCombobox}
-            onOptionSubmit={(val) => {
-              const button = proto.CrkdNeckButtonType[val as keyof typeof proto.CrkdNeckButtonType];
-              if (button !== undefined) {
-                dispatch({
-                  ...mapping,
-                  input: { crkd: { ...mapping.input.crkd!, button } },
-                });
-              }
-              inputCombobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                label="Input"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => inputCombobox.toggleDropdown()}
-              >
-                {proto.CrkdNeckButtonType[mapping.input.crkd?.button ?? -1] || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
+        {mapping.input.wiiAxis &&
+          ((inputCombobox.dropdownOpened && (
+            <Combobox
+              store={inputCombobox}
+              onOptionSubmit={(val) => {
+                const axis = proto.WiiAxisType[val as keyof typeof proto.WiiAxisType];
+                if (axis !== undefined) {
+                  dispatch({
+                    ...mapping,
+                    input: { wiiAxis: { ...mapping.input.wiiAxis!, axis } },
+                  });
+                }
+                inputCombobox.closeDropdown();
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  label="Input"
+                  component="button"
+                  type="button"
+                  pointer
+                  rightSection={<Combobox.Chevron />}
+                  rightSectionPointerEvents="none"
+                  onClick={() => inputCombobox.toggleDropdown()}
+                >
+                  {proto.WiiAxisType[mapping.input.wiiAxis?.axis ?? -1] || (
+                    <Input.Placeholder>Pick value</Input.Placeholder>
+                  )}
+                </InputBase>
+              </Combobox.Target>
 
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.CrkdNeckButtonType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {item}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-        )}
+              <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                <Combobox.Options>
+                  {Object.keys(proto.WiiAxisType).map((item) => (
+                    <Combobox.Option value={item} key={item}>
+                      {item}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+          )) || (
+            <InputBase
+              label="Input"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => inputCombobox.toggleDropdown()}
+            >
+              {proto.WiiAxisType[mapping.input.wiiAxis?.axis ?? -1] || (
+                <Input.Placeholder>Pick value</Input.Placeholder>
+              )}
+            </InputBase>
+          ))}
+        {mapping.input.wiiButton &&
+          ((inputCombobox.dropdownOpened && (
+            <Combobox
+              store={inputCombobox}
+              onOptionSubmit={(val) => {
+                const button = proto.WiiButtonType[val as keyof typeof proto.WiiButtonType];
+                if (button !== undefined) {
+                  dispatch({
+                    ...mapping,
+                    input: { wiiButton: { ...mapping.input.wiiButton!, button } },
+                  });
+                }
+                inputCombobox.closeDropdown();
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  label="Input"
+                  component="button"
+                  type="button"
+                  pointer
+                  rightSection={<Combobox.Chevron />}
+                  rightSectionPointerEvents="none"
+                  onClick={() => inputCombobox.toggleDropdown()}
+                >
+                  {proto.WiiButtonType[mapping.input.wiiButton?.button ?? -1] || (
+                    <Input.Placeholder>Pick value</Input.Placeholder>
+                  )}
+                </InputBase>
+              </Combobox.Target>
+
+              <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                <Combobox.Options>
+                  {Object.keys(proto.WiiButtonType).map((item) => (
+                    <Combobox.Option value={item} key={item}>
+                      {item}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+          )) || (
+            <InputBase
+              label="Input"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => inputCombobox.toggleDropdown()}
+            >
+              {proto.WiiButtonType[mapping.input.wiiButton?.button ?? -1] || (
+                <Input.Placeholder>Pick value</Input.Placeholder>
+              )}
+            </InputBase>
+          ))}
+        {mapping.input.crkd &&
+          ((inputCombobox.dropdownOpened && (
+            <Combobox
+              store={inputCombobox}
+              onOptionSubmit={(val) => {
+                const button =
+                  proto.CrkdNeckButtonType[val as keyof typeof proto.CrkdNeckButtonType];
+                if (button !== undefined) {
+                  dispatch({
+                    ...mapping,
+                    input: { crkd: { ...mapping.input.crkd!, button } },
+                  });
+                }
+                inputCombobox.closeDropdown();
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  label="Input"
+                  component="button"
+                  type="button"
+                  pointer
+                  rightSection={<Combobox.Chevron />}
+                  rightSectionPointerEvents="none"
+                  onClick={() => inputCombobox.toggleDropdown()}
+                >
+                  {proto.CrkdNeckButtonType[mapping.input.crkd?.button ?? -1] || (
+                    <Input.Placeholder>Pick value</Input.Placeholder>
+                  )}
+                </InputBase>
+              </Combobox.Target>
+
+              <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                <Combobox.Options>
+                  {Object.keys(proto.CrkdNeckButtonType).map((item) => (
+                    <Combobox.Option value={item} key={item}>
+                      {item}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+          )) || (
+            <InputBase
+              label="Input"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => inputCombobox.toggleDropdown()}
+            >
+              {proto.CrkdNeckButtonType[mapping.input.crkd?.button ?? -1] || (
+                <Input.Placeholder>Pick value</Input.Placeholder>
+              )}
+            </InputBase>
+          ))}
         {mapping.input.gpio && (
           <>
             <PinBox
@@ -487,126 +667,69 @@ export function SantrollerInput({
                 })
               }
             />
-
-            <Combobox
-              store={pinModeCombobox}
-              onOptionSubmit={(val) => {
-                dispatch({
-                  ...mapping,
-                  input: {
-                    ...mapping.input,
-                    gpio: {
-                      ...mapping.input.gpio!,
-                      pinMode: proto.PinMode[val as keyof typeof proto.PinMode],
+            {(pinModeCombobox.dropdownOpened && (
+              <Combobox
+                store={pinModeCombobox}
+                onOptionSubmit={(val) => {
+                  dispatch({
+                    ...mapping,
+                    input: {
+                      ...mapping.input,
+                      gpio: {
+                        ...mapping.input.gpio!,
+                        pinMode: proto.PinMode[val as keyof typeof proto.PinMode],
+                      },
                     },
-                  },
-                });
-                pinModeCombobox.closeDropdown();
-              }}
-            >
-              <Combobox.Target>
-                <InputBase
-                  label="Pin Mode"
-                  component="button"
-                  type="button"
-                  pointer
-                  rightSection={<Combobox.Chevron />}
-                  rightSectionPointerEvents="none"
-                  onClick={() => pinModeCombobox.toggleDropdown()}
-                >
-                  {proto.PinMode[mapping.input.gpio.pinMode] || (
-                    <Input.Placeholder>Pick value</Input.Placeholder>
-                  )}
-                </InputBase>
-              </Combobox.Target>
+                  });
+                  pinModeCombobox.closeDropdown();
+                }}
+              >
+                <Combobox.Target>
+                  <InputBase
+                    label="Pin Mode"
+                    component="button"
+                    type="button"
+                    pointer
+                    rightSection={<Combobox.Chevron />}
+                    rightSectionPointerEvents="none"
+                    onClick={() => pinModeCombobox.toggleDropdown()}
+                  >
+                    {proto.PinMode[mapping.input.gpio.pinMode] || (
+                      <Input.Placeholder>Pick value</Input.Placeholder>
+                    )}
+                  </InputBase>
+                </Combobox.Target>
 
-              <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-                <Combobox.Options>
-                  {Object.keys(proto.PinMode).map((item) => (
-                    <Combobox.Option value={item} key={item}>
-                      {item}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
-              </Combobox.Dropdown>
-            </Combobox>
+                <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                  <Combobox.Options>
+                    {Object.keys(proto.PinMode).map((item) => (
+                      <Combobox.Option value={item} key={item}>
+                        {item}
+                      </Combobox.Option>
+                    ))}
+                  </Combobox.Options>
+                </Combobox.Dropdown>
+              </Combobox>
+            )) || (
+              <InputBase
+                label="Pin Mode"
+                component="button"
+                type="button"
+                pointer
+                rightSection={<Combobox.Chevron />}
+                rightSectionPointerEvents="none"
+                onClick={() => pinModeCombobox.toggleDropdown()}
+              >
+                {proto.PinMode[mapping.input.gpio.pinMode] || (
+                  <Input.Placeholder>Pick value</Input.Placeholder>
+                )}
+              </InputBase>
+            )}
           </>
         )}
       </Card>
     </>
   );
-}
-
-export function AxisSantrollerMapping({
-  mapping,
-  id,
-}: {
-  mapping: proto.IAxisMapping;
-  id: string;
-}) {
-  const { t } = useTranslation();
-  const inputCombobox = useCombobox({
-    onDropdownClose: () => inputCombobox.resetSelectedOption(),
-  });
-  return (
-    <Combobox
-      store={inputCombobox}
-      onOptionSubmit={(val) => {
-        // setInputValue(val);
-        inputCombobox.closeDropdown();
-      }}
-    >
-      <Combobox.Target>
-        <InputBase
-          label="Output"
-          component="button"
-          type="button"
-          pointer
-          rightSection={<Combobox.Chevron />}
-          rightSectionPointerEvents="none"
-          onClick={() => inputCombobox.toggleDropdown()}
-        >
-          {t(`axis.${proto.AxisType[mapping.axis]}`) || (
-            <Input.Placeholder>Pick value</Input.Placeholder>
-          )}
-        </InputBase>
-      </Combobox.Target>
-
-      <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-        <Combobox.Options>
-          {Object.keys(proto.AxisType).map((item) => (
-            <Combobox.Option value={item} key={item}>
-              {t(`axis.${item}`)}
-            </Combobox.Option>
-          ))}
-          {Object.keys(proto.ButtonType).map((item) => (
-            <Combobox.Option value={item} key={item}>
-              {t(`button.${item}`)}
-            </Combobox.Option>
-          ))}
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
-  );
-}
-export function ButtonSantrollerMapping({
-  mapping,
-  id,
-}: {
-  mapping: proto.IButtonMapping;
-  id: string;
-}) {
-  return <></>;
-}
-
-export function SantrollerMapping({ mapping, id }: { mapping: proto.Mapping; id: string }) {
-  if (mapping.axis) {
-    return <AxisSantrollerMapping mapping={mapping.axis} id={id} />;
-  }
-  if (mapping.button) {
-    return <ButtonSantrollerMapping mapping={mapping.button} id={id} />;
-  }
-  return <></>;
 }
 
 export function InputsTab({ value, idx }: { value: string; idx: number }) {
@@ -655,9 +778,24 @@ export function Inputs() {
   const updateProfile = useConfigStore((state) => state.updateProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
+  const pollInputs = useConfigStore((state) => state.pollInputs);
+
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
+  const [loaded, setLoaded] = useState(false);
+  // Give the loader a sec to render before rendering the rest of the page
+  useTimeout(
+    () => {
+      setLoaded(true);
+      pollInputs(true);
+    },
+    1,
+    { autoInvoke: true }
+  );
+  if (!loaded) {
+    return <Loader></Loader>;
+  }
   return (
     <>
       <Tabs value={(activeProfile ?? 0).toString()} onChange={setActiveProfile}>
@@ -727,7 +865,7 @@ export function Inputs() {
             )}
             <Space h="md" />
             <Title order={3}>Activation method</Title>
-            <SimpleGrid cols={3}>
+            <Group>
               {x.activationMethod?.map((mapping, mappingIdx) => (
                 <SantrollerInput
                   key={mappingIdx}
@@ -761,10 +899,10 @@ export function Inputs() {
                   }
                 />
               ))}
-            </SimpleGrid>
+            </Group>
             <Space h="md" />
             <Title order={3}>Inputs</Title>
-            <SimpleGrid cols={3}>
+            <Group>
               {x.mappings?.map((mapping, mappingIdx) => (
                 <SantrollerInput
                   key={mappingIdx}
@@ -798,7 +936,7 @@ export function Inputs() {
                   }
                 />
               ))}
-            </SimpleGrid>
+            </Group>
           </Tabs.Panel>
         ))}
       </Tabs>

@@ -8,7 +8,7 @@ import {
   IconHome2,
   IconSettings,
 } from '@tabler/icons-react';
-import { NavLink as RouterLink } from 'react-router-dom';
+import { NavLink as RouterLink, useNavigate } from 'react-router-dom';
 import { AppShell, Badge, Burger, Group, Image, NavLink, Skeleton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
@@ -17,6 +17,8 @@ import classes from './Layout.module.css';
 export function Layout({ children }) {
   const [opened, { toggle }] = useDisclosure();
   const connected = useConfigStore((state) => state.connected);
+  const pollInputs = useConfigStore((state) => state.pollInputs);
+  const nav = useNavigate();
   return (
     <>
       <AppShell
@@ -34,6 +36,10 @@ export function Layout({ children }) {
           <NavLink
             component={RouterLink}
             to="/"
+            onClick={() => {
+              pollInputs(false);
+              nav('/');
+            }}
             label="Main"
             leftSection={<IconSettings size={16} stroke={1.5} />}
           />
@@ -42,6 +48,10 @@ export function Layout({ children }) {
               <NavLink
                 component={RouterLink}
                 to="/devices"
+                onClick={() => {
+                  pollInputs(false);
+                  nav('/devices');
+                }}
                 label="Devices"
                 leftSection={<IconSettings size={16} stroke={1.5} />}
               />
@@ -50,7 +60,7 @@ export function Layout({ children }) {
                 to="/profiles"
                 label="Profiles"
                 leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
-              />
+              ></NavLink>
             </>
           )}
         </AppShell.Navbar>
