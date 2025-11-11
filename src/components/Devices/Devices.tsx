@@ -403,71 +403,25 @@ function WorldTourDrumDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
-function MPU6050Device({ id }: { id: string }) {
+function AccelerometerDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const device = status.device;
-  if (!device.mpu6050) {
+  if (!device.accelerometer) {
     throw new Error('device null!');
   }
-  const mpu6050 = device.mpu6050;
+  const accelerometer = device.accelerometer;
   return (
     <DeviceCard
       connected={status.connected}
-      title="devices.mpu6050"
-      image="covers/devices/mpu6050.png"
+      title="devices.accelerometer"
+      image="covers/devices/accelerometer.png"
       deleteDevice={() => deleteDevice(id)}
     >
       <I2CDevice
-        device={mpu6050.i2c}
-        dispatch={(val) => updateDevice({ mpu6050: { ...mpu6050, i2c: val } }, id)}
-      />
-    </DeviceCard>
-  );
-}
-function ADXL345Device({ id }: { id: string }) {
-  const status = useConfigStore((state) => state.deviceStatus[id]);
-  const updateDevice = useConfigStore((state) => state.updateDevice);
-  const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const device = status.device;
-  if (!device.adxl) {
-    throw new Error('device null!');
-  }
-  const adxl = device.adxl;
-  return (
-    <DeviceCard
-      connected={status.connected}
-      title="devices.adxl"
-      image="covers/devices/adxl.png"
-      deleteDevice={() => deleteDevice(id)}
-    >
-      <I2CDevice
-        device={adxl.i2c}
-        dispatch={(val) => updateDevice({ adxl: { ...adxl, i2c: val } }, id)}
-      />
-    </DeviceCard>
-  );
-}
-function LIS3DHDevice({ id }: { id: string }) {
-  const status = useConfigStore((state) => state.deviceStatus[id]);
-  const updateDevice = useConfigStore((state) => state.updateDevice);
-  const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const device = status.device;
-  if (!device.lis3dh) {
-    throw new Error('device null!');
-  }
-  const lis3dh = device.lis3dh;
-  return (
-    <DeviceCard
-      connected={status.connected}
-      title="devices.lis3dh"
-      image="covers/devices/lis3dh.png"
-      deleteDevice={() => deleteDevice(id)}
-    >
-      <I2CDevice
-        device={lis3dh.i2c}
-        dispatch={(val) => updateDevice({ lis3dh: { ...lis3dh, i2c: val } }, id)}
+        device={accelerometer.i2c}
+        dispatch={(val) => updateDevice({ accelerometer: { ...accelerometer, i2c: val } }, id)}
       />
     </DeviceCard>
   );
@@ -606,6 +560,45 @@ function PeripheralDevice({ id }: { id: string }) {
         label="peripheral.address.label"
         description="peripheral.address.description"
       />
+    </DeviceCard>
+  );
+}
+function ADS1115Device({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.ads1115) {
+    throw new Error('device null!');
+  }
+  const ads1115 = device.ads1115;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.ads1115"
+      image="covers/devices/ads1115.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <I2CDevice
+        device={ads1115.i2c}
+        dispatch={(val) => updateDevice({ ads1115: { ...ads1115, i2c: val } }, id)}
+      />
+      <PinBox
+        label="ads1115.interrupt.pin"
+        pin={ads1115.interrupt}
+        valid={AllPinsNamed}
+        dispatch={(pin) => updateDevice({ ads1115: { ...ads1115, interrupt: pin } }, id)}
+      />
+      {/* <LabeledSegmentedControl
+        data={peripheralData}
+        translateData={false}
+        value={`0x${peripheral.address.toString(16)}`}
+        dispatch={(val) =>
+          updateDevice({ peripheral: { ...peripheral, address: Number(val) } }, id)
+        }
+        label="peripheral.address.label"
+        description="peripheral.address.description"
+      /> */}
     </DeviceCard>
   );
 }
@@ -999,9 +992,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
-  adxl: ADXL345Device,
-  lis3dh: LIS3DHDevice,
-  mpu6050: MPU6050Device,
+  accelerometer: AccelerometerDevice,
   max1704x: Max1704XDevice,
   mpr121: MPR121Device,
   crazyGuitarNeck: CrazyGuitarNeckDevice,
@@ -1018,6 +1009,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   psxEmulation: PSXEmulationDevice,
   joybusEmulation: JoybusEmulationDevice,
   peripheral: PeripheralDevice,
+  ads1115: ADS1115Device,
 };
 export function Devices() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);

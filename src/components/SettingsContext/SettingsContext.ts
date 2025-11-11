@@ -50,6 +50,8 @@ export class DeviceStatus {
     switch (status.type) {
       case 'wii':
         return [status.device.wii?.i2c.sda, status.device.wii?.i2c.scl];
+      case 'accelerometer':
+        return [status.device.accelerometer?.i2c.sda, status.device.accelerometer?.i2c.scl];
       case 'bhDrum':
         return [status.device.bhDrum?.i2c.sda, status.device.bhDrum?.i2c.scl];
       case 'mpu6050':
@@ -128,6 +130,7 @@ export interface ConfigState {
   writeTimeout?: NodeJS.Timeout;
   keepaliveTimeout?: NodeJS.Timeout;
   currentProfile: number;
+  lastProfile: number;
 }
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
@@ -145,6 +148,7 @@ export interface Actions {
   sendKeepAlive: () => void;
   saveConfig: () => void;
   pollInputs: (poll: boolean) => void;
+  loadDefaults: (device: DeviceStatus | undefined) => void;
 }
 
 function InitState(config: proto.Config): ConfigState {
@@ -166,7 +170,8 @@ function InitState(config: proto.Config): ConfigState {
     lastUpdate: 0,
     writing: false,
     polling: false,
-    currentProfile: 0
+    currentProfile: 0,
+    lastProfile: 0,
   };
 }
 
@@ -177,6 +182,114 @@ export const initialConfig = InitState(
   })
 );
 
+const WiiMappings = {
+  [proto.SubType.GuitarHeroGuitar]: {
+    [proto.WiiButtonType.WiiButtonGuitarMinus]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBack,
+    [proto.WiiButtonType.WiiButtonGuitarPlus]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStart,
+    [proto.WiiButtonType.WiiButtonGuitarStrumUp]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumUp,
+    [proto.WiiButtonType.WiiButtonGuitarStrumDown]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumDown,
+    [proto.WiiButtonType.WiiButtonGuitarGreen]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarGreen,
+    [proto.WiiButtonType.WiiButtonGuitarRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarRed,
+    [proto.WiiButtonType.WiiButtonGuitarYellow]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarYellow,
+    [proto.WiiButtonType.WiiButtonGuitarBlue]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBlue,
+    [proto.WiiButtonType.WiiButtonGuitarOrange]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarOrange,
+    [proto.WiiButtonType.WiiButtonGuitarTapGreen]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapGreen,
+    [proto.WiiButtonType.WiiButtonGuitarTapRed]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapRed,
+    [proto.WiiButtonType.WiiButtonGuitarTapYellow]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapYellow,
+    [proto.WiiButtonType.WiiButtonGuitarTapBlue]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapBlue,
+    [proto.WiiButtonType.WiiButtonGuitarTapOrange]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapOrange,
+  },
+  [proto.SubType.Gamepad]: {
+    [proto.WiiButtonType.WiiButtonClassicA]: proto.GamepadButtonType.GamepadA,
+    [proto.WiiButtonType.WiiButtonClassicB]: proto.GamepadButtonType.GamepadB,
+    [proto.WiiButtonType.WiiButtonClassicX]: proto.GamepadButtonType.GamepadX,
+    [proto.WiiButtonType.WiiButtonClassicY]: proto.GamepadButtonType.GamepadY,
+    [proto.WiiButtonType.WiiButtonClassicDPadUp]: proto.GamepadButtonType.GamepadDpadUp,
+    [proto.WiiButtonType.WiiButtonClassicDPadDown]: proto.GamepadButtonType.GamepadDpadDown,
+    [proto.WiiButtonType.WiiButtonClassicDPadLeft]: proto.GamepadButtonType.GamepadDpadLeft,
+    [proto.WiiButtonType.WiiButtonClassicDPadRight]: proto.GamepadButtonType.GamepadDpadRight,
+    [proto.WiiButtonType.WiiButtonClassicZl]: proto.GamepadButtonType.GamepadLeftShoulder,
+    [proto.WiiButtonType.WiiButtonClassicZr]: proto.GamepadButtonType.GamepadRightShoulder,
+    [proto.WiiButtonType.WiiButtonClassicPlus]: proto.GamepadButtonType.GamepadStart,
+    [proto.WiiButtonType.WiiButtonClassicMinus]: proto.GamepadButtonType.GamepadBack,
+    [proto.WiiButtonType.WiiButtonClassicHome]: proto.GamepadButtonType.GamepadGuide,
+  },
+};
+
+const CrkdMappings = {
+  [proto.SubType.GuitarHeroGuitar]: {
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarDpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadRight]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarDpadRight,
+    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarGreen,
+    [proto.CrkdNeckButtonType.CrkdRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarRed,
+    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarYellow,
+    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBlue,
+    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarOrange,
+    [proto.CrkdNeckButtonType.CrkdSoloGreen]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapGreen,
+    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapRed,
+    [proto.CrkdNeckButtonType.CrkdSoloYellow]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapYellow,
+    [proto.CrkdNeckButtonType.CrkdSoloBlue]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapBlue,
+    [proto.CrkdNeckButtonType.CrkdSoloOrange]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapOrange,
+  },
+  [proto.SubType.Gamepad]: {
+    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GamepadButtonType.GamepadA,
+    [proto.CrkdNeckButtonType.CrkdRed]: proto.GamepadButtonType.GamepadB,
+    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GamepadButtonType.GamepadX,
+    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GamepadButtonType.GamepadY,
+    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GamepadButtonType.GamepadLeftShoulder,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GamepadButtonType.GamepadDpadUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.GamepadButtonType.GamepadDpadDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.GamepadButtonType.GamepadDpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadRight]: proto.GamepadButtonType.GamepadDpadRight,
+  },
+};
+
+const WiiMappingsStick = {
+  [proto.SubType.GuitarHeroGuitar]: {
+    [proto.WiiAxisType.WiiAxisGuitarJoystickX]:
+      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarLeftStickX,
+    [proto.WiiAxisType.WiiAxisGuitarJoystickY]:
+      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarLeftStickY,
+  },
+  [proto.SubType.Gamepad]: {
+    [proto.WiiAxisType.WiiAxisClassicLeftStickX]: proto.GamepadAxisType.GamepadLeftStickX,
+    [proto.WiiAxisType.WiiAxisClassicLeftStickY]: proto.GamepadAxisType.GamepadLeftStickY,
+    [proto.WiiAxisType.WiiAxisClassicRightStickX]: proto.GamepadAxisType.GamepadRightStickX,
+    [proto.WiiAxisType.WiiAxisClassicRightStickY]: proto.GamepadAxisType.GamepadRightStickY,
+  },
+};
+const WiiMappingsTrigger = {
+  [proto.SubType.GuitarHeroGuitar]: {
+    [proto.WiiAxisType.WiiAxisGuitarWhammy]: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarWhammy,
+  },
+  [proto.SubType.Gamepad]: {
+    [proto.WiiAxisType.WiiAxisClassicLeftTrigger]: proto.GamepadAxisType.GamepadLeftTrigger,
+    [proto.WiiAxisType.WiiAxisClassicRightTrigger]: proto.GamepadAxisType.GamepadRightTrigger,
+  },
+};
+
 function createDefault(type: string, id: string) {
   let device = {};
   const i2c = { sda: -1, scl: -1 };
@@ -184,11 +297,9 @@ function createDefault(type: string, id: string) {
   const uart = { tx: -1, rx: -1 };
   const mappingMode = proto.MappingMode.PerInput;
   switch (type) {
-    case 'mpu6050':
     case 'wii':
     case 'bhDrum':
-    case 'adxl':
-    case 'lis3dh':
+    case 'accelerometer':
     case 'mpr121':
     case 'crazyGuitarNeck':
     case 'gh5Neck':
@@ -198,6 +309,9 @@ function createDefault(type: string, id: string) {
       break;
     case 'peripheral':
       device = { i2c, address: 0x45 };
+      break;
+    case 'ads1115':
+      device = { i2c, interrupt: -1 };
       break;
     case 'worldTourDrum':
       device = { spi };
@@ -235,291 +349,455 @@ function buf2hex(buffer: Uint8Array) {
   return [...new Uint8Array(buffer)].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
 const magic = 0xd2f1e365;
+function fixInput(mapping: proto.IMapping) {
+  // Swap A<->B and Y<->X for wii inputs when swapping between label and legend mode
+  let wiiButton = mapping.input.wiiButton?.button;
+  switch (wiiButton) {
+    case proto.WiiButtonType.WiiButtonClassicA:
+      wiiButton = proto.WiiButtonType.WiiButtonClassicB;
+      break;
+    case proto.WiiButtonType.WiiButtonClassicB:
+      wiiButton = proto.WiiButtonType.WiiButtonClassicA;
+      break;
+    case proto.WiiButtonType.WiiButtonClassicX:
+      wiiButton = proto.WiiButtonType.WiiButtonClassicY;
+      break;
+    case proto.WiiButtonType.WiiButtonClassicY:
+      wiiButton = proto.WiiButtonType.WiiButtonClassicX;
+      break;
+  }
+  if (wiiButton) {
+    mapping.input.wiiButton!.button = wiiButton;
+  }
+  return mapping;
+}
 export const useConfigStore = create<ConfigState & Actions>()(
-  immer(
-    devtools(
-      (set, get) => ({
-        ...initialConfig,
-        updateDevice: (device: proto.IDevice, id: string) => {
-          set((state) => {
-            state.deviceStatus[id].device = device;
-          });
-          get().saveConfig();
-        },
-        setActiveProfile: (id: string | null) => {
-          set((state) => {
-            state.currentProfile = parseInt(id ?? '0');
-          });
-          get().saveConfig();
-        },
-        updateProfile: (profile: proto.IProfile, id: number) => {
-          set((state) => {
-            state.config = {
-              ...state.config,
-              profiles: [
-                ...state.config.profiles!.map((prevProfile, prevIndex) =>
-                  prevIndex == id ? profile : prevProfile
-                ),
-              ],
-            };
-            state.mappingStatus[id] = Object.fromEntries(
-              profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
-            );
-          });
-          get().saveConfig();
-        },
-        deleteProfile: (id: number) => {
-          set((state) => {
-            if (state.currentProfile == id) {
-              state.currentProfile = Math.max(id - 1, 0);
+  immer((set, get) => ({
+    ...initialConfig,
+    updateDevice: (device: proto.IDevice, id: string) => {
+      set((state) => {
+        state.deviceStatus[id].device = device;
+      });
+      get().saveConfig();
+    },
+    setActiveProfile: (id: string | null) => {
+      set((state) => {
+        state.currentProfile = parseInt(id ?? '0');
+      });
+      get().saveConfig();
+    },
+    updateProfile: (profile: proto.IProfile, id: number) => {
+      set((state) => {
+        if (state.config.profiles![id].faceButtonMappingMode != profile.faceButtonMappingMode) {
+          profile.mappings = profile.mappings?.map(fixInput);
+        }
+        state.config = {
+          ...state.config,
+          profiles: [
+            ...state.config.profiles!.map((prevProfile, prevIndex) =>
+              prevIndex == id ? profile : prevProfile
+            ),
+          ],
+        };
+        state.mappingStatus[id] = Object.fromEntries(
+          profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+        );
+      });
+      get().saveConfig();
+    },
+    deleteProfile: (id: number) => {
+      set((state) => {
+        if (state.currentProfile == id) {
+          state.currentProfile = Math.max(id - 1, 0);
+        }
+        state.config = {
+          ...state.config,
+          profiles: state.config.profiles?.filter((x, i) => i != id),
+        };
+        state.mappingStatus = state.config.profiles!.map((profile) =>
+          Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
+        );
+      });
+      get().saveConfig();
+    },
+    sendKeepAlive: async () => {
+      const dev = get().hidDevice;
+      if (!dev) return;
+      await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+    },
+    updateConfig: (config: proto.IConfig) => {
+      set((state) => {
+        state.config = { ...state.config, ...config };
+      });
+      get().saveConfig();
+    },
+    loadDefaults: (device: DeviceStatus | undefined) => {
+      set((state) => {
+        const type = device?.type ?? 'gpio';
+        const profile = state.config.profiles![state.currentProfile];
+        switch (type) {
+          case 'wii':
+            switch (profile.deviceToEmulate) {
+              case proto.SubType.GuitarHeroGuitar:
+                profile.mappings!.push(
+                  ...Object.entries(WiiMappingsTrigger[profile.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      ghAxis: base,
+                      input: {
+                        wiiAxis: {
+                          axis: parseInt(wii),
+                          deviceid: parseInt(device?.id!),
+                        },
+                      },
+                      min: 0,
+                      max: 65535,
+                      center: 0,
+                    })
+                  ),
+                  ...Object.entries(WiiMappingsStick[profile.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      ghAxis: base,
+                      input: {
+                        wiiAxis: {
+                          axis: parseInt(wii),
+                          deviceid: parseInt(device?.id!),
+                        },
+                      },
+                      min: 0,
+                      max: 65535,
+                      center: 32767,
+                    })
+                  ),
+                  ...Object.entries(WiiMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
+                    ghButton: base,
+                    input: {
+                      wiiButton: {
+                        button: parseInt(wii),
+                        deviceid: parseInt(device?.id!),
+                      },
+                    },
+                  }))
+                );
+                break;
+              case proto.SubType.Gamepad:
+                profile.mappings!.push(
+                  ...Object.entries(WiiMappingsTrigger[profile.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      gamepadAxis: base,
+                      input: {
+                        wiiAxis: {
+                          axis: parseInt(wii),
+                          deviceid: parseInt(device?.id!),
+                        },
+                      },
+                      min: 0,
+                      max: 65535,
+                      center: 0,
+                    })
+                  ),
+                  ...Object.entries(WiiMappingsStick[profile.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      gamepadAxis: base,
+                      input: {
+                        wiiAxis: {
+                          axis: parseInt(wii),
+                          deviceid: parseInt(device?.id!),
+                        },
+                      },
+                      min: 0,
+                      max: 65535,
+                      center: 32767,
+                    })
+                  ),
+                  ...Object.entries(WiiMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
+                    gamepadButton: base,
+                    input: {
+                      wiiButton: {
+                        button: parseInt(wii),
+                        deviceid: parseInt(device?.id!),
+                      },
+                    },
+                  }))
+                );
+                break;
             }
-            state.config = {
-              ...state.config,
-              profiles: state.config.profiles?.filter((x, i) => i != id),
-            };
-            state.mappingStatus = state.config.profiles!.map((profile) =>
-              Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
-            );
-          });
-          get().saveConfig();
-        },
-        sendKeepAlive: async () => {
-          const dev = get().hidDevice;
-          if (!dev) return;
-          await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
-        },
-        updateConfig: (config: proto.IConfig) => {
-          set((state) => {
-            state.config = { ...state.config, ...config };
-          });
-          get().saveConfig();
-        },
-        deleteDevice: (id: string) => {
-          set((state) => {
-            delete state.deviceStatus[id];
-          });
-          get().saveConfig();
-        },
-        addDevice: (type: string) => {
-          set((state) => {
-            let id = '0';
-            if (Object.keys(state.deviceStatus).length) {
-              id = (
-                Math.max(...Object.keys(state.deviceStatus).map((x) => parseInt(x))) + 1
-              ).toString();
+            break;
+          case 'crkdNeck':
+            switch (profile.deviceToEmulate) {
+              case proto.SubType.GuitarHeroGuitar:
+                profile.mappings!.push(
+                  ...Object.entries(CrkdMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
+                    ghButton: base,
+                    input: {
+                      crkd: {
+                        button: parseInt(wii),
+                        deviceid: parseInt(device?.id!),
+                      },
+                    },
+                  }))
+                );
+                break;
+              case proto.SubType.Gamepad:
+                profile.mappings!.push(
+                  ...Object.entries(CrkdMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
+                    gamepadButton: base,
+                    input: {
+                      crkd: {
+                        button: parseInt(wii),
+                        deviceid: parseInt(device?.id!),
+                      },
+                    },
+                  }))
+                );
+                break;
             }
-            state.deviceStatus[id] = createDefault(type, id);
-          });
-          get().saveConfig();
-        },
-        onReport: (evt: HIDInputReportEvent) => {
-          if (evt.reportId != proto.ReportId.ReportIdConfig) {
-            return;
-          }
-          const deviceEvent = proto.Event.decode(
-            new Uint8Array(evt.data.buffer),
-            evt.data.byteLength
-          );
-          if (deviceEvent.debug) {
-            console.log(buf2hex(new Uint8Array(Int32Array.from(deviceEvent.debug.data!).buffer)));
-          }
-          if (deviceEvent.wii) {
-            set((state) => {
-              if (deviceEvent.wii!.id in state.deviceStatus) {
-                state.deviceStatus[deviceEvent.wii!.id].wiiExtType = deviceEvent.wii!.extension;
-              }
-            });
-          }
-          if (deviceEvent.device) {
-            set((state) => {
-              if (deviceEvent.device!.id in state.deviceStatus) {
-                state.deviceStatus[deviceEvent.device!.id].connected =
-                  deviceEvent.device!.connected;
-              }
-            });
-          }
-          if (deviceEvent.button && get().polling) {
-            set((state) => {
-              if (state.mappingStatus.length) {
-                const mappings = state.mappingStatus[state.currentProfile ?? 0];
-                if (deviceEvent.button!.id in mappings) {
-                  const mapping = mappings[deviceEvent.button!.id];
-                  mapping.state = deviceEvent.button?.state ? 65535 : 0;
-                  mapping.stateRaw = deviceEvent.button?.stateRaw ? 65535 : 0;
-                }
-              }
-            });
-          }
-          if (deviceEvent.axis && get().polling) {
-            set((state) => {
-              if (state.mappingStatus.length) {
-                const mappings = state.mappingStatus[state.currentProfile ?? 0];
-                if (deviceEvent.axis!.id in mappings) {
-                  const mapping = mappings[deviceEvent.axis!.id];
-                  mapping.state = deviceEvent.axis?.state!;
-                  mapping.stateRaw = deviceEvent.axis?.stateRaw!;
-                }
-              }
-            });
-          }
-        },
-        addProfile: () => {
-          set((state) => {
-            state.config = {
-              ...state.config,
-              profiles: [
-                ...(state.config.profiles || []),
-                {
-                  faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
-                  deviceToEmulate: proto.SubType.Gamepad,
-                  name: 'Device',
-                  activationMethod: [],
-                  mappings: [],
-                },
-              ],
-            };
-            state.currentProfile = state.config.profiles!.length;
-            state.mappingStatus[state.config.profiles!.length - 1] = [];
-          });
-          get().saveConfig();
-        },
-        deleteAllDevices: () => {
-          set((state) => {
-            state.deviceStatus = {};
-          });
-          get().saveConfig();
-        },
-        disconnect: () =>
-          set((state) => {
-            state.hidDevice?.removeEventListener('inputreport', state.onReport);
-            state.hidDevice?.close();
-            if (state.keepaliveTimeout) {
-              clearInterval(state.keepaliveTimeout);
-            }
-            state.connected = false;
-            state.hidDevice = undefined;
-          }),
-        pollInputs: (poll) =>
-          set((state) => {
-            state.polling = poll;
-          }),
-        saveConfig: async () => {
-          const state = get();
-          if (state.hidDevice == null || !state.connected) {
-            return;
-          }
-          // debounce writes so we don't trash the flash on the pico
-          const now = +new Date();
-          if (now - state.lastUpdate < 1000 || state.writing) {
-            if (state.writeTimeout) {
-              clearTimeout(state.writeTimeout);
-            }
-            set((state) => {
-              state.writeTimeout = setTimeout(() => get().saveConfig(), 500);
-            });
-            return;
-          }
-          set((state) => {
-            state.lastUpdate = now;
-          });
-          const config = { ...state.config };
-          config.devices = Object.values(state.deviceStatus).map((x) => x.device);
-          config.profiles = state.mappingStatus.map((x, i) => ({
-            ...config.profiles![i],
-            mappings: Object.values(x).map((x) => x.mapping),
-          }));
-          const buffer = proto.Config.encode(config).finish();
-          const crc = new CRC32().calculate(buffer);
-          // Don't write if nothing has changed
-          if (crc == state.crc) {
-            return;
-          }
-          set((state) => {
-            state.writing = true;
-            state.crc = crc;
-          });
-          console.log("what")
-          const infoBuffer = proto.ConfigInfo.encode(
-            proto.ConfigInfo.create({ dataSize: buffer.length, dataCrc: crc, magic, currentProfile: state.currentProfile })
-          ).finish();
-          await state.hidDevice.sendFeatureReport(
-            proto.ReportId.ReportIdConfigInfo,
-            infoBuffer as Buffer<ArrayBuffer>
-          );
-          let start = 0;
-          const len = 63;
-          while (start <= buffer.length) {
-            const slice = buffer.slice(start, start + len);
-            start += len;
-            await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
-          }
-          set((state) => {
-            state.writing = false;
-          });
-        },
-        connect: async () => {
-          const devices = await navigator.hid.requestDevice({
-            filters: [{ vendorId: 0x1209, productId: 0x2882, usagePage: 0xff00 }],
-          });
-          if (devices.length) {
-            const device = devices[0];
-            if (!device.opened) {
-              await device.open();
-            }
-            device.addEventListener('inputreport', get().onReport);
-            const infoData = await device.receiveFeatureReport(proto.ReportId.ReportIdConfigInfo);
-            const info = proto.ConfigInfo.decode(
-              new Uint8Array(infoData.buffer).slice(1),
-              infoData.byteLength - 1
-            );
-            if (info.magic >>> 0 != magic) {
-              console.log('magic didnt match!');
-            }
-            let data = new Uint8Array(info.dataSize);
-            let start = 0;
-            while (start < info.dataSize) {
-              const slice = await device.receiveFeatureReport(proto.ReportId.ReportIdConfig);
-              data.set(new Uint8Array(slice.buffer).slice(1), start);
-              start += slice.byteLength - 1;
-            }
-            if (new CRC32().calculate(data) != info.dataCrc) {
-              console.log('CRC didnt match!');
-            }
-            try {
-              const config = proto.Config.decode(data, info.dataSize);
-              const timeout = setInterval(() => get().sendKeepAlive(), 10);
-              set(
-                (old) => ({
-                  ...old,
-                  ...InitState(config),
-                  connected: true,
-                  hidDevice: device,
-                  crc: info.dataCrc,
-                  keepaliveTimeout: timeout,
-                  currentProfile: info.currentProfile
-                }),
-                true
-              );
-              await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
-            } catch (e) {
-              set(
-                (old) => ({
-                  ...old,
-                  connected: true,
-                  hidDevice: device,
-                  crc: 0,
-                }),
-                true
-              );
-            }
-          }
-        },
-      }),
-      {
-        name: 'config',
+            break;
+        }
+        profile.mappings = profile.mappings;
+        state.config = {
+          ...state.config,
+          profiles: [
+            ...state.config.profiles!.map((prevProfile, prevIndex) =>
+              prevIndex == state.currentProfile ? profile : prevProfile
+            ),
+          ],
+        };
+        state.mappingStatus[state.currentProfile] = Object.fromEntries(
+          profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+        );
+      });
+      get().saveConfig();
+    },
+    deleteDevice: (id: string) => {
+      set((state) => {
+        delete state.deviceStatus[id];
+      });
+      get().saveConfig();
+    },
+    addDevice: (type: string) => {
+      set((state) => {
+        let id = '0';
+        if (Object.keys(state.deviceStatus).length) {
+          id = (
+            Math.max(...Object.keys(state.deviceStatus).map((x) => parseInt(x))) + 1
+          ).toString();
+        }
+        state.deviceStatus[id] = createDefault(type, id);
+      });
+      get().saveConfig();
+    },
+    onReport: (evt: HIDInputReportEvent) => {
+      if (evt.reportId != proto.ReportId.ReportIdConfig) {
+        return;
       }
-    )
-  )
+      const deviceEvent = proto.Event.decode(new Uint8Array(evt.data.buffer), evt.data.byteLength);
+      if (deviceEvent.debug) {
+        console.log(buf2hex(new Uint8Array(Int32Array.from(deviceEvent.debug.data!).buffer)));
+      }
+      if (deviceEvent.wii) {
+        set((state) => {
+          if (deviceEvent.wii!.id in state.deviceStatus) {
+            state.deviceStatus[deviceEvent.wii!.id].wiiExtType = deviceEvent.wii!.extension;
+          }
+        });
+      }
+      if (deviceEvent.device) {
+        set((state) => {
+          if (deviceEvent.device!.id in state.deviceStatus) {
+            state.deviceStatus[deviceEvent.device!.id].connected = deviceEvent.device!.connected;
+          }
+        });
+      }
+      if (deviceEvent.button && get().polling) {
+        set((state) => {
+          if (state.mappingStatus.length) {
+            const mappings = state.mappingStatus[state.currentProfile ?? 0];
+            if (deviceEvent.button!.id in mappings) {
+              const mapping = mappings[deviceEvent.button!.id];
+              mapping.state = deviceEvent.button?.state ? 65535 : 0;
+              mapping.stateRaw = deviceEvent.button?.stateRaw ? 65535 : 0;
+            }
+          }
+        });
+      }
+      if (deviceEvent.axis && get().polling) {
+        set((state) => {
+          if (state.mappingStatus.length) {
+            const mappings = state.mappingStatus[state.currentProfile ?? 0];
+            if (deviceEvent.axis!.id in mappings) {
+              const mapping = mappings[deviceEvent.axis!.id];
+              mapping.state = deviceEvent.axis?.state!;
+              mapping.stateRaw = deviceEvent.axis?.stateRaw!;
+            }
+          }
+        });
+      }
+    },
+    addProfile: () => {
+      set((state) => {
+        state.config = {
+          ...state.config,
+          profiles: [
+            ...(state.config.profiles || []),
+            {
+              faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
+              deviceToEmulate: proto.SubType.Gamepad,
+              name: 'Device',
+              activationMethod: [],
+              mappings: [],
+            },
+          ],
+        };
+        state.currentProfile = state.config.profiles!.length - 1;
+        state.mappingStatus[state.config.profiles!.length - 1] = [];
+      });
+      get().saveConfig();
+    },
+    deleteAllDevices: () => {
+      set((state) => {
+        state.deviceStatus = {};
+      });
+      get().saveConfig();
+    },
+    disconnect: () =>
+      set((state) => {
+        state.hidDevice?.removeEventListener('inputreport', state.onReport);
+        state.hidDevice?.close();
+        if (state.keepaliveTimeout) {
+          clearInterval(state.keepaliveTimeout);
+        }
+        state.connected = false;
+        state.hidDevice = undefined;
+      }),
+    pollInputs: (poll) =>
+      set((state) => {
+        state.polling = poll;
+      }),
+    saveConfig: async () => {
+      const state = get();
+      if (state.hidDevice == null || !state.connected) {
+        return;
+      }
+      // debounce writes so we don't trash the flash on the pico
+      const now = +new Date();
+      if (now - state.lastUpdate < 1000 || state.writing) {
+        if (state.writeTimeout) {
+          clearTimeout(state.writeTimeout);
+        }
+        set((state) => {
+          state.writeTimeout = setTimeout(() => get().saveConfig(), 500);
+        });
+        return;
+      }
+      set((state) => {
+        state.lastUpdate = now;
+      });
+      const config = { ...state.config };
+      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+      config.profiles = state.mappingStatus.map((x, i) => ({
+        ...config.profiles![i],
+        mappings: Object.values(x).map((x) => x.mapping),
+      }));
+      const buffer = proto.Config.encode(config).finish();
+      const crc = new CRC32().calculate(buffer);
+      // Don't write if nothing has changed
+      if (crc == state.crc && state.lastProfile == state.currentProfile) {
+        return;
+      }
+      set((state) => {
+        state.writing = true;
+        state.crc = crc;
+        state.lastProfile = state.currentProfile;
+      });
+      const infoBuffer = proto.ConfigInfo.encode(
+        proto.ConfigInfo.create({
+          dataSize: buffer.length,
+          dataCrc: crc,
+          magic,
+          currentProfile: state.currentProfile,
+        })
+      ).finish();
+      console.log(infoBuffer.length)
+      await state.hidDevice.sendFeatureReport(
+        proto.ReportId.ReportIdConfigInfo,
+        infoBuffer as Buffer<ArrayBuffer>
+      );
+      if (buffer.length == 0) {
+        set((state) => {
+          state.writing = false;
+        });
+        return;
+      }
+      let start = 0;
+      const len = 63;
+      while (start <= buffer.length) {
+        const slice = buffer.slice(start, start + len);
+        start += len;
+        await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
+      }
+      set((state) => {
+        state.writing = false;
+      });
+    },
+    connect: async () => {
+      const devices = await navigator.hid.requestDevice({
+        filters: [{ vendorId: 0x1209, productId: 0x2882, usagePage: 0xff00 }],
+      });
+      if (devices.length) {
+        const device = devices[0];
+        if (!device.opened) {
+          await device.open();
+        }
+        device.addEventListener('inputreport', get().onReport);
+        const infoData = await device.receiveFeatureReport(proto.ReportId.ReportIdConfigInfo);
+        const info = proto.ConfigInfo.decode(
+          new Uint8Array(infoData.buffer).slice(1),
+          infoData.byteLength - 1
+        );
+        if (info.magic >>> 0 != magic) {
+          console.log('magic didnt match!');
+        }
+        let data = new Uint8Array(info.dataSize);
+        let start = 0;
+        while (start < info.dataSize) {
+          const slice = await device.receiveFeatureReport(proto.ReportId.ReportIdConfig);
+          data.set(new Uint8Array(slice.buffer).slice(1), start);
+          start += slice.byteLength - 1;
+        }
+        if (new CRC32().calculate(data) != info.dataCrc) {
+          console.log('CRC didnt match!');
+        }
+        try {
+          const config = proto.Config.decode(data, info.dataSize);
+          const timeout = setInterval(() => get().sendKeepAlive(), 10);
+          set(
+            (old) => ({
+              ...old,
+              ...InitState(config),
+              connected: true,
+              hidDevice: device,
+              crc: info.dataCrc,
+              keepaliveTimeout: timeout,
+              currentProfile: info.currentProfile,
+              lastProfile: info.currentProfile,
+            }),
+            true
+          );
+          await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
+        } catch (e) {
+          set(
+            (old) => ({
+              ...old,
+              connected: true,
+              hidDevice: device,
+              crc: 0,
+            }),
+            true
+          );
+        }
+      }
+    },
+  }))
 );
 
 navigator.hid.addEventListener('disconnect', (e) => {

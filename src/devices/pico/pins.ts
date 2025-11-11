@@ -81,8 +81,11 @@ export const TxPins = Object.fromEntries(
 export const RxPins = Object.fromEntries(
     Object.entries(UARTPins).flatMap(group => group[1].rx.map(pin => [pin, { label: "uart.rx.pin", channel: group[0], pin }]))
 )
-export const AllPins = [...Array(29).keys()].filter(x => x !== 25)
+export const AllPins = [...Array(30).keys()]
 
 export const AllPinsNamed = Object.fromEntries(
     AllPins.map(pin => [pin, { label: "pin", pin }])
+)
+export const AnalogPinsNamed = Object.fromEntries(
+    AnalogPins.map(pin => [pin, { label: "pin", pin }])
 )
