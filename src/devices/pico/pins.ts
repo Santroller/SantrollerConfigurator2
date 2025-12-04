@@ -63,8 +63,8 @@ export const UARTPins = {
         "rx": [1, 13, 17]
     },
     1: {
-        "tx": [4, 20],
-        "rx": [5, 21]
+        "tx": [4, 8, 20],
+        "rx": [5, 9, 21]
     }
 }
 export const UARTGroups = Object.fromEntries(

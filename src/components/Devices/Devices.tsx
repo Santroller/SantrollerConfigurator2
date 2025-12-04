@@ -13,6 +13,7 @@ import {
   Image,
   Input,
   InputBase,
+  Loader,
   Menu,
   Modal,
   NumberInput,
@@ -20,7 +21,6 @@ import {
   SimpleGrid,
   Space,
   Title,
-  Loader,
   UnstyledButton,
   useCombobox,
 } from '@mantine/core';
@@ -215,14 +215,14 @@ function UARTDevice({
         error={error}
         pin={device.tx}
         valid={TxPins}
-        dispatch={(pin) => dispatch({ ...device, tx: pin })}
+        dispatch={(pin) => dispatch({ ...device, tx: pin, block: parseInt(UARTGroups[pin]) })}
       />
       <PinBox
         label="uart.rx.label"
         error={error}
         pin={device.rx}
         valid={RxPins}
-        dispatch={(pin) => dispatch({ ...device, rx: pin })}
+        dispatch={(pin) => dispatch({ ...device, rx: pin, block: parseInt(UARTGroups[pin]) })}
       />
     </>
   );
@@ -650,6 +650,31 @@ function CrkdNeckDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function DebugDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.debug) {
+    throw new Error('device null!');
+  }
+  const debug = device.debug;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.debug"
+      image="covers/devices/debug.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <UARTDevice
+        device={debug.uart}
+        dispatch={(val) =>
+          updateDevice({ debug: { ...debug, uart: { ...val, baudrate: 115200 } } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
 function Max1704XDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -1010,6 +1035,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   joybusEmulation: JoybusEmulationDevice,
   peripheral: PeripheralDevice,
   ads1115: ADS1115Device,
+  debug: DebugDevice,
 };
 export function Devices() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);

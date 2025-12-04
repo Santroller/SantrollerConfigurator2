@@ -323,6 +323,7 @@ function createDefault(type: string, id: string) {
       device = { uart };
       break;
     case 'crkdNeck':
+    case 'debug':
       device = { uart };
       break;
     case 'multiplexer':
