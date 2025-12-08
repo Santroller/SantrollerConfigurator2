@@ -8,7 +8,7 @@
     "worldTourDrum": "World Tour Drums",
     "usbHost": "USB Host",
     "max1704x": "MAX1704X",
-    "multiplexer": "Multiplexer",
+    "multiplexer": "74HC Style Multiplexer",
     "psx": "PS1/PS2 Controller",
     "midiSerial": "MIDI Serial (DIN)",
     "snes": "NES/SNES Controller",
@@ -25,7 +25,13 @@
     "gpio": "GPIO",
     "gpio_analog": "GPIO (Analog)",
     "gpio_digital": "GPIO (Digital)",
-    "midi": "MIDI"
+    "midi": "MIDI",
+    "debug": "Debug",
+    "ads1115": "ADS1115 Multiplexer",
+    "accelerometer": "MPU-6050 / LIS3DH / ADXL345 Multiplexer",
+    "ws2812": "WS2812 LEDs",
+    "apa102": "APA102 LEDs",
+    "STP16CPC": "STP16CPC LED Driver"
   },
   "wii": {
     "extensions": {

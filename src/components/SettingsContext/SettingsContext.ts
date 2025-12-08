@@ -316,8 +316,17 @@ function createDefault(type: string, id: string) {
     case 'worldTourDrum':
       device = { spi };
       break;
+    case 'apa102':
+      device = { spi, count: 0, type: proto.APA102Type.Apa102Rgb };
+      break;
+    case 'stp16cpc':
+      device = { spi, oe: -1, le: -1, count: 0 };
+      break;
+    case 'ws2812':
+      device = { pin: -1, count: 0, type: proto.WS2812Type.Ws2812Rgb };
+      break;
     case 'usbHost':
-      device = { firstPin: -1 };
+      device = { firstPin: -1, dmFirst: true };
       break;
     case 'midiSerial':
       device = { uart };
