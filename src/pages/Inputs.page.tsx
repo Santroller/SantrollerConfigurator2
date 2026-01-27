@@ -1535,21 +1535,19 @@ const SingleProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'usbDevice',
   'midiChannel',
 ];
-const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignmentTypes.filter(x => !SingleProfileAssignmentTypes.includes(x));
+const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignmentTypes.filter(
+  (x) => !SingleProfileAssignmentTypes.includes(x)
+);
 function SantrollerAssignment({
   mapping,
-  type,
   profileIdx,
-  mappingIdx,
   mode,
   filterSingle,
   dispatch,
   deleteAssignment: deleteInput,
 }: {
   mapping: proto.IProfileAssignmentInfo;
-  type: proto.SubType;
   profileIdx: number;
-  mappingIdx: number;
   mode: proto.FaceButtonMappingMode;
   filterSingle: boolean;
   dispatch: (mapping: proto.IProfileAssignmentInfo) => void;
@@ -1564,8 +1562,8 @@ function SantrollerAssignment({
   const typeCombobox = useCombobox({
     onDropdownClose: () => typeCombobox.resetSelectedOption(),
   });
-  const types = filterSingle? MultiProfileAssignmentTypes : AllProfileAssignmentTypes;
-  const label = t("assignmentType."+types.filter((x) => mapping[x]));
+  const types = (filterSingle ? MultiProfileAssignmentTypes : AllProfileAssignmentTypes);
+  const label = t('assignmentType.' + types.filter((x) => mapping[x]));
   const base = useMemo(
     () => (
       <InputBase
@@ -1695,7 +1693,9 @@ function SantrollerAssignment({
                 rightSectionPointerEvents="none"
                 onClick={() => typeCombobox.toggleDropdown()}
               >
-                {t(`subType.${proto.SubType[mapping.usbType]}`) || <Input.Placeholder>Pick value</Input.Placeholder>}
+                {t(`subType.${proto.SubType[mapping.usbType]}`) || (
+                  <Input.Placeholder>Pick value</Input.Placeholder>
+                )}
               </InputBase>
             </Combobox.Target>
 
@@ -1728,7 +1728,9 @@ function SantrollerAssignment({
                 rightSectionPointerEvents="none"
                 onClick={() => typeCombobox.toggleDropdown()}
               >
-                {t(`consoleType.${proto.ConsoleType[mapping.consoleType]}`) || <Input.Placeholder>Pick value</Input.Placeholder>}
+                {t(`consoleType.${proto.ConsoleType[mapping.consoleType]}`) || (
+                  <Input.Placeholder>Pick value</Input.Placeholder>
+                )}
               </InputBase>
             </Combobox.Target>
 
@@ -1761,7 +1763,9 @@ function SantrollerAssignment({
                 rightSectionPointerEvents="none"
                 onClick={() => typeCombobox.toggleDropdown()}
               >
-                {t(`wii.extensions.${proto.WiiExtType[mapping.wiiExt]}`) || <Input.Placeholder>Pick value</Input.Placeholder>}
+                {t(`wii.extensions.${proto.WiiExtType[mapping.wiiExt]}`) || (
+                  <Input.Placeholder>Pick value</Input.Placeholder>
+                )}
               </InputBase>
             </Combobox.Target>
 
@@ -1794,7 +1798,9 @@ function SantrollerAssignment({
                 rightSectionPointerEvents="none"
                 onClick={() => typeCombobox.toggleDropdown()}
               >
-                {t(`psx.devices.${proto.PS2ControllerType[mapping.ps2Cnt]}`) || <Input.Placeholder>Pick value</Input.Placeholder>}
+                {t(`psx.devices.${proto.PS2ControllerType[mapping.ps2Cnt]}`) || (
+                  <Input.Placeholder>Pick value</Input.Placeholder>
+                )}
               </InputBase>
             </Combobox.Target>
 
@@ -1808,6 +1814,12 @@ function SantrollerAssignment({
               </Combobox.Options>
             </Combobox.Dropdown>
           </Combobox>
+        )}
+        {mapping.usbDevice && (
+          <>
+            <TextInput label="Vendor ID" leftSection="0x" accept='\w' value={mapping.usbDevice.vid.toString(16)} onChange={(event) => dispatch({ ...mapping, usbDevice: {...mapping.usbDevice!, vid: parseInt((event.currentTarget.value || "0").substring(0,4), 16) ?? 0}})} />
+            <TextInput label="Product ID" leftSection="0x" accept='\w' value={mapping.usbDevice.pid.toString(16)} onChange={(event) => dispatch({ ...mapping, usbDevice: {...mapping.usbDevice!, pid: parseInt((event.currentTarget.value || "0").substring(0,4), 16) ?? 0}})} />
+          </>
         )}
         {mapping.input && (
           <SantrollerInput
@@ -1832,30 +1844,17 @@ function SantrollerAssignment({
 
 function SantrollerAssignmentList({
   mapping,
-  type,
   profileIdx,
-  mappingIdx,
   mode,
   dispatch,
   deleteAssignment: deleteInput,
 }: {
   mapping: proto.IProfileAssignment;
-  type: proto.SubType;
   profileIdx: number;
-  mappingIdx: number;
   mode: proto.FaceButtonMappingMode;
   dispatch: (mapping: proto.IProfileAssignment) => void;
   deleteAssignment: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
-    id: mappingIdx,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Translate.toString(transform),
-    transition: isSorting ? transition : '',
-    alignSelf: 'stretch',
-  };
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
@@ -1863,7 +1862,7 @@ function SantrollerAssignmentList({
     onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
   });
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <>
       <Modal opened={opened} onClose={close} title={t('delete_assignment_dialog.title')} centered>
         {t('delete_assignment_dialog.desc')}
         <Space h="md" />
@@ -1883,20 +1882,16 @@ function SantrollerAssignmentList({
         </Flex>
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder w="400px" h="100%">
-        <Card.Section h="10px">
-          <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
-            <IconGripVertical size={18} stroke={1.5} />
-          </div>
-        </Card.Section>
-        <Space h="md" />
         {mapping.assignments?.map((assignment, assignmentIdx) => (
           <SantrollerAssignment
             key={assignmentIdx}
             mapping={assignment}
-            type={type}
-            filterSingle={mapping.assignments?.some(x => x != assignment && SingleProfileAssignmentTypes.some(y => x[y])) ?? false}
+            filterSingle={
+              mapping.assignments?.some(
+                (x) => x != assignment && SingleProfileAssignmentTypes.some((y) => x[y])
+              ) ?? false
+            }
             profileIdx={profileIdx}
-            mappingIdx={assignmentIdx}
             mode={mode}
             dispatch={(val) =>
               dispatch({
@@ -1931,7 +1926,7 @@ function SantrollerAssignmentList({
           {t('assignments.match')}
         </Button>
       </Card>
-    </div>
+    </>
   );
 }
 
@@ -2098,8 +2093,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Title order={3}>{t('assignments.title')}</Title>
       <Input.Description c="dimmed">
         Assigning profiles allows Santroller to pick the right profile depending on what you are
-        doing. For example, you can assign one profile if a guitar is plugged into an adapter, and a
-        different profile for a gamepad. All matchers need to match for a profile to be used.
+        doing. Each profile can have multiple assignments, and then the profile is assigned of all
+        the matches in a profile match.
       </Input.Description>
       <Input.Description c="dimmed">
         The catch all matcher is special in that it will be used in any case where no profiles have
@@ -2132,9 +2127,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               <SantrollerAssignmentList
                 key={mappingIdx}
                 mapping={mapping}
-                type={profile.deviceToEmulate}
                 profileIdx={profileIdx}
-                mappingIdx={mappingIdx}
                 mode={profile.faceButtonMappingMode}
                 dispatch={(val) =>
                   updateProfile(

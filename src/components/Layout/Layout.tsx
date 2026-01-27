@@ -121,16 +121,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   leftSection={<IconPlus size={16} stroke={1.5} />}
                 ></NavLink>
               </NavLink>
-              <NavLink
-                component={RouterNavLink}
-                to="/assign"
-                onClick={() => {
-                  pollInputs(false);
-                  nav('/assign');
-                }}
-                label="Profile Assign"
-                leftSection={<IconSettings size={16} stroke={1.5} />}
-              />
             </>
           )}
         </AppShell.Navbar>
