@@ -122,12 +122,20 @@
       "WiiButtonClassicHome": "Classic Controller - Home"
     }
   },
+  "pick_value": "Pick value",
   "disconnected": "Disconnected",
   "connected": "Connected",
   "connected_with_type": "Connected ({{type}})",
   "invalid_pin": "None",
   "invalid_pin_message": "No pin selected",
   "pin": "GP{{pin}}",
+  "pin_detect": "Detect Pin",
+  "pin_use_current": "Use current value",
+  "trigger": {
+    "min": "Trigger Min",
+    "max": "Trigger Max",
+    "trigger": "Trigger"
+  },
   "mapping_mode": {
     "label": "Mapping Mode",
     "per_input": "Per Input",

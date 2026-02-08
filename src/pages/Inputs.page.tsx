@@ -265,7 +265,7 @@ function OutputBox({
         rightSectionPointerEvents="none"
         onClick={() => outputCombobox.toggleDropdown()}
       >
-        {label || <Input.Placeholder>Pick value</Input.Placeholder>}
+        {label || <Input.Placeholder>{t("pick_value")}</Input.Placeholder>}
       </InputBase>
     ),
     [label]
@@ -657,11 +657,15 @@ function SantrollerInput({
   input,
   axis,
   button,
+  mappingIdx,
+  activationIdx,
   dispatch,
 }: {
   input: proto.IInput;
   axis: boolean;
   button: boolean;
+  mappingIdx?: number;
+  activationIdx?: number;
   dispatch: (input: proto.IInput) => void;
 }) {
   let deviceId = -1;
@@ -680,8 +684,12 @@ function SantrollerInput({
   }
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
-  const deviceStatus = useConfigStore.getState().deviceStatus
+  const deviceStatus = useConfigStore.getState().deviceStatus;
+  const detectPins = useConfigStore.getState().detectPins;
+  const detected = useConfigStore.getState().detected;
+  const detectedMapping = useConfigStore.getState().detectedMapping;
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
+  const detecting = useConfigStore((state) => state.detecting);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -720,6 +728,12 @@ function SantrollerInput({
   }
   if (device) {
     deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
+  }
+  if (detectedMapping == mappingIdx && detected != -1 && input.gpio) {
+    dispatch({ gpio: { ...input.gpio!, pin: detected } });
+  }
+  if (detectedMapping == activationIdx && detected != -1 && input.gpio) {
+    dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
   return (
     <>
@@ -811,7 +825,7 @@ function SantrollerInput({
               rightSectionPointerEvents="none"
               onClick={() => deviceCombobox.toggleDropdown()}
             >
-              {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
+              {deviceValue || <Input.Placeholder>{t("pick_value")}</Input.Placeholder>}
             </InputBase>
           </Combobox.Target>
 
@@ -839,7 +853,7 @@ function SantrollerInput({
           rightSectionPointerEvents="none"
           onClick={() => deviceCombobox.toggleDropdown()}
         >
-          {deviceValue || <Input.Placeholder>Pick value</Input.Placeholder>}
+          {deviceValue || <Input.Placeholder>{t("pick_value")}</Input.Placeholder>}
         </InputBase>
       )}
       <Space h="md" />
@@ -989,7 +1003,7 @@ function SantrollerInput({
             onClick={() => inputCombobox.toggleDropdown()}
           >
             {proto.CrkdNeckButtonType[input.crkd?.button ?? -1] || (
-              <Input.Placeholder>Pick value</Input.Placeholder>
+              <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
             )}
           </InputBase>
         ))}
@@ -1041,7 +1055,7 @@ function SantrollerInput({
             onClick={() => inputCombobox.toggleDropdown()}
           >
             {proto.Gh5NeckButtonType[input.gh5Neck?.button ?? -1] || (
-              <Input.Placeholder>Pick value</Input.Placeholder>
+              <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
             )}
           </InputBase>
         ))}
@@ -1053,6 +1067,20 @@ function SantrollerInput({
             pin={input.gpio.pin}
             dispatch={(pin) => dispatch({ gpio: { ...input.gpio!, pin } })}
           />
+          <Button
+            onClick={() => {
+              detectPins(
+                activationIdx,
+                mappingIdx,
+                input.gpio!.analog
+                  ? proto.PinDetectType.DetectAnalog
+                  : proto.PinDetectType.DetectDigital
+              );
+            }}
+            disabled={detecting}
+          >
+            {t('pin_detect')}
+          </Button>
           {(pinModeCombobox.dropdownOpened && (
             <Combobox
               store={pinModeCombobox}
@@ -1078,7 +1106,7 @@ function SantrollerInput({
                   onClick={() => pinModeCombobox.toggleDropdown()}
                 >
                   {proto.PinMode[input.gpio.pinMode] || (
-                    <Input.Placeholder>Pick value</Input.Placeholder>
+                    <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                   )}
                 </InputBase>
               </Combobox.Target>
@@ -1104,7 +1132,7 @@ function SantrollerInput({
               onClick={() => pinModeCombobox.toggleDropdown()}
             >
               {proto.PinMode[input.gpio.pinMode] || (
-                <Input.Placeholder>Pick value</Input.Placeholder>
+                <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
               )}
             </InputBase>
           )}
@@ -1215,7 +1243,7 @@ function SantrollerInput({
             onClick={() => inputCombobox.toggleDropdown()}
           >
             {proto.AccelerometerInputType[input.accelerometer?.type ?? -1] || (
-              <Input.Placeholder>Pick value</Input.Placeholder>
+              <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
             )}
           </InputBase>
         ))}
@@ -1305,7 +1333,11 @@ function SantrollerMapping({
   const stick = label?.includes('Stick');
   const trigger = label?.includes('Trigger');
   const whammy = label?.includes('Whammy');
-  const analogInput = mapping.input.gpio?.analog || mapping.input.ads1115 || mapping.input.wiiAxis || mapping.input.accelerometer;
+  const analogInput =
+    mapping.input.gpio?.analog ||
+    mapping.input.ads1115 ||
+    mapping.input.wiiAxis ||
+    mapping.input.accelerometer;
   let deviceValue = '';
   if (mapping.input.gpio && mapping.input.gpio.analog) {
     deviceValue = t(`devices.gpio_analog`);
@@ -1368,6 +1400,7 @@ function SantrollerMapping({
           button={!!button}
           input={mapping.input}
           dispatch={(input) => dispatch({ ...mapping, input })}
+          mappingIdx={mappingIdx}
         ></SantrollerInput>
         <Space h="md" />
         {button && analogInput && (
@@ -1397,7 +1430,7 @@ function SantrollerMapping({
                     onClick={() => triggerModeCombobox.toggleDropdown()}
                   >
                     {proto.AnalogToDigitalTriggerType[mapping.trigger!] || (
-                      <Input.Placeholder>Pick value</Input.Placeholder>
+                      <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                     )}
                   </InputBase>
                 </Combobox.Target>
@@ -1423,7 +1456,7 @@ function SantrollerMapping({
                 onClick={() => triggerModeCombobox.toggleDropdown()}
               >
                 {proto.AnalogToDigitalTriggerType[mapping.trigger!] || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
+                  <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                 )}
               </InputBase>
             )}
@@ -1449,13 +1482,58 @@ function SantrollerMapping({
                 raw
               ></StateSlider>
             )}
-            <Text size="sm">Trigger</Text>
+            {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
+              <StateSlider
+                mappingIdx={mappingIdx}
+                profileIdx={profileIdx}
+                center={32767}
+                min={mapping.triggerValue!}
+                max={mapping.maxTriggerValue!}
+                deadzone={mapping.deadzone!}
+                raw
+              ></StateSlider>
+            )}
+            {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && <Text size="sm">{t("trigger.min")}</Text> || <Text size="sm">{t("trigger.trigger")}</Text>}
             <Slider
               value={mapping.triggerValue!}
               min={0}
               max={65535}
               onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
             />
+            <Button
+              onClick={() => {
+                dispatch({
+                  ...mapping,
+                  triggerValue:
+                    useConfigStore.getState().mappingStatus[profileIdx][mappingIdx].stateRaw,
+                });
+              }}
+            >
+              {t('pin_use_current')}
+            </Button>
+            {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
+              <>
+                <Text size="sm">{t("trigger.max")}</Text>
+                <Slider
+                  value={mapping.maxTriggerValue!}
+                  min={0}
+                  max={65535}
+                  onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
+                />
+
+                <Button
+                  onClick={() => {
+                    dispatch({
+                      ...mapping,
+                      maxTriggerValue:
+                        useConfigStore.getState().mappingStatus[profileIdx][mappingIdx].stateRaw,
+                    });
+                  }}
+                >
+                  {t('pin_use_current')}
+                </Button>
+              </>
+            )}
           </>
         )}
         {axis && !analogInput && (
@@ -1512,6 +1590,18 @@ function SantrollerMapping({
                             max={65535}
                             onChange={(val) => dispatch({ ...mapping, center: val })}
                           />
+                          <Button
+                            onClick={() => {
+                              dispatch({
+                                ...mapping,
+                                center:
+                                  useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                    .stateRaw,
+                              });
+                            }}
+                          >
+                            {t('pin_use_current')}
+                          </Button>
                           <Space h="md" />
                         </>
                       )}
@@ -1522,6 +1612,17 @@ function SantrollerMapping({
                         max={65535}
                         onChange={(val) => dispatch({ ...mapping, min: val })}
                       />
+                      <Button
+                        onClick={() => {
+                          dispatch({
+                            ...mapping,
+                            min: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                              .stateRaw,
+                          });
+                        }}
+                      >
+                        {t('pin_use_current')}
+                      </Button>
                       <Space h="md" />
                       <Text size="sm">Max</Text>
                       <Slider
@@ -1530,6 +1631,17 @@ function SantrollerMapping({
                         max={65535}
                         onChange={(val) => dispatch({ ...mapping, max: val })}
                       />
+                      <Button
+                        onClick={() => {
+                          dispatch({
+                            ...mapping,
+                            max: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                              .stateRaw,
+                          });
+                        }}
+                      >
+                        {t('pin_use_current')}
+                      </Button>
                       <Space h="md" />
                       <Text size="sm">Deadzone</Text>
                       <Slider
@@ -1585,6 +1697,7 @@ function ActivationTrigger({
   activationIdx: number;
   dispatch: (input: proto.IInputActivationTrigger) => void;
 }) {
+  const { t } = useTranslation();
   const triggerModeCombobox = useCombobox({
     onDropdownClose: () => triggerModeCombobox.resetSelectedOption(),
   });
@@ -1615,7 +1728,7 @@ function ActivationTrigger({
               onClick={() => triggerModeCombobox.toggleDropdown()}
             >
               {proto.AnalogToDigitalTriggerType[input.trigger!] || (
-                <Input.Placeholder>Pick value</Input.Placeholder>
+                <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
               )}
             </InputBase>
           </Combobox.Target>
@@ -1641,7 +1754,7 @@ function ActivationTrigger({
           onClick={() => triggerModeCombobox.toggleDropdown()}
         >
           {proto.AnalogToDigitalTriggerType[input.trigger!] || (
-            <Input.Placeholder>Pick value</Input.Placeholder>
+            <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
           )}
         </InputBase>
       )}
@@ -1681,20 +1794,48 @@ function ActivationTrigger({
           activationBased
         ></StateSlider>
       )}
-      <Text size="sm">Trigger</Text>
+      {input.trigger == proto.AnalogToDigitalTriggerType.Range && <Text size="sm">{t("trigger.min")}</Text> || <Text size="sm">{t("trigger.trigger")}</Text>}
+
       <Slider
         value={input.triggerValue!}
         min={0}
         max={65535}
         onChange={(val) => dispatch({ ...input, triggerValue: val })}
       />
+
+      <Button
+        onClick={() => {
+          dispatch({
+            ...input,
+            triggerValue:
+              useConfigStore.getState().activationStatus[profileIdx][activationIdx].stateRaw,
+          });
+        }}
+      >
+        {t('pin_use_current')}
+      </Button>
       {input.trigger == proto.AnalogToDigitalTriggerType.Range && (
-        <Slider
-          value={input.maxTriggerValue!}
-          min={0}
-          max={65535}
-          onChange={(val) => dispatch({ ...input, maxTriggerValue: val })}
-        />
+        <>
+          <Text size="sm">{t("trigger.max")}</Text>
+          <Slider
+            value={input.maxTriggerValue!}
+            min={0}
+            max={65535}
+            onChange={(val) => dispatch({ ...input, maxTriggerValue: val })}
+          />
+
+          <Button
+            onClick={() => {
+              dispatch({
+                ...input,
+                maxTriggerValue:
+                  useConfigStore.getState().activationStatus[profileIdx][activationIdx].stateRaw,
+              });
+            }}
+          >
+            {t('pin_use_current')}
+          </Button>
+        </>
       )}
     </>
   );
@@ -1740,7 +1881,7 @@ function SantrollerAssignment({
         rightSectionPointerEvents="none"
         onClick={() => assignmentTypeCombobox.toggleDropdown()}
       >
-        {label || <Input.Placeholder>Pick value</Input.Placeholder>}
+        {label || <Input.Placeholder>{t("pick_value")}</Input.Placeholder>}
       </InputBase>
     ),
     [label]
@@ -1867,7 +2008,7 @@ function SantrollerAssignment({
                 onClick={() => typeCombobox.toggleDropdown()}
               >
                 {t(`subType.${proto.SubType[mapping.usbType]}`) || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
+                  <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                 )}
               </InputBase>
             </Combobox.Target>
@@ -1902,7 +2043,7 @@ function SantrollerAssignment({
                 onClick={() => typeCombobox.toggleDropdown()}
               >
                 {t(`consoleType.${proto.ConsoleType[mapping.consoleType]}`) || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
+                  <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                 )}
               </InputBase>
             </Combobox.Target>
@@ -1937,7 +2078,7 @@ function SantrollerAssignment({
                 onClick={() => typeCombobox.toggleDropdown()}
               >
                 {t(`wii.extensions.${proto.WiiExtType[mapping.wiiExt]}`) || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
+                  <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                 )}
               </InputBase>
             </Combobox.Target>
@@ -1974,7 +2115,7 @@ function SantrollerAssignment({
                 onClick={() => typeCombobox.toggleDropdown()}
               >
                 {t(`psx.devices.${proto.PS2ControllerType[mapping.ps2Cnt]}`) || (
-                  <Input.Placeholder>Pick value</Input.Placeholder>
+                  <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
                 )}
               </InputBase>
             </Combobox.Target>
@@ -2028,6 +2169,7 @@ function SantrollerAssignment({
             button={true}
             input={mapping.input.input}
             dispatch={(input) => dispatch({ ...mapping, input: { input } })}
+            activationIdx={activationIdx}
           ></SantrollerInput>
         )}
         {mapping.inputAnyTime && (
@@ -2036,6 +2178,7 @@ function SantrollerAssignment({
               axis={false}
               button={true}
               input={mapping.inputAnyTime.input}
+              activationIdx={activationIdx}
               dispatch={(input) => dispatch({ ...mapping, inputAnyTime: { input } })}
             ></SantrollerInput>
             {analogInput && (
@@ -2308,7 +2451,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           onClick={() => combobox.toggleDropdown()}
         >
           {proto.SubType[profile.deviceToEmulate] || (
-            <Input.Placeholder>Pick value</Input.Placeholder>
+            <Input.Placeholder>{t("pick_value")}</Input.Placeholder>
           )}
         </InputBase>
       )}
@@ -2476,8 +2619,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
 export function InputsPage() {
   const activeProfile = useConfigStore((state) => state.currentProfile);
   const profiles = useConfigStore((state) => state.config.profiles!);
-  const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
-  const addProfile = useConfigStore((state) => state.addProfile);
   const pollInputs = useConfigStore((state) => state.pollInputs);
 
   const [loaded, setLoaded] = useState(false);
