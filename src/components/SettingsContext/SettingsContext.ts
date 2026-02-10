@@ -54,6 +54,7 @@ export class DeviceStatus {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
       .join(', ');
+    label = `${status.connected?"Connected":"Disconnected"}, ${label}`
     switch (status.type) {
       case 'peripheral':
         return `${label}, 0x${status.device.peripheral?.address.toString(16)}`;
@@ -64,6 +65,8 @@ export class DeviceStatus {
     switch (status.type) {
       case 'wii':
         return [status.device.wii?.i2c.sda, status.device.wii?.i2c.scl];
+      case 'ads1115':
+        return [status.device.ads1115?.i2c.sda, status.device.ads1115?.i2c.scl];
       case 'accelerometer':
         return [status.device.accelerometer?.i2c.sda, status.device.accelerometer?.i2c.scl];
       case 'bhDrum':

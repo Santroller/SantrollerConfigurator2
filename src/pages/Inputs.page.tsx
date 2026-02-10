@@ -54,6 +54,7 @@ import {
   Slider,
   Space,
   Switch,
+  Table,
   Tabs,
   Text,
   TextInput,
@@ -172,8 +173,8 @@ function StateBox({
       <Text size="sm">Value</Text>
       <Badge color={state > 0 ? 'blue' : 'gray'}>
         {state > 0
-          ? t(activationBased ? 'active' : 'pressed')
-          : t(activationBased ? 'inactive' : 'released')}
+          ? t(activationBased ? 'state.active' : 'state.pressed')
+          : t(activationBased ? 'state.inactive' : 'state.released')}
       </Badge>
       <Space h="md" />
     </>
@@ -221,8 +222,8 @@ function StateSlider({
             max={max}
             deadzone={deadzone}
             activationBased={activationBased}
+            trigger={trigger}
             raw
-            trigger
           ></StateSection>
         </Progress.Root>
         <Space h="md" />
@@ -275,7 +276,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           mode={mode}
           e={proto.GamepadAxisType}
           e2={proto.GamepadButtonType}
@@ -298,7 +299,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.GuitarHeroGuitarAxisType}
           e2={proto.GuitarHeroGuitarButtonType}
           val={mapping.ghAxis!}
@@ -320,7 +321,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.RockBandGuitarAxisType}
           e2={proto.RockBandGuitarButtonType}
           val={mapping.rbAxis!}
@@ -343,7 +344,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.GuitarHeroDrumsAxisType}
           e2={proto.GuitarHeroDrumsButtonType}
           val={mapping.ghDrumAxis!}
@@ -366,7 +367,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.RockBandDrumsAxisType}
           e2={proto.RockBandDrumsButtonType}
           val={mapping.rbDrumAxis!}
@@ -389,7 +390,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.GuitarHeroLiveGuitarAxisType}
           e2={proto.GuitarHeroLiveGuitarButtonType}
           val={mapping.ghlAxis!}
@@ -412,7 +413,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.DJHTurntableAxisType}
           e2={proto.DJHTurntableButtonType}
           val={mapping.djhAxis!}
@@ -436,7 +437,7 @@ function OutputBox({
       return (
         <DropdownOutputBox
           label="outputs"
-          title="Output"
+          title="output"
           e={proto.RockBandGuitarAxisType}
           e2={proto.RockBandGuitarButtonType}
           val={mapping.rbAxis!}
@@ -671,18 +672,12 @@ function SantrollerInput({
   dispatch: (input: proto.IInput) => void;
 }) {
   let deviceId = -1;
-  if (input.mpr121) {
-    deviceId = input.mpr121.deviceid;
-  } else if (input.wiiAxis) {
-    deviceId = input.wiiAxis.deviceid;
-  } else if (input.crkd) {
-    deviceId = input.crkd.deviceid;
-  } else if (input.wiiButton) {
-    deviceId = input.wiiButton.deviceid;
-  } else if (input.gh5Neck) {
-    deviceId = input.gh5Neck.deviceid;
-  } else if (input.accelerometer) {
-    deviceId = input.accelerometer.deviceid;
+  for (const key of Object.keys(input)) {
+    const key2 = key as keyof typeof input;
+    if (key2 != 'fixed' && key2 != 'gpio' && key2 != 'shortcut' && input[key2]!.deviceid) {
+      deviceId = input[key2]!.deviceid;
+      break;
+    }
   }
   const { t } = useTranslation();
   const deviceStatus = useConfigStore.getState().deviceStatus;
@@ -697,14 +692,8 @@ function SantrollerInput({
   const inputCombobox = useCombobox({
     onDropdownClose: () => inputCombobox.resetSelectedOption(),
   });
-  const outputCombobox = useCombobox({
-    onDropdownClose: () => outputCombobox.resetSelectedOption(),
-  });
   const pinModeCombobox = useCombobox({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
-  });
-  const triggerModeCombobox = useCombobox({
-    onDropdownClose: () => triggerModeCombobox.resetSelectedOption(),
   });
 
   let deviceValue = '';
@@ -712,16 +701,13 @@ function SantrollerInput({
     deviceValue = t(`devices.gpio_analog`);
   } else if (input.gpio) {
     deviceValue = t(`devices.gpio_digital`);
-  } else if (input.ads1115) {
-    deviceValue = t(`devices.ads1115`);
   } else if (input.mouseAxis) {
     deviceValue = t(`devices.mouseAxis`);
   } else if (input.mouseButton) {
     deviceValue = t(`devices.mouseButton`);
   } else if (input.key) {
     deviceValue = t(`devices.key`);
-  }
-  if (device) {
+  } else if (device) {
     deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
   }
   if (detectedMapping == mappingIdx && detected != -1 && input.gpio) {
@@ -773,24 +759,20 @@ function SantrollerInput({
                   });
                   break;
                 case 'crkdNeck':
-                  if (button) {
-                    dispatch({
-                      crkd: {
-                        button: proto.CrkdNeckButtonType.CrkdGreen,
-                        deviceid: parseInt(val),
-                      },
-                    });
-                  }
+                  dispatch({
+                    crkd: {
+                      button: proto.CrkdNeckButtonType.CrkdGreen,
+                      deviceid: parseInt(val),
+                    },
+                  });
                   break;
                 case 'gh5Neck':
-                  if (button) {
-                    dispatch({
-                      gh5Neck: {
-                        button: proto.Gh5NeckButtonType.Gh5Green,
-                        deviceid: parseInt(val),
-                      },
-                    });
-                  }
+                  dispatch({
+                    gh5Neck: {
+                      button: proto.Gh5NeckButtonType.Gh5Green,
+                      deviceid: parseInt(val),
+                    },
+                  });
                   break;
               }
               return;
@@ -1017,38 +999,8 @@ function SantrollerMapping({
     transition: isSorting ? transition : '',
     alignSelf: 'stretch',
   };
-  let deviceId = -1;
-  if (mapping.input.mpr121) {
-    deviceId = mapping.input.mpr121.deviceid;
-  } else if (mapping.input.wiiAxis) {
-    deviceId = mapping.input.wiiAxis.deviceid;
-  } else if (mapping.input.crkd) {
-    deviceId = mapping.input.crkd.deviceid;
-  } else if (mapping.input.wiiButton) {
-    deviceId = mapping.input.wiiButton.deviceid;
-  } else if (mapping.input.gh5Neck) {
-    deviceId = mapping.input.gh5Neck.deviceid;
-  } else if (mapping.input.accelerometer) {
-    deviceId = mapping.input.accelerometer.deviceid;
-  }
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
-  const device = useConfigStore((state) => state.deviceStatus[deviceId]);
-  const deviceCombobox = useCombobox({
-    onDropdownClose: () => deviceCombobox.resetSelectedOption(),
-  });
-  const inputCombobox = useCombobox({
-    onDropdownClose: () => inputCombobox.resetSelectedOption(),
-  });
-  const outputCombobox = useCombobox({
-    onDropdownClose: () => outputCombobox.resetSelectedOption(),
-  });
-  const pinModeCombobox = useCombobox({
-    onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
-  });
-  const triggerModeCombobox = useCombobox({
-    onDropdownClose: () => triggerModeCombobox.resetSelectedOption(),
-  });
   const label =
     proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
     proto.GamepadAxisType[mapping.gamepadAxis ?? -1] ||
@@ -1060,6 +1012,7 @@ function SantrollerMapping({
     proto.ProGuitarAxisType[mapping.proAxis ?? -1] ||
     proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
     proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
+
   let fixedLabel = FixLabel(mode, label);
   let img = `Icons/Input/${fixedLabel}.png`;
   const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
@@ -1119,7 +1072,9 @@ function SantrollerMapping({
           axis={!!axis}
           button={!!button}
           input={mapping.input}
-          dispatch={(input) => dispatch({ ...mapping, input })}
+          dispatch={(input) => {
+            dispatch({ ...mapping, input });
+          }}
           mappingIdx={mappingIdx}
         ></SantrollerInput>
         <Space h="md" />
@@ -1375,9 +1330,6 @@ function ActivationTrigger({
   dispatch: (input: proto.IInputActivationTrigger) => void;
 }) {
   const { t } = useTranslation();
-  const triggerModeCombobox = useCombobox({
-    onDropdownClose: () => triggerModeCombobox.resetSelectedOption(),
-  });
   return (
     <Accordion>
       <Accordion.Item value="main">
@@ -1501,12 +1453,6 @@ function SantrollerAssignment({
   const assignmentTypeCombobox = useCombobox({
     onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
   });
-  const typeCombobox = useCombobox({
-    onDropdownClose: () => typeCombobox.resetSelectedOption(),
-  });
-  const triggerModeCombobox = useCombobox({
-    onDropdownClose: () => triggerModeCombobox.resetSelectedOption(),
-  });
   const types = filterSingle ? MultiProfileAssignmentTypes : AllProfileAssignmentTypes;
   const label = t('assignmentType.' + types.filter((x) => mapping[x]));
   const base = useMemo(
@@ -1562,7 +1508,7 @@ function SantrollerAssignment({
           )}
         </Card.Section>
         <Space h="md" />
-        {<StateBox mappingIdx={activationIdx} profileIdx={profileIdx} activationBased></StateBox>}
+        <StateBox mappingIdx={activationIdx} profileIdx={profileIdx} activationBased></StateBox>
         <Combobox
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
@@ -1629,146 +1575,40 @@ function SantrollerAssignment({
           </Combobox.Dropdown>
         </Combobox>
         {mapping.usbType && (
-          <Combobox
-            store={typeCombobox}
-            onOptionSubmit={(val) => {
-              dispatch({ usbType: proto.SubType[val as keyof typeof proto.SubType] });
-              typeCombobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                label="Usb Controller Type"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => typeCombobox.toggleDropdown()}
-              >
-                {t(`subType.${proto.SubType[mapping.usbType]}`) || (
-                  <Input.Placeholder>{t('pick_value')}</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.SubType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {t(`subType.${item}`)}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
+          <DropdownBox
+            title="activation.usbType"
+            e={proto.SubType}
+            val={mapping.usbType}
+            label="subType"
+            dispatch={(usbType) => dispatch({ usbType })}
+          ></DropdownBox>
         )}
         {mapping.consoleType && (
-          <Combobox
-            store={typeCombobox}
-            onOptionSubmit={(val) => {
-              dispatch({ consoleType: proto.ConsoleType[val as keyof typeof proto.ConsoleType] });
-              typeCombobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                label="Plugged in device type"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => typeCombobox.toggleDropdown()}
-              >
-                {t(`consoleType.${proto.ConsoleType[mapping.consoleType]}`) || (
-                  <Input.Placeholder>{t('pick_value')}</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.ConsoleType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {t(`consoleType.${item}`)}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
+          <DropdownBox
+            title="activation.consoleType"
+            e={proto.ConsoleType}
+            val={mapping.consoleType}
+            label="consoleType"
+            dispatch={(consoleType) => dispatch({ consoleType })}
+          ></DropdownBox>
         )}
         {mapping.wiiExt && (
-          <Combobox
-            store={typeCombobox}
-            onOptionSubmit={(val) => {
-              dispatch({ wiiExt: proto.WiiExtType[val as keyof typeof proto.WiiExtType] });
-              typeCombobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                label="Wii extension type"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => typeCombobox.toggleDropdown()}
-              >
-                {t(`wii.extensions.${proto.WiiExtType[mapping.wiiExt]}`) || (
-                  <Input.Placeholder>{t('pick_value')}</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.WiiExtType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {t(`wii.extensions.${item}`)}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
+          <DropdownBox
+            title="activation.wiiExt"
+            e={proto.WiiExtType}
+            val={mapping.wiiExt}
+            label="wiiExt"
+            dispatch={(wiiExt) => dispatch({ wiiExt })}
+          ></DropdownBox>
         )}
         {mapping.ps2Cnt && (
-          <Combobox
-            store={typeCombobox}
-            onOptionSubmit={(val) => {
-              dispatch({
-                ps2Cnt: proto.PS2ControllerType[val as keyof typeof proto.PS2ControllerType],
-              });
-              typeCombobox.closeDropdown();
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                label="PS2 Controller Type"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => typeCombobox.toggleDropdown()}
-              >
-                {t(`psx.devices.${proto.PS2ControllerType[mapping.ps2Cnt]}`) || (
-                  <Input.Placeholder>{t('pick_value')}</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.keys(proto.PS2ControllerType).map((item) => (
-                  <Combobox.Option value={item} key={item}>
-                    {t(`psx.devices.${item}`)}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
+          <DropdownBox
+            title="activation.ps2Cnt"
+            e={proto.PS2ControllerType}
+            val={mapping.ps2Cnt}
+            label="ps2Cnt"
+            dispatch={(ps2Cnt) => dispatch({ ps2Cnt })}
+          ></DropdownBox>
         )}
         {mapping.usbDevice && (
           <>
@@ -1898,6 +1738,19 @@ function SantrollerAssignmentList({
           </ActionIcon>
           <Space h="xl" />
         </Card.Section>
+        <Group>
+          <Button
+            onClick={() =>
+              dispatch({
+                ...mapping,
+                assignments: [...(mapping.assignments ?? []), { input: { input: {} } }],
+              })
+            }
+          >
+            {t('assignments.match')}
+          </Button>
+        </Group>
+        <Space h="md" />
         {mapping.assignments?.map((assignment, assignmentIdx) => (
           <SantrollerAssignment
             key={assignmentIdx}
@@ -1932,16 +1785,6 @@ function SantrollerAssignmentList({
             }
           />
         ))}
-        <Button
-          onClick={() =>
-            dispatch({
-              ...mapping,
-              assignments: [...(mapping.assignments ?? []), { input: { input: {} } }],
-            })
-          }
-        >
-          {t('assignments.match')}
-        </Button>
       </Card>
     </>
   );
@@ -2001,9 +1844,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-  });
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) {
@@ -2026,6 +1866,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           <Group align="flex-end">
             <Button
               onClick={() => {
+                loadDefaults(undefined);
                 close();
               }}
               color="red"
@@ -2085,63 +1926,31 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </Flex>
       </Modal>
       <Space h="md" />
-      <Title order={2}>Settings</Title>
+      <Group>
+        <Title order={2}>Settings</Title>
+        <ActionIcon color="red">
+          <IconTrash
+            style={{ width: '70%', height: '70%' }}
+            onClick={() => deleteProfile(profileIdx)}
+          />
+        </ActionIcon>
+      </Group>
+      <Space h="md" />
       <TextInput
         value={profile.name}
         onChange={(e) => updateProfile({ ...profile, name: e.currentTarget.value }, profileIdx)}
         label="Profile name"
       />
-      <Button variant="filled" color="red" onClick={() => deleteProfile(profileIdx)}>
-        Delete profile
-      </Button>
-      {(combobox.dropdownOpened && (
-        <Combobox
-          store={combobox}
-          onOptionSubmit={(val) => {
-            updateProfile(
-              { ...profile, deviceToEmulate: proto.SubType[val as keyof typeof proto.SubType] },
-              profileIdx
-            );
-            combobox.closeDropdown();
-          }}
-        >
-          <Combobox.Target>
-            <InputBase
-              label={t('device_to_emulate')}
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => combobox.toggleDropdown()}
-            >
-              {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)}
-            </InputBase>
-          </Combobox.Target>
+      <Space h="md" />
+      <Space h="md" />
 
-          <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-            <Combobox.Options>
-              {Object.keys(proto.SubType).map((item) => (
-                <Combobox.Option value={item} key={item}>
-                  {t(`subType.${item}`)}
-                </Combobox.Option>
-              ))}
-            </Combobox.Options>
-          </Combobox.Dropdown>
-        </Combobox>
-      )) || (
-        <InputBase
-          label={t('device_to_emulate')}
-          component="button"
-          type="button"
-          pointer
-          rightSection={<Combobox.Chevron />}
-          rightSectionPointerEvents="none"
-          onClick={() => combobox.toggleDropdown()}
-        >
-          {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)}
-        </InputBase>
-      )}
+      <DropdownBox
+        title="device_to_emulate"
+        e={proto.SubType}
+        val={profile.deviceToEmulate!}
+        label="subType"
+        dispatch={(deviceToEmulate) => updateProfile({ ...profile, deviceToEmulate }, profileIdx)}
+      ></DropdownBox>
 
       {profile.deviceToEmulate == proto.SubType.Gamepad && (
         <>
@@ -2156,155 +1965,192 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       )}
       <Space h="md" />
       <Title order={3}>{t('assignments.title')}</Title>
+      <Space h="md" />
       <Input.Description c="dimmed">
         Assigning profiles allows Santroller to pick the right profile depending on what you are
-        doing. Each profile can have multiple assignments, and then the profile is assigned of all
+        doing. Each profile can have multiple assignments, and then the profile is assigned if all
         the matches in a profile match.
       </Input.Description>
       <Input.Description c="dimmed">
         The catch all matcher is special in that it will be used in any case where no profiles have
         valid matches.
       </Input.Description>
-      <Button
-        variant="filled"
-        onClick={() =>
-          updateProfile(
-            {
-              ...profile,
-              assignments: [
-                ...profile.assignments!,
-                { assignments: [{ catchall: false, input: { input: {} } }] },
-              ],
-            },
-            profileIdx
-          )
-        }
-      >
-        {t('assignments.add')}
-      </Button>
-      <Button variant="filled" onClick={open3}>
-        {t('clear_all_button')}
-      </Button>
-      <Group>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={profile.assignments?.map((mapping, mappingIdx) => mappingIdx)!}
-            strategy={rectSortingStrategy}
-          >
-            {profile.assignments?.map((mapping, mappingIdx) => (
-              <SantrollerAssignmentList
-                key={mappingIdx}
-                mapping={mapping}
-                profileIdx={profileIdx}
-                mode={profile.faceButtonMappingMode}
-                dispatch={(val) =>
+      <Space h="md" />
+
+      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+        <Table.Thead>
+          <Table.Tr>
+            <Group>
+              <Button
+                variant="filled"
+                onClick={() =>
                   updateProfile(
                     {
                       ...profile,
                       assignments: [
-                        ...profile.assignments!.map((cMapping, cMappingIdx) =>
-                          cMappingIdx == mappingIdx ? val : cMapping
-                        ),
+                        ...profile.assignments!,
+                        { assignments: [{ catchall: false, input: { input: {} } }] },
                       ],
                     },
                     profileIdx
                   )
                 }
-                deleteAssignment={() =>
-                  updateProfile(
-                    {
-                      ...profile,
-                      assignments: [
-                        ...profile.assignments!.filter(
-                          (_, cMappingIdx) => cMappingIdx != mappingIdx
-                        ),
-                      ],
-                    },
-                    profileIdx
-                  )
-                }
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </Group>
+              >
+                {t('assignments.add')}
+              </Button>
+              <Button variant="filled" onClick={open3}>
+                {t('clear_all_button')}
+              </Button>
+            </Group>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          <Space h="md" />
+          <Group>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={profile.assignments?.map((mapping, mappingIdx) => mappingIdx)!}
+                strategy={rectSortingStrategy}
+              >
+                {profile.assignments?.map((mapping, mappingIdx) => (
+                  <SantrollerAssignmentList
+                    key={mappingIdx}
+                    mapping={mapping}
+                    profileIdx={profileIdx}
+                    mode={profile.faceButtonMappingMode}
+                    dispatch={(val) =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          assignments: [
+                            ...profile.assignments!.map((cMapping, cMappingIdx) =>
+                              cMappingIdx == mappingIdx ? val : cMapping
+                            ),
+                          ],
+                        },
+                        profileIdx
+                      )
+                    }
+                    deleteAssignment={() =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          assignments: [
+                            ...profile.assignments!.filter(
+                              (_, cMappingIdx) => cMappingIdx != mappingIdx
+                            ),
+                          ],
+                        },
+                        profileIdx
+                      )
+                    }
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </Group>
+        </Table.Tbody>
+      </Table>
+
       <Space h="md" />
       <Title order={3}>Inputs</Title>
-      <Group align="stretch">
-        <Button
-          variant="filled"
-          onClick={() =>
-            updateProfile(
-              {
-                ...profile,
-                mappings: [
-                  ...profile.mappings!,
-                  { input: { gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp } } },
-                ],
-              },
-              profileIdx
-            )
-          }
-        >
-          {t('inputs.add')}
-        </Button>
-        <Button variant="filled" onClick={() => loadDefaults(undefined)}>
-          Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
-        </Button>
-        <Button variant="filled" onClick={open2}>
-          {t('clear_all_button')}
-        </Button>
-        {Object.values(deviceStatus)
-          .filter(hasDefaults)
-          .map((item) => (
-            <Button value={item.id} key={item.id} onClick={() => loadDefaults(item)}>
-              Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
-            </Button>
-          ))}
-      </Group>
-      <Group align="stretch">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={profile.mappings?.map((mapping, mappingIdx) => mappingIdx)!}
-            strategy={rectSortingStrategy}
-          >
-            {profile.mappings?.map((mapping, mappingIdx) => (
-              <SantrollerMapping
-                key={mappingIdx}
-                mapping={mapping}
-                type={profile.deviceToEmulate}
-                profileIdx={profileIdx}
-                mappingIdx={mappingIdx}
-                mode={profile.faceButtonMappingMode}
-                dispatch={(val) =>
+      <Space h="md" />
+      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+        <Table.Thead>
+          <Table.Tr>
+            <Group align="stretch">
+              <Button
+                variant="filled"
+                onClick={() =>
                   updateProfile(
                     {
                       ...profile,
                       mappings: [
-                        ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                          cMappingIdx == mappingIdx ? val : cMapping
-                        ),
+                        ...profile.mappings!,
+                        {
+                          input: { gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp } },
+                        },
                       ],
                     },
                     profileIdx
                   )
                 }
-                deleteInput={() =>
-                  updateProfile(
-                    {
-                      ...profile,
-                      mappings: [
-                        ...profile.mappings!.filter((_, cMappingIdx) => cMappingIdx != mappingIdx),
-                      ],
-                    },
-                    profileIdx
-                  )
-                }
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </Group>
+              >
+                {t('inputs.add')}
+              </Button>
+              <Button variant="filled" onClick={open}>
+                Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
+              </Button>
+              <Button variant="filled" onClick={open2}>
+                {t('clear_all_button')}
+              </Button>
+              {Object.values(deviceStatus)
+                .filter(hasDefaults)
+                .map((item) => (
+                  <Button value={item.id} key={item.id} onClick={() => loadDefaults(item)}>
+                    Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                  </Button>
+                ))}
+            </Group>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          <Space h="md" />
+          <Group align="stretch">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={profile.mappings?.map((mapping, mappingIdx) => mappingIdx)!}
+                strategy={rectSortingStrategy}
+              >
+                {profile.mappings?.map((mapping, mappingIdx) => (
+                  <SantrollerMapping
+                    key={mappingIdx}
+                    mapping={mapping}
+                    type={profile.deviceToEmulate}
+                    profileIdx={profileIdx}
+                    mappingIdx={mappingIdx}
+                    mode={profile.faceButtonMappingMode}
+                    dispatch={(val) =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          mappings: [
+                            ...profile.mappings!.map((cMapping, cMappingIdx) =>
+                              cMappingIdx == mappingIdx ? val : cMapping
+                            ),
+                          ],
+                        },
+                        profileIdx
+                      )
+                    }
+                    deleteInput={() =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          mappings: [
+                            ...profile.mappings!.filter(
+                              (_, cMappingIdx) => cMappingIdx != mappingIdx
+                            ),
+                          ],
+                        },
+                        profileIdx
+                      )
+                    }
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </Group>
+        </Table.Tbody>
+      </Table>
     </>
   );
 }

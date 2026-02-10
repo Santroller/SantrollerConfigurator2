@@ -33,7 +33,35 @@
     "apa102": "APA102 LEDs",
     "STP16CPC": "STP16CPC LED Driver"
   },
+  "crkd": {
+    "inputs": {
+      "CrkdGreen": "Green Fret",
+      "CrkdRed": "Red Fret",
+      "CrkdYellow": "Yellow Fret",
+      "CrkdBlue": "Blue Fret",
+      "CrkdOrange": "Orange Fret",
+      "CrkdDpadUp": "D-pad Up",
+      "CrkdDpadDown": "D-pad Down",
+      "CrkdDpadLeft": "D-pad Left",
+      "CrkdDpadRight": "D-pad Right",
+      "CrkdSoloGreen": "Green Solo Fret",
+      "CrkdSoloRed": "Red Solo Fret",
+      "CrkdSoloYellow": "Yellow Solo Fret",
+      "CrkdSoloBlue": "Blue Solo Fret",
+      "CrkdSoloOrange": "Orange Solo Fret"
+    }
+  },
   "inputs": { "add": "Add Input" },
+  "accelerometer": {
+    "inputs": {
+      "AccelerometerX": "X Axis",
+      "AccelerometerY": "Y Axis",
+      "AccelerometerZ": "Z Axis",
+      "AccelerometerAdc1": "ADC 1 (LIS3DH only)",
+      "AccelerometerAdc2": "ADC 2 (LIS3DH only)",
+      "AccelerometerAdc3": "ADC 3 (LIS3DH only)"
+    }
+  },
   "wii": {
     "extensions": {
       "WiiClassicController": "Classic Controller",
@@ -299,7 +327,7 @@
   },
   "defaults_dialog": {
     "title": "Load defaults",
-    "desc": "Are you sure you wish to delete this device?",
+    "desc": "Are you sure you wish to load defaults (will remove all inputs)?",
     "confirm": "Delete device",
     "cancel": "Cancel"
   },
@@ -348,6 +376,12 @@
     "inputAnyTime": "Match on input (anytime)",
     "midiChannel": "Match on MIDI channel"
   },
+  "activation": {
+    "usbType": "Usb Controller Type",
+    "consoleType": "Plugged in device type",
+    "wiiExt": "Wii extension type",
+    "ps2Cnt": "PS2 Controller Type"
+  },
   "consoleType": {
     "ConsoleWii_WiiU": "Wii / Wii U",
     "ConsoleOgXbox": "OG Xbox",
@@ -359,6 +393,8 @@
     "ConsoleSwitch_Switch2": "Switch / Switch 2",
     "ConsolePC": "Windows / Linux / macOS"
   },
+  "output": "Output",
+  "input": "Input",
   "subType": {
     "Gamepad": "Gamepad",
     "Dancepad": "Dancepad",
