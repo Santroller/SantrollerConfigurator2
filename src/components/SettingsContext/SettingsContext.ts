@@ -24,6 +24,19 @@ export class MappingStatus {
   state: number;
   stateRaw: number;
 }
+export class LedStatus {
+  [immerable] = true;
+  constructor(id: number, led: proto.ILed) {
+    this.id = id;
+    this.led = led;
+    this.state = 0;
+    this.stateRaw = 0;
+  }
+  id: number;
+  led: proto.ILed;
+  state: number;
+  stateRaw: number;
+}
 export class ActivationStatus {
   [immerable] = true;
   constructor(id: number, activation: proto.IProfileAssignmentInfo) {
@@ -54,7 +67,15 @@ export class DeviceStatus {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
       .join(', ');
-    label = `${status.connected?"Connected":"Disconnected"}, ${label}`
+    switch (status.type) {
+      case 'ws2812':
+      case 'apa102':
+      case 'stp16cpc':
+        break;
+      default:
+        label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
+        break;
+    }
     switch (status.type) {
       case 'peripheral':
         return `${label}, 0x${status.device.peripheral?.address.toString(16)}`;
@@ -63,6 +84,18 @@ export class DeviceStatus {
   }
   static pins(status: DeviceStatus) {
     switch (status.type) {
+      case 'ws2812':
+        return [status.device.ws2812?.pin];
+      case 'apa102':
+        return [status.device.apa102?.spi.mosi, status.device.apa102?.spi.sck];
+      case 'stp16cpc':
+        return [
+          status.device.stp16cpc?.spi.mosi,
+          status.device.stp16cpc?.spi.miso,
+          status.device.stp16cpc?.spi.sck,
+          status.device.stp16cpc?.le,
+          status.device.stp16cpc?.oe,
+        ];
       case 'wii':
         return [status.device.wii?.i2c.sda, status.device.wii?.i2c.scl];
       case 'ads1115':
@@ -137,6 +170,7 @@ export class DeviceStatus {
 export interface ConfigState {
   deviceStatus: { [id: string]: DeviceStatus };
   mappingStatus: { [id: number]: MappingStatus }[];
+  ledStatus: { [id: number]: LedStatus }[];
   activationStatus: { [id: number]: ActivationStatus }[];
   config: proto.IConfig;
   connected: boolean;
@@ -147,6 +181,7 @@ export interface ConfigState {
   detected: number;
   detectedMapping?: number;
   detectedActivation?: number;
+  detectedLed?: number;
   detecting: boolean;
   lastUpdate: number;
   writeTimeout?: NodeJS.Timeout;
@@ -175,6 +210,7 @@ export interface Actions {
   detectPins: (
     activation: number | undefined,
     mapping: number | undefined,
+    led: number | undefined,
     type: proto.PinDetectType
   ) => void;
 }
@@ -196,10 +232,14 @@ function InitState(config: proto.Config): ConfigState {
         .map((x, i) => [i, new ActivationStatus(i, x)])
     )
   );
+  const ledStatus = config.profiles!.map((profile) =>
+    Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
+  );
   return {
     deviceStatus,
     mappingStatus,
     activationStatus,
+    ledStatus,
     config,
     connected: false,
     detecting: false,
@@ -294,10 +334,8 @@ const CrkdMappings = {
   },
   [proto.SubType.RockBandGuitar]: {
     [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.RockBandGuitarButtonType.RockBandGuitarStrumUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]:
-      proto.RockBandGuitarButtonType.RockBandGuitarStrumDown,
-    [proto.CrkdNeckButtonType.CrkdDpadLeft]:
-      proto.RockBandGuitarButtonType.RockBandGuitarDpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.RockBandGuitarButtonType.RockBandGuitarStrumDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.RockBandGuitarButtonType.RockBandGuitarDpadLeft,
     [proto.CrkdNeckButtonType.CrkdDpadRight]:
       proto.RockBandGuitarButtonType.RockBandGuitarDpadRight,
     [proto.CrkdNeckButtonType.CrkdGreen]: proto.RockBandGuitarButtonType.RockBandGuitarGreen,
@@ -310,8 +348,7 @@ const CrkdMappings = {
     [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.RockBandGuitarButtonType.RockBandGuitarSoloRed,
     [proto.CrkdNeckButtonType.CrkdSoloYellow]:
       proto.RockBandGuitarButtonType.RockBandGuitarSoloYellow,
-    [proto.CrkdNeckButtonType.CrkdSoloBlue]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloBlue,
+    [proto.CrkdNeckButtonType.CrkdSoloBlue]: proto.RockBandGuitarButtonType.RockBandGuitarSoloBlue,
     [proto.CrkdNeckButtonType.CrkdSoloOrange]:
       proto.RockBandGuitarButtonType.RockBandGuitarSoloOrange,
   },
@@ -354,32 +391,32 @@ const WiiMappingsTrigger = {
 
 function createDefault(type: string, id: string) {
   let device = {};
-  const i2c = { sda: -1, scl: -1, clock: 100000 };
-  const i2c15 = { sda: -1, scl: -1, clock: 150000 };
-  const i2c4 = { sda: -1, scl: -1, clock: 400000 };
-  const spi = { mosi: -1, miso: -1, sck: -1 };
-  const uart = { tx: -1, rx: -1 };
+  const i2c = { sda: -1, scl: -1, block: 0, clock: 100000 };
+  const i2c15 = { sda: -1, scl: -1, block: 0, clock: 150000 };
+  const i2c4 = { sda: -1, scl: -1, block: 0, clock: 400000 };
+  const spi = { mosi: -1, miso: -1, sck: -1, block: 0 };
+  const uart = { tx: -1, rx: -1, block: 0 };
   const mappingMode = proto.MappingMode.PerInput;
   switch (type) {
     case 'gh5Neck':
     case 'djhTurntable':
-      device = { i2c15 };
+      device = { i2c: i2c15 };
       break;
     case 'accelerometer':
     case 'wii':
     case 'wiiEmulation':
     case 'mpr121':
-      device = { i2c4 };
+      device = { i2c: i2c4 };
       break;
     case 'bhDrum':
     case 'crazyGuitarNeck':
       device = { i2c };
       break;
     case 'peripheral':
-      device = { i2c4, address: 0x45 };
+      device = { i2c: i2c4, address: 0x45 };
       break;
     case 'ads1115':
-      device = { i2c4, interrupt: -1 };
+      device = { i2c: i2c4, interrupt: -1 };
       break;
     case 'worldTourDrum':
       device = { spi };
@@ -497,6 +534,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.mappingStatus[id] = Object.fromEntries(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
+        state.activationStatus[id] = Object.fromEntries(
+          profile
+            .assignments!.flatMap((x) => x.assignments)
+            .map((x, i) => [i, new ActivationStatus(i, x!)])
+        );
+        state.ledStatus[id] = Object.fromEntries(
+          profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
+        );
       });
       get().saveConfig();
     },
@@ -512,6 +557,17 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.mappingStatus = state.config.profiles!.map((profile) =>
           Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
         );
+
+        state.activationStatus = state.config.profiles!.map((profile) =>
+          Object.fromEntries(
+            profile
+              .assignments!.flatMap((x) => x.assignments)
+              .map((x, i) => [i, new ActivationStatus(i, x!)])
+          )
+        );
+        state.ledStatus = state.config.profiles!.map((profile) =>
+          Object.fromEntries(profile.leds!.map((x, i) => [i, new LedStatus(i, x)]))
+        );
       });
       get().saveConfig();
     },
@@ -523,6 +579,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     detectPins: async (
       activation: number | undefined,
       mapping: number | undefined,
+      led: number | undefined,
       type: proto.PinDetectType
     ) => {
       const dev = get().hidDevice;
@@ -530,6 +587,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.detected = -1;
         state.detecting = true;
+        state.detectedLed = led;
         state.detectedMapping = mapping;
         state.detectedActivation = activation;
       });
@@ -699,6 +757,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.mappingStatus[state.currentProfile] = Object.fromEntries(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
+        state.activationStatus[state.currentProfile] = Object.fromEntries(
+          profile
+            .assignments!.flatMap((x) => x.assignments)
+            .map((x, i) => [i, new ActivationStatus(i, x!)])
+        );
+        state.ledStatus[state.currentProfile] = Object.fromEntries(
+          profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
+        );
       });
       get().saveConfig();
     },
@@ -788,6 +854,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
           });
         }
+        if (deviceEvent.led && get().polling) {
+          set((state) => {
+            if (state.ledStatus.length) {
+              const mappings = state.ledStatus[state.currentProfile ?? 0];
+              if (deviceEvent.led!.id in mappings) {
+                const mapping = mappings[deviceEvent.led!.id];
+                mapping.state = deviceEvent.led?.state!;
+                mapping.stateRaw = deviceEvent.led?.stateRaw!;
+              }
+            }
+          });
+        }
       }
     },
     addProfile: () => {
@@ -802,12 +880,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
               name: 'Device',
               assignments: [],
               mappings: [],
+              leds: [],
               uid: Math.max(...(state.config.profiles?.map((x) => x.uid) || [0])) + 1,
             },
           ],
         };
         state.currentProfile = state.config.profiles!.length - 1;
         state.mappingStatus[state.config.profiles!.length - 1] = [];
+        state.activationStatus[state.config.profiles!.length - 1] = [];
+        state.ledStatus[state.config.profiles!.length - 1] = [];
       });
       get().saveConfig();
     },
@@ -865,6 +946,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.writing = true;
         state.crc = crc;
+        state.detecting = false;
       });
       const infoBuffer = proto.ConfigInfo.encode(
         proto.ConfigInfo.create({
@@ -886,7 +968,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }
       let start = 0;
       const len = 63;
-      while (start <= buffer.length) {
+      while (start < buffer.length) {
         const slice = buffer.slice(start, start + len);
         start += len;
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
@@ -894,7 +976,21 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.writing = false;
       });
-      state.setActiveProfile(state.currentProfile.toString());
+      await state.hidDevice.sendFeatureReport(
+        proto.ReportId.ReportIdKeepalive,
+        new Uint8Array([0])
+      );
+      const infoBuffer2 = proto.Command.encode(
+        proto.Command.create({
+          setProfile: proto.SetProfileCommand.create({
+            profileId: state.currentProfile,
+          }),
+        })
+      ).finish();
+      await state.hidDevice?.sendFeatureReport(
+        proto.ReportId.ReportIdCommand,
+        infoBuffer2 as Buffer<ArrayBuffer>
+      );
     },
     connect: async () => {
       const devices = await navigator.hid.requestDevice({

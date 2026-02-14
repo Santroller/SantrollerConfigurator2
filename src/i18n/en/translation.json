@@ -277,6 +277,21 @@
     },
     "incorrect_group": "I2C Pins are not from the same group"
   },
+  "leds": {
+    "add": "Add Led Mapping",
+    "type": {
+      "input": "Input Based",
+      "pattern": "Pattern based",
+      "static": "Static"
+    },
+    "speed": "Speed",
+    "brightness": "Brightness",
+    "pattern": {
+      "label": "Pattern",
+      "PatternRainbow": "Rainbow",
+      "PatternFade": "Breathing"
+    }
+  },
   "psx": {
     "data": {
       "pin": "Data"
