@@ -31,9 +31,17 @@ export function ConnectPage() {
           <ul>
             <li>USB Host</li>
             <li>Bluetooth</li>
-            <li>Wii Extension Emulation</li>
-            <li>PS2 Emulation</li>
+            <li>Wii Extension Emulation (as in, plugging the pico into a wii remote)</li>
+            <li>PS2 Emulation (as in, plugging the pico into the PS2 controller port on your console)</li>
           </ul>
+        </Alert>
+        <Alert
+          variant="light"
+          color="red"
+          title="Santroller 2 is not finished"
+          icon={<IconExclamationCircle />}
+        >
+          Make sure your bootsel button is easily accessible! Santroller 2 isn't 100% stable, and sometimes it may not load correctly after programming.
         </Alert>
         {!navigator.hid && (
           <Alert

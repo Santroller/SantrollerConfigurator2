@@ -507,17 +507,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.currentProfile = parseInt(id ?? '0');
       });
       const state = get();
-      const infoBuffer = proto.Command.encode(
+      const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           setProfile: proto.SetProfileCommand.create({
             profileId: state.config.profiles![parseInt(id ?? '0')].uid,
           }),
         })
-      ).finish();
-      await state.hidDevice?.sendFeatureReport(
-        proto.ReportId.ReportIdCommand,
-        infoBuffer as Buffer<ArrayBuffer>
-      );
+      )
+        .ldelim()
+        .finish();
+      let outBuffer2 = new ArrayBuffer(63);
+      new Uint8Array(outBuffer2).set(infoBuffer2);
+      await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
     },
     updateProfile: (profile: proto.IProfile, id: number) => {
       set((state) => {
@@ -617,17 +618,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.detectedMapping = mapping;
         state.detectedActivation = activation;
       });
-      const infoBuffer = proto.Command.encode(
+      const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           detectPin: proto.DetectPinCommand.create({
             detectType: type,
           }),
         })
-      ).finish();
-      await dev.sendFeatureReport(
-        proto.ReportId.ReportIdCommand,
-        infoBuffer as Buffer<ArrayBuffer>
-      );
+      )
+        .ldelim()
+        .finish();
+      let outBuffer2 = new ArrayBuffer(63);
+      new Uint8Array(outBuffer2).set(infoBuffer2);
+      await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       console.log('done');
     },
     updateConfig: (config: proto.IConfig) => {
@@ -816,10 +818,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       if (evt.reportId != proto.ReportId.ReportIdConfig) {
         return;
       }
-      const eventList = proto.EventList.decode(
-        new Uint8Array(evt.data.buffer),
-        evt.data.byteLength
-      );
+      const eventList = proto.EventList.decodeDelimited(new Uint8Array(evt.data.buffer));
       for (const deviceEvent of eventList.event) {
         if (deviceEvent.debug) {
           console.log(buf2hex(new Uint8Array(Int32Array.from(deviceEvent.debug.data!).buffer)));
@@ -1016,18 +1015,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.crc = crc;
         state.detecting = false;
       });
-      const infoBuffer = proto.ConfigInfo.encode(
+      let infoBuffer = proto.ConfigInfo.encode(
         proto.ConfigInfo.create({
           dataSize: buffer.length,
           dataCrc: crc,
           magic,
         })
-      ).finish();
-      console.log(infoBuffer.length);
-      await state.hidDevice.sendFeatureReport(
-        proto.ReportId.ReportIdConfigInfo,
-        infoBuffer as Buffer<ArrayBuffer>
-      );
+      )
+        .ldelim()
+        .finish();
+      let outBuffer = new ArrayBuffer(63);
+      new Uint8Array(outBuffer).set(infoBuffer);
+      await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfigInfo, outBuffer);
       if (buffer.length == 0) {
         set((state) => {
           state.writing = false;
@@ -1037,7 +1036,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
       let start = 0;
       const len = 63;
       while (start < buffer.length) {
-        const slice = buffer.slice(start, start + len);
+        let slice = new ArrayBuffer(63);
+        new Uint8Array(slice).set(buffer.slice(start, start + len));
         start += len;
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
@@ -1056,11 +1056,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
               profileId: state.config.profiles![state.currentProfile].uid,
             }),
           })
-        ).finish();
-        await state.hidDevice?.sendFeatureReport(
-          proto.ReportId.ReportIdCommand,
-          infoBuffer2 as Buffer<ArrayBuffer>
-        );
+        )
+          .ldelim()
+          .finish();
+        let outBuffer2 = new ArrayBuffer(63);
+        new Uint8Array(outBuffer2).set(infoBuffer2);
+        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       }
     },
     connect: async () => {
