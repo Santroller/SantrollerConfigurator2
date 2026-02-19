@@ -1026,6 +1026,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         let slice = new ArrayBuffer(63);
         new Uint8Array(slice).set(buffer.slice(start, start + len));
         start += len;
+        console.log("saving!", start);
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
       set((state) => {

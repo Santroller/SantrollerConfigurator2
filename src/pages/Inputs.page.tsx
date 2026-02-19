@@ -2224,7 +2224,7 @@ function SantrollerAssignment({
     onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
   });
   const types = filterSingle ? MultiProfileAssignmentTypes : AllProfileAssignmentTypes;
-  const label = t('assignmentType.' + types.filter((x) => mapping[x]));
+  const label = t('assignmentType.' + types.filter((x) => mapping[x] != null && mapping[x] != undefined));
   const base = useMemo(
     () => (
       <InputBase
@@ -2361,7 +2361,7 @@ function SantrollerAssignment({
             dispatch={(consoleType) => dispatch({ consoleType })}
           ></DropdownBox>
         )}
-        {mapping.wiiExt && (
+        {mapping.wiiExt !== undefined && mapping.wiiExt != null && (
           <DropdownBox
             title="activation.wiiExt"
             e={proto.WiiExtType}

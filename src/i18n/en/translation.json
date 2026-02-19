@@ -65,6 +65,7 @@
   "wii": {
     "extensions": {
       "WiiClassicController": "Classic Controller",
+      "WiiClassicControllerPro": "Classic Controller Pro",
       "WiiGuitarHeroGuitar": "Guitar Hero Guitar"
     },
     "inputs": {
