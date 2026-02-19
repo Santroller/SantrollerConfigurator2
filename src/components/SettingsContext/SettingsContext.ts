@@ -205,6 +205,8 @@ export interface Actions {
   setActiveProfile: (id: string | null) => void;
   sendKeepAlive: () => void;
   saveConfig: () => void;
+  exportConfig: () => void;
+  loadConfig: (file: File | null) => void;
   pollInputs: (poll: boolean) => void;
   loadDefaults: (device: DeviceStatus | undefined) => void;
   detectPins: (
@@ -938,6 +940,45 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.polling = poll;
       }),
+    exportConfig: () => {
+      const state = get();
+      if (state.hidDevice == null || !state.connected) {
+        return;
+      }
+      const config = { ...state.config };
+      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+      config.profiles = state.mappingStatus.map((x, i) => ({
+        ...config.profiles![i],
+        mappings: Object.values(x).map((x) => x.mapping),
+      }));
+      const buffer = proto.Config.create(config).toJSON();
+      const element = document.createElement('a');
+      const file = new Blob([JSON.stringify(buffer)], {
+        type: 'text/json',
+      });
+      element.href = URL.createObjectURL(file);
+      element.download = 'config.json';
+      document.body.appendChild(element);
+      element.click();
+    },
+    loadConfig: async (file: File | null) => {
+      try {
+        const config = proto.Config.fromObject(JSON.parse((await file?.text()) ?? ''));
+        const timeout = setInterval(() => get().sendKeepAlive(), 10);
+        set(
+          (old) => ({
+            ...old,
+            ...InitState(config),
+            connected: true,
+            keepaliveTimeout: timeout,
+          }),
+          true
+        );
+        get().saveConfig()
+      } catch (e) {
+        console.log(e)
+      }
+    },
     saveConfig: async () => {
       const state = get();
       if (state.hidDevice == null || !state.connected) {

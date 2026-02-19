@@ -1,12 +1,14 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Space, Text } from '@mantine/core';
+import { Alert, Button, FileButton, FileInput, Space, Text } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
   const disconnect = useConfigStore((state) => state.disconnect);
+  const exportConfig = useConfigStore((state) => state.exportConfig);
+  const loadConfig = useConfigStore((state) => state.loadConfig);
   const connected = useConfigStore((state) => state.connected);
   const { t } = useTranslation();
   return (
@@ -20,6 +22,10 @@ export function ConnectPage() {
         >
           Santroller 2 is currently not finished. Right now, several features are missing when
           compared to the normal tool, and there are likley a lot of crashes and unfinished features
+          <Space h="md" />
+          Note that there may be situations where your config wipes itself, and there isn't any
+          documentation right now, this is mostly here for experimenting but its known that there
+          are many bugs and issues with it currently.
           <Space h="md" />
           Notable missing features:
           <ul>
@@ -42,7 +48,16 @@ export function ConnectPage() {
           </Alert>
         )}
         {navigator.hid && connected && (
-          <Button onClick={disconnect}>Disconnect from Santroller</Button>
+          <>
+            <Space h="md" />
+            <Button onClick={disconnect}>Disconnect from Santroller</Button>
+            <Space h="md" />
+            <Button onClick={exportConfig}>Export current config</Button>
+            <Space h="md" />
+            <FileButton onChange={loadConfig} accept="application/json">
+              {(props) => <Button {...props}>Load config from file</Button>}
+            </FileButton>
+          </>
         )}
         {navigator.hid && !connected && <Button onClick={connect}>Connect to Santroller</Button>}
         <Space h="md" />
