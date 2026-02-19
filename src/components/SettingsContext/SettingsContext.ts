@@ -582,6 +582,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           Object.fromEntries(profile.leds!.map((x, i) => [i, new LedStatus(i, x)]))
         );
         if (
+          state.config.profiles?.length &&
           state.config.profiles?.every((x) =>
             x.assignments?.every((y) => y.assignments?.every((z) => !z.catchall))
           )
@@ -974,9 +975,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
           }),
           true
         );
-        get().saveConfig()
+        get().saveConfig();
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
     },
     saveConfig: async () => {
@@ -1047,17 +1048,20 @@ export const useConfigStore = create<ConfigState & Actions>()(
         proto.ReportId.ReportIdKeepalive,
         new Uint8Array([0])
       );
-      const infoBuffer2 = proto.Command.encode(
-        proto.Command.create({
-          setProfile: proto.SetProfileCommand.create({
-            profileId: state.config.profiles![state.currentProfile].uid,
-          }),
-        })
-      ).finish();
-      await state.hidDevice?.sendFeatureReport(
-        proto.ReportId.ReportIdCommand,
-        infoBuffer2 as Buffer<ArrayBuffer>
-      );
+
+      if (state.config.profiles![state.currentProfile] != null) {
+        const infoBuffer2 = proto.Command.encode(
+          proto.Command.create({
+            setProfile: proto.SetProfileCommand.create({
+              profileId: state.config.profiles![state.currentProfile].uid,
+            }),
+          })
+        ).finish();
+        await state.hidDevice?.sendFeatureReport(
+          proto.ReportId.ReportIdCommand,
+          infoBuffer2 as Buffer<ArrayBuffer>
+        );
+      }
     },
     connect: async () => {
       if (!navigator.hid) {
