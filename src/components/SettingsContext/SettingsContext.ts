@@ -71,6 +71,7 @@ export class DeviceStatus {
       case 'ws2812':
       case 'apa102':
       case 'stp16cpc':
+      case 'multiplexer':
         break;
       default:
         label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
@@ -127,13 +128,20 @@ export class DeviceStatus {
       case 'crkdNeck':
         return [status.device.crkdNeck?.uart.tx, status.device.crkdNeck?.uart.rx];
       case 'multiplexer':
-        return [
-          status.device.multiplexer?.s0Pin,
-          status.device.multiplexer?.s1Pin,
-          status.device.multiplexer?.s2Pin,
-          status.device.multiplexer?.s3Pin,
-          status.device.multiplexer?.inputPin,
-        ];
+        return status.device.multiplexer?.sixteenChannel
+          ? [
+              status.device.multiplexer?.s0Pin,
+              status.device.multiplexer?.s1Pin,
+              status.device.multiplexer?.s2Pin,
+              status.device.multiplexer?.s3Pin,
+              status.device.multiplexer?.inputPin,
+            ]
+          : [
+              status.device.multiplexer?.s0Pin,
+              status.device.multiplexer?.s1Pin,
+              status.device.multiplexer?.s2Pin,
+              status.device.multiplexer?.inputPin,
+            ];
       case 'psx':
         return [
           status.device.psx?.spi.mosi,
@@ -443,7 +451,7 @@ function createDefault(type: string, id: string) {
       device = { uart };
       break;
     case 'multiplexer':
-      device = { s0Pin: -1, s1Pin: -1, s2Pin: -1, s3Pin: -1, inputPin: -1 };
+      device = { s0Pin: -1, s1Pin: -1, s2Pin: -1, s3Pin: -1, inputPin: -1, sixteenChannel: false };
       break;
     case 'psx':
       device = { spi, ackPin: -1, attPin: -1 };
@@ -1026,7 +1034,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         let slice = new ArrayBuffer(63);
         new Uint8Array(slice).set(buffer.slice(start, start + len));
         start += len;
-        console.log("saving!", start);
+        console.log('saving!', start);
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
       set((state) => {

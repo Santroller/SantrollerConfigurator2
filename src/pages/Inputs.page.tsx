@@ -820,6 +820,14 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'multiplexer':
+                  dispatch({
+                    multiplexer: {
+                      channel: 0,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
                 case 'accelerometer':
                   dispatch({
                     accelerometer: {
@@ -1130,6 +1138,77 @@ function SantrollerInput({
           )}
         </>
       )}
+      {input.multiplexer && (
+        <>
+          {(pinModeCombobox.dropdownOpened && (
+            <Combobox
+              store={pinModeCombobox}
+              onOptionSubmit={(val) => {
+                dispatch({
+                  ...input,
+                  multiplexer: {
+                    ...input.multiplexer!,
+                    channel: parseInt(val),
+                  },
+                });
+                pinModeCombobox.closeDropdown();
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  label="Channel"
+                  component="button"
+                  type="button"
+                  pointer
+                  rightSection={<Combobox.Chevron />}
+                  rightSectionPointerEvents="none"
+                  onClick={() => pinModeCombobox.toggleDropdown()}
+                >
+                  {input.multiplexer.channel}
+                </InputBase>
+              </Combobox.Target>
+
+              <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                <Combobox.Options>
+                  <Combobox.Option value="0">Channel 0</Combobox.Option>
+                  <Combobox.Option value="1">Channel 1</Combobox.Option>
+                  <Combobox.Option value="2">Channel 2</Combobox.Option>
+                  <Combobox.Option value="3">Channel 3</Combobox.Option>
+                  <Combobox.Option value="4">Channel 4</Combobox.Option>
+                  <Combobox.Option value="5">Channel 5</Combobox.Option>
+                  <Combobox.Option value="6">Channel 6</Combobox.Option>
+                  <Combobox.Option value="7">Channel 7</Combobox.Option>
+
+                  {device.device.multiplexer?.sixteenChannel && (
+                    <>
+                      <Combobox.Option value="8">Channel 8</Combobox.Option>
+                      <Combobox.Option value="9">Channel 9</Combobox.Option>
+                      <Combobox.Option value="10">Channel 10</Combobox.Option>
+                      <Combobox.Option value="11">Channel 11</Combobox.Option>
+                      <Combobox.Option value="12">Channel 12</Combobox.Option>
+                      <Combobox.Option value="13">Channel 13</Combobox.Option>
+                      <Combobox.Option value="14">Channel 14</Combobox.Option>
+                      <Combobox.Option value="15">Channel 15</Combobox.Option>
+                    </>
+                  )}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+          )) || (
+            <InputBase
+              label="Channel"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => pinModeCombobox.toggleDropdown()}
+            >
+              {input.multiplexer.channel}
+            </InputBase>
+          )}
+        </>
+      )}
       {input.accelerometer && (
         <DropdownBox
           e={proto.AccelerometerInputType}
@@ -1256,8 +1335,8 @@ function SantrollerMapping({
         <Space h="md" />
         {button && (
           <NumberInput
-            label={t("debounce.label")}
-            description={t("debounce.desc")}
+            label={t('debounce.label')}
+            description={t('debounce.desc')}
             value={mapping.debounce ?? 0}
             onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
           ></NumberInput>
@@ -2250,7 +2329,9 @@ function SantrollerAssignment({
     onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
   });
   const types = filterSingle ? MultiProfileAssignmentTypes : AllProfileAssignmentTypes;
-  const label = t('assignmentType.' + types.filter((x) => mapping[x] != null && mapping[x] != undefined));
+  const label = t(
+    'assignmentType.' + types.filter((x) => mapping[x] != null && mapping[x] != undefined)
+  );
   const base = useMemo(
     () => (
       <InputBase

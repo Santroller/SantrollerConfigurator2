@@ -36,6 +36,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
 import {
   AllPinsNamed,
+  AnalogPinsNamed,
   I2CGroups,
   MisoPins,
   MosiPins,
@@ -893,7 +894,6 @@ function MultiplexerDevice({ id }: { id: string }) {
   const multiplexer = device.multiplexer;
   return (
     <DeviceCard
-      connected={status.connected}
       title="devices.multiplexer"
       image="covers/devices/multiplexer.png"
       deleteDevice={() => deleteDevice(id)}
@@ -909,8 +909,8 @@ function MultiplexerDevice({ id }: { id: string }) {
       />
       <PinBox
         label="multiplexer.input.label"
-        pin={multiplexer.s0Pin}
-        valid={AllPinsNamed}
+        pin={multiplexer.inputPin}
+        valid={AnalogPinsNamed}
         dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, inputPin: pin } }, id)}
       />
       <PinBox
