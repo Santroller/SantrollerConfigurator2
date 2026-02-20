@@ -844,6 +844,14 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'usbHost':
+                  dispatch({
+                    usbButton: {
+                      button: proto.UsbButtonType.UsbButtonA,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
               }
               return;
             }
@@ -992,6 +1000,24 @@ function SantrollerInput({
           val={input.wiiButton?.button}
           label="wii.inputs"
           dispatch={(button) => dispatch({ wiiButton: { ...input.wiiButton!, button } })}
+        ></DropdownBox>
+      )}
+      {input.usbAxis && (
+        <DropdownBox
+          title="input"
+          e={proto.UsbAxisType}
+          val={input.usbAxis?.axis}
+          label="usb.inputs"
+          dispatch={(axis) => dispatch({ usbAxis: { ...input.usbAxis!, axis } })}
+        ></DropdownBox>
+      )}
+      {input.usbButton && (
+        <DropdownBox
+          title="input"
+          e={proto.UsbButtonType}
+          val={input.usbButton?.button}
+          label="usb.inputs"
+          dispatch={(button) => dispatch({ usbButton: { ...input.usbButton!, button } })}
         ></DropdownBox>
       )}
       {input.crkd && (
