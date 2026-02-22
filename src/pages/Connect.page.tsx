@@ -10,6 +10,7 @@ export function ConnectPage() {
   const exportConfig = useConfigStore((state) => state.exportConfig);
   const loadConfig = useConfigStore((state) => state.loadConfig);
   const connected = useConfigStore((state) => state.connected);
+  const latest = useConfigStore((state) => state.latest);
   const { t } = useTranslation();
   return (
     <>
@@ -32,7 +33,9 @@ export function ConnectPage() {
             <li>USB Host</li>
             <li>Bluetooth</li>
             <li>Wii Extension Emulation (as in, plugging the pico into a wii remote)</li>
-            <li>PS2 Emulation (as in, plugging the pico into the PS2 controller port on your console)</li>
+            <li>
+              PS2 Emulation (as in, plugging the pico into the PS2 controller port on your console)
+            </li>
           </ul>
         </Alert>
         <Alert
@@ -41,8 +44,21 @@ export function ConnectPage() {
           title="Santroller 2 is not finished"
           icon={<IconExclamationCircle />}
         >
-          Make sure your bootsel button is easily accessible! Santroller 2 isn't 100% stable, and sometimes it may not load correctly after programming.
+          Make sure your bootsel button is easily accessible! Santroller 2 isn't 100% stable, and
+          sometimes it may not load correctly after programming.
         </Alert>
+
+        {!latest && connected && (
+          <Alert
+            variant="light"
+            color="red"
+            title="Controller firmware out of date"
+            icon={<IconExclamationCircle />}
+          >
+            Please download the latest uf2 and flash it to your device
+          </Alert>
+        )}
+
         {!navigator.hid && (
           <Alert
             variant="light"

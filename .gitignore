@@ -133,3 +133,4 @@ dist
 src/components/SettingsContext/config.js
 src/components/SettingsContext/config.d.ts
 public/santroller.uf2
+public/commit.hash

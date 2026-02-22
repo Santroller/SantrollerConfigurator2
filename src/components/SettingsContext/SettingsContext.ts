@@ -182,6 +182,7 @@ export interface ConfigState {
   activationStatus: { [id: number]: ActivationStatus }[];
   config: proto.IConfig;
   connected: boolean;
+  latest: boolean;
   hidDevice?: HIDDevice;
   crc: number;
   writing: boolean;
@@ -253,6 +254,7 @@ function InitState(config: proto.Config): ConfigState {
     config,
     connected: false,
     detecting: false,
+    latest: true,
     detected: -1,
     crc: 0,
     lastUpdate: 0,
@@ -1073,7 +1075,19 @@ export const useConfigStore = create<ConfigState & Actions>()(
           await device.open();
         }
         device.addEventListener('inputreport', get().onReport);
+        let latest = false;
         const infoData = await device.receiveFeatureReport(proto.ReportId.ReportIdConfigInfo);
+        try {
+          const commitHash = await device.receiveFeatureReport(proto.ReportId.ReportIdGetVersion);
+          const deviceVersion = String.fromCharCode.apply(
+            null,
+            Array.from(new Uint8Array(commitHash.buffer.slice(1)))
+          ).trim().substring(0,8);
+          const latestVersion = (await (await fetch('commit.hash')).text()).trim().substring(0,8);
+          latest = deviceVersion == latestVersion;
+        } catch (e) {
+          console.log(e);
+        }
         const info = proto.ConfigInfo.decode(
           new Uint8Array(infoData.buffer).slice(1),
           infoData.byteLength - 1
@@ -1107,6 +1121,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               connected: true,
               hidDevice: device,
               crc: info.dataCrc,
+              latest,
               keepaliveTimeout: timeout,
               activeProfiles: activeProfiles.profiles,
             }),
@@ -1131,6 +1146,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
 if (navigator.hid) {
   navigator.hid.addEventListener('disconnect', (e) => {
     if (useConfigStore.getState().hidDevice == e.device) {
+      useConfigStore.getState().disconnect();
       useConfigStore.setState((state) => {
         state.connected = false;
         state.hidDevice = undefined;

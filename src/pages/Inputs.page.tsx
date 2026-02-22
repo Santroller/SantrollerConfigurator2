@@ -2414,10 +2414,10 @@ function SantrollerAssignment({
                 });
                 break;
               case 'usbType':
-                dispatch({ catchall: false, usbType: proto.SubType.Gamepad });
+                dispatch({ usbType: proto.SubType.Gamepad });
                 break;
               case 'usbDevice':
-                dispatch({ catchall: false, usbDevice: { vid: 0, pid: 0 } });
+                dispatch({ usbDevice: { vid: 0, pid: 0 } });
                 break;
               case 'input':
                 dispatch({
