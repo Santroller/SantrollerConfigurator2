@@ -1456,7 +1456,7 @@ function SantrollerMapping({
           <>
             <Switch
               label={t('axis.released_toggle')}
-              checked={mapping.released !== undefined}
+              checked={mapping.released !== null}
               onChange={(event) => {
                 dispatch({
                   ...mapping,
