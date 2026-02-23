@@ -9,6 +9,7 @@ import type {} from '@redux-devtools/extension';
 import { BufferReader } from 'protobufjs';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
+import { disconnect } from 'process';
 
 export * from './config.js';
 export class MappingStatus {
@@ -935,6 +936,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           clearInterval(state.keepaliveTimeout);
         }
         state.connected = false;
+        state.updating = false;
         state.hidDevice = undefined;
       }),
     pollInputs: (poll) =>
@@ -1096,7 +1098,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((old) => ({ ...old, updatePercentage: 1 + ((i + j) / updateFile.length) * 99 }));
         }
       }
-      set((old) => ({ ...old, updating: false }));
+      state.disconnect();
     },
     connect: async () => {
       if (!navigator.hid) {
