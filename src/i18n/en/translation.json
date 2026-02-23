@@ -51,6 +51,12 @@
       "CrkdSoloOrange": "Orange Solo Fret"
     }
   },
+  "axis": {
+    "calibration": "Axis Calibration",
+    "pressed": "Pressed Value",
+    "released": "Released Value",
+    "released_toggle": "Set released value"
+  },
   "inputs": { "add": "Add Input" },
   "accelerometer": {
     "inputs": {

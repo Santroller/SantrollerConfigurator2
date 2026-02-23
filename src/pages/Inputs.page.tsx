@@ -324,6 +324,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               gamepadAxis: axis,
               gamepadButton: null,
             })
@@ -346,6 +347,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               ghAxis: axis,
               ghButton: null,
             })
@@ -368,6 +370,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               rbAxis: axis,
               rbButton: null,
             })
@@ -391,6 +394,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               ghDrumAxis: axis,
               ghDrumButton: null,
             })
@@ -414,6 +418,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               rbDrumAxis: axis,
               rbDrumButton: null,
             })
@@ -437,6 +442,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               ghlAxis: axis,
               ghlButton: null,
             })
@@ -460,6 +466,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               djhAxis: axis,
               djhButton: null,
             })
@@ -484,6 +491,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               rbAxis: axis,
               rbButton: null,
             })
@@ -1330,8 +1338,7 @@ function SantrollerMapping({
             dispatch({
               ...mapping,
               input,
-              pressed: isAnalog(input) ? undefined : mapping.pressed ?? 0,
-              released: isAnalog(input) ? undefined : mapping.released ?? stick ? 32768 : 0,
+              pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 0),
             });
           }}
           mappingIdx={mappingIdx}
@@ -1447,14 +1454,28 @@ function SantrollerMapping({
         )}
         {axis && !analogInput && (
           <>
-            <Text size="sm">Released value</Text>
-            <Slider
-              value={mapping.released!}
-              min={0}
-              max={65535}
-              onChange={(val) => dispatch({ ...mapping, released: val })}
+            <Switch
+              label={t('axis.released_toggle')}
+              checked={mapping.released !== undefined}
+              onChange={(event) => {
+                dispatch({
+                  ...mapping,
+                  released: event.currentTarget.checked ? (stick ? 32767 : 0) : undefined,
+                });
+              }}
             />
-            <Text size="sm">Pressed value</Text>
+            {mapping.released && (
+              <>
+                <Text size="sm">{t('axis.released')}</Text>
+                <Slider
+                  value={mapping.released!}
+                  min={0}
+                  max={65535}
+                  onChange={(val) => dispatch({ ...mapping, released: val })}
+                />
+              </>
+            )}
+                <Text size="sm">{t('axis.pressed')}</Text>
             <Slider
               value={mapping.pressed!}
               min={0}
@@ -1468,7 +1489,7 @@ function SantrollerMapping({
             <Space h="md" />
             <Accordion>
               <Accordion.Item value="main">
-                <Accordion.Control>Axis Calibration</Accordion.Control>
+                <Accordion.Control>{t('axis.calibration')}</Accordion.Control>
                 <Accordion.Panel>
                   {axis && (
                     <>
@@ -2921,7 +2942,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         ...profile,
                         assignments: [
                           ...profile.assignments!,
-                          { assignments: [{ catchall: false, input: { input: {} } }] },
+                          { assignments: [{ input: { input: {} } }] },
                         ],
                       },
                       profileIdx
