@@ -1464,6 +1464,7 @@ function SantrollerMapping({
                 });
               }}
             />
+            <Space h="md" />
             {mapping.released && (
               <>
                 <Text size="sm">{t('axis.released')}</Text>
