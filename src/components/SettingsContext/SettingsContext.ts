@@ -412,7 +412,7 @@ function createDefault(type: string, id: string) {
   const i2c = { sda: -1, scl: -1, block: 0, clock: 100000 };
   const i2c15 = { sda: -1, scl: -1, block: 0, clock: 150000 };
   const i2c4 = { sda: -1, scl: -1, block: 0, clock: 400000 };
-  const spi = { mosi: -1, miso: -1, sck: -1, block: 0 };
+  const spi = { mosi: -1, miso: -1, sck: -1, block: 0, clock: 500000 };
   const uart = { tx: -1, rx: -1, block: 0 };
   const mappingMode = proto.MappingMode.PerInput;
   switch (type) {

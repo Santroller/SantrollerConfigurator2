@@ -307,19 +307,19 @@
   },
   "psx": {
     "data": {
-      "pin": "Data"
+      "pin": "Data (Brown)"
     },
     "command": {
-      "pin": "Command"
+      "pin": "Command (Orange)"
     },
     "clock": {
-      "pin": "Clock"
+      "pin": "Clock (Blue)"
     },
     "attention": {
-      "pin": "Attention"
+      "pin": "Attention (Green)"
     },
     "acknowledge": {
-      "pin": "Acknowledge"
+      "pin": "Acknowledge (Yellow)"
     },
     "devices": {
       "PS2ControllerTypeDigital": "PS1 Gamepad",

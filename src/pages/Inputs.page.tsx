@@ -343,10 +343,10 @@ function OutputBox({
           val2={mapping.ghButton!}
           dispatch={(axis) =>
             dispatch({
-              center: proto.GuitarHeroGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
               min: 0,
               max: 65535,
               ...mapping,
+              center: proto.GuitarHeroGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
               ghAxis: axis,
               ghButton: null,
