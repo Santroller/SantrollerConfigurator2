@@ -820,6 +820,23 @@ function SantrollerInput({
                     });
                   }
                   break;
+                case 'psx':
+                  if (axis) {
+                    dispatch({
+                      ps2Axis: {
+                        axis: proto.PS2AxisType.PS2AxisLeftStickX,
+                        deviceid: parseInt(val),
+                      },
+                    });
+                  } else if (button) {
+                    dispatch({
+                      ps2Button: {
+                        button: proto.PS2ButtonType.PS2ButtonCross,
+                        deviceid: parseInt(val),
+                      },
+                    });
+                  }
+                  break;
                 case 'ads1115':
                   dispatch({
                     ads1115: {
@@ -1016,6 +1033,24 @@ function SantrollerInput({
           val={input.wiiButton?.button}
           label="wii.inputs"
           dispatch={(button) => dispatch({ wiiButton: { ...input.wiiButton!, button } })}
+        ></DropdownBox>
+      )}
+      {input.ps2Axis && (
+        <DropdownBox
+          title="input"
+          e={proto.PS2AxisType}
+          val={input.ps2Axis?.axis}
+          label="ps2.inputs"
+          dispatch={(axis) => dispatch({ ps2Axis: { ...input.ps2Axis!, axis } })}
+        ></DropdownBox>
+      )}
+      {input.ps2Button && (
+        <DropdownBox
+          title="input"
+          e={proto.PS2ButtonType}
+          val={input.ps2Button?.button}
+          label="ps2.inputs"
+          dispatch={(button) => dispatch({ ps2Button: { ...input.ps2Button!, button } })}
         ></DropdownBox>
       )}
       {input.usbAxis && (

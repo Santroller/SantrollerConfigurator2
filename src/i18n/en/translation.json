@@ -331,7 +331,8 @@
       "PS2ControllerTypeGunCon": "GunCon Controller",
       "PS2ControllerTypeFlightStick": "Flight Stick Controller",
       "PS2ControllerTypeMouse": "Mouse",
-      "PS2ControllerTypeTaiko": "Taiko Drum"
+      "PS2ControllerTypeTaiko": "Taiko Drum",
+      "PS2ControllerTypePopNMusic": "Pop'n Music Controller"
     }
   },
   "spi": {
