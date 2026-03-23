@@ -6,10 +6,10 @@ import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
 
+import { disconnect } from 'process';
 import { BufferReader } from 'protobufjs';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
-import { disconnect } from 'process';
 
 export * from './config.js';
 export class MappingStatus {
@@ -212,6 +212,7 @@ export interface Actions {
   connect: () => void;
   firmwareUpdate: () => void;
   disconnect: () => void;
+  bootloader: () => void;
   deleteAllDevices: () => void;
   addDevice: (type: string) => void;
   onReport: (evt: HIDInputReportEvent) => void;
@@ -939,6 +940,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.updating = false;
         state.hidDevice = undefined;
       }),
+    bootloader: async () => {
+      const dev = get().hidDevice;
+      if (!dev) return;
+      await dev.sendFeatureReport(proto.ReportId.ReportIdBootloader, new Uint8Array([0]));
+    },
     pollInputs: (poll) =>
       set((state) => {
         state.polling = poll;

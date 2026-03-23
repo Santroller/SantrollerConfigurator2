@@ -538,6 +538,8 @@ function hasDefaults(deviceStatus: DeviceStatus) {
   switch (deviceStatus.type) {
     case 'crkdNeck':
       return true;
+    case 'wii':
+      return true;
     default:
       return false;
   }
@@ -1017,59 +1019,53 @@ function SantrollerInput({
             </Card>
           </div>
         ))}
-      {input.wiiAxis && (
-        <DropdownBox
+      {(input.wiiAxis || input.wiiButton) && (
+        <DropdownOutputBox
           title="input"
           e={proto.WiiAxisType}
+          e2={proto.WiiButtonType}
           val={input.wiiAxis?.axis}
+          val2={input.wiiButton?.button}
           label="wii.inputs"
-          dispatch={(axis) => dispatch({ wiiAxis: { ...input.wiiAxis!, axis } })}
-        ></DropdownBox>
+          dispatch={(axis) =>
+            dispatch({ wiiAxis: { ...input.wiiAxis!, axis, deviceid: deviceId } })
+          }
+          dispatch2={(button) =>
+            dispatch({ wiiButton: { ...input.wiiButton!, button, deviceid: deviceId } })
+          }
+        ></DropdownOutputBox>
       )}
-      {input.wiiButton && (
-        <DropdownBox
-          title="input"
-          e={proto.WiiButtonType}
-          val={input.wiiButton?.button}
-          label="wii.inputs"
-          dispatch={(button) => dispatch({ wiiButton: { ...input.wiiButton!, button } })}
-        ></DropdownBox>
-      )}
-      {input.ps2Axis && (
-        <DropdownBox
+      {(input.ps2Axis || input.ps2Button) && (
+        <DropdownOutputBox
           title="input"
           e={proto.PS2AxisType}
+          e2={proto.PS2ButtonType}
           val={input.ps2Axis?.axis}
+          val2={input.ps2Button?.button}
           label="ps2.inputs"
-          dispatch={(axis) => dispatch({ ps2Axis: { ...input.ps2Axis!, axis } })}
-        ></DropdownBox>
+          dispatch={(axis) =>
+            dispatch({ ps2Axis: { ...input.ps2Axis!, axis, deviceid: deviceId } })
+          }
+          dispatch2={(button) =>
+            dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
+          }
+        ></DropdownOutputBox>
       )}
-      {input.ps2Button && (
-        <DropdownBox
-          title="input"
-          e={proto.PS2ButtonType}
-          val={input.ps2Button?.button}
-          label="ps2.inputs"
-          dispatch={(button) => dispatch({ ps2Button: { ...input.ps2Button!, button } })}
-        ></DropdownBox>
-      )}
-      {input.usbAxis && (
-        <DropdownBox
+      {(input.usbAxis || input.usbButton) && (
+        <DropdownOutputBox
           title="input"
           e={proto.UsbAxisType}
+          e2={proto.UsbButtonType}
           val={input.usbAxis?.axis}
+          val2={input.usbButton?.button}
           label="usb.inputs"
-          dispatch={(axis) => dispatch({ usbAxis: { ...input.usbAxis!, axis } })}
-        ></DropdownBox>
-      )}
-      {input.usbButton && (
-        <DropdownBox
-          title="input"
-          e={proto.UsbButtonType}
-          val={input.usbButton?.button}
-          label="usb.inputs"
-          dispatch={(button) => dispatch({ usbButton: { ...input.usbButton!, button } })}
-        ></DropdownBox>
+          dispatch={(axis) =>
+            dispatch({ usbAxis: { ...input.usbAxis!, axis, deviceid: deviceId } })
+          }
+          dispatch2={(button) =>
+            dispatch({ usbButton: { ...input.usbButton!, button, deviceid: deviceId } })
+          }
+        ></DropdownOutputBox>
       )}
       {input.crkd && (
         <DropdownBox
@@ -1265,7 +1261,7 @@ function SantrollerInput({
   );
 }
 function isAnalog(input: proto.IInput) {
-  return input.gpio?.analog || input.ads1115 || input.wiiAxis || input.accelerometer;
+  return input.gpio?.analog || input.ads1115 || input.wiiAxis || input.accelerometer || input.usbAxis || input.ps2Axis;
 }
 function SantrollerMapping({
   mapping,
@@ -1511,7 +1507,7 @@ function SantrollerMapping({
                 />
               </>
             )}
-                <Text size="sm">{t('axis.pressed')}</Text>
+            <Text size="sm">{t('axis.pressed')}</Text>
             <Slider
               value={mapping.pressed!}
               min={0}
@@ -2949,8 +2945,32 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               updateProfile({ ...profile, faceButtonMappingMode: val }, profileIdx)
             }
           />
+          <Space h="md" />
+          <Switch
+            label={t('axis.invert_y_hid')}
+            checked={!!profile.invertYAxisHid}
+            onChange={(event) =>
+              updateProfile({ ...profile, invertYAxisHid: event.currentTarget.checked }, profileIdx)
+            }
+          />
         </>
       )}
+      <Space h="md" />
+      <Switch
+        label={t('mode.xinput_on_windows')}
+        checked={!!profile.xinputOnWindows}
+        onChange={(event) =>
+          updateProfile({ ...profile, xinputOnWindows: event.currentTarget.checked }, profileIdx)
+        }
+      />
+      <Space h="md" />
+      <Switch
+        label={t('mode.supportsPs4')}
+        checked={!!profile.ps4OrPs5Mode}
+        onChange={(event) =>
+          updateProfile({ ...profile, ps4OrPs5Mode: event.currentTarget.checked }, profileIdx)
+        }
+      />
       <Space h="md" />
       <Title order={3}>{t('assignments.title')}</Title>
       <Space h="md" />

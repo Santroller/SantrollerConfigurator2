@@ -7,6 +7,7 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
   const disconnect = useConfigStore((state) => state.disconnect);
+  const bootloader = useConfigStore((state) => state.bootloader);
   const exportConfig = useConfigStore((state) => state.exportConfig);
   const loadConfig = useConfigStore((state) => state.loadConfig);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
@@ -68,6 +69,10 @@ export function ConnectPage() {
             <Space h="md" />
             <Button disabled={updating} onClick={disconnect}>
               Disconnect from Santroller
+            </Button>
+            <Space h="md" />
+            <Button disabled={updating} onClick={bootloader}>
+              Jump to bootloader
             </Button>
             <Space h="md" />
             <Button disabled={updating} onClick={exportConfig}>Export current config</Button>
