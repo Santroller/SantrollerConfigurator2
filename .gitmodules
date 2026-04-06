@@ -1,4 +1,4 @@
 [submodule "Santroller"]
 	path = Santroller
 	url = https://github.com/Santroller/Santroller
-	branch = rewrite-2
+	branch = main
