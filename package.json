@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run build_proto && npm run build_santroller && npm run copy_santroller  && vite",
     "build_proto": "pbjs -w es6 --null-semantics -t static-module Santroller/proto/config.proto Santroller/proto/events.proto Santroller/proto/commands.proto -o src/components/SettingsContext/config.js && pbts -o src/components/SettingsContext/config.d.ts src/components/SettingsContext/config.js",
-    "build_santroller": "cd Santroller;mkdir build;cd build;cmake ..;make",
+    "build_santroller": "cd Santroller;mkdir build;cd build;cmake ..;make -j",
     "copy_santroller": "cp Santroller/build/santroller_fota_image.bin public && cp Santroller/build/santroller_fota.uf2 public/santroller.uf2 && cp Santroller/build/commit.hash public",
     "build": "npm run build_proto && npm run build_santroller && npm run copy_santroller && tsc && vite build && cp dist/index.html dist/404.html ",
     "preview": "vite preview",
