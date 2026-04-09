@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ConnectPage } from './pages/Connect.page';
 import { DevicesPage } from './pages/Devices.page';
 import { InputsPage } from './pages/Inputs.page';
+import { DebugPage } from './pages/Debug.page';
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,9 @@ const router = createBrowserRouter([
   },{
     path: '/profiles',
     element: <InputsPage />,
+  },{
+    path: '/debug',
+    element: <DebugPage />,
   },
 ]);
 

@@ -7,6 +7,7 @@ import {
   IconGauge,
   IconHome2,
   IconMoon,
+  IconPiano,
   IconPlus,
   IconSettings,
   IconSun,
@@ -97,6 +98,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 }}
                 label="Devices"
                 leftSection={<IconSettings size={16} stroke={1.5} />}
+              />
+              <NavLink
+                disabled={updating}
+                component={RouterNavLink}
+                to="/debug"
+                onClick={() => {
+                  pollInputs(false);
+                  nav('/debug');
+                }}
+                label="Debug"
+                leftSection={<IconPiano size={16} stroke={1.5} />}
               />
               <NavLink
                 disabled={updating}

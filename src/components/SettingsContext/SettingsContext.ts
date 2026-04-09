@@ -201,6 +201,7 @@ export interface ConfigState {
   currentProfile: number;
   lastProfile: number;
   activeProfiles: number[];
+  midiData: number[][];
 }
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
@@ -270,6 +271,7 @@ function InitState(config: proto.Config): ConfigState {
     currentProfile: 0,
     lastProfile: 0,
     activeProfiles: [],
+    midiData: [],
   };
 }
 
@@ -827,7 +829,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const eventList = proto.EventList.decodeDelimited(new Uint8Array(evt.data.buffer));
       for (const deviceEvent of eventList.event) {
         if (deviceEvent.debug) {
-          console.log(buf2hex(new Uint8Array(Int32Array.from(deviceEvent.debug.data!).buffer)));
+          console.log(buf2hex(deviceEvent.debug.data!));
+        }
+        if (deviceEvent.midiDebug) {
+          set((state) => {
+            if (deviceEvent.midiDebug) {
+              state.midiData.push([...deviceEvent.midiDebug.data!]);
+            }
+          });
         }
         if (deviceEvent.wii) {
           set((state) => {
