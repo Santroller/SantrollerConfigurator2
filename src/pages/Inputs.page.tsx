@@ -1075,7 +1075,7 @@ function SantrollerInput({
             switch (type) {
               case 'midiNote':
                 dispatch({
-                  midiNote: { ...input.midiNote!, note: 1, channel: 1, deviceid: deviceId },
+                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
                 });
                 break;
               case 'midiControlChange':
@@ -1083,14 +1083,13 @@ function SantrollerInput({
                   midiControlChange: {
                     ...input.midiControlChange!,
                     cc: 1,
-                    channel: 1,
                     deviceid: deviceId,
                   },
                 });
                 break;
               case 'midiPitchBend':
                 dispatch({
-                  midiPitchBend: { ...input.midiPitchBend!, channel: 1, deviceid: deviceId },
+                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
                 });
                 break;
             }
@@ -1142,7 +1141,7 @@ function SantrollerInput({
             switch (type) {
               case 'midiNote':
                 dispatch({
-                  midiNote: { ...input.midiNote!, note: 1, channel: 1, deviceid: deviceId },
+                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
                 });
                 break;
               case 'midiControlChange':
@@ -1150,14 +1149,13 @@ function SantrollerInput({
                   midiControlChange: {
                     ...input.midiControlChange!,
                     cc: 1,
-                    channel: 1,
                     deviceid: deviceId,
                   },
                 });
                 break;
               case 'midiPitchBend':
                 dispatch({
-                  midiPitchBend: { ...input.midiPitchBend!, channel: 1, deviceid: deviceId },
+                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
                 });
                 break;
             }
@@ -1359,12 +1357,7 @@ function SantrollerInput({
           <NumberInput
             label={t('input.midiNote')}
             value={input.midiNote.note}
-            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) }, })}
-          ></NumberInput>
-          <NumberInput
-            label={t('input.midiChannel')}
-            value={input.midiNote.channel}
-            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, channel: Number(val) },})}
+            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
           ></NumberInput>
         </>
       )}
@@ -1378,7 +1371,10 @@ function isAnalog(input: proto.IInput) {
     input.wiiAxis ||
     input.accelerometer ||
     input.usbAxis ||
-    input.ps2Axis
+    input.ps2Axis ||
+    input.midiNote ||
+    input.midiControlChange ||
+    input.midiPitchBend
   );
 }
 function SantrollerMapping({
