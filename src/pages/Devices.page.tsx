@@ -634,7 +634,7 @@ function MidiSerialDevice({ id }: { id: string }) {
     >
       <UARTDevice
         device={midiSerial.uart}
-        dispatch={(val) => updateDevice({ midiSerial: { ...midiSerial, uart: val } }, id)}
+        dispatch={(val) => updateDevice({ midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } } }, id)}
       />
     </DeviceCard>
   );

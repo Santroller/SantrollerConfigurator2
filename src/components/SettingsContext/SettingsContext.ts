@@ -202,6 +202,7 @@ export interface ConfigState {
   lastProfile: number;
   activeProfiles: number[];
   midiData: number[][];
+  console: string;
 }
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
@@ -224,6 +225,8 @@ export interface Actions {
   loadConfig: (file: File | null) => void;
   pollInputs: (poll: boolean) => void;
   loadDefaults: (device: DeviceStatus | undefined) => void;
+  clearConsole: () => void;
+  clearMidi: () => void;
   detectPins: (
     activation: number | undefined,
     mapping: number | undefined,
@@ -272,6 +275,7 @@ function InitState(config: proto.Config): ConfigState {
     lastProfile: 0,
     activeProfiles: [],
     midiData: [],
+    console: '',
   };
 }
 
@@ -510,6 +514,16 @@ function fixInput(mapping: proto.IMapping) {
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    clearConsole: () => {
+      set((state) => {
+        state.console = "";
+      });
+    },
+    clearMidi: () => {
+      set((state) => {
+        state.midiData = [];
+      });
+    },
     updateDevice: (device: proto.IDevice, id: string) => {
       set((state) => {
         state.deviceStatus[id].device = device;
@@ -835,6 +849,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.midiDebug) {
               state.midiData.push([...deviceEvent.midiDebug.data!]);
+            }
+          });
+        }
+        if (deviceEvent.console) {
+          set((state) => {
+            if (deviceEvent.console) {
+              state.console += deviceEvent.console.data;
             }
           });
         }

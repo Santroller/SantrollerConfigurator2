@@ -1,4 +1,6 @@
 import {
+  Button,
+  Code,
   Loader,
   Table,
   Text,
@@ -45,6 +47,9 @@ function MidiRow({ data, i }: { data: number[]; i: number }) {
 
 export function DebugPage() {
   const midiData = useConfigStore((state) => state.midiData);
+  const consoleData = useConfigStore((state) => state.console);
+  const clearMidi = useConfigStore((state) => state.clearMidi);
+  const clearConsole = useConfigStore((state) => state.clearConsole);
   const mounted = useMounted();
   if (!mounted) {
     return <Loader></Loader>;
@@ -53,7 +58,9 @@ export function DebugPage() {
     <>
       <Layout>
         <RequireDevice>
-          <Text>MIDI Monitor</Text>
+          <Text>Logs</Text> <Button onClick={clearConsole}>Clear</Button>
+          <Code block>{consoleData}</Code>
+          <Text>MIDI Monitor</Text> <Button onClick={clearMidi}>Clear</Button>
           <Table>
             <Table.Thead>
               <Table.Tr>

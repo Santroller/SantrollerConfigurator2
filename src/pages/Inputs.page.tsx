@@ -330,6 +330,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, gamepadButton: button, gamepadAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.GuitarHeroGuitar:
@@ -353,6 +354,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghButton: button, ghAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.RockBandGuitar:
@@ -376,6 +378,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -400,6 +403,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghDrumButton: button, ghDrumAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -424,6 +428,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, rbDrumButton: button, rbDrumAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -448,6 +453,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghlButton: button, ghlAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -472,6 +478,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, djhButton: button, djhAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -497,6 +504,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.ProKeys:
@@ -612,21 +620,27 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   e2,
   val,
   val2,
+  val3,
   title,
   label,
   mode,
+  midi,
   dispatch,
   dispatch2,
+  dispatch3,
 }: {
   e: T;
   e2: T2;
   val?: T[keyof T];
   val2?: T2[keyof T2];
+  val3?: string;
   title: string;
   label: string;
   mode?: proto.FaceButtonMappingMode;
+  midi?: boolean;
   dispatch: (input: T[keyof T]) => void;
   dispatch2: (input: T2[keyof T2]) => void;
+  dispatch3: (input: string) => void;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -642,7 +656,9 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       rightSectionPointerEvents="none"
       onClick={() => inputCombobox.toggleDropdown()}
     >
-      {t(`${label}.${FixLabel(mode, (e[val as keyof T] || e2[val2 as keyof T2]) as string)}`)}
+      {t(
+        `${label}.${FixLabel(mode, (e[val as keyof T] || e2[val2 as keyof T2] || val3) as string)}`
+      )}
     </InputBase>
   ) : (
     <InputBase
@@ -654,7 +670,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       rightSectionPointerEvents="none"
       onClick={() => inputCombobox.toggleDropdown()}
     >
-      {t(`${label}.${e[val as keyof T] || e2[val2 as keyof T2]}`)}
+      {t(`${label}.${e[val as keyof T] || e2[val2 as keyof T2] || val3}`)}
     </InputBase>
   );
   if (!inputCombobox.dropdownOpened) {
@@ -672,6 +688,9 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         if (axis !== undefined) {
           dispatch2(axis);
         }
+        if (val == 'midiNote' || val == 'midiControlChange' || val == 'midiPitchBend') {
+          dispatch3(val);
+        }
         inputCombobox.closeDropdown();
       }}
     >
@@ -679,6 +698,15 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 
       <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
         <Combobox.Options>
+          {midi && (
+            <>
+              <Combobox.Option value="midiNote">{t('input.midiNote')}</Combobox.Option>
+              <Combobox.Option value="midiControlChange">
+                {t('input.midiControlChange')}
+              </Combobox.Option>
+              <Combobox.Option value="midiPitchBend">{t('input.midiPitchBend')}</Combobox.Option>
+            </>
+          )}
           {Object.keys(e).map((item) => (
             <Combobox.Option value={item} key={item}>
               {t(`${label}.${item}`)}
@@ -1019,20 +1047,54 @@ function SantrollerInput({
             </Card>
           </div>
         ))}
-      {(input.wiiAxis || input.wiiButton) && (
+      {device.type == 'wii' && (
         <DropdownOutputBox
           title="input"
           e={proto.WiiAxisType}
           e2={proto.WiiButtonType}
           val={input.wiiAxis?.axis}
           val2={input.wiiButton?.button}
+          val3={
+            input.midiNote
+              ? 'midiNote'
+              : input.midiControlChange
+                ? 'midiControlChange'
+                : input.midiPitchBend
+                  ? 'midiPitchBend'
+                  : undefined
+          }
           label="wii.inputs"
+          midi
           dispatch={(axis) =>
             dispatch({ wiiAxis: { ...input.wiiAxis!, axis, deviceid: deviceId } })
           }
           dispatch2={(button) =>
             dispatch({ wiiButton: { ...input.wiiButton!, button, deviceid: deviceId } })
           }
+          dispatch3={(type) => {
+            switch (type) {
+              case 'midiNote':
+                dispatch({
+                  midiNote: { ...input.midiNote!, note: 1, channel: 1, deviceid: deviceId },
+                });
+                break;
+              case 'midiControlChange':
+                dispatch({
+                  midiControlChange: {
+                    ...input.midiControlChange!,
+                    cc: 1,
+                    channel: 1,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiPitchBend':
+                dispatch({
+                  midiPitchBend: { ...input.midiPitchBend!, channel: 1, deviceid: deviceId },
+                });
+                break;
+            }
+          }}
         ></DropdownOutputBox>
       )}
       {(input.ps2Axis || input.ps2Button) && (
@@ -1049,22 +1111,57 @@ function SantrollerInput({
           dispatch2={(button) =>
             dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
           }
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       )}
-      {(input.usbAxis || input.usbButton) && (
+      {device.type == 'usbHost' && (
         <DropdownOutputBox
           title="input"
           e={proto.UsbAxisType}
           e2={proto.UsbButtonType}
           val={input.usbAxis?.axis}
           val2={input.usbButton?.button}
+          val3={
+            input.midiNote
+              ? 'midiNote'
+              : input.midiControlChange
+                ? 'midiControlChange'
+                : input.midiPitchBend
+                  ? 'midiPitchBend'
+                  : undefined
+          }
           label="usb.inputs"
+          midi
           dispatch={(axis) =>
             dispatch({ usbAxis: { ...input.usbAxis!, axis, deviceid: deviceId } })
           }
           dispatch2={(button) =>
             dispatch({ usbButton: { ...input.usbButton!, button, deviceid: deviceId } })
           }
+          dispatch3={(type) => {
+            switch (type) {
+              case 'midiNote':
+                dispatch({
+                  midiNote: { ...input.midiNote!, note: 1, channel: 1, deviceid: deviceId },
+                });
+                break;
+              case 'midiControlChange':
+                dispatch({
+                  midiControlChange: {
+                    ...input.midiControlChange!,
+                    cc: 1,
+                    channel: 1,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiPitchBend':
+                dispatch({
+                  midiPitchBend: { ...input.midiPitchBend!, channel: 1, deviceid: deviceId },
+                });
+                break;
+            }
+          }}
         ></DropdownOutputBox>
       )}
       {input.crkd && (
@@ -1257,11 +1354,32 @@ function SantrollerInput({
           dispatch={(type) => dispatch({ accelerometer: { ...input.accelerometer!, type } })}
         ></DropdownBox>
       )}
+      {input.midiNote && (
+        <>
+          <NumberInput
+            label={t('input.midiNote')}
+            value={input.midiNote.note}
+            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) }, })}
+          ></NumberInput>
+          <NumberInput
+            label={t('input.midiChannel')}
+            value={input.midiNote.channel}
+            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, channel: Number(val) },})}
+          ></NumberInput>
+        </>
+      )}
     </>
   );
 }
 function isAnalog(input: proto.IInput) {
-  return input.gpio?.analog || input.ads1115 || input.wiiAxis || input.accelerometer || input.usbAxis || input.ps2Axis;
+  return (
+    input.gpio?.analog ||
+    input.ads1115 ||
+    input.wiiAxis ||
+    input.accelerometer ||
+    input.usbAxis ||
+    input.ps2Axis
+  );
 }
 function SantrollerMapping({
   mapping,
@@ -2515,6 +2633,15 @@ function SantrollerAssignment({
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
           ></DropdownBox>
+        )}
+        {mapping.midiChannel && (
+          <NumberInput
+            label="MIDI Channel"
+            value={mapping.midiChannel}
+            min={1}
+            max={16}
+            onChange={(val) => dispatch({ midiChannel: parseInt(val.toString()) ?? 1 })}
+          />
         )}
         {mapping.consoleType && (
           <DropdownBox
