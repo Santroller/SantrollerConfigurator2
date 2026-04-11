@@ -688,7 +688,13 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         if (axis !== undefined) {
           dispatch2(axis);
         }
-        if (val == 'midiNote' || val == 'midiControlChange' || val == 'midiPitchBend') {
+        if (
+          val == 'midiNote' ||
+          val == 'midiControlChange' ||
+          val == 'midiPitchBend' ||
+          val == 'midiProGuitarButton' ||
+          val == 'midiProGuitarAxis'
+        ) {
           dispatch3(val);
         }
         inputCombobox.closeDropdown();
@@ -705,6 +711,12 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
                 {t('input.midiControlChange')}
               </Combobox.Option>
               <Combobox.Option value="midiPitchBend">{t('input.midiPitchBend')}</Combobox.Option>
+              <Combobox.Option value="midiProGuitarButton">
+                {t('input.midiProGuitarButton')}
+              </Combobox.Option>
+              <Combobox.Option value="midiProGuitarAxis">
+                {t('input.midiProGuitarAxis')}
+              </Combobox.Option>
             </>
           )}
           {Object.keys(e).map((item) => (
@@ -1061,7 +1073,11 @@ function SantrollerInput({
                 ? 'midiControlChange'
                 : input.midiPitchBend
                   ? 'midiPitchBend'
-                  : undefined
+                  : input.midiProGuitarButton
+                    ? 'midiProGuitarButton'
+                    : input.midiProGuitarAxis
+                      ? 'midiProGuitarAxis'
+                      : undefined
           }
           label="wii.inputs"
           midi
@@ -1090,6 +1106,24 @@ function SantrollerInput({
               case 'midiPitchBend':
                 dispatch({
                   midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
+                });
+                break;
+              case 'midiProGuitarButton':
+                dispatch({
+                  midiProGuitarButton: {
+                    ...input.midiProGuitarButton!,
+                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiProGuitarAxis':
+                dispatch({
+                  midiProGuitarAxis: {
+                    ...input.midiProGuitarAxis!,
+                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    deviceid: deviceId,
+                  },
                 });
                 break;
             }
@@ -1127,7 +1161,11 @@ function SantrollerInput({
                 ? 'midiControlChange'
                 : input.midiPitchBend
                   ? 'midiPitchBend'
-                  : undefined
+                  : input.midiProGuitarButton
+                    ? 'midiProGuitarButton'
+                    : input.midiProGuitarAxis
+                      ? 'midiProGuitarAxis'
+                      : undefined
           }
           label="usb.inputs"
           midi
@@ -1156,6 +1194,23 @@ function SantrollerInput({
               case 'midiPitchBend':
                 dispatch({
                   midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
+                });
+              case 'midiProGuitarButton':
+                dispatch({
+                  midiProGuitarButton: {
+                    ...input.midiProGuitarButton!,
+                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiProGuitarAxis':
+                dispatch({
+                  midiProGuitarAxis: {
+                    ...input.midiProGuitarAxis!,
+                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    deviceid: deviceId,
+                  },
                 });
                 break;
             }
@@ -1353,13 +1408,42 @@ function SantrollerInput({
         ></DropdownBox>
       )}
       {input.midiNote && (
-        <>
-          <NumberInput
-            label={t('input.midiNote')}
-            value={input.midiNote.note}
-            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
-          ></NumberInput>
-        </>
+        <NumberInput
+          label={t('input.midiNote')}
+          value={input.midiNote.note}
+          onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
+        ></NumberInput>
+      )}
+      {input.midiControlChange && (
+        <NumberInput
+          label={t('input.midiControlChange')}
+          value={input.midiControlChange.cc}
+          onChange={(val) =>
+            dispatch({ midiControlChange: { ...input.midiControlChange!, cc: Number(val) } })
+          }
+        ></NumberInput>
+      )}
+      {input.midiProGuitarButton && (
+        <DropdownBox
+          title="input.midiProGuitarButton"
+          e={proto.ProGuitarButtonType}
+          val={input.midiProGuitarButton?.button}
+          label="input.midiProGuitarButton"
+          dispatch={(button) =>
+            dispatch({ midiProGuitarButton: { ...input.midiProGuitarButton!, button } })
+          }
+        ></DropdownBox>
+      )}
+      {input.midiProGuitarAxis && (
+        <DropdownBox
+          title="input.midiProGuitarAxis"
+          e={proto.ProGuitarButtonType}
+          val={input.midiProGuitarAxis?.axis}
+          label="input.midiProGuitarAxis"
+          dispatch={(axis) =>
+            dispatch({ midiProGuitarAxis: { ...input.midiProGuitarAxis!, axis } })
+          }
+        ></DropdownBox>
       )}
     </>
   );
@@ -1374,7 +1458,8 @@ function isAnalog(input: proto.IInput) {
     input.ps2Axis ||
     input.midiNote ||
     input.midiControlChange ||
-    input.midiPitchBend
+    input.midiPitchBend ||
+    input.midiProGuitarAxis
   );
 }
 function SantrollerMapping({
@@ -2635,7 +2720,7 @@ function SantrollerAssignment({
             label="MIDI Channel"
             value={mapping.midiChannel}
             min={1}
-            max={16}
+            max={17}
             onChange={(val) => dispatch({ midiChannel: parseInt(val.toString()) ?? 1 })}
           />
         )}
