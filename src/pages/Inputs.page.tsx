@@ -1047,7 +1047,7 @@ function SantrollerInput({
             </Card>
           </div>
         ))}
-      {device.type == 'wii' && (
+      {device?.type == 'wii' && (
         <DropdownOutputBox
           title="input"
           e={proto.WiiAxisType}
@@ -1113,7 +1113,7 @@ function SantrollerInput({
           dispatch3={() => {}}
         ></DropdownOutputBox>
       )}
-      {device.type == 'usbHost' && (
+      {device?.type == 'usbHost' && (
         <DropdownOutputBox
           title="input"
           e={proto.UsbAxisType}
