@@ -604,19 +604,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.ledStatus = state.config.profiles!.map((profile) =>
           Object.fromEntries(profile.leds!.map((x, i) => [i, new LedStatus(i, x)]))
         );
-        if (
-          state.config.profiles?.length &&
-          state.config.profiles?.every((x) =>
-            x.assignments?.every((y) => y.assignments?.every((z) => !z.catchall))
-          )
-        ) {
-          state.config.profiles[0].assignments = [
-            ...state.config.profiles[0].assignments!,
-            {
-              assignments: [{ catchall: true }],
-            },
-          ];
-        }
       });
       get().saveConfig();
     },
