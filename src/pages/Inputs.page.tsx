@@ -1437,7 +1437,7 @@ function SantrollerInput({
       {input.midiProGuitarAxis && (
         <DropdownBox
           title="input.midiProGuitarAxis"
-          e={proto.ProGuitarButtonType}
+          e={proto.ProGuitarAxisType}
           val={input.midiProGuitarAxis?.axis}
           label="input.midiProGuitarAxis"
           dispatch={(axis) =>
