@@ -320,10 +320,10 @@
       "pin": "Clock (Blue)"
     },
     "attention": {
-      "pin": "Attention (Green)"
+      "pin": "Attention (Yellow)"
     },
     "acknowledge": {
-      "pin": "Acknowledge (Yellow)"
+      "pin": "Acknowledge (Green)"
     },
     "devices": {
       "PS2ControllerTypeDigital": "PS1 Gamepad",
