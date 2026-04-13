@@ -850,6 +850,7 @@ function PSXDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const { t } = useTranslation();
   const device = status.device;
   if (!device.psx) {
     throw new Error('device null!');
@@ -858,12 +859,28 @@ function PSXDevice({ id }: { id: string }) {
   return (
     <DeviceCard
       connected={
-        status.ps2CntType.find((x) => x != proto.PS2ControllerType.PS2ControllerTypeUnknown) != null
+        status.ps2CntType.find((x) => x.type != proto.PS2ControllerType.PS2ControllerTypeUnknown) != null
       }
       title="devices.psx"
       image="covers/devices/psx.png"
       deleteDevice={() => deleteDevice(id)}
     >
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Port</Table.Th>
+            <Table.Th>Connected Device</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {Object.values(status.ps2CntType).map((x) => (
+            <Table.Tr key={x.port}>
+              <Table.Td>{x.port}</Table.Td>
+              <Table.Td>{t(`psx.devices.${proto.PS2ControllerType[x.type]}`)}</Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
       <SPIDevice
         device={psx.spi}
         mosiLabel="psx.command.pin"
