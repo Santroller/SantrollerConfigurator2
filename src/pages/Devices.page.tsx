@@ -20,6 +20,7 @@ import {
   SegmentedControl,
   SimpleGrid,
   Space,
+  Table,
   Title,
   UnstyledButton,
   useCombobox,
@@ -97,11 +98,13 @@ function SPIDevice({
   noSck?: boolean;
 }) {
   const error =
-    (new Set([
-      noMosi ? null : SPIGroups[device.mosi],
-      noMiso ? null : SPIGroups[device.miso],
-      noSck ? null : SPIGroups[device.sck],
-    ].filter(x=>x)).size !== 1 &&
+    (new Set(
+      [
+        noMosi ? null : SPIGroups[device.mosi],
+        noMiso ? null : SPIGroups[device.miso],
+        noSck ? null : SPIGroups[device.sck],
+      ].filter((x) => x)
+    ).size !== 1 &&
       'spi.incorrect_group') ||
     '';
 
@@ -634,7 +637,9 @@ function MidiSerialDevice({ id }: { id: string }) {
     >
       <UARTDevice
         device={midiSerial.uart}
-        dispatch={(val) => updateDevice({ midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } } }, id)}
+        dispatch={(val) =>
+          updateDevice({ midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -743,7 +748,7 @@ function APA102Device({ id }: { id: string }) {
     throw new Error('device null!');
   }
   const apa102 = device.apa102;
-  console.log(apa102)
+  console.log(apa102);
   return (
     <DeviceCard
       title="devices.apa102"
@@ -852,7 +857,9 @@ function PSXDevice({ id }: { id: string }) {
   const psx = device.psx;
   return (
     <DeviceCard
-      connected={status.connected}
+      connected={
+        status.ps2CntType.find((x) => x != proto.PS2ControllerType.PS2ControllerTypeUnknown) != null
+      }
       title="devices.psx"
       image="covers/devices/psx.png"
       deleteDevice={() => deleteDevice(id)}
@@ -1023,11 +1030,25 @@ function USBHostDevice({ id }: { id: string }) {
   const usbHost = device.usbHost;
   return (
     <DeviceCard
-      connected={status.connected}
+      connected={Object.values(status.usbDevices).length != 0}
       title="devices.usbHost"
       image="covers/devices/usbHost.png"
       deleteDevice={() => deleteDevice(id)}
     >
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Connected Devices</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {Object.values(status.usbDevices).map((x) => (
+            <Table.Tr key={x.port * 127 + x.interface}>
+              <Table.Td>{x.name}</Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
       <PinBox
         label={usbHost.dmFirst ? 'usb.dm.label' : 'usb.dp.label'}
         pin={usbHost.firstPin}

@@ -58,12 +58,22 @@ export class DeviceStatus {
     this.type = type;
     this.device = device;
     this.wiiExtType = proto.WiiExtType.WiiNoExtension;
+    this.usbDevices = {};
+    // four port Multitap
+    this.ps2CntType = [
+      proto.PS2ControllerType.PS2ControllerTypeUnknown,
+      proto.PS2ControllerType.PS2ControllerTypeUnknown,
+      proto.PS2ControllerType.PS2ControllerTypeUnknown,
+      proto.PS2ControllerType.PS2ControllerTypeUnknown,
+    ];
   }
   id: string;
   type: string;
   connected: boolean = false;
   device: proto.IDevice;
   wiiExtType: proto.WiiExtType;
+  ps2CntType: proto.PS2ControllerType[];
+  usbDevices: { [key: number]: proto.UsbDeviceHotplugEvent };
   static label(status: DeviceStatus) {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
@@ -516,7 +526,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     ...initialConfig,
     clearConsole: () => {
       set((state) => {
-        state.console = "";
+        state.console = '';
       });
     },
     clearMidi: () => {
@@ -843,6 +853,26 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.console) {
               state.console += deviceEvent.console.data;
+            }
+          });
+        }
+        if (deviceEvent.ps2) {
+          set((state) => {
+            if (deviceEvent.ps2!.id in state.deviceStatus) {
+              state.deviceStatus[deviceEvent.ps2!.id].ps2CntType[deviceEvent.ps2?.port!] =
+                deviceEvent.ps2!.type;
+            }
+          });
+        }
+        if (deviceEvent.usb) {
+          set((state) => {
+            if (deviceEvent.usb!.id in state.deviceStatus) {
+              const id = deviceEvent.usb?.port! * 127 + deviceEvent.usb?.interface!;
+              if (deviceEvent.usb!.connected) {
+                state.deviceStatus[deviceEvent.usb!.id].usbDevices[id] = deviceEvent.usb!;
+              } else {
+                delete state.deviceStatus[deviceEvent.usb!.id].usbDevices[id];
+              }
             }
           });
         }
