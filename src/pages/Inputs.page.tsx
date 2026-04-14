@@ -1686,7 +1686,7 @@ function SantrollerMapping({
           <>
             <Switch
               label={t('axis.released_toggle')}
-              checked={mapping.released !== null}
+              checked={mapping.released !== undefined}
               onChange={(event) => {
                 dispatch({
                   ...mapping,
@@ -1695,7 +1695,7 @@ function SantrollerMapping({
               }}
             />
             <Space h="md" />
-            {mapping.released && (
+            {mapping.released !== undefined && (
               <>
                 <Text size="sm">{t('axis.released')}</Text>
                 <Slider
