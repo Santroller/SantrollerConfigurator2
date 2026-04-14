@@ -324,7 +324,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               gamepadAxis: axis,
               gamepadButton: null,
             })
@@ -348,7 +348,7 @@ function OutputBox({
               max: 65535,
               ...mapping,
               center: proto.GuitarHeroGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               ghAxis: axis,
               ghButton: null,
             })
@@ -372,7 +372,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               rbAxis: axis,
               rbButton: null,
             })
@@ -397,7 +397,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               ghDrumAxis: axis,
               ghDrumButton: null,
             })
@@ -422,7 +422,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               rbDrumAxis: axis,
               rbDrumButton: null,
             })
@@ -447,7 +447,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               ghlAxis: axis,
               ghlButton: null,
             })
@@ -472,7 +472,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               djhAxis: axis,
               djhButton: null,
             })
@@ -498,7 +498,7 @@ function OutputBox({
               min: 0,
               max: 65535,
               ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
               rbAxis: axis,
               rbButton: null,
             })
@@ -1568,7 +1568,7 @@ function SantrollerMapping({
             dispatch({
               ...mapping,
               input,
-              pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 0),
+              pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
             });
           }}
           mappingIdx={mappingIdx}
