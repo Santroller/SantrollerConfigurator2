@@ -2426,17 +2426,6 @@ function SantrollerLed({
 }
 
 type ProfileAssignmentTypes = keyof proto.IProfileAssignmentInfo;
-const AllProfileAssignmentTypes: ProfileAssignmentTypes[] = [
-  'catchall',
-  'consoleType',
-  'wiiExt',
-  'ps2Cnt',
-  'usbType',
-  'usbDevice',
-  'input',
-  'inputAnyTime',
-  'midiChannel',
-];
 const SingleProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'catchall',
   'wiiExt',
@@ -2459,6 +2448,9 @@ const DeviceProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'bluetooth',
   'consoleType',
 ];
+const AllProfileAssignmentTypes: ProfileAssignmentTypes[] = OtherAssignmentTypes.concat(
+  HostProfileAssignmentTypes
+).concat(DeviceProfileAssignmentTypes);
 const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignmentTypes.filter(
   (x) => !SingleProfileAssignmentTypes.includes(x)
 );
@@ -2612,9 +2604,9 @@ function SantrollerAssignment({
   const assignmentTypeCombobox = useCombobox({
     onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
   });
-  const types = filterSingle ? MultiProfileAssignmentTypes : AllProfileAssignmentTypes;
   const label = t(
-    'assignmentType.' + types.filter((x) => mapping[x] != null && mapping[x] != undefined)
+    'assignmentType.' +
+      AllProfileAssignmentTypes.filter((x) => mapping[x] != null && mapping[x] != undefined)
   );
   const base = useMemo(
     () => (
@@ -2680,7 +2672,7 @@ function SantrollerAssignment({
           onOptionSubmit={(val) => {
             switch (val as ProfileAssignmentTypes) {
               case 'bluetooth':
-                dispatch({ bluetooth: proto.BluetoothMode.BTStandard  });
+                dispatch({ bluetooth: proto.BluetoothMode.BTStandard });
                 break;
               case 'ps2Emulation':
                 dispatch({ ps2Emulation: {} });
