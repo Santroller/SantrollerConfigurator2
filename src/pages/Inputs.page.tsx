@@ -814,10 +814,17 @@ function SantrollerInput({
   });
 
   let deviceValue = <></>;
-  if (input.gpio && input.gpio.analog) {
-    deviceValue = <Text>{t(`devices.gpio_analog`)}</Text>;
-  } else if (input.gpio) {
-    deviceValue = <Text>{t(`devices.gpio_digital`)}</Text>;
+  if (input.gpio) {
+    deviceValue = (
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t('devices.gpio')}
+        </Text>
+        <Text fz="xs" span opacity="0.7">
+          {t(input.gpio.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')}
+        </Text>
+      </Group>
+    );
   } else if (input.mouseAxis) {
     deviceValue = <Text>{t(`devices.mouseAxis`)}</Text>;
   } else if (input.mouseButton) {
@@ -1004,8 +1011,26 @@ function SantrollerInput({
                     </Group>
                   </Combobox.Option>
                 ))}
-              <Combobox.Option value="gpio_analog">{t('devices.gpio_analog')}</Combobox.Option>
-              <Combobox.Option value="gpio_digital">{t('devices.gpio_digital')}</Combobox.Option>
+              <Combobox.Option value="gpio_analog">
+                <Group gap="2">
+                  <Text fz="sm" span>
+                    {t('devices.gpio')}
+                  </Text>
+                  <Text fz="xs" span opacity="0.7">
+                    {t('devices.gpio_analog')}
+                  </Text>
+                </Group>
+              </Combobox.Option>
+              <Combobox.Option value="gpio_digital">
+                <Group gap="2">
+                  <Text fz="sm" span>
+                    {t('devices.gpio')}
+                  </Text>
+                  <Text fz="xs" span opacity="0.7">
+                    {t('devices.gpio_digital')}
+                  </Text>
+                </Group>
+              </Combobox.Option>
               <Combobox.Option value="shortcut">{t('devices.shortcut')}</Combobox.Option>
             </Combobox.Options>
           </Combobox.Dropdown>
@@ -1889,19 +1914,43 @@ function SantrollerLed({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   let img = `Icons/Generic.png`;
-  const analog = !!(
-    led.mapping.inputMapping?.input.gpio?.analog ||
-    led.mapping.inputMapping?.input.ads1115 ||
-    led.mapping.inputMapping?.input.wiiAxis ||
-    led.mapping.inputMapping?.input.accelerometer
-  );
-  let deviceValue = '';
-  if (led.device.gpio && led.device.gpio.analog) {
-    deviceValue = t(`devices.gpio_analog`);
-  } else if (led.device.gpio) {
-    deviceValue = t(`devices.gpio_digital`);
+  const analog = led.mapping.inputMapping && isAnalog(led.mapping.inputMapping.input);
+  let deviceValue = <></>;
+  if (led.mapping.inputMapping?.input.gpio) {
+    deviceValue = (
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t('devices.gpio')}
+        </Text>
+        <Text fz="xs" span opacity="0.7">
+          {t(
+            led.mapping.inputMapping?.input.gpio.analog
+              ? 'devices.gpio_analog'
+              : 'devices.gpio_digital'
+          )}
+        </Text>
+      </Group>
+    );
+  } else if (led.mapping.inputMapping?.input.mouseAxis) {
+    deviceValue = <Text>{t(`devices.mouseAxis`)}</Text>;
+  } else if (led.mapping.inputMapping?.input.mouseButton) {
+    deviceValue = <Text>{t(`devices.mouseButton`)}</Text>;
+  } else if (led.mapping.inputMapping?.input.key) {
+    deviceValue = <Text>{t(`devices.key`)}</Text>;
+  } else if (led.mapping.inputMapping?.input.shortcut) {
+    deviceValue = <Text>{t(`devices.shortcut`)}</Text>;
   } else if (device) {
-    deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
+    deviceValue = (
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t(`devices.${device.type}`)}
+        </Text>
+
+        <Text fz="xs" span opacity="0.7">
+          ({DeviceStatus.label(device)})
+        </Text>
+      </Group>
+    );
   }
   let mappingValue = '';
   if (led.mapping.inputMapping) {
@@ -2031,11 +2080,37 @@ function SantrollerLed({
                   .filter(isLed)
                   .map((item) => (
                     <Combobox.Option value={item.id} key={item.id}>
-                      {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                      <Group gap="2">
+                        <Text fz="sm" span>
+                          {t(`devices.${item.type}`)}
+                        </Text>
+
+                        <Text fz="xs" span opacity="0.7">
+                          ({DeviceStatus.label(item)})
+                        </Text>
+                      </Group>
                     </Combobox.Option>
                   ))}
-                <Combobox.Option value="gpio_analog">{t('devices.gpio_analog')}</Combobox.Option>
-                <Combobox.Option value="gpio_digital">{t('devices.gpio_digital')}</Combobox.Option>
+                <Combobox.Option value="gpio_analog">
+                  <Group gap="2">
+                    <Text fz="sm" span>
+                      {t('devices.gpio')}
+                    </Text>
+                    <Text fz="xs" span opacity="0.7">
+                      {t('devices.gpio_analog')}
+                    </Text>
+                  </Group>
+                </Combobox.Option>
+                <Combobox.Option value="gpio_digital">
+                  <Group gap="2">
+                    <Text fz="sm" span>
+                      {t('devices.gpio')}
+                    </Text>
+                    <Text fz="xs" span opacity="0.7">
+                      {t('devices.gpio_digital')}
+                    </Text>
+                  </Group>
+                </Combobox.Option>
               </Combobox.Options>
             </Combobox.Dropdown>
           </Combobox>
@@ -2160,7 +2235,7 @@ function SantrollerLed({
               }
             ></DropdownBox>
             <SantrollerInput
-              axis={analog}
+              axis={!!analog}
               button={!analog}
               input={led.mapping.inputMapping?.input}
               dispatch={(input) => {
