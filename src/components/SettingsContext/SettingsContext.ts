@@ -73,6 +73,12 @@ export class DeviceStatus {
       ?.map((x) => `GP${x}`)
       .join(', ');
     switch (status.type) {
+      case 'wii':
+        label = `${status.wiiExtType != proto.WiiExtType.WiiNoExtension ? 'Connected' : 'Disconnected'}, ${label}`;
+        break;
+      case 'psx':
+        label = `${status.ps2CntType != proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${label}`;
+        break;
       case 'ws2812':
       case 'apa102':
       case 'stp16cpc':
