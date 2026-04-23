@@ -79,12 +79,14 @@ import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
 function StateLabel({
   profileIdx,
   mappingIdx,
+  listIdx,
   raw,
   activationBased,
   ledBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
+  listIdx?: number;
   raw?: boolean;
   activationBased?: boolean;
   ledBased?: boolean;
@@ -93,14 +95,14 @@ function StateLabel({
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
       : activationBased
-        ? state.activationStatus[profileIdx][mappingIdx]?.stateRaw
+        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
         : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const state = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
-        ? state.activationStatus[profileIdx][mappingIdx]?.state
+        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
         : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   return <Center h="100%">{raw ? stateRaw : state}</Center>;
@@ -108,6 +110,7 @@ function StateLabel({
 function StateSection({
   profileIdx,
   mappingIdx,
+  listIdx,
   min,
   max,
   center,
@@ -119,6 +122,7 @@ function StateSection({
 }: {
   profileIdx: number;
   mappingIdx: number;
+  listIdx?: number;
   min: number;
   max: number;
   center: number;
@@ -132,14 +136,16 @@ function StateSection({
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
       : activationBased
-        ? state.activationStatus[profileIdx][mappingIdx]?.stateRaw
+        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
         : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const state = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
-        ? state.activationStatus[profileIdx][mappingIdx]?.state
+        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
+          ? 65535
+          : 0
         : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   if (min > max) {
@@ -180,11 +186,13 @@ function StateSection({
 function StateBox({
   profileIdx,
   mappingIdx,
+  listIdx,
   activationBased,
   ledBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
+  listIdx?: number;
   activationBased?: boolean;
   ledBased?: boolean;
 }) {
@@ -193,14 +201,14 @@ function StateBox({
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
-        ? state.activationStatus[profileIdx][mappingIdx]?.state
+        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
         : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   return (
     <>
       <Text size="sm">Value</Text>
-      <Badge color={state > 0 ? 'blue' : 'gray'}>
-        {state > 0
+      <Badge color={state ? 'blue' : 'gray'}>
+        {state
           ? t(activationBased ? 'state.active' : 'state.pressed')
           : t(activationBased ? 'state.inactive' : 'state.released')}
       </Badge>
@@ -2457,11 +2465,13 @@ const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignme
 function ActivationTrigger({
   input,
   profileIdx,
+  listIdx,
   activationIdx,
   dispatch,
 }: {
   input: proto.IInputActivationTrigger;
   profileIdx: number;
+  listIdx: number;
   activationIdx: number;
   dispatch: (input: proto.IInputActivationTrigger) => void;
 }) {
@@ -2531,7 +2541,8 @@ function ActivationTrigger({
                 dispatch({
                   ...input,
                   triggerValue:
-                    useConfigStore.getState().activationStatus[profileIdx][activationIdx].stateRaw,
+                    useConfigStore.getState().activationStatus[profileIdx][listIdx][activationIdx]
+                      .stateRaw,
                 });
               }}
             >
@@ -2552,8 +2563,9 @@ function ActivationTrigger({
                     dispatch({
                       ...input,
                       maxTriggerValue:
-                        useConfigStore.getState().activationStatus[profileIdx][activationIdx]
-                          .stateRaw,
+                        useConfigStore.getState().activationStatus[profileIdx][listIdx][
+                          activationIdx
+                        ].stateRaw,
                     });
                   }}
                 >
@@ -2583,6 +2595,7 @@ function AssignmentOption({ value }: { value: string }) {
 function SantrollerAssignment({
   mapping,
   profileIdx,
+  listIdx,
   activationIdx,
   mode,
   filterSingle,
@@ -2592,6 +2605,7 @@ function SantrollerAssignment({
 }: {
   mapping: proto.IProfileAssignmentInfo;
   profileIdx: number;
+  listIdx: number;
   activationIdx: number;
   mode: proto.FaceButtonMappingMode;
   filterSingle: boolean;
@@ -2666,7 +2680,12 @@ function SantrollerAssignment({
           )}
         </Card.Section>
         <Space h="md" />
-        <StateBox mappingIdx={activationIdx} profileIdx={profileIdx} activationBased></StateBox>
+        <StateBox
+          mappingIdx={activationIdx}
+          profileIdx={profileIdx}
+          listIdx={listIdx}
+          activationBased
+        ></StateBox>
         <Combobox
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
@@ -2874,6 +2893,7 @@ function SantrollerAssignment({
               <ActivationTrigger
                 input={mapping.inputAnyTime}
                 profileIdx={profileIdx}
+                listIdx={listIdx}
                 activationIdx={activationIdx}
                 dispatch={(inputAnyTime) => dispatch({ ...mapping, inputAnyTime })}
               ></ActivationTrigger>
@@ -2885,6 +2905,7 @@ function SantrollerAssignment({
             <SantrollerInput
               axis={false}
               button={true}
+              activationIdx={activationIdx}
               input={mapping.input.input}
               dispatch={(input) => dispatch({ ...mapping, input: { input } })}
             ></SantrollerInput>
@@ -2892,6 +2913,7 @@ function SantrollerAssignment({
               <ActivationTrigger
                 input={mapping.input}
                 profileIdx={profileIdx}
+                listIdx={listIdx}
                 activationIdx={activationIdx}
                 dispatch={(input) => dispatch({ ...mapping, input })}
               ></ActivationTrigger>
@@ -2906,6 +2928,7 @@ function SantrollerAssignment({
 function SantrollerAssignmentList({
   mapping,
   profileIdx,
+  listIdx,
   mode,
   dispatch,
   deleteAssignment,
@@ -2913,6 +2936,7 @@ function SantrollerAssignmentList({
 }: {
   mapping: proto.IProfileAssignment;
   profileIdx: number;
+  listIdx: number;
   mode: proto.FaceButtonMappingMode;
   dispatch: (mapping: proto.IProfileAssignment) => void;
   deleteAssignment: () => void;
@@ -2972,6 +2996,7 @@ function SantrollerAssignmentList({
           <SantrollerAssignment
             key={assignmentIdx}
             activationIdx={assignmentIdx}
+            listIdx={listIdx}
             mapping={assignment}
             filterSingle={
               mapping.assignments?.some(
@@ -3310,6 +3335,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         key={mappingIdx}
                         mapping={mapping}
                         profileIdx={profileIdx}
+                        listIdx={mappingIdx}
                         mode={profile.faceButtonMappingMode}
                         dispatch={(val) =>
                           updateProfile(

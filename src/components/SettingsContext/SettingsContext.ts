@@ -43,12 +43,12 @@ export class ActivationStatus {
   constructor(id: number, activation: proto.IProfileAssignmentInfo) {
     this.id = id;
     this.activation = activation;
-    this.state = 0;
+    this.state = false;
     this.stateRaw = 0;
   }
   id: number;
   activation: proto.IProfileAssignmentInfo;
-  state: number;
+  state: boolean;
   stateRaw: number;
 }
 export class DeviceStatus {
@@ -184,7 +184,7 @@ export interface ConfigState {
   deviceStatus: { [id: string]: DeviceStatus };
   mappingStatus: { [id: number]: MappingStatus }[];
   ledStatus: { [id: number]: LedStatus }[];
-  activationStatus: { [id: number]: ActivationStatus }[];
+  activationStatus: { [id: number]: ActivationStatus[] }[];
   config: proto.IConfig;
   connected: boolean;
   latest: boolean;
@@ -251,11 +251,10 @@ function InitState(config: proto.Config): ConfigState {
   );
   const activationStatus = config.profiles!.map((profile) =>
     Object.fromEntries(
-      profile
-        .assignments!.flatMap((x) => x.assignments)
-        .map((x, i) => [i, new ActivationStatus(i, x)])
+      profile.assignments!.map((x, i) => [i, x.assignments!.map((x, i) => new ActivationStatus(i, x))])
     )
   );
+  console.log(activationStatus)
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
@@ -575,9 +574,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
         state.activationStatus[id] = Object.fromEntries(
-          profile
-            .assignments!.flatMap((x) => x.assignments)
-            .map((x, i) => [i, new ActivationStatus(i, x!)])
+          profile.assignments!.map((x) =>
+            x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
+          )
         );
         state.ledStatus[id] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
@@ -600,9 +599,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
 
         state.activationStatus = state.config.profiles!.map((profile) =>
           Object.fromEntries(
-            profile
-              .assignments!.flatMap((x) => x.assignments)
-              .map((x, i) => [i, new ActivationStatus(i, x!)])
+            profile.assignments!.map((x) =>
+              x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
+            )
           )
         );
         state.ledStatus = state.config.profiles!.map((profile) =>
@@ -799,9 +798,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
         state.activationStatus[state.currentProfile] = Object.fromEntries(
-          profile
-            .assignments!.flatMap((x) => x.assignments)
-            .map((x, i) => [i, new ActivationStatus(i, x!)])
+          profile.assignments!.map((x) =>
+            x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
+          )
         );
         state.ledStatus[state.currentProfile] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
@@ -918,7 +917,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             if (state.activationStatus.length) {
               const mappings = state.activationStatus[state.currentProfile ?? 0];
               if (deviceEvent.trigger!.id in mappings) {
-                const mapping = mappings[deviceEvent.trigger!.id];
+                const mapping = mappings[deviceEvent.trigger!.listId][deviceEvent.trigger!.id];
                 mapping.state = deviceEvent.trigger?.state!;
                 mapping.stateRaw = deviceEvent.trigger?.stateRaw!;
               }

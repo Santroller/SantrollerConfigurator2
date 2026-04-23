@@ -34,8 +34,8 @@ export function ConnectPage() {
           <Space h="md" />
           Notable missing features:
           <ul>
-            <li>USB Host - Partial support is there, but its not finished</li>
-            <li>Bluetooth</li>
+            <li>USB Host - Some devices aren't supported yet</li>
+            <li>Bluetooth - You can emulate a gamepad, but connecting devices doesn't work yet</li>
             <li>Wii Extension Emulation (as in, plugging the pico into a wii remote)</li>
             <li>
               PS2 Emulation (as in, plugging the pico into the PS2 controller port on your console)
