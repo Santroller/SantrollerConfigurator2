@@ -2886,9 +2886,10 @@ function SantrollerAssignment({
         )}
         {mapping.consoleType && (
           <>
+            <Space h="md" />
             <Switch
-              label={t('activation.consoleTypeAny')}
-              checked={!!mapping.consoleType}
+              label={t('assignments.specificConsole')}
+              checked={!!mapping.consoleType.consoleType}
               onChange={(event) =>
                 dispatch({
                   consoleType: {
@@ -2897,6 +2898,8 @@ function SantrollerAssignment({
                 })
               }
             />
+            <Text fz="xs" opacity="0.7">{t('assignments.specificConsoleDesc')}</Text>
+            <Space h="md" />
             {mapping.consoleType.consoleType && (
               <DropdownBox
                 title="activation.consoleType"

@@ -395,6 +395,8 @@
     "title": "Assignments",
     "match": "Add match",
     "add": "Add Assignment",
+    "specificConsole": "Require specific device",
+    "specificConsoleDesc": "Tick this box if you only want to apply this profile when plugged into a specific device, for example setting this to PS3 would only apply this profile when plugged into a PS3.",
     "missingDevice": "This profile is missing an emulation assignment. Without one, santroller doesn't know when it should use this profile, so it won't be used. Add a catch all assignment if you want this profile used for every mode.",
     "missing": "This profile is missing an assignment! Without one, it won't ever be assigned. Add a catch all assignment if you want this profile used for every mode."
   },
