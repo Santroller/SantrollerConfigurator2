@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import {
   IconCopy,
+  IconExclamationCircle,
   IconGripVertical,
   IconPencil,
   IconPlus,
@@ -32,6 +33,7 @@ import {
   Accordion,
   ActionIcon,
   Affix,
+  Alert,
   Badge,
   Button,
   Card,
@@ -2942,6 +2944,7 @@ function SantrollerAssignmentList({
   deleteAssignment: () => void;
   copyAssignment: () => void;
 }) {
+  const errorIcon = <IconExclamationCircle />;
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const assignmentTypeCombobox = useCombobox({
@@ -2979,18 +2982,26 @@ function SantrollerAssignmentList({
           </div>
           <Space h="xl" />
         </Card.Section>
-        <Group>
-          <Button
-            onClick={() =>
-              dispatch({
-                ...mapping,
-                assignments: [...(mapping.assignments ?? []), { input: { input: {} } }],
-              })
-            }
-          >
-            {t('assignments.match')}
-          </Button>
-        </Group>
+        {!mapping.assignments?.some(
+          (x) => x.catchall || DeviceProfileAssignmentTypes.some((y) => x[y])
+        ) && (
+          <>
+            <Alert variant="light" color="red" title="Error" icon={errorIcon}>
+              {t('assignments.missingDevice')}
+            </Alert>
+            <Space h="md" />
+          </>
+        )}
+        <Button
+          onClick={() =>
+            dispatch({
+              ...mapping,
+              assignments: [...(mapping.assignments ?? []), { input: { input: {} } }],
+            })
+          }
+        >
+          {t('assignments.match')}
+        </Button>
         <Space h="md" />
         {mapping.assignments?.map((assignment, assignmentIdx) => (
           <SantrollerAssignment
@@ -3078,6 +3089,7 @@ function FaceButtonMappingMode({
   );
 }
 function Profile({ profileIdx }: { profileIdx: number }) {
+  const errorIcon = <IconExclamationCircle />;
   const [opened, { open, close }] = useDisclosure(false);
   const [opened2, { open: open2, close: close2 }] = useDisclosure(false);
   const [opened3, { open: open3, close: close3 }] = useDisclosure(false);
@@ -3276,21 +3288,19 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Space h="md" />
       <Title order={3}>{t('assignments.title')}</Title>
       <Space h="md" />
-      <Input.Description c="dimmed">
-        Assigning profiles allows Santroller to pick the right profile depending on what you are
-        doing. Each profile can have multiple assignments, and then the profile is assigned if all
-        the matches in a profile match.
-      </Input.Description>
-      <Input.Description c="dimmed">
-        The catch all matcher is special in that it will be used in any case where no profiles have
-        valid matches.
-      </Input.Description>
-      <Space h="md" />
 
       <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
         <Table.Thead>
           <Table.Tr>
             <Table.Td>
+              {profile.assignments?.length == 0 && (
+                <>
+                  <Alert variant="light" color="red" title="Error" icon={errorIcon}>
+                    {t('assignments.missing')}
+                  </Alert>
+                  <Space h="md" />
+                </>
+              )}
               <Group>
                 <Button
                   variant="filled"

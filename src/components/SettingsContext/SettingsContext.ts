@@ -251,10 +251,12 @@ function InitState(config: proto.Config): ConfigState {
   );
   const activationStatus = config.profiles!.map((profile) =>
     Object.fromEntries(
-      profile.assignments!.map((x, i) => [i, x.assignments!.map((x, i) => new ActivationStatus(i, x))])
+      profile.assignments!.map((x, listIdx) => [
+        listIdx,
+        x.assignments!.map((x, i) => new ActivationStatus(i, x)),
+      ])
     )
   );
-  console.log(activationStatus)
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
@@ -574,9 +576,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
         state.activationStatus[id] = Object.fromEntries(
-          profile.assignments!.map((x) =>
-            x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
-          )
+          profile.assignments!.map((x, listIdx) => [
+            listIdx,
+            x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
+          ])
         );
         state.ledStatus[id] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
@@ -599,9 +602,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
 
         state.activationStatus = state.config.profiles!.map((profile) =>
           Object.fromEntries(
-            profile.assignments!.map((x) =>
-              x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
-            )
+            profile.assignments!.map((x, listIdx) => [
+              listIdx,
+              x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
+            ])
           )
         );
         state.ledStatus = state.config.profiles!.map((profile) =>
@@ -798,9 +802,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
         state.activationStatus[state.currentProfile] = Object.fromEntries(
-          profile.assignments!.map((x) =>
-            x.assignments!.map((x, i) => [i, new ActivationStatus(i, x!)])
-          )
+          profile.assignments!.map((x, listIdx) => [
+            listIdx,
+            x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
+          ])
         );
         state.ledStatus[state.currentProfile] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
