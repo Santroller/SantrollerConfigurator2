@@ -538,6 +538,7 @@ function isInput(deviceStatus: DeviceStatus) {
     case 'ws2812':
     case 'apa102':
     case 'stp16cpc':
+    case 'bt':
       return false;
     default:
       return true;
@@ -812,21 +813,31 @@ function SantrollerInput({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
   });
 
-  let deviceValue = '';
+  let deviceValue = <></>;
   if (input.gpio && input.gpio.analog) {
-    deviceValue = t(`devices.gpio_analog`);
+    deviceValue = <Text>{t(`devices.gpio_analog`)}</Text>;
   } else if (input.gpio) {
-    deviceValue = t(`devices.gpio_digital`);
+    deviceValue = <Text>{t(`devices.gpio_digital`)}</Text>;
   } else if (input.mouseAxis) {
-    deviceValue = t(`devices.mouseAxis`);
+    deviceValue = <Text>{t(`devices.mouseAxis`)}</Text>;
   } else if (input.mouseButton) {
-    deviceValue = t(`devices.mouseButton`);
+    deviceValue = <Text>{t(`devices.mouseButton`)}</Text>;
   } else if (input.key) {
-    deviceValue = t(`devices.key`);
+    deviceValue = <Text>{t(`devices.key`)}</Text>;
   } else if (input.shortcut) {
-    deviceValue = t(`devices.shortcut`);
+    deviceValue = <Text>{t(`devices.shortcut`)}</Text>;
   } else if (device) {
-    deviceValue = `${t(`devices.${device.type}`)} (${DeviceStatus.label(device)})`;
+    deviceValue = (
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t(`devices.${device.type}`)}
+        </Text>
+
+        <Text fz="xs" span opacity="0.7">
+          ({DeviceStatus.label(device)})
+        </Text>
+      </Group>
+    );
   }
   if (
     detectedMapping !== undefined &&
@@ -982,7 +993,15 @@ function SantrollerInput({
                 .filter(isInput)
                 .map((item) => (
                   <Combobox.Option value={item.id} key={item.id}>
-                    {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                    <Group gap="2">
+                      <Text fz="sm" span>
+                        {t(`devices.${item.type}`)}
+                      </Text>
+
+                      <Text fz="xs" span opacity="0.7">
+                        ({DeviceStatus.label(item)})
+                      </Text>
+                    </Group>
                   </Combobox.Option>
                 ))}
               <Combobox.Option value="gpio_analog">{t('devices.gpio_analog')}</Combobox.Option>

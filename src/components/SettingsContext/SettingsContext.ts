@@ -79,6 +79,9 @@ export class DeviceStatus {
       case 'psx':
         label = `${status.ps2CntType != proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${label}`;
         break;
+      case 'usbHost':
+        label = `${Object.values(status.usbDevices).length != 0 ? 'Connected' : 'Disconnected'}, ${label}`;
+        break;
       case 'ws2812':
       case 'apa102':
       case 'stp16cpc':
