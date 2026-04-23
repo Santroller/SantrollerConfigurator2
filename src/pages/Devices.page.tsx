@@ -1,54 +1,22 @@
 import { createElement, useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Affix,
-  Badge,
-  Button,
-  Card,
-  Center,
-  Combobox,
-  Flex,
-  Group,
-  Image,
-  Input,
-  InputBase,
-  Loader,
-  Menu,
-  Modal,
-  NumberInput,
-  SegmentedControl,
-  SimpleGrid,
-  Space,
-  Table,
-  Title,
-  UnstyledButton,
-  useCombobox,
-} from '@mantine/core';
+import { ActionIcon, Affix, Badge, Button, Card, Center, Combobox, Flex, Group, Image, Input, InputBase, Loader, Menu, Modal, NumberInput, SegmentedControl, SimpleGrid, Space, Table, Title, UnstyledButton, useCombobox } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto, useConfigStore } from '../components/SettingsContext/SettingsContext';
 
+
+
 import '@/i18n/config';
+
+
 
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
-import {
-  AllPinsNamed,
-  AnalogPinsNamed,
-  I2CGroups,
-  MisoPins,
-  MosiPins,
-  RxPins,
-  SckPins,
-  SclPins,
-  SdaPins,
-  SPIGroups,
-  TxPins,
-  UARTGroups,
-} from '@/devices/pico/pins';
+import { AllPinsNamed, AnalogPinsNamed, I2CGroups, MisoPins, MosiPins, RxPins, SckPins, SclPins, SdaPins, SPIGroups, TxPins, UARTGroups } from '@/devices/pico/pins';
+
 
 function I2CDevice({
   device,
@@ -173,6 +141,7 @@ function UARTDevice({
 function DeviceCard({
   connected,
   type,
+  type_prefix,
   title,
   image,
   children,
@@ -180,6 +149,7 @@ function DeviceCard({
 }: {
   connected?: boolean;
   type?: string;
+  type_prefix?: string;
   title: string;
   image: string;
   children: React.ReactNode;
@@ -191,7 +161,7 @@ function DeviceCard({
     () =>
       connected ? (
         <Badge size="md" color="blue">
-          {type ? t('connected_with_type', { type: t(`wii.extensions.${type}`) }) : t('connected')}
+          {type ? t('connected_with_type', { type: t(`${type_prefix}.${type}`) }) : t('connected')}
         </Badge>
       ) : (
         <Badge size="md" color="red">
@@ -359,6 +329,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
         status.wiiExtType != proto.WiiExtType.WiiNoExtension &&
         status.wiiExtType != proto.WiiExtType.WiiNotInitialised
       }
+      type_prefix="wii.extensions"
       title="devices.wii"
       type={proto.WiiExtType[status.wiiExtType]}
       image="covers/devices/wii.png"
@@ -858,29 +829,13 @@ function PSXDevice({ id }: { id: string }) {
   const psx = device.psx;
   return (
     <DeviceCard
-      connected={
-        status.ps2CntType.find((x) => x.type != proto.PS2ControllerType.PS2ControllerTypeUnknown) != null
-      }
+      connected={status.ps2CntType != proto.PS2ControllerType.PS2ControllerTypeUnknown}
+      type={proto.PS2ControllerType[status.ps2CntType]}
+      type_prefix="psx.devices"
       title="devices.psx"
       image="covers/devices/psx.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Port</Table.Th>
-            <Table.Th>Connected Device</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {Object.values(status.ps2CntType).map((x) => (
-            <Table.Tr key={x.port}>
-              <Table.Td>{x.port}</Table.Td>
-              <Table.Td>{t(`psx.devices.${proto.PS2ControllerType[x.type]}`)}</Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
       <SPIDevice
         device={psx.spi}
         mosiLabel="psx.command.pin"
@@ -1192,6 +1147,27 @@ function PSXEmulationDevice({ id }: { id: string }) {
   );
 }
 
+function BluetoothDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.bt) {
+    throw new Error('device null!');
+  }
+  const bluetooth = device.bt;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.bluetooth"
+      image="covers/devices/bluetooth.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <></>
+    </DeviceCard>
+  );
+}
+
 const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
@@ -1218,6 +1194,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   ws2812: WS2812Device,
   apa102: APA102Device,
   stp16cpc: STP16CPCDevice,
+  bt: BluetoothDevice,
 };
 
 export function DevicesPage() {

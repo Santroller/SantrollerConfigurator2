@@ -59,20 +59,14 @@ export class DeviceStatus {
     this.device = device;
     this.wiiExtType = proto.WiiExtType.WiiNoExtension;
     this.usbDevices = {};
-    // four port Multitap
-    this.ps2CntType = [
-      { id: 0, port: 1, type: proto.PS2ControllerType.PS2ControllerTypeUnknown },
-      { id: 0, port: 2, type: proto.PS2ControllerType.PS2ControllerTypeUnknown },
-      { id: 0, port: 3, type: proto.PS2ControllerType.PS2ControllerTypeUnknown },
-      { id: 0, port: 4, type: proto.PS2ControllerType.PS2ControllerTypeUnknown },
-    ];
+    this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
   }
   id: string;
   type: string;
   connected: boolean = false;
   device: proto.IDevice;
   wiiExtType: proto.WiiExtType;
-  ps2CntType: proto.IPS2DeviceHotplugEvent[];
+  ps2CntType: proto.PS2ControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
   static label(status: DeviceStatus) {
     let label = DeviceStatus.pins(status)
@@ -859,8 +853,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (deviceEvent.ps2) {
           set((state) => {
             if (deviceEvent.ps2!.id in state.deviceStatus) {
-              state.deviceStatus[deviceEvent.ps2!.id].ps2CntType[deviceEvent.ps2?.port! - 1] =
-                deviceEvent.ps2!;
+              state.deviceStatus[deviceEvent.ps2!.id].ps2CntType = deviceEvent.ps2!.type;
             }
           });
         }

@@ -59,6 +59,7 @@ import {
   SimpleGrid,
   Slider,
   Space,
+  Stack,
   Switch,
   Table,
   Tabs,
@@ -2444,6 +2445,20 @@ const SingleProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'usbDevice',
   'midiChannel',
 ];
+const OtherAssignmentTypes: ProfileAssignmentTypes[] = ['catchall', 'input', 'inputAnyTime'];
+const HostProfileAssignmentTypes: ProfileAssignmentTypes[] = [
+  'wiiExt',
+  'ps2Cnt',
+  'usbType',
+  'usbDevice',
+  'midiChannel',
+];
+const DeviceProfileAssignmentTypes: ProfileAssignmentTypes[] = [
+  'ps2Emulation',
+  'wiiEmulation',
+  'bluetooth',
+  'consoleType',
+];
 const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignmentTypes.filter(
   (x) => !SingleProfileAssignmentTypes.includes(x)
 );
@@ -2560,6 +2575,19 @@ function ActivationTrigger({
     </Accordion>
   );
 }
+function AssignmentOption({ value }: { value: string }) {
+  const { t } = useTranslation();
+  return (
+    <Stack gap="0">
+      <Text fz="sm" fw={500}>
+        {t(`assignmentType.${value}`)}
+      </Text>
+      <Text fz="xs" opacity={0.5}>
+        {t(`assignmentTypeDesc.${value}`)}
+      </Text>
+    </Stack>
+  );
+}
 function SantrollerAssignment({
   mapping,
   profileIdx,
@@ -2651,12 +2679,21 @@ function SantrollerAssignment({
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
             switch (val as ProfileAssignmentTypes) {
+              case 'bluetooth':
+                dispatch({ bluetooth: proto.BluetoothMode.BTStandard  });
+                break;
+              case 'ps2Emulation':
+                dispatch({ ps2Emulation: {} });
+                break;
+              case 'wiiEmulation':
+                dispatch({ wiiEmulation: {} });
+                break;
               case 'catchall':
-                dispatch({ catchall: true });
+                dispatch({ catchall: {} });
                 break;
               case 'consoleType':
                 dispatch({
-                  consoleType: proto.ConsoleType.ConsolePC,
+                  consoleType: { consoleType: null },
                 });
                 break;
               case 'wiiExt':
@@ -2698,11 +2735,27 @@ function SantrollerAssignment({
 
           <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
             <Combobox.Options>
-              {types.map((item) => (
-                <Combobox.Option value={item} key={item}>
-                  {t(`assignmentType.${FixLabel(mode, item)}`)}
-                </Combobox.Option>
-              ))}
+              <Combobox.Group label="Generic">
+                {OtherAssignmentTypes.map((item) => (
+                  <Combobox.Option value={item} key={item}>
+                    <AssignmentOption value={FixLabel(mode, item)} />
+                  </Combobox.Option>
+                ))}
+              </Combobox.Group>
+              <Combobox.Group label="Host (Connecting something to this device)">
+                {HostProfileAssignmentTypes.map((item) => (
+                  <Combobox.Option value={item} key={item}>
+                    <AssignmentOption value={FixLabel(mode, item)} />
+                  </Combobox.Option>
+                ))}
+              </Combobox.Group>
+              <Combobox.Group label="Emulation (Connecting this device to something)">
+                {DeviceProfileAssignmentTypes.map((item) => (
+                  <Combobox.Option value={item} key={item}>
+                    <AssignmentOption value={FixLabel(mode, item)} />
+                  </Combobox.Option>
+                ))}
+              </Combobox.Group>
             </Combobox.Options>
           </Combobox.Dropdown>
         </Combobox>
@@ -2725,15 +2778,39 @@ function SantrollerAssignment({
           />
         )}
         {mapping.consoleType && (
+          <>
+            <Switch
+              label={t('activation.consoleTypeAny')}
+              checked={!!mapping.consoleType}
+              onChange={(event) =>
+                dispatch({
+                  consoleType: {
+                    consoleType: event.currentTarget.checked ? proto.ConsoleType.ConsolePC : null,
+                  },
+                })
+              }
+            />
+            {mapping.consoleType.consoleType && (
+              <DropdownBox
+                title="activation.consoleType"
+                e={proto.ConsoleType}
+                val={mapping.consoleType!.consoleType!}
+                label="consoleType"
+                dispatch={(consoleType) => dispatch({ consoleType: { consoleType } })}
+              ></DropdownBox>
+            )}
+          </>
+        )}
+        {mapping.bluetooth && (
           <DropdownBox
-            title="activation.consoleType"
-            e={proto.ConsoleType}
-            val={mapping.consoleType}
-            label="consoleType"
-            dispatch={(consoleType) => dispatch({ consoleType })}
+            title="activation.bluetooth"
+            e={proto.BluetoothMode}
+            val={mapping.bluetooth}
+            label="bluetooth"
+            dispatch={(bluetooth) => dispatch({ bluetooth })}
           ></DropdownBox>
         )}
-        {mapping.wiiExt !== undefined && mapping.wiiExt != null && (
+        {mapping.wiiExt && (
           <DropdownBox
             title="activation.wiiExt"
             e={proto.WiiExtType}
