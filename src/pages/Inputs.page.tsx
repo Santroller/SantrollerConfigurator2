@@ -1745,7 +1745,7 @@ function SantrollerMapping({
               onChange={(event) => {
                 dispatch({
                   ...mapping,
-                  released: event.currentTarget.checked ? (stick ? 32767 : 0) : undefined,
+                  released: event.currentTarget.checked ? (stick ? 32767 : 0) : null,
                 });
               }}
             />
