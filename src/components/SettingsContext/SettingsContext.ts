@@ -203,6 +203,7 @@ export interface ConfigState {
   polling: boolean;
   updating: boolean;
   detected: number;
+  type: string;
   updatePercentage: number;
   detectedMapping?: number;
   detectedActivation?: number;
@@ -290,6 +291,7 @@ function InitState(config: proto.Config): ConfigState {
     activeProfiles: [],
     midiData: [],
     console: '',
+    type: ''
   };
 }
 
@@ -1132,7 +1134,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const state = get();
       set((old) => ({ ...old, updatePercentage: 1, updating: true }));
       console.log('loading file');
-      const updateFile = await (await fetch('santroller_fota_image.bin')).bytes();
+      const updateFile = await (await fetch(`santroller_ota_${state.type}.bin`)).bytes();
       let firmwareInfo = proto.FirmwareUpdate.create({
         chunkOffset: 0,
         chunkSize: 32,
@@ -1208,6 +1210,16 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (new CRC32().calculate(data) != info.dataCrc) {
           console.log('CRC didnt match!');
         }
+        let deviceType = "pico_w"
+        try {
+          const deviceTypeData = await device.receiveFeatureReport(proto.ReportId.ReportIdGetType);
+          deviceType = String.fromCharCode
+            .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
+            .trim().replaceAll("\0","");
+        } catch (e) {
+          console.log(e);
+        }
+        console.log("type: ", deviceType);
         try {
           const config = proto.Config.decode(data, info.dataSize);
           const timeout = setInterval(() => get().sendKeepAlive(), 10);
@@ -1219,6 +1231,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               updating: false,
               hidDevice: device,
               crc: info.dataCrc,
+              type: deviceType,
               latest,
               keepaliveTimeout: timeout,
               activeProfiles: activeProfiles.profiles,

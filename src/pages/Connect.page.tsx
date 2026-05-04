@@ -108,8 +108,11 @@ export function ConnectPage() {
         <Text size="h1">{t('getting_started.title')}</Text>
         <Text size="sm">{t('getting_started.text')}</Text>
         <Space h="md" />
-        <Button component="a" download="santroller.uf2" href="santroller.uf2" target="_blank">
-          Download uf2
+        <Button component="a" download="santroller_pico1.uf2" href="santroller_pico1.uf2" target="_blank">
+          Download uf2 (Pico 1 / RP2040)
+        </Button>
+        <Button component="a" download="santroller_pico2.uf2" href="santroller_pico2.uf2" target="_blank">
+          Download uf2 (Pico 2 / RP2350)
         </Button>
       </Layout>
     </>
