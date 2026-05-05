@@ -42,7 +42,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential gcc-arm-none-eabi make fg
+          sudo apt install build-essential gcc-arm-none-eabi make
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
