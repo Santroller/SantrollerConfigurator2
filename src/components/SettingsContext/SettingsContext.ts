@@ -217,6 +217,7 @@ export interface ConfigState {
   activeProfiles: number[];
   midiData: number[][];
   console: string;
+  sendingKeepAlive: boolean;
 }
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
@@ -291,7 +292,8 @@ function InitState(config: proto.Config): ConfigState {
     activeProfiles: [],
     midiData: [],
     console: '',
-    type: ''
+    type: '',
+    sendingKeepAlive: false
   };
 }
 
@@ -626,9 +628,17 @@ export const useConfigStore = create<ConfigState & Actions>()(
       get().saveConfig();
     },
     sendKeepAlive: async () => {
-      const dev = get().hidDevice;
-      if (!dev) return;
+      const state = get();
+      const dev = state.hidDevice;
+      if (!dev || state.sendingKeepAlive) return;
+      // only ever have a single keep alive in flight at once, and ignore additional requests while one is in flight
+      set((state) => {
+        state.sendingKeepAlive = true;
+      });
       await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+      set((state) => {
+        state.sendingKeepAlive = false;
+      });
     },
     detectPins: async (
       activation: number | undefined,
