@@ -70,7 +70,7 @@ export function DebugPage() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {midiData.map((data, index) => (
+              {midiData.reverse().map((data, index) => (
                 <MidiRow key={index} data={data} i={index} />
               ))}
             </Table.Tbody>
