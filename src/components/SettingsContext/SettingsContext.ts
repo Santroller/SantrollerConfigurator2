@@ -293,7 +293,7 @@ function InitState(config: proto.Config): ConfigState {
     midiData: [],
     console: '',
     type: '',
-    sendingKeepAlive: false
+    sendingKeepAlive: false,
   };
 }
 
@@ -630,12 +630,16 @@ export const useConfigStore = create<ConfigState & Actions>()(
     sendKeepAlive: async () => {
       const state = get();
       const dev = state.hidDevice;
-      if (!dev || state.sendingKeepAlive) return;
+      if (!dev || state.sendingKeepAlive || state.writing) return;
       // only ever have a single keep alive in flight at once, and ignore additional requests while one is in flight
       set((state) => {
         state.sendingKeepAlive = true;
       });
-      await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+      try {
+        await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+      } catch (e) {
+        console.error('Failed to send keep alive', e);
+      }
       set((state) => {
         state.sendingKeepAlive = false;
       });
@@ -1117,6 +1121,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         console.log('saving!', start);
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
+      await new Promise(r => setTimeout(r, 500)); 
       set((state) => {
         state.writing = false;
       });
@@ -1220,16 +1225,17 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (new CRC32().calculate(data) != info.dataCrc) {
           console.log('CRC didnt match!');
         }
-        let deviceType = "pico_w"
+        let deviceType = 'pico_w';
         try {
           const deviceTypeData = await device.receiveFeatureReport(proto.ReportId.ReportIdGetType);
           deviceType = String.fromCharCode
             .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
-            .trim().replaceAll("\0","");
+            .trim()
+            .replaceAll('\0', '');
         } catch (e) {
           console.log(e);
         }
-        console.log("type: ", deviceType);
+        console.log('type: ', deviceType);
         try {
           const config = proto.Config.decode(data, info.dataSize);
           const timeout = setInterval(() => get().sendKeepAlive(), 10);
