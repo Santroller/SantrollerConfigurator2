@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  base: '/SantrollerConfigurator2/',
   plugins: [react({
     babel: {
       plugins: [['babel-plugin-react-compiler']],
     },
   }), tsconfigPaths()],
+
   resolve: {
     alias: {
       // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
