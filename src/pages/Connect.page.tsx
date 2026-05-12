@@ -22,33 +22,33 @@ export function ConnectPage() {
         <Alert
           variant="light"
           color="red"
-          title="Santroller 2 is not finished"
+          title="Santroller 2 is incomplete!"
           icon={<IconExclamationCircle />}
         >
-          Santroller 2 is currently not finished. Right now, several features are missing when
-          compared to the normal tool, and there are likley a lot of crashes and unfinished features
+          Santroller 2 is currently not finished. Right now, several features are missing in 
+          comparison to the normal tool, and there are likely to be a lot of crashes and unfinished features.
           <Space h="md" />
-          Note that there may be situations where your config wipes itself, and there isn't any
-          documentation right now, this is mostly here for experimenting but its known that there
-          are many bugs and issues with it currently.
+          Disclaimer: There may be situations where your configuration completely wipes itself. 
+          There is no documentation right now, and this tool mostly exists for experimental sake, there are currently many bugs and issues.
           <Space h="md" />
           Notable missing features:
           <ul>
-            <li>USB Host - Some devices aren't supported yet</li>
-            <li>Bluetooth - You can emulate a gamepad, but connecting devices doesn't work yet</li>
-            <li>Wii Extension Emulation (as in, plugging the pico into a wii remote)</li>
+            <li>USB Host - Not all devices aren't supported yet</li>
+            <li>Bluetooth - You can emulate a gamepad, but connecting devices to a receiver is not supported yet.</li>
+            <li>Wii Extension Emulation (as in, plugging the Pico into a Wii Remote)</li>
             <li>
-              PS2 Emulation (as in, plugging the pico into the PS2 controller port on your console)
+              PS2 Emulation (as in, plugging the Pico into the PS2 controller port on your console)
             </li>
           </ul>
         </Alert>
+        <Space h="md" />
         <Alert
           variant="light"
           color="red"
-          title="Santroller 2 is not finished"
+          title="Santroller 2 is incomplete!"
           icon={<IconExclamationCircle />}
         >
-          Make sure your bootsel button is easily accessible! Santroller 2 isn't 100% stable, and
+          Make sure the BOOTSEL button is easily accessible! Santroller 2 isn't 100% stable, and
           sometimes it may not load correctly after programming.
         </Alert>
 
@@ -59,9 +59,9 @@ export function ConnectPage() {
             title="Browser Unsupported"
             icon={<IconExclamationCircle />}
           >
-            This browser is not supported as it does not support WebHID.
+            This browser does not support WebHID, therefor will not work.
             <Space h="md" />
-            You need to use a chromium based browser, firefox based browsers don't support WebHID.
+            You need to use a Chromium based browser, Firefox based browsers don't support WebHID.
           </Alert>
         )}
         {navigator.hid && connected && (
@@ -72,13 +72,13 @@ export function ConnectPage() {
             </Button>
             <Space h="md" />
             <Button disabled={updating} onClick={bootloader}>
-              Jump to bootloader
+              Jump to Bootloader
             </Button>
             <Space h="md" />
-            <Button disabled={updating} onClick={exportConfig}>Export current config</Button>
+            <Button disabled={updating} onClick={exportConfig}>Export Current Config</Button>
             <Space h="md" />
             <FileButton disabled={updating} onChange={loadConfig} accept="application/json">
-              {(props) => <Button disabled={updating}  {...props}>Load config from file</Button>}
+              {(props) => <Button disabled={updating}  {...props}>Load Config from File</Button>}
             </FileButton>
           </>
         )}
@@ -96,7 +96,7 @@ export function ConnectPage() {
             title="Controller firmware out of date"
             icon={<IconExclamationCircle />}
           >
-            Firmware outdated! Click the button below to update
+            Firmware outdated! Click the button below to update!
             <Space h="md" />
             <Button disabled={updating} onClick={firmwareUpdate}>Start update</Button>
             <Progress size="xl" value={updatePercentage}></Progress>
@@ -109,10 +109,11 @@ export function ConnectPage() {
         <Text size="sm">{t('getting_started.text')}</Text>
         <Space h="md" />
         <Button component="a" download="santroller_pico1.uf2" href="santroller_pico1.uf2" target="_blank">
-          Download uf2 (Pico 1 / RP2040)
+          Download UF2 (Pico 1 / RP2040)
         </Button>
+        <Space h="md" />
         <Button component="a" download="santroller_pico2.uf2" href="santroller_pico2.uf2" target="_blank">
-          Download uf2 (Pico 2 / RP2350)
+          Download UF2 (Pico 2 / RP2350)
         </Button>
       </Layout>
     </>
