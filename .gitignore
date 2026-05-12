@@ -135,5 +135,3 @@ src/components/SettingsContext/config.d.ts
 public/santroller*.uf2
 public/santroller_ota_*.bin
 public/commit.hash
-
-.github/workflow/main.yml
