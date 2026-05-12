@@ -18,7 +18,7 @@ const router = createBrowserRouter([
     path: '/debug',
     element: <DebugPage />,
   },
-]
+]);
 
 export function Router() {
   return <RouterProvider router={router} />;
