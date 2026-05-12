@@ -25,8 +25,8 @@ export function ConnectPage() {
           title="Santroller 2 is incomplete!"
           icon={<IconExclamationCircle />}
         >
-          Santroller 2 is currently not finished. Right now, several features are missing when
-          compared to the normal tool, and there are likley a lot of crashes and unfinished features
+          Santroller 2 is currently not finished. Right now, several features are missing in 
+          comparison to the normal tool, and there are likely to be a lot of crashes and unfinished features.
           <Space h="md" />
           Disclaimer: There may be situations where your configuration completely wipes itself. 
           There is no documentation right now, and this tool mostly exists for experimental sake, there are currently many bugs and issues.

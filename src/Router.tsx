@@ -18,9 +18,7 @@ const router = createBrowserRouter([
     path: '/debug',
     element: <DebugPage />,
   },
-], {
-  basename: '/SantrollerConfigurator2/',
-});
+]
 
 export function Router() {
   return <RouterProvider router={router} />;
