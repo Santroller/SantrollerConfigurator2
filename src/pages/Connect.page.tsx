@@ -22,7 +22,7 @@ export function ConnectPage() {
         <Alert
           variant="light"
           color="red"
-          title="Santroller 2 is not finished"
+          title="Santroller 2 is incomplete!"
           icon={<IconExclamationCircle />}
         >
           Santroller 2 is currently not finished. Right now, several features are missing when
@@ -45,7 +45,7 @@ export function ConnectPage() {
         <Alert
           variant="light"
           color="red"
-          title="Santroller 2 is not finished"
+          title="Santroller 2 is incomplete!"
           icon={<IconExclamationCircle />}
         >
           Make sure the BOOTSEL button is easily accessible! Santroller 2 isn't 100% stable, and
@@ -111,6 +111,7 @@ export function ConnectPage() {
         <Button component="a" download="santroller_pico1.uf2" href="santroller_pico1.uf2" target="_blank">
           Download UF2 (Pico 1 / RP2040)
         </Button>
+        <Space h="md" />
         <Button component="a" download="santroller_pico2.uf2" href="santroller_pico2.uf2" target="_blank">
           Download UF2 (Pico 2 / RP2350)
         </Button>
