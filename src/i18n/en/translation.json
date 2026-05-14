@@ -182,7 +182,7 @@
   },
   "getting_started": {
     "title": "Getting started",
-    "text": "Put your Pi Pico into bootloader mode by holding bootsel and plugging it into your pc, then download the following UF2 and drag it into the usb disk that shows up. Once programmed, click Connect to Santroller and connect to the device."
+    "text": "Put your Raspberry Pi Pico or Pico 2 into bootloader mode by holding BOOTSEL and connecting it to your pc, then download the following UF2 and drag it into the USB Drive named either RPI-RP2 for Pico 1 or RP2350 for Pico 2 that shows up. Once programmed, click Connect to Santroller and connect to the device."
   },
   "gpio": {
     "mode": {
