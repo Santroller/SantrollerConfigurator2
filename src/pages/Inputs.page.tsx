@@ -1509,6 +1509,7 @@ function isAnalog(input: proto.IInput) {
     input.ads1115 ||
     input.wiiAxis ||
     input.accelerometer ||
+    input.multiplexer ||
     input.usbAxis ||
     input.ps2Axis ||
     input.midiNote ||
