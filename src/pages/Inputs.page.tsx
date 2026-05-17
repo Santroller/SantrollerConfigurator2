@@ -957,6 +957,23 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'protarNeck':
+                  if (axis) {
+                    dispatch({
+                      protarNeckAxis: {
+                        axis: proto.ProGuitarNeckAxisType.ProGuitarNeckAFret,
+                        deviceid: parseInt(val),
+                      },
+                    });
+                  } else {
+                    dispatch({
+                      protarNeckButton: {
+                        button: proto.ProGuitarNeckButtonType.ProGuitarNeckGreen,
+                        deviceid: parseInt(val),
+                      },
+                    });
+                  }
+                  break;
               }
               return;
             }
