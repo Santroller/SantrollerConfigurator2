@@ -164,6 +164,13 @@ export class DeviceStatus {
           status.device.psx?.ackPin,
           status.device.psx?.attPin,
         ];
+      case 'protarNeck':
+        return [
+          status.device.protarNeck?.spi.mosi,
+          status.device.protarNeck?.spi.miso,
+          status.device.protarNeck?.spi.sck,
+          status.device.protarNeck?.attPin,
+        ];
       case 'snes':
         return [
           status.device.snes?.clockPin,
@@ -440,6 +447,7 @@ function createDefault(type: string, id: string) {
   const spi = { mosi: -1, miso: -1, sck: -1, block: 0, clock: 500000 };
   const uart = { tx: -1, rx: -1, block: 0 };
   const mappingMode = proto.MappingMode.PerInput;
+  console.log(type, id)
   switch (type) {
     case 'gh5Neck':
     case 'djhTurntable':
@@ -450,6 +458,9 @@ function createDefault(type: string, id: string) {
     case 'wiiEmulation':
     case 'mpr121':
       device = { i2c: i2c4 };
+      break;
+    case 'protarNeck':
+      device = { spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 100000 }, attPin: -1 };
       break;
     case 'bhDrum':
     case 'crazyGuitarNeck':
@@ -1121,7 +1132,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         console.log('saving!', start);
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
-      await new Promise(r => setTimeout(r, 500)); 
+      await new Promise((r) => setTimeout(r, 500));
       set((state) => {
         state.writing = false;
       });

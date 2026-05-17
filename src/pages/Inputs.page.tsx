@@ -499,22 +499,22 @@ function OutputBox({
         <DropdownOutputBox
           label="outputs"
           title="output"
-          e={proto.RockBandGuitarAxisType}
-          e2={proto.RockBandGuitarButtonType}
-          val={mapping.rbAxis!}
-          val2={mapping.rbButton!}
+          e={proto.ProGuitarAxisType}
+          e2={proto.ProGuitarButtonType}
+          val={mapping.proAxis!}
+          val2={mapping.proButton!}
           dispatch={(axis) =>
             dispatch({
-              center: proto.RockBandGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
+              center: proto.ProGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
               min: 0,
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              rbAxis: axis,
-              rbButton: null,
+              proAxis: axis,
+              proButton: null,
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, proButton: button, proAxis: null })}
           dispatch3={() => {}}
         ></DropdownOutputBox>
       );
@@ -764,6 +764,7 @@ function FixLabel(mode: proto.FaceButtonMappingMode, label: string) {
   }
   return label;
 }
+
 function SantrollerInput({
   input,
   axis,
@@ -1500,6 +1501,26 @@ function SantrollerInput({
           }
         ></DropdownBox>
       )}
+      {input.protarNeckButton && (
+        <DropdownBox
+          title="input.protarNeckButton"
+          e={proto.ProGuitarNeckButtonType}
+          val={input.protarNeckButton?.button}
+          label="input.protarNeckButton"
+          dispatch={(button) =>
+            dispatch({ protarNeckButton: { ...input.protarNeckButton!, button } })
+          }
+        ></DropdownBox>
+      )}
+      {input.protarNeckAxis && (
+        <DropdownBox
+          title="input.protarNeckAxis"
+          e={proto.ProGuitarNeckAxisType}
+          val={input.protarNeckAxis?.axis}
+          label="input.protarNeckAxis"
+          dispatch={(axis) => dispatch({ protarNeckAxis: { ...input.protarNeckAxis!, axis } })}
+        ></DropdownBox>
+      )}
     </>
   );
 }
@@ -1515,7 +1536,8 @@ function isAnalog(input: proto.IInput) {
     input.midiNote ||
     input.midiControlChange ||
     input.midiPitchBend ||
-    input.midiProGuitarAxis
+    input.midiProGuitarAxis ||
+    input.protarNeckAxis
   );
 }
 function SantrollerMapping({
@@ -2899,7 +2921,9 @@ function SantrollerAssignment({
                 })
               }
             />
-            <Text fz="xs" opacity="0.7">{t('assignments.specificConsoleDesc')}</Text>
+            <Text fz="xs" opacity="0.7">
+              {t('assignments.specificConsoleDesc')}
+            </Text>
             <Space h="md" />
             {mapping.consoleType.consoleType && (
               <DropdownBox

@@ -640,6 +640,37 @@ function CrkdNeckDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function ProtarNeckDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.protarNeck) {
+    throw new Error('device null!');
+  }
+  const protarNeck = device.protarNeck!;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.protarNeck"
+      image="covers/devices/protarNeck.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <SPIDevice
+        device={protarNeck?.spi!}
+        dispatch={(val) =>
+          updateDevice({ protarNeck: { ...protarNeck, spi: { ...val } } }, id)
+        }
+      />
+      <PinBox
+        label="spi.cs.label"
+        pin={protarNeck.attPin}
+        valid={AllPinsNamed}
+        dispatch={(pin) => updateDevice({ protarNeck: { ...protarNeck, attPin: pin } }, id)}
+      />
+    </DeviceCard>
+  );
+}
 function DebugDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -1180,6 +1211,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   djhTurntable: DJHeroTurntableDevice,
   midiSerial: MidiSerialDevice,
   crkdNeck: CrkdNeckDevice,
+  protarNeck: ProtarNeckDevice,
   usbHost: USBHostDevice,
   multiplexer: MultiplexerDevice,
   psx: PSXDevice,
