@@ -447,7 +447,7 @@ function createDefault(type: string, id: string) {
   const spi = { mosi: -1, miso: -1, sck: -1, block: 0, clock: 500000 };
   const uart = { tx: -1, rx: -1, block: 0 };
   const mappingMode = proto.MappingMode.PerInput;
-  console.log(type, id);
+  console.log(type, id)
   switch (type) {
     case 'gh5Neck':
     case 'djhTurntable':
@@ -1169,17 +1169,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       console.log('loaded');
       let buffer = new ArrayBuffer(63);
-      let u8Buffer = new Uint8Array(buffer);
-      let buffer2 = new ArrayBuffer(33);
-      let u8Buffer2 = new Uint8Array(buffer2);
       for (let i = 0; i < updateFile.length; i += 256) {
         firmwareInfo.chunkOffset = 0;
         firmwareInfo.offset = i;
-        u8Buffer.set(proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish());
+        let firmwareInfoBuffer = proto.FirmwareUpdate.encodeDelimited(firmwareInfo)
+          .ldelim()
+          .finish();
+        new Uint8Array(buffer).set(firmwareInfoBuffer);
         await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUpdateFirmware, buffer);
         for (let j = 0; j < 256 && i + j < updateFile.length; j += 32) {
-          u8Buffer2.set([proto.ReportId.ReportIdUploadFirmware]);
-          u8Buffer2.set(updateFile.slice(i + j, i + j + 32), 1);
+          let buffer2 = new ArrayBuffer(33);
+          new Uint8Array(buffer2).set([proto.ReportId.ReportIdUploadFirmware]);
+          new Uint8Array(buffer2).set(updateFile.slice(i + j, i + j + 32), 1);
           await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, buffer2);
           set((old) => ({ ...old, updatePercentage: 1 + ((i + j) / updateFile.length) * 99 }));
         }
