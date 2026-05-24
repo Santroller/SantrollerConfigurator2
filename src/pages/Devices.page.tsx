@@ -1,22 +1,54 @@
 import { createElement, useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { ActionIcon, Affix, Badge, Button, Card, Center, Combobox, Flex, Group, Image, Input, InputBase, Loader, Menu, Modal, NumberInput, SegmentedControl, SimpleGrid, Space, Table, Title, UnstyledButton, useCombobox } from '@mantine/core';
+import {
+  ActionIcon,
+  Affix,
+  Badge,
+  Button,
+  Card,
+  Center,
+  Combobox,
+  Flex,
+  Group,
+  Image,
+  Input,
+  InputBase,
+  Loader,
+  Menu,
+  Modal,
+  NumberInput,
+  SegmentedControl,
+  SimpleGrid,
+  Space,
+  Table,
+  Title,
+  UnstyledButton,
+  useCombobox,
+} from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto, useConfigStore } from '../components/SettingsContext/SettingsContext';
 
-
-
 import '@/i18n/config';
-
-
 
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
-import { AllPinsNamed, AnalogPinsNamed, I2CGroups, MisoPins, MosiPins, RxPins, SckPins, SclPins, SdaPins, SPIGroups, TxPins, UARTGroups } from '@/devices/pico/pins';
-
+import {
+  AllPinsNamed,
+  AnalogPinsNamed,
+  I2CGroups,
+  MisoPins,
+  MosiPins,
+  RxPins,
+  SckPins,
+  SclPins,
+  SdaPins,
+  SPIGroups,
+  TxPins,
+  UARTGroups,
+} from '@/devices/pico/pins';
 
 function I2CDevice({
   device,
@@ -337,7 +369,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={wii.i2c}
-        dispatch={(val) => updateDevice({ wii: { ...wii, i2c: val } }, id)}
+        dispatch={(val) => updateDevice({ deviceid: parseInt(id), wii: { ...wii, i2c: val } }, id)}
       />
     </DeviceCard>
   );
@@ -362,7 +394,10 @@ function BandHeroDrumDevice({ id }: { id: string }) {
       <I2CDevice
         device={bhDrum.i2c}
         dispatch={(val) =>
-          updateDevice({ bhDrum: { ...bhDrum, i2c: { ...val, clock: 100000 } } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), bhDrum: { ...bhDrum, i2c: { ...val, clock: 100000 } } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -386,7 +421,12 @@ function WorldTourDrumDevice({ id }: { id: string }) {
     >
       <SPIDevice
         device={worldTourDrum.spi}
-        dispatch={(val) => updateDevice({ worldTourDrum: { ...worldTourDrum, spi: val } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, spi: val } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -409,7 +449,12 @@ function AccelerometerDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={accelerometer.i2c}
-        dispatch={(val) => updateDevice({ accelerometer: { ...accelerometer, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), accelerometer: { ...accelerometer, i2c: val } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -433,12 +478,19 @@ function MPR121Device({ id }: { id: string }) {
     >
       <I2CDevice
         device={mpr121.i2c}
-        dispatch={(val) => updateDevice({ mpr121: { ...mpr121, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), mpr121: { ...mpr121, i2c: val } }, id)
+        }
       />
       <NumberInput
         label={t('mpr121.touchpad_count')}
         value={mpr121.touchpadCount}
-        onChange={(val) => updateDevice({ mpr121: { ...mpr121, touchpadCount: Number(val) } }, id)}
+        onChange={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), mpr121: { ...mpr121, touchpadCount: Number(val) } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -461,7 +513,12 @@ function CrazyGuitarNeckDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={crazyGuitarNeck.i2c}
-        dispatch={(val) => updateDevice({ crazyGuitarNeck: { ...crazyGuitarNeck, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), crazyGuitarNeck: { ...crazyGuitarNeck, i2c: val } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -484,7 +541,9 @@ function GH5NeckDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={gh5Neck.i2c}
-        dispatch={(val) => updateDevice({ gh5Neck: { ...gh5Neck, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), gh5Neck: { ...gh5Neck, i2c: val } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -507,7 +566,9 @@ function DJHeroTurntableDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={djhTurntable.i2c}
-        dispatch={(val) => updateDevice({ djhTurntable: { ...djhTurntable, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), djhTurntable: { ...djhTurntable, i2c: val } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -536,14 +597,19 @@ function PeripheralDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={peripheral.i2c}
-        dispatch={(val) => updateDevice({ peripheral: { ...peripheral, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), peripheral: { ...peripheral, i2c: val } }, id)
+        }
       />
       <LabeledSegmentedControl
         data={peripheralData}
         translateData={false}
         value={`0x${peripheral.address.toString(16)}`}
         dispatch={(val) =>
-          updateDevice({ peripheral: { ...peripheral, address: Number(val) } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), peripheral: { ...peripheral, address: Number(val) } },
+            id
+          )
         }
         label="peripheral.address.label"
         description="peripheral.address.description"
@@ -569,13 +635,17 @@ function ADS1115Device({ id }: { id: string }) {
     >
       <I2CDevice
         device={ads1115.i2c}
-        dispatch={(val) => updateDevice({ ads1115: { ...ads1115, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), ads1115: { ...ads1115, i2c: val } }, id)
+        }
       />
       <PinBox
         label="ads1115.interrupt.pin"
         pin={ads1115.interrupt}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ ads1115: { ...ads1115, interrupt: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), ads1115: { ...ads1115, interrupt: pin } }, id)
+        }
       />
       {/* <LabeledSegmentedControl
         data={peripheralData}
@@ -609,7 +679,13 @@ function MidiSerialDevice({ id }: { id: string }) {
       <UARTDevice
         device={midiSerial.uart}
         dispatch={(val) =>
-          updateDevice({ midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } } }, id)
+          updateDevice(
+            {
+              deviceid: parseInt(id),
+              midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } },
+            },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -634,7 +710,13 @@ function CrkdNeckDevice({ id }: { id: string }) {
       <UARTDevice
         device={crkdNeck.uart}
         dispatch={(val) =>
-          updateDevice({ crkdNeck: { ...crkdNeck, uart: { ...val, baudrate: 460800 } } }, id)
+          updateDevice(
+            {
+              deviceid: parseInt(id),
+              crkdNeck: { ...crkdNeck, uart: { ...val, baudrate: 460800 } },
+            },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -659,14 +741,19 @@ function ProtarNeckDevice({ id }: { id: string }) {
       <SPIDevice
         device={protarNeck?.spi!}
         dispatch={(val) =>
-          updateDevice({ protarNeck: { ...protarNeck, spi: { ...val } } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), protarNeck: { ...protarNeck, spi: { ...val } } },
+            id
+          )
         }
       />
       <PinBox
         label="spi.cs.label"
         pin={protarNeck.attPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ protarNeck: { ...protarNeck, attPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), protarNeck: { ...protarNeck, attPin: pin } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -689,7 +776,10 @@ function DebugDevice({ id }: { id: string }) {
       <UARTDevice
         device={debug.uart}
         dispatch={(val) =>
-          updateDevice({ debug: { ...debug, uart: { ...val, baudrate: 115200 } } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), debug: { ...debug, uart: { ...val, baudrate: 115200 } } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -719,19 +809,28 @@ function WS2812Device({ id }: { id: string }) {
         label="ws2812.pin"
         pin={ws2812.pin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ ws2812: { ...ws2812, pin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), ws2812: { ...ws2812, pin: pin } }, id)
+        }
       />
       <NumberInput
         label={'ws2812.count'}
         value={ws2812.count}
-        onChange={(val) => updateDevice({ ws2812: { ...ws2812, count: Number(val) } }, id)}
+        onChange={(val) =>
+          updateDevice({ deviceid: parseInt(id), ws2812: { ...ws2812, count: Number(val) } }, id)
+        }
       />
       <LabeledDropdown
         data={ws2812TypeData}
         label="Type"
         value={`ws2812.${proto.WS2812Type[ws2812.type]}`}
         description="ws2812.description"
-        dispatch={(val) => updateDevice({ ws2812: { ...ws2812, type: parseInt(val) + 1 } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), ws2812: { ...ws2812, type: parseInt(val) + 1 } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -763,19 +862,28 @@ function APA102Device({ id }: { id: string }) {
         mosiLabel="apa102.mosi.pin"
         sckLabel="apa102.clock.pin"
         noMiso={true}
-        dispatch={(val) => updateDevice({ apa102: { ...apa102, spi: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), apa102: { ...apa102, spi: val } }, id)
+        }
       />
       <NumberInput
         label={'apa102.count'}
         value={apa102.count}
-        onChange={(val) => updateDevice({ apa102: { ...apa102, count: Number(val) } }, id)}
+        onChange={(val) =>
+          updateDevice({ deviceid: parseInt(id), apa102: { ...apa102, count: Number(val) } }, id)
+        }
       />
       <LabeledDropdown
         data={apa102TypeData}
         label="Type"
         value={`apa102.${proto.APA102Type[apa102.type]}`}
         description="apa102.description"
-        dispatch={(val) => updateDevice({ apa102: { ...apa102, type: parseInt(val) + 1 } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), apa102: { ...apa102, type: parseInt(val) + 1 } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -802,24 +910,35 @@ function STP16CPCDevice({ id }: { id: string }) {
         mosiLabel="stp16cpc.mosi.pin"
         sckLabel="stp16cpc.clock.pin"
         noMiso={true}
-        dispatch={(val) => updateDevice({ stp16cpc: { ...stp16cpc, spi: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, spi: val } }, id)
+        }
       />
       <PinBox
         label="stp16cpc.oe.pin"
         pin={stp16cpc.oe}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ stp16cpc: { ...stp16cpc, oe: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, oe: pin } }, id)
+        }
       />
       <PinBox
         label="stp16cpc.le.pin"
         pin={stp16cpc.le}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ stp16cpc: { ...stp16cpc, le: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, le: pin } }, id)
+        }
       />
       <NumberInput
         label={'stp16cpc.count'}
         value={stp16cpc.count}
-        onChange={(val) => updateDevice({ stp16cpc: { ...stp16cpc, count: Number(val) } }, id)}
+        onChange={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), stp16cpc: { ...stp16cpc, count: Number(val) } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -842,7 +961,9 @@ function Max1704XDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={max1704x.i2c}
-        dispatch={(val) => updateDevice({ max1704x: { ...max1704x, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), max1704x: { ...max1704x, i2c: val } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -872,19 +993,23 @@ function PSXDevice({ id }: { id: string }) {
         mosiLabel="psx.command.pin"
         misoLabel="psx.data.pin"
         sckLabel="psx.clock.pin"
-        dispatch={(val) => updateDevice({ psx: { ...psx, spi: val } }, id)}
+        dispatch={(val) => updateDevice({ deviceid: parseInt(id), psx: { ...psx, spi: val } }, id)}
       />
       <PinBox
         label="psx.attention.pin"
         pin={psx.attPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ psx: { ...psx, attPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), psx: { ...psx, attPin: pin } }, id)
+        }
       />
       <PinBox
         label="psx.acknowledge.pin"
         pin={psx.ackPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ psx: { ...psx, ackPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), psx: { ...psx, ackPin: pin } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -912,7 +1037,13 @@ function MultiplexerDevice({ id }: { id: string }) {
         data={multiplexerData}
         value={multiplexer.sixteenChannel.toString()}
         dispatch={(val) =>
-          updateDevice({ multiplexer: { ...multiplexer, sixteenChannel: val === 'true' } }, id)
+          updateDevice(
+            {
+              deviceid: parseInt(id),
+              multiplexer: { ...multiplexer, sixteenChannel: val === 'true' },
+            },
+            id
+          )
         }
         label="multiplexer.selector.label"
         description="multiplexer.selector.description"
@@ -921,32 +1052,48 @@ function MultiplexerDevice({ id }: { id: string }) {
         label="multiplexer.input.label"
         pin={multiplexer.inputPin}
         valid={AnalogPinsNamed}
-        dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, inputPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice(
+            { deviceid: parseInt(id), multiplexer: { ...multiplexer, inputPin: pin } },
+            id
+          )
+        }
       />
       <PinBox
         label="multiplexer.s0.label"
         pin={multiplexer.s0Pin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, s0Pin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s0Pin: pin } }, id)
+        }
       />
       <PinBox
         label="multiplexer.s1.label"
         pin={multiplexer.s1Pin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, s1Pin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s1Pin: pin } }, id)
+        }
       />
       <PinBox
         label="multiplexer.s2.label"
         pin={multiplexer.s2Pin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, s2Pin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s2Pin: pin } }, id)
+        }
       />
       {multiplexer.sixteenChannel && (
         <PinBox
           label="multiplexer.s3.label"
           pin={multiplexer.s3Pin}
           valid={AllPinsNamed}
-          dispatch={(pin) => updateDevice({ multiplexer: { ...multiplexer, s3Pin: pin } }, id)}
+          dispatch={(pin) =>
+            updateDevice(
+              { deviceid: parseInt(id), multiplexer: { ...multiplexer, s3Pin: pin } },
+              id
+            )
+          }
         />
       )}
     </DeviceCard>
@@ -972,19 +1119,25 @@ function SNESDevice({ id }: { id: string }) {
         label="snes.clock_pin"
         pin={snes.clockPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ snes: { ...snes, clockPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), snes: { ...snes, clockPin: pin } }, id)
+        }
       />
       <PinBox
         label="snes.data_pin"
         pin={snes.dataPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ snes: { ...snes, dataPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), snes: { ...snes, dataPin: pin } }, id)
+        }
       />
       <PinBox
         label="snes.latch_pin"
         pin={snes.latchPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ snes: { ...snes, latchPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), snes: { ...snes, latchPin: pin } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -1010,7 +1163,9 @@ function JoybusDevice({ id }: { id: string }) {
         label="joybus.data_pin"
         pin={joybus.dataPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ joybus: { ...joybus, dataPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), joybus: { ...joybus, dataPin: pin } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -1056,7 +1211,9 @@ function USBHostDevice({ id }: { id: string }) {
         label={usbHost.dmFirst ? 'usb.dm.label' : 'usb.dp.label'}
         pin={usbHost.firstPin}
         valid={usbHostValidPins}
-        dispatch={(pin) => updateDevice({ usbHost: { ...usbHost, firstPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), usbHost: { ...usbHost, firstPin: pin } }, id)
+        }
       />
       <PinBox
         label={usbHost.dmFirst ? 'usb.dp.label' : 'usb.dm.label'}
@@ -1066,7 +1223,12 @@ function USBHostDevice({ id }: { id: string }) {
       <LabeledSegmentedControl
         data={usbHostData}
         value={usbHost.dmFirst.toString()}
-        dispatch={(val) => updateDevice({ usbHost: { ...usbHost, dmFirst: val === 'true' } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), usbHost: { ...usbHost, dmFirst: val === 'true' } },
+            id
+          )
+        }
         label="usb.selector.label"
         description="usb.selector.description"
       />
@@ -1091,7 +1253,9 @@ function WiiEmulationDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={wiiEmulation.i2c}
-        dispatch={(val) => updateDevice({ wiiEmulation: { ...wiiEmulation, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id), wiiEmulation: { ...wiiEmulation, i2c: val } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -1117,7 +1281,10 @@ function JoybusEmulationDevice({ id }: { id: string }) {
         pin={joybusEmulation.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ joybusEmulation: { ...joybusEmulation, dataPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), joybusEmulation: { ...joybusEmulation, dataPin: pin } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -1144,26 +1311,44 @@ function PSXEmulationDevice({ id }: { id: string }) {
         label="psx.data.pin"
         pin={psxEmulation.dataPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ psxEmulation: { ...psxEmulation, dataPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice(
+            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, dataPin: pin } },
+            id
+          )
+        }
       />
       <PinBox
         label="psx.command.pin"
         pin={psxEmulation.commandPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ psxEmulation: { ...psxEmulation, commandPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice(
+            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, commandPin: pin } },
+            id
+          )
+        }
       />
       <PinBox
         label="psx.clock.pin"
         pin={psxEmulation.clockPin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ psxEmulation: { ...psxEmulation, clockPin: pin } }, id)}
+        dispatch={(pin) =>
+          updateDevice(
+            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, clockPin: pin } },
+            id
+          )
+        }
       />
       <PinBox
         label="psx.attention.pin"
         pin={psxEmulation.attentionPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ psxEmulation: { ...psxEmulation, attentionPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, attentionPin: pin } },
+            id
+          )
         }
       />
       <PinBox
@@ -1171,7 +1356,10 @@ function PSXEmulationDevice({ id }: { id: string }) {
         pin={psxEmulation.acknowledgePin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ psxEmulation: { ...psxEmulation, acknowledgePin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, acknowledgePin: pin } },
+            id
+          )
         }
       />
     </DeviceCard>

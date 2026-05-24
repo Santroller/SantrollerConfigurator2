@@ -261,7 +261,7 @@ function InitState(config: proto.Config): ConfigState {
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, i) => [
       i,
-      new DeviceStatus(i.toString(10), Object.entries(x).find((x) => x[1])![0], x),
+      new DeviceStatus(i.toString(10), Object.keys(x).find(x => x!="deviceid")!, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
@@ -511,7 +511,7 @@ function createDefault(type: string, id: string) {
       device = { commandPin: -1, attentionPin: -1, acknowledgePin: -1, dataPin: -1, clockPin: -1 };
       break;
   }
-  return new DeviceStatus(id, type, { [type]: { ...device, mappingMode } });
+  return new DeviceStatus(id, type, {  deviceid: parseInt(id), [type]: { ...device, mappingMode } });
 }
 function buf2hex(buffer: Uint8Array) {
   // buffer is an ArrayBuffer
@@ -684,6 +684,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       console.log('done');
     },
+
     updateConfig: (config: proto.IConfig) => {
       set((state) => {
         state.config = { ...state.config, ...config };
@@ -860,7 +861,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         let id = '0';
         if (Object.keys(state.deviceStatus).length) {
           id = (
-            Math.max(...Object.keys(state.deviceStatus).map((x) => parseInt(x))) + 1
+            Math.max(...Object.values(state.deviceStatus).map((x) => x.device.deviceid)) + 1
           ).toString();
         }
         state.deviceStatus[id] = createDefault(type, id);
