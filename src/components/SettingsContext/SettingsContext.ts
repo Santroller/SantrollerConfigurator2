@@ -189,6 +189,13 @@ export class DeviceStatus {
           status.device.psxEmulation?.dataPin,
           status.device.psxEmulation?.clockPin,
         ];
+      case 'vtechExpander':
+        return [
+          status.device.vtechExpander?.spi.mosi,
+          status.device.vtechExpander?.spi.miso,
+          status.device.vtechExpander?.spi.sck,
+          status.device.vtechExpander?.attPin,
+        ];
       case 'joybusEmulation':
         return [status.device.joybusEmulation?.dataPin];
       case 'peripheral':
@@ -447,7 +454,6 @@ function createDefault(type: string, id: string) {
   const spi = { mosi: -1, miso: -1, sck: -1, block: 0, clock: 500000 };
   const uart = { tx: -1, rx: -1, block: 0 };
   const mappingMode = proto.MappingMode.PerInput;
-  console.log(type, id)
   switch (type) {
     case 'gh5Neck':
     case 'djhTurntable':
