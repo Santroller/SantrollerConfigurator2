@@ -548,6 +548,7 @@ function isLed(deviceStatus: DeviceStatus) {
   switch (deviceStatus.type) {
     case 'ws2812':
     case 'apa102':
+    case 'vtechExpander':
     case 'stp16cpc':
       return true;
     default:
@@ -1310,11 +1311,15 @@ function SantrollerInput({
       )}
       {input.vtechExpander && (
         <>
-        <NumberInput
-          label={t('input.vtechExpander.pin')}
-          value={input.vtechExpander.button}
-          onChange={(val) => dispatch({ vtechExpander: { ...input.vtechExpander!, button: Number(val) } })}
-        ></NumberInput>
+          <NumberInput
+            label={t('input.vtechExpander.pin')}
+            value={input.vtechExpander.button}
+            onChange={(val) =>
+              dispatch({ vtechExpander: { ...input.vtechExpander!, button: Number(val) } })
+            }
+            min={0}
+            max={7}
+          ></NumberInput>
         </>
       )}
       {input.gpio && (
@@ -1957,6 +1962,8 @@ function SantrollerLed({
     deviceId = led.device.rgb.deviceId;
   } else if (led.device.stp16) {
     deviceId = led.device.stp16.deviceId;
+  } else if (led.device.vtechExpander) {
+    deviceId = led.device.vtechExpander.deviceId;
   }
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
@@ -2081,6 +2088,17 @@ function SantrollerLed({
                       device: {
                         stp16: {
                           activeLed: [],
+                          deviceId: parseInt(val),
+                        },
+                      },
+                    });
+                    break;
+                  case 'vtechExpander':
+                    dispatch({
+                      ...led,
+                      device: {
+                        vtechExpander: {
+                          activeLed: 0,
                           deviceId: parseInt(val),
                         },
                       },
@@ -2267,6 +2285,25 @@ function SantrollerLed({
             valid={led.device.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
             pin={led.device.gpio.pin}
             dispatch={(pin) => dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })}
+          />
+        )}
+        {led.device.vtechExpander && (
+          <NumberInput
+            label="selected_led"
+            value={led.device.vtechExpander.activeLed}
+            min={1}
+            max={8}
+            onChange={(val) =>
+              dispatch({
+                ...led,
+                device: {
+                  vtechExpander: {
+                    ...led.device.vtechExpander!,
+                    activeLed: parseInt(val.toString()) ?? 1,
+                  },
+                },
+              })
+            }
           />
         )}
         {led.mapping.inputMapping?.input && (
