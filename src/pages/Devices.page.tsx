@@ -1423,7 +1423,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
+const types: { [type in keyof Omit<proto.IDevice, 'deviceid'>]: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -1451,7 +1451,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   apa102: APA102Device,
   stp16cpc: STP16CPCDevice,
   bt: BluetoothDevice,
-  vtechexpander: VTechExpanderDevice,
+  vtechExpander: VTechExpanderDevice,
 };
 
 export function DevicesPage() {
@@ -1463,7 +1463,7 @@ export function DevicesPage() {
   });
   const config = useConfigStore(
     useShallow((state) =>
-      Object.fromEntries(Object.values(state.deviceStatus).map((x) => [x.id, x.type]))
+      Object.fromEntries(Object.values(state.deviceStatus).filter(x=>x.type).map((x) => [x.id, x.type]))
     )
   );
   const deleteAllDevices = useConfigStore((state) => state.deleteAllDevices);
