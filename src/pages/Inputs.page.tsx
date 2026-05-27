@@ -1980,7 +1980,7 @@ function SantrollerLed({
   let img = `Icons/Generic.png`;
   const analog = led.mapping.inputMapping && isAnalog(led.mapping.inputMapping.input);
   let deviceValue = <></>;
-  if (led.mapping.inputMapping?.input.gpio) {
+  if (led.device.gpio) {
     deviceValue = (
       <Group gap="2">
         <Text fz="sm" span>
@@ -1988,21 +1988,13 @@ function SantrollerLed({
         </Text>
         <Text fz="xs" span opacity="0.7">
           {t(
-            led.mapping.inputMapping?.input.gpio.analog
+            led.device.gpio.analog
               ? 'devices.gpio_analog'
               : 'devices.gpio_digital'
           )}
         </Text>
       </Group>
     );
-  } else if (led.mapping.inputMapping?.input.mouseAxis) {
-    deviceValue = <Text>{t(`devices.mouseAxis`)}</Text>;
-  } else if (led.mapping.inputMapping?.input.mouseButton) {
-    deviceValue = <Text>{t(`devices.mouseButton`)}</Text>;
-  } else if (led.mapping.inputMapping?.input.key) {
-    deviceValue = <Text>{t(`devices.key`)}</Text>;
-  } else if (led.mapping.inputMapping?.input.shortcut) {
-    deviceValue = <Text>{t(`devices.shortcut`)}</Text>;
   } else if (device) {
     deviceValue = (
       <Group gap="2">
@@ -2296,23 +2288,23 @@ function SantrollerLed({
           />
         )}
         {led.device.vtechExpander && (
-          <NumberInput
-            label="selected_led"
-            value={led.device.vtechExpander.activeLed}
-            min={1}
-            max={8}
-            onChange={(val) =>
-              dispatch({
-                ...led,
-                device: {
-                  vtechExpander: {
-                    ...led.device.vtechExpander!,
-                    activeLed: parseInt(val.toString()) ?? 1,
-                  },
-                },
-              })
-            }
-          />
+          <MultiSelect
+              label="Leds"
+              value={Array.from(Array(10).keys()).filter((x) => led.device.vtechExpander?.activeLed! & (1 << x)).map((x) => x.toString())}
+              data={Array.from(
+                { length: 8 },
+                (_, x) => x.toString()
+              )}
+              clearable
+              maxValues={8}
+              onChange={(val) =>
+                dispatch({
+                  ...led,
+                  device: { vtechExpander: { ...led.device.vtechExpander!, activeLed: val.reduce((prev, current) => prev | (1 << parseInt(current)), 0) } },
+                })
+              }
+              searchable
+            />
         )}
         {led.mapping.inputMapping?.input && (
           <>
