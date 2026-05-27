@@ -2290,7 +2290,7 @@ function SantrollerLed({
         {led.device.vtechExpander && (
           <MultiSelect
               label="Leds"
-              value={Array.from(Array(10).keys()).filter((x) => led.device.vtechExpander?.activeLed! & (1 << x)).map((x) => x.toString())}
+              value={Array.from(Array(8).keys()).filter((x) => led.device.vtechExpander?.activeLed! & (1 << x)).map((x) => x.toString())}
               data={Array.from(
                 { length: 8 },
                 (_, x) => x.toString()
