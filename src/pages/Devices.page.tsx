@@ -1014,6 +1014,42 @@ function PSXDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+
+function VTechExpanderDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const { t } = useTranslation();
+  const device = status.device;
+  if (!device.vtechExpander) {
+    throw new Error('device null!');
+  }
+  const vtechExpander = device.vtechExpander;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.vtechExpander"
+      image="covers/devices/vtechExpander.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <SPIDevice
+        device={vtechExpander.spi}
+        mosiLabel="spi.mosi.label"
+        misoLabel="spi.miso.label"
+        sckLabel="spi.sck.label"
+        dispatch={(val) => updateDevice({ deviceid: parseInt(id), vtechExpander: { ...vtechExpander, spi: val } }, id)}
+      />
+      <PinBox
+        label="spi.cs.label"
+        pin={vtechExpander.attPin}
+        valid={AllPinsNamed}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), vtechExpander: { ...vtechExpander, attPin: pin } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
 const multiplexerData = [
   { label: 'multiplexer.selector.eightChannel', value: 'false' },
   { label: 'multiplexer.selector.sixteenChannel', value: 'true' },
@@ -1415,6 +1451,7 @@ const types: { [type: string]: React.FunctionComponent<{ id: string }> } = {
   apa102: APA102Device,
   stp16cpc: STP16CPCDevice,
   bt: BluetoothDevice,
+  vtechexpander: VTechExpanderDevice,
 };
 
 export function DevicesPage() {

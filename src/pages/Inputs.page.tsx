@@ -1308,6 +1308,15 @@ function SantrollerInput({
           dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
         ></DropdownBox>
       )}
+      {input.vtechExpander && (
+        <>
+        <NumberInput
+          label={t('input.vtechExpander.pin')}
+          value={input.vtechExpander.button}
+          onChange={(val) => dispatch({ vtechExpander: { ...input.vtechExpander!, button: Number(val) } })}
+        ></NumberInput>
+        </>
+      )}
       {input.gpio && (
         <>
           <Group>
