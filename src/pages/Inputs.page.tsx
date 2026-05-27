@@ -934,6 +934,14 @@ function SantrollerInput({
                     },
                   });
                   break;
+              case 'vtechExpander':
+                dispatch({
+                    vtechExpander: {
+                      button: 0,
+                      deviceid: parseInt(val),
+                    },
+                });
+                break;
                 case 'crkdNeck':
                   dispatch({
                     crkd: {

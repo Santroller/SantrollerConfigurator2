@@ -1453,7 +1453,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: { [type in keyof Omit<proto.IDevice, 'deviceid'>]-?: React.FunctionComponent<{ id: string }> } = {
+const types: { [type in keyof proto.IDevice as Exclude<type, 'deviceid'>]-?: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
