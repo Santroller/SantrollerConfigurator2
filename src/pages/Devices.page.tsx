@@ -1423,7 +1423,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: { [type in keyof Omit<proto.IDevice, 'deviceid'>]: React.FunctionComponent<{ id: string }> } = {
+const types: { [type in keyof Omit<proto.IDevice, 'deviceid' | 'encoder'>]-?: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -1453,7 +1453,6 @@ const types: { [type in keyof Omit<proto.IDevice, 'deviceid'>]: React.FunctionCo
   bt: BluetoothDevice,
   vtechExpander: VTechExpanderDevice,
 };
-
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);
   const [opened, { open, close }] = useDisclosure(false);
@@ -1461,7 +1460,7 @@ export function DevicesPage() {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const config = useConfigStore(
+  const config: { [id in keyof Omit<proto.IDevice, 'deviceid'>]: string } = useConfigStore(
     useShallow((state) =>
       Object.fromEntries(Object.values(state.deviceStatus).filter(x=>x.type).map((x) => [x.id, x.type]))
     )
@@ -1525,7 +1524,7 @@ export function DevicesPage() {
           </Modal>
           <SimpleGrid cols={3}>
             {Object.entries(config).map(([id, type]) =>
-              createElement(types[type], { id, key: id })
+              createElement(types[type as keyof typeof types], { id, key: id })
             )}
           </SimpleGrid>
           <Affix position={{ bottom: 40, right: 40 }}>
