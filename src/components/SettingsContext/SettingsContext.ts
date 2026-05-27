@@ -462,6 +462,9 @@ function createDefault(type: string, id: string) {
     case 'protarNeck':
       device = { spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 100000 }, attPin: -1 };
       break;
+    case 'vtechExpander':
+      device = { spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 10000 }, attPin: -1 };
+      break;
     case 'bhDrum':
     case 'crazyGuitarNeck':
       device = { i2c };
