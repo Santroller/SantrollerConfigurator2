@@ -1326,6 +1326,36 @@ function JoybusEmulationDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function EncoderDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.encoder) {
+    throw new Error('device null!');
+  }
+  const encoder = device.encoder;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.encoder"
+      image="covers/devices/encoder.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <PinBox
+        label="encoder.data_pin"
+        pin={encoder.dataPin}
+        valid={AllPinsNamed}
+        dispatch={(pin) =>
+          updateDevice(
+            { deviceid: parseInt(id), encoder: { ...encoder, dataPin: pin } },
+            id
+          )
+        }
+      />
+    </DeviceCard>
+  );
+}
 
 function PSXEmulationDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
@@ -1423,7 +1453,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: { [type in keyof Omit<proto.IDevice, 'deviceid' | 'encoder'>]-?: React.FunctionComponent<{ id: string }> } = {
+const types: { [type in keyof Omit<proto.IDevice, 'deviceid'>]-?: React.FunctionComponent<{ id: string }> } = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -1452,6 +1482,7 @@ const types: { [type in keyof Omit<proto.IDevice, 'deviceid' | 'encoder'>]-?: Re
   stp16cpc: STP16CPCDevice,
   bt: BluetoothDevice,
   vtechExpander: VTechExpanderDevice,
+  encoder: EncoderDevice
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);

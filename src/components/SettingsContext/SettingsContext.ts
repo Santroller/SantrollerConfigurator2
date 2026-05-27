@@ -506,6 +506,9 @@ function createDefault(type: string, id: string) {
     case 'snes':
       device = { clockPin: -1, latchPin: -1, dataPin: -1 };
       break;
+    case 'encoder':
+      device = { dataPin: -1 };
+      break;
     case 'joybus':
     case 'joybusEmulation':
       device = { dataPin: -1 };
