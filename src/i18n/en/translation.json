@@ -26,6 +26,7 @@
     "gpio_analog": "(Analog)",
     "gpio_digital": "(Digital)",
     "shortcut": "Shortcut",
+    "held": "Held",
     "midi": "MIDI",
     "debug": "Debug",
     "ads1115": "ADS1115 Multiplexer",
@@ -33,6 +34,9 @@
     "ws2812": "WS2812 LEDs",
     "apa102": "APA102 LEDs",
     "STP16CPC": "STP16CPC LED Driver"
+  },
+  "held": {
+    "time": "Time (ms)"
   },
   "crkd": {
     "inputs": {

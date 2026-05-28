@@ -790,6 +790,7 @@ function SantrollerInput({
       key2 != 'fixed' &&
       key2 != 'gpio' &&
       key2 != 'shortcut' &&
+      key2 != 'held' &&
       input[key2]!.deviceid !== undefined
     ) {
       deviceId = input[key2]!.deviceid;
@@ -835,6 +836,8 @@ function SantrollerInput({
     deviceValue = <Text>{t(`devices.key`)}</Text>;
   } else if (input.shortcut) {
     deviceValue = <Text>{t(`devices.shortcut`)}</Text>;
+  } else if (input.held) {
+    deviceValue = <Text>{t(`devices.held`)}</Text>;
   } else if (device) {
     deviceValue = (
       <Group gap="2">
@@ -934,14 +937,14 @@ function SantrollerInput({
                     },
                   });
                   break;
-              case 'vtechExpander':
-                dispatch({
+                case 'vtechExpander':
+                  dispatch({
                     vtechExpander: {
                       button: 0,
                       deviceid: parseInt(val),
                     },
-                });
-                break;
+                  });
+                  break;
                 case 'crkdNeck':
                   dispatch({
                     crkd: {
@@ -1004,6 +1007,14 @@ function SantrollerInput({
                   },
                 });
                 break;
+              case 'held':
+                dispatch({
+                  held: {
+                    input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
+                    time: 1000,
+                  },
+                });
+                break;
             }
           }}
         >
@@ -1059,6 +1070,7 @@ function SantrollerInput({
                 </Group>
               </Combobox.Option>
               <Combobox.Option value="shortcut">{t('devices.shortcut')}</Combobox.Option>
+              <Combobox.Option value="held">{t('devices.held')}</Combobox.Option>
             </Combobox.Options>
           </Combobox.Dropdown>
         </Combobox>
@@ -1141,6 +1153,32 @@ function SantrollerInput({
             </Card>
           </div>
         ))}
+      {input.held && (
+        <>
+          <NumberInput
+            label={t('held.time')}
+            value={input.held.time}
+            onChange={(val) =>
+              dispatch({ held: { ...input.held!, time: Number(val) } })
+            }
+            min={0}
+          ></NumberInput>
+          <SantrollerInput
+            axis={!!axis}
+            button={!!button}
+            input={input.held.input}
+            dispatch={(changed) =>
+              dispatch({
+                held: {
+                  ...input.held!,
+                  input: changed,
+                },
+              })
+            }
+            mappingIdx={mappingIdx}
+          ></SantrollerInput>
+        </>
+      )}
       {device?.type == 'wii' && (
         <DropdownOutputBox
           title="input"
@@ -1987,11 +2025,7 @@ function SantrollerLed({
           {t('devices.gpio')}
         </Text>
         <Text fz="xs" span opacity="0.7">
-          {t(
-            led.device.gpio.analog
-              ? 'devices.gpio_analog'
-              : 'devices.gpio_digital'
-          )}
+          {t(led.device.gpio.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')}
         </Text>
       </Group>
     );
@@ -2289,22 +2323,26 @@ function SantrollerLed({
         )}
         {led.device.vtechExpander && (
           <MultiSelect
-              label="Leds"
-              value={Array.from(Array(8).keys()).filter((x) => led.device.vtechExpander?.activeLed! & (1 << x)).map((x) => x.toString())}
-              data={Array.from(
-                { length: 8 },
-                (_, x) => x.toString()
-              )}
-              clearable
-              maxValues={8}
-              onChange={(val) =>
-                dispatch({
-                  ...led,
-                  device: { vtechExpander: { ...led.device.vtechExpander!, activeLed: val.reduce((prev, current) => prev | (1 << parseInt(current)), 0) } },
-                })
-              }
-              searchable
-            />
+            label="Leds"
+            value={Array.from(Array(8).keys())
+              .filter((x) => led.device.vtechExpander?.activeLed! & (1 << x))
+              .map((x) => x.toString())}
+            data={Array.from({ length: 8 }, (_, x) => x.toString())}
+            clearable
+            maxValues={8}
+            onChange={(val) =>
+              dispatch({
+                ...led,
+                device: {
+                  vtechExpander: {
+                    ...led.device.vtechExpander!,
+                    activeLed: val.reduce((prev, current) => prev | (1 << parseInt(current)), 0),
+                  },
+                },
+              })
+            }
+            searchable
+          />
         )}
         {led.mapping.inputMapping?.input && (
           <>
