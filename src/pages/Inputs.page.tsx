@@ -1387,29 +1387,16 @@ function SantrollerInput({
             )}
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, pin } })}
           ></PinBox>
-          <MultiSelect
-            label={t('matrix.output_pins')}
-            value={Array.from(Array(32).keys())
-              .filter((x) => input.matrix?.outPins! & (1 << x))
-              .map((x) => x.toString())}
-            data={Object.entries(AllPinsNamed).filter((x) => device.device.matrix?.outPins! & (1 << parseInt(x[0]))).map((item) => ({
-              value: item[0],
-              label: t(item[1].label, item[1]),
-            }))}
-            clearable
-            maxValues={32}
-            onChange={(val) =>
-              dispatch(
-                {
-                  matrix: {
-                    ...input.matrix!,
-                    outPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
-                  },
-                }
+          <PinBox
+            label={t('matrix.output_pin')}
+            pin={input.matrix.pin}
+            valid={Object.fromEntries(
+              Object.entries(AllPinsNamed).filter(
+                (x) => device.device.matrix?.outPins! & (1 << parseInt(x[0]))
               )
-            }
-            searchable
-          />
+            )}
+            dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, outputPin: pin } })}
+          ></PinBox>
         </>
       )}
       {input.gpio && (

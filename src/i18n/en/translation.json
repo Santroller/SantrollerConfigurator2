@@ -62,7 +62,8 @@
   "matrix": {
     "output_pins": "Output pins",
     "input_pins": "Input pins",
-    "input_pin": "Input pin"
+    "input_pin": "Input pin",
+    "output_pin": "Output pin"
   },
   "axis": {
     "calibration": "Axis Calibration",
