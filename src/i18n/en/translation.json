@@ -59,6 +59,11 @@
   "mode": {
     "xinput_on_windows": "Use xinput instead of HID on windows"
   },
+  "matrix": {
+    "output_pins": "Output pins",
+    "input_pins": "Input pins",
+    "input_pin": "Input pin"
+  },
   "axis": {
     "calibration": "Axis Calibration",
     "pressed": "Pressed Value",

@@ -86,6 +86,7 @@ export class DeviceStatus {
       case 'apa102':
       case 'stp16cpc':
       case 'multiplexer':
+      case 'matrix':
         break;
       default:
         label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
@@ -196,6 +197,10 @@ export class DeviceStatus {
           status.device.vtechExpander?.spi.sck,
           status.device.vtechExpander?.attPin,
         ];
+      case 'matrix':
+        return Array.from(Array(32).keys())
+          .filter((x) => (status.device.matrix?.outPins! | status.device.matrix?.inPins!) & (1 << x))
+          .map((x) => x.toString());
       case 'joybusEmulation':
         return [status.device.joybusEmulation?.dataPin];
       case 'peripheral':
@@ -521,6 +526,9 @@ function createDefault(type: string, id: string) {
       break;
     case 'psxEmulation':
       device = { commandPin: -1, attentionPin: -1, acknowledgePin: -1, dataPin: -1, clockPin: -1 };
+      break;
+    case 'matrix':
+      device = { inPins: 0, outPins: 0 };
       break;
   }
   return new DeviceStatus(id, type, {  deviceid: parseInt(id), [type]: { ...device, mappingMode } });

@@ -945,6 +945,15 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'matrix':
+                  dispatch({
+                    matrix: {
+                      outPins: 0,
+                      pin: 0,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
                 case 'crkdNeck':
                   dispatch({
                     crkd: {
@@ -1158,9 +1167,7 @@ function SantrollerInput({
           <NumberInput
             label={t('held.time')}
             value={input.held.time}
-            onChange={(val) =>
-              dispatch({ held: { ...input.held!, time: Number(val) } })
-            }
+            onChange={(val) => dispatch({ held: { ...input.held!, time: Number(val) } })}
             min={0}
           ></NumberInput>
           <SantrollerInput
@@ -1366,6 +1373,43 @@ function SantrollerInput({
             min={0}
             max={7}
           ></NumberInput>
+        </>
+      )}
+      {input.matrix && (
+        <>
+          <PinBox
+            label={t('matrix.input_pin')}
+            pin={input.matrix.pin}
+            valid={Object.fromEntries(
+              Object.entries(AllPinsNamed).filter(
+                (x) => device.device.matrix?.inPins! & (1 << parseInt(x[0]))
+              )
+            )}
+            dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, pin } })}
+          ></PinBox>
+          <MultiSelect
+            label={t('matrix.output_pins')}
+            value={Array.from(Array(32).keys())
+              .filter((x) => input.matrix?.outPins! & (1 << x))
+              .map((x) => x.toString())}
+            data={Object.entries(AllPinsNamed).filter((x) => device.device.matrix?.outPins! & (1 << parseInt(x[0]))).map((item) => ({
+              value: item[0],
+              label: t(item[1].label, item[1]),
+            }))}
+            clearable
+            maxValues={32}
+            onChange={(val) =>
+              dispatch(
+                {
+                  matrix: {
+                    ...input.matrix!,
+                    outPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
+                  },
+                }
+              )
+            }
+            searchable
+          />
         </>
       )}
       {input.gpio && (

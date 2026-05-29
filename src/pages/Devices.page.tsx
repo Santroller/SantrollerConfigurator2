@@ -16,6 +16,7 @@ import {
   Loader,
   Menu,
   Modal,
+  MultiSelect,
   NumberInput,
   SegmentedControl,
   SimpleGrid,
@@ -1037,14 +1038,22 @@ function VTechExpanderDevice({ id }: { id: string }) {
         mosiLabel="spi.mosi.label"
         misoLabel="spi.miso.label"
         sckLabel="spi.sck.label"
-        dispatch={(val) => updateDevice({ deviceid: parseInt(id), vtechExpander: { ...vtechExpander, spi: val } }, id)}
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), vtechExpander: { ...vtechExpander, spi: val } },
+            id
+          )
+        }
       />
       <PinBox
         label="spi.cs.label"
         pin={vtechExpander.attPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), vtechExpander: { ...vtechExpander, attPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), vtechExpander: { ...vtechExpander, attPin: pin } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -1347,11 +1356,72 @@ function EncoderDevice({ id }: { id: string }) {
         pin={encoder.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), encoder: { ...encoder, dataPin: pin } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
+function MatrixDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const { t } = useTranslation();
+  const device = status.device;
+  if (!device.matrix) {
+    throw new Error('device null!');
+  }
+  const matrix = device.matrix;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.matrix"
+      image="covers/devices/matrix.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <MultiSelect
+        label={t("matrix.output_pins")}
+        value={Array.from(Array(32).keys())
+          .filter((x) => matrix.outPins! & (1 << x))
+          .map((x) => x.toString())}
+        data={Object.entries(AllPinsNamed).map(item => ({value: item[0], label: t(item[1].label, item[1])}))}
+        clearable
+        maxValues={32}
+        onChange={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), encoder: { ...encoder, dataPin: pin } },
+            {
+              deviceid: parseInt(id),
+              matrix: {
+                ...matrix,
+                outPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
+              },
+            },
             id
           )
         }
+        searchable
+      />
+      <MultiSelect
+        label={t("matrix.input_pins")}
+        value={Array.from(Array(32).keys())
+          .filter((x) => matrix.inPins! & (1 << x))
+          .map((x) => x.toString())}
+        data={Object.entries(AllPinsNamed).map(item => ({value: item[0], label: t(item[1].label, item[1])}))}
+        clearable
+        maxValues={32}
+        onChange={(val) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id),
+              matrix: {
+                ...matrix,
+                inPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
+              },
+            },
+            id
+          )
+        }
+        searchable
       />
     </DeviceCard>
   );
@@ -1453,7 +1523,11 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: { [type in keyof proto.IDevice as Exclude<type, 'deviceid'>]-?: React.FunctionComponent<{ id: string }> } = {
+const types: {
+  [type in keyof proto.IDevice as Exclude<type, 'deviceid'>]-?: React.FunctionComponent<{
+    id: string;
+  }>;
+} = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -1482,7 +1556,8 @@ const types: { [type in keyof proto.IDevice as Exclude<type, 'deviceid'>]-?: Rea
   stp16cpc: STP16CPCDevice,
   bt: BluetoothDevice,
   vtechExpander: VTechExpanderDevice,
-  encoder: EncoderDevice
+  encoder: EncoderDevice,
+  matrix: MatrixDevice,
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);
@@ -1493,7 +1568,11 @@ export function DevicesPage() {
   });
   const config: { [id in keyof Omit<proto.IDevice, 'deviceid'>]: string } = useConfigStore(
     useShallow((state) =>
-      Object.fromEntries(Object.values(state.deviceStatus).filter(x=>x.type).map((x) => [x.id, x.type]))
+      Object.fromEntries(
+        Object.values(state.deviceStatus)
+          .filter((x) => x.type)
+          .map((x) => [x.id, x.type])
+      )
     )
   );
   const deleteAllDevices = useConfigStore((state) => state.deleteAllDevices);
