@@ -948,8 +948,8 @@ function SantrollerInput({
                 case 'matrix':
                   dispatch({
                     matrix: {
-                      outPins: 0,
-                      pin: 0,
+                      outputPin: -1,
+                      pin: -1,
                       deviceid: parseInt(val),
                     },
                   });
