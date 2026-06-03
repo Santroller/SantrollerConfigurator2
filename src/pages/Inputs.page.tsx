@@ -962,6 +962,14 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'crkdDrum':
+                  dispatch({
+                    crkdDrum: {
+                      axis: proto.CrkdDrumAxisType.CrkdGreenPad,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
                 case 'gh5Neck':
                   dispatch({
                     gh5Neck: {
@@ -1353,6 +1361,15 @@ function SantrollerInput({
           dispatch={(button) => dispatch({ crkd: { ...input.crkd!, button } })}
         ></DropdownBox>
       )}
+      {input.crkdDrum && (
+        <DropdownBox
+          title="input"
+          e={proto.CrkdDrumAxisType}
+          val={input.crkdDrum?.axis}
+          label="crkd_drum.inputs"
+          dispatch={(axis) => dispatch({ crkdDrum: { ...input.crkdDrum!, axis } })}
+        ></DropdownBox>
+      )}
       {input.gh5Neck && (
         <DropdownBox
           title="input"
@@ -1637,6 +1654,7 @@ function isAnalog(input: proto.IInput) {
     input.gpio?.analog ||
     input.ads1115 ||
     input.wiiAxis ||
+    input.crkdDrum ||
     input.accelerometer ||
     input.multiplexer ||
     input.usbAxis ||

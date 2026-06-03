@@ -723,6 +723,37 @@ function CrkdNeckDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function CrkdDrumDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.crkdDrum) {
+    throw new Error('device null!');
+  }
+  const crkdDrum = device.crkdDrum;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.crkdDrum"
+      image="covers/devices/crkdDrum.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <UARTDevice
+        device={crkdDrum.uart}
+        dispatch={(val) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id),
+              crkdDrum: { ...crkdDrum, uart: { ...val, baudrate: 460800 } },
+            },
+            id
+          )
+        }
+      />
+    </DeviceCard>
+  );
+}
 function ProtarNeckDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -1539,6 +1570,7 @@ const types: {
   djhTurntable: DJHeroTurntableDevice,
   midiSerial: MidiSerialDevice,
   crkdNeck: CrkdNeckDevice,
+  crkdDrum: CrkdDrumDevice,
   protarNeck: ProtarNeckDevice,
   usbHost: USBHostDevice,
   multiplexer: MultiplexerDevice,

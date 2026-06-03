@@ -142,6 +142,8 @@ export class DeviceStatus {
         return [status.device.midiSerial?.uart.tx, status.device.midiSerial?.uart.rx];
       case 'crkdNeck':
         return [status.device.crkdNeck?.uart.tx, status.device.crkdNeck?.uart.rx];
+      case 'crkdDrum':
+        return [status.device.crkdDrum?.uart.tx, status.device.crkdDrum?.uart.rx];
       case 'multiplexer':
         return status.device.multiplexer?.sixteenChannel
           ? [
@@ -504,6 +506,7 @@ function createDefault(type: string, id: string) {
     case 'midiSerial':
       device = { uart };
       break;
+    case 'crkdDrum':
     case 'crkdNeck':
     case 'debug':
       device = { uart };

@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
+    "dev-nobuild": "npm run build_proto && vite",
     "dev": "npm run build_proto && (npm run build_santroller_pico1 & npm run build_santroller_pico2) && npm run copy_santroller  && vite",
     "build_proto": "pbjs -w es6 --null-semantics -t static-module Santroller/proto/config.proto Santroller/proto/events.proto Santroller/proto/commands.proto -o src/components/SettingsContext/config.js && pbts -o src/components/SettingsContext/config.d.ts src/components/SettingsContext/config.js",
     "build_santroller_pico1": "cd Santroller;mkdir build_pico1;cd build_pico1;cmake .. -DPICO_BOARD=pico_w;make -j",
