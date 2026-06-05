@@ -89,7 +89,10 @@ export class DeviceStatus {
       case 'stp16cpc':
       case 'multiplexer':
       case 'matrix':
+        break;
+        
       case 'cycle':
+        label = `${status.id}`
         break;
       default:
         label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;

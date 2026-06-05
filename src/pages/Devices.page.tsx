@@ -174,6 +174,7 @@ function UARTDevice({
 
 function DeviceCard({
   connected,
+  id,
   type,
   type_prefix,
   title,
@@ -182,6 +183,7 @@ function DeviceCard({
   deleteDevice,
 }: {
   connected?: boolean;
+  id?: string;
   type?: string;
   type_prefix?: string;
   title: string;
@@ -237,7 +239,7 @@ function DeviceCard({
         </Card.Section>
         <Flex mt="md" mb="xs" justify="center" align="center" gap="xs">
           <Title order={2} fw={500}>
-            {t(title)}
+            {id ? t(title, { id: id }) : t(title)}
           </Title>{' '}
         </Flex>
         <Center>{connected == null ? null : badge}</Center>
@@ -1176,11 +1178,16 @@ function MultiplexerDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+const cycleData = Object.keys(proto.CycleType).map((t) => ({
+  label: `cycle.labels.${t.toLowerCase()}`,
+  value: t,
+}));
 function CycleDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const updateCycle = useConfigStore((state) => state.updateCycle);
+  const { t } = useTranslation();
   const device = status.device;
   if (!device.cycle) {
     throw new Error('device null!');
@@ -1188,20 +1195,42 @@ function CycleDevice({ id }: { id: string }) {
   const cycle = device.cycle;
   return (
     <DeviceCard
-      title="devices.cycle"
+      title="cycle.title"
+      id={id}
       image="covers/devices/cycle.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <SegmentedControl data={cycle.values?.map((x,i) => ({label: x.toString(), value: i.toString()}))!} value={status.cycleState.toString()} onChange={(val)=>updateCycle(parseInt(id), parseInt(val))} />
-      <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} value={cycle.values?.map(x => x.toString())} onChange={(changed) =>
-        updateDevice({
-          deviceid: parseInt(id),
-          cycle: {
-            ...cycle,
-            values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
-          },
-        },id)
-      } />
+
+      <LabeledDropdown
+        data={cycleData}
+        label="Type"
+        value={`cycle.label.${proto.CycleType[cycle.type]}`}
+        description="cycle.description"
+        dispatch={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id), cycle: { ...cycle, type: parseInt(val) + 1, values: (parseInt(val) + 1) == proto.CycleType.pickup ? [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500] : [0] } },
+            id
+          )
+        }
+      />
+      {cycle.type == proto.CycleType.custom && (
+        <>
+          <SegmentedControl data={cycle.values?.map((x, i) => ({ label: x.toString(), value: i.toString() }))!} value={status.cycleState.toString()} onChange={(val) => updateCycle(parseInt(id), parseInt(val))} />
+          <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} value={cycle.values?.map(x => x.toString())} onChange={(changed) =>
+            updateDevice({
+              deviceid: parseInt(id),
+              cycle: {
+                ...cycle,
+                values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
+              },
+            }, id)
+          } /></>
+      )}
+      {cycle.type == proto.CycleType.pickup && (
+        <>
+          <SegmentedControl data={cycle.values?.map((x, i) => ({ label: t(`pickup.notch.${i}`), value: i.toString() }))!} value={status.cycleState.toString()} onChange={(val) => updateCycle(parseInt(id), parseInt(val))} />
+        </>
+      )}
     </DeviceCard>
   );
 }

@@ -33,10 +33,28 @@
     "accelerometer": "Accelerometer",
     "ws2812": "WS2812 LEDs",
     "apa102": "APA102 LEDs",
-    "STP16CPC": "STP16CPC LED Driver"
+    "STP16CPC": "STP16CPC LED Driver",
+    "cycle": "Cycling input"
   },
   "held": {
     "time": "Time (ms)"
+  },
+  "cycle": {
+    "description": "Cycling inputs let you jump between a set list of values. This can be useful for something like the pickup selector, where you could map a button to the pickup selector, and each time you press the button, it jumps between each notch.",
+    "title": "Cycling input {{id}}",
+    "label": {
+      "custom": "Custom range",
+      "pickup": "Pickup selector"
+    }
+  },
+  "pickup": {
+    "notch": {
+      "0": "Notch 1",
+      "1": "Notch 2",
+      "2": "Notch 3",
+      "3": "Notch 4",
+      "4": "Notch 5"
+    }
   },
   "crkd": {
     "inputs": {
