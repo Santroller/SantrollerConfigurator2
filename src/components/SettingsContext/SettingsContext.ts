@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type {} from '@redux-devtools/extension';
+import type { } from '@redux-devtools/extension';
 
 import { disconnect } from 'process';
 import { BufferReader } from 'protobufjs';
@@ -60,9 +60,11 @@ export class DeviceStatus {
     this.wiiExtType = proto.WiiExtType.WiiNoExtension;
     this.usbDevices = {};
     this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
+    this.cycleState = 0;
   }
   id: string;
   type: string;
+  cycleState: number;
   connected: boolean = false;
   device: proto.IDevice;
   wiiExtType: proto.WiiExtType;
@@ -87,6 +89,7 @@ export class DeviceStatus {
       case 'stp16cpc':
       case 'multiplexer':
       case 'matrix':
+      case 'cycle':
         break;
       default:
         label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
@@ -147,18 +150,18 @@ export class DeviceStatus {
       case 'multiplexer':
         return status.device.multiplexer?.sixteenChannel
           ? [
-              status.device.multiplexer?.s0Pin,
-              status.device.multiplexer?.s1Pin,
-              status.device.multiplexer?.s2Pin,
-              status.device.multiplexer?.s3Pin,
-              status.device.multiplexer?.inputPin,
-            ]
+            status.device.multiplexer?.s0Pin,
+            status.device.multiplexer?.s1Pin,
+            status.device.multiplexer?.s2Pin,
+            status.device.multiplexer?.s3Pin,
+            status.device.multiplexer?.inputPin,
+          ]
           : [
-              status.device.multiplexer?.s0Pin,
-              status.device.multiplexer?.s1Pin,
-              status.device.multiplexer?.s2Pin,
-              status.device.multiplexer?.inputPin,
-            ];
+            status.device.multiplexer?.s0Pin,
+            status.device.multiplexer?.s1Pin,
+            status.device.multiplexer?.s2Pin,
+            status.device.multiplexer?.inputPin,
+          ];
       case 'psx':
         return [
           status.device.psx?.spi.mosi,
@@ -243,6 +246,7 @@ export interface ConfigState {
 export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
+  updateCycle: (id: number, state: number) => void;
   addProfile: () => void;
   deleteProfile: (id: number) => void;
   updateConfig: (config: proto.IConfig) => void;
@@ -271,11 +275,11 @@ export interface Actions {
   ) => void;
 }
 
-function InitState(config: proto.Config): ConfigState {
+function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, i) => [
       i,
-      new DeviceStatus(i.toString(10), Object.keys(x).find(x => x!="deviceid")!, x),
+      new DeviceStatus(i.toString(10), Object.keys(x).find(x => x != "deviceid")!, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
@@ -292,6 +296,7 @@ function InitState(config: proto.Config): ConfigState {
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
+  aux.states.forEach(x => deviceStatus[x.id].cycleState = x.state);
   return {
     deviceStatus,
     mappingStatus,
@@ -322,6 +327,9 @@ export const initialConfig = InitState(
   proto.Config.create({
     devices: [],
     profiles: [],
+  }),
+  proto.AuxConfigBlock.create({
+    states: []
   })
 );
 
@@ -533,8 +541,11 @@ function createDefault(type: string, id: string) {
     case 'matrix':
       device = { inPins: 0, outPins: 0 };
       break;
+    case 'cycle':
+      device = { values: [0] };
+      break;
   }
-  return new DeviceStatus(id, type, {  deviceid: parseInt(id), [type]: { ...device, mappingMode } });
+  return new DeviceStatus(id, type, { deviceid: parseInt(id), [type]: { ...device, mappingMode } });
 }
 function buf2hex(buffer: Uint8Array) {
   // buffer is an ArrayBuffer
@@ -579,6 +590,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
     updateDevice: (device: proto.IDevice, id: string) => {
       set((state) => {
         state.deviceStatus[id].device = device;
+      });
+      get().saveConfig();
+    },
+    updateCycle: (id: number, val: number) => {
+      set((state) => {
+        state.deviceStatus[id].cycleState = val;
       });
       get().saveConfig();
     },
@@ -907,6 +924,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
           });
         }
+        if (deviceEvent.cycle) {
+          set((state) => {
+            if (deviceEvent.cycle) {
+              if (deviceEvent.cycle.id in state.deviceStatus) {
+                state.deviceStatus[deviceEvent.cycle.id].cycleState = deviceEvent.cycle.state
+              }
+            }
+          });
+        }
         if (deviceEvent.console) {
           set((state) => {
             if (deviceEvent.console) {
@@ -1016,10 +1042,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
               assignments: [],
               mappings: [],
               leds: [],
-              uid: Math.max(...(state.config.profiles?.map((x) => x.uid) || [0])) + 1,
+              uid: Math.max(0, ...(state.config.profiles?.map((x) => x.uid) || [])) + 1,
             },
           ],
         };
+        console.log(state.config)
         state.currentProfile = state.config.profiles!.length - 1;
         state.mappingStatus[state.config.profiles!.length - 1] = [];
         state.activationStatus[state.config.profiles!.length - 1] = [];
@@ -1064,9 +1091,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
+      const aux = { states: Object.entries(state.deviceStatus).filter(x => x[1].type == "cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x[0]), state: x[1].cycleState })) };
+
       const buffer = proto.Config.create(config).toJSON();
+      const bufferAux = proto.AuxConfigBlock.create(aux).toJSON();
       const element = document.createElement('a');
-      const file = new Blob([JSON.stringify(buffer)], {
+      const file = new Blob([JSON.stringify({ "config": buffer, "aux": bufferAux })], {
         type: 'text/json',
       });
       element.href = URL.createObjectURL(file);
@@ -1076,12 +1106,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     loadConfig: async (file: File | null) => {
       try {
-        const config = proto.Config.fromObject(JSON.parse((await file?.text()) ?? ''));
+        const data = JSON.parse((await file?.text()) ?? '')
+        const config = proto.Config.fromObject(data["main"]);
+        const aux = proto.AuxConfigBlock.fromObject(data["aux"]);
         const timeout = setInterval(() => get().sendKeepAlive(), 10);
         set(
           (old) => ({
             ...old,
-            ...InitState(config),
+            ...InitState(config, aux),
             connected: true,
             keepaliveTimeout: timeout,
           }),
@@ -1117,7 +1149,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
-      const buffer = proto.Config.encode(config).finish();
+      const states = Object.values(state.deviceStatus).filter(x =>x.type=="cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }))
+      const aux = { states: states };
+      const bufferMain = proto.Config.encode(config).finish();
+      const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
+      const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
+      buffer.set(bufferMain, 0);
+      buffer.set(bufferAux, bufferMain.length);
       const crc = new CRC32().calculate(buffer);
       // Don't write if nothing has changed
       if (crc == state.crc) {
@@ -1132,6 +1170,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
         proto.ConfigInfo.create({
           dataSize: buffer.length,
           dataCrc: crc,
+          auxSize: bufferAux.length,
+          mainSize: bufferMain.length,
           magic,
         })
       )
@@ -1272,12 +1312,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         console.log('type: ', deviceType);
         try {
-          const config = proto.Config.decode(data, info.dataSize);
+          console.log(info)
+          const config = proto.Config.decode(data, info.mainSize);
+          const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize)
+          console.log(config, aux)
           const timeout = setInterval(() => get().sendKeepAlive(), 10);
           set(
             (old) => ({
               ...old,
-              ...InitState(config),
+              ...InitState(config, aux),
               connected: true,
               updating: false,
               hidDevice: device,
@@ -1291,6 +1334,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           );
           await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
         } catch (e) {
+          console.log(e)
           set(
             (old) => ({
               ...old,

@@ -22,6 +22,7 @@ import {
   SimpleGrid,
   Space,
   Table,
+  TagsInput,
   Title,
   UnstyledButton,
   useCombobox,
@@ -1175,6 +1176,36 @@ function MultiplexerDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function CycleDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const updateCycle = useConfigStore((state) => state.updateCycle);
+  const device = status.device;
+  if (!device.cycle) {
+    throw new Error('device null!');
+  }
+  const cycle = device.cycle;
+  return (
+    <DeviceCard
+      title="devices.cycle"
+      image="covers/devices/cycle.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <SegmentedControl data={cycle.values?.map((x,i) => ({label: x.toString(), value: i.toString()}))!} value={status.cycleState.toString()} onChange={(val)=>updateCycle(parseInt(id), parseInt(val))} />
+      <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} value={cycle.values?.map(x => x.toString())} onChange={(changed) =>
+        updateDevice({
+          deviceid: parseInt(id),
+          cycle: {
+            ...cycle,
+            values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
+          },
+        },id)
+      } />
+    </DeviceCard>
+  );
+}
+
 function SNESDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -1415,7 +1446,7 @@ function MatrixDevice({ id }: { id: string }) {
         value={Array.from(Array(32).keys())
           .filter((x) => matrix.outPins! & (1 << x))
           .map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map(item => ({value: item[0], label: t(item[1].label, item[1])}))}
+        data={Object.entries(AllPinsNamed).map(item => ({ value: item[0], label: t(item[1].label, item[1]) }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -1437,7 +1468,7 @@ function MatrixDevice({ id }: { id: string }) {
         value={Array.from(Array(32).keys())
           .filter((x) => matrix.inPins! & (1 << x))
           .map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map(item => ({value: item[0], label: t(item[1].label, item[1])}))}
+        data={Object.entries(AllPinsNamed).map(item => ({ value: item[0], label: t(item[1].label, item[1]) }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -1590,6 +1621,7 @@ const types: {
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
   matrix: MatrixDevice,
+  cycle: CycleDevice
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);
