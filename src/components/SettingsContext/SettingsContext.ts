@@ -90,7 +90,7 @@ export class DeviceStatus {
       case 'multiplexer':
       case 'matrix':
         break;
-        
+
       case 'cycle':
         label = `${status.id}`
         break;
@@ -895,7 +895,17 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     deleteDevice: (id: string) => {
       set((state) => {
+        const idNum = parseInt(id)
+        const type = state.deviceStatus[id].type as keyof proto.IInput
+        if (type == "gpio" || type == "fixed" || type == "shortcut" || type == "held") return;
         delete state.deviceStatus[id];
+        state.mappingStatus = state.mappingStatus.map(x => Object.fromEntries(Object.entries(x).filter(([i, x]) => x.mapping.input[type]?.deviceid != idNum)))
+        state.config.profiles = state.config.profiles!.map(p => ({
+          ...p,
+          mappings: p.mappings?.filter(x => x.input[type]?.deviceid != idNum),
+          assignments: p.assignments?.map(x => ({ ...x, assignments: x.assignments?.filter(y => (!y.input || y.input.input[type]?.deviceid != idNum) && (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid != idNum)) })),
+          leds: p.leds?.filter(x => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid != idNum)
+        }))
       });
       get().saveConfig();
     },
@@ -1152,7 +1162,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
-      const states = Object.values(state.deviceStatus).filter(x =>x.type=="cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }))
+      const states = Object.values(state.deviceStatus).filter(x => x.type == "cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }))
       const aux = { states: states };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
