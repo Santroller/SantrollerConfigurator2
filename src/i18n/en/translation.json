@@ -45,7 +45,9 @@
     "label": {
       "custom": "Custom range",
       "pickup": "Pickup selector"
-    }
+    },
+    "forward_input": "Allow cycling forwards",
+    "reverse_input": "Allow cycling backwards"
   },
   "pickup": {
     "notch": {

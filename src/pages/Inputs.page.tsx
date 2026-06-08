@@ -1208,7 +1208,19 @@ function SantrollerInput({
       {input.cycle && (
         <>
           <SegmentedControl data={device.device.cycle!.values?.map(x => x.toString())!} value={device.device.cycle!.values![deviceStatus[input.cycle.deviceid].cycleState].toString()} />
-          <SantrollerInput
+          <Switch
+            label={t('cycle.forward_input')}
+            checked={input.cycle.input !== null}
+            onChange={(event) => {
+              dispatch({
+                cycle: {
+                  ...input.cycle!,
+                  input: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
+                }
+              })
+            }}
+          />
+          {input.cycle.input && <SantrollerInput
             axis={!!axis}
             button={!!button}
             input={input.cycle.input}
@@ -1221,7 +1233,33 @@ function SantrollerInput({
               })
             }
             mappingIdx={mappingIdx}
-          ></SantrollerInput>
+          ></SantrollerInput>}
+          <Switch
+            label={t('cycle.reverse_input')}
+            checked={input.cycle.inputReverse !== null}
+            onChange={(event) => {
+              dispatch({
+                cycle: {
+                  ...input.cycle!,
+                  inputReverse: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
+                }
+              })
+            }}
+          />
+          {input.cycle.inputReverse && <SantrollerInput
+            axis={!!axis}
+            button={!!button}
+            input={input.cycle.inputReverse}
+            dispatch={(changed) =>
+              dispatch({
+                cycle: {
+                  ...input.cycle!,
+                  inputReverse: changed,
+                },
+              })
+            }
+            mappingIdx={mappingIdx}
+          ></SantrollerInput>}
         </>
       )}
       {device?.type == 'wii' && (
