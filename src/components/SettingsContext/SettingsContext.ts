@@ -234,6 +234,7 @@ export interface ConfigState {
   updatePercentage: number;
   detectedMapping?: number;
   detectedActivation?: number;
+  detectedInnerMapping?: number;
   detectedLed?: number;
   detecting: boolean;
   lastUpdate: number;
@@ -274,6 +275,7 @@ export interface Actions {
     activation: number | undefined,
     mapping: number | undefined,
     led: number | undefined,
+    innerMapping: number | undefined,
     type: proto.PinDetectType
   ) => void;
 }
@@ -702,6 +704,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       activation: number | undefined,
       mapping: number | undefined,
       led: number | undefined,
+      innerMapping: number | undefined,
       type: proto.PinDetectType
     ) => {
       const dev = get().hidDevice;
@@ -712,6 +715,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.detectedLed = led;
         state.detectedMapping = mapping;
         state.detectedActivation = activation;
+        state.detectedInnerMapping = innerMapping;
       });
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({

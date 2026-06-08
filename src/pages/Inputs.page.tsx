@@ -774,6 +774,7 @@ function SantrollerInput({
   mappingIdx,
   activationIdx,
   ledIdx,
+  innerIdx,
   dispatch,
 }: {
   input: proto.IInput;
@@ -782,6 +783,7 @@ function SantrollerInput({
   mappingIdx?: number;
   activationIdx?: number;
   ledIdx?: number;
+  innerIdx?: number;
   dispatch: (input: proto.IInput) => void;
 }) {
   let deviceId = -1;
@@ -803,6 +805,7 @@ function SantrollerInput({
   const detectPins = useConfigStore.getState().detectPins;
   const detected = useConfigStore.getState().detected;
   const detectedMapping = useConfigStore.getState().detectedMapping;
+  const detectedInnerMapping = useConfigStore.getState().detectedInnerMapping;
   const detectedActivation = useConfigStore.getState().detectedActivation;
   const detectedLed = useConfigStore.getState().detectedLed;
   const detecting = useConfigStore((state) => state.detecting);
@@ -856,6 +859,7 @@ function SantrollerInput({
   if (
     detectedMapping !== undefined &&
     detectedMapping == mappingIdx &&
+    (innerIdx == null || detectedInnerMapping == innerIdx) &&
     detected != -1 &&
     input.gpio
   ) {
@@ -864,12 +868,14 @@ function SantrollerInput({
   if (
     detectedActivation !== undefined &&
     detectedActivation == activationIdx &&
+    (innerIdx == null || detectedInnerMapping == innerIdx) &&
     detected != -1 &&
     input.gpio
   ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
-  if (detectedLed !== undefined && detectedLed == ledIdx && detected != -1 && input.gpio) {
+  if (detectedLed !== undefined && detectedLed == ledIdx && detected != -1 && (
+    innerIdx == null || detectedInnerMapping == innerIdx) && input.gpio) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
   return (
@@ -1177,6 +1183,7 @@ function SantrollerInput({
                   })
                 }
                 mappingIdx={mappingIdx}
+                innerIdx={idx}
               ></SantrollerInput>
             </Card>
           </div>
@@ -1232,6 +1239,7 @@ function SantrollerInput({
                 },
               })
             }
+            innerIdx={0}
             mappingIdx={mappingIdx}
           ></SantrollerInput>}
           <Switch
@@ -1259,6 +1267,7 @@ function SantrollerInput({
               })
             }
             mappingIdx={mappingIdx}
+            innerIdx={1}
           ></SantrollerInput>}
         </>
       )}
@@ -1509,6 +1518,7 @@ function SantrollerInput({
                     activationIdx,
                     mappingIdx,
                     ledIdx,
+                    innerIdx,
                     input.gpio!.analog
                       ? proto.PinDetectType.DetectAnalog
                       : proto.PinDetectType.DetectDigital
