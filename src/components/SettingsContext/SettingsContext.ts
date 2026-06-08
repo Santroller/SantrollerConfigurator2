@@ -1110,7 +1110,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     loadConfig: async (file: File | null) => {
       try {
         const data = JSON.parse((await file?.text()) ?? '')
-        const config = proto.Config.fromObject(data["main"]);
+        const config = proto.Config.fromObject(data["config"]);
         const aux = proto.AuxConfigBlock.fromObject(data["aux"]);
         const timeout = setInterval(() => get().sendKeepAlive(), 10);
         set(
