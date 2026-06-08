@@ -1216,7 +1216,7 @@ function CycleDevice({ id }: { id: string }) {
       {cycle.type == proto.CycleType.custom && (
         <>
           <SegmentedControl data={cycle.values?.map((x, i) => ({ label: x.toString(), value: i.toString() }))!} value={status.cycleState.toString()} onChange={(val) => updateCycle(parseInt(id), parseInt(val))} />
-          <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} value={cycle.values?.map(x => x.toString())} onChange={(changed) =>
+          <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} withPillsReorder allowDuplicates value={cycle.values?.map(x => x.toString())} onChange={(changed) => {
             updateDevice({
               deviceid: parseInt(id),
               cycle: {
@@ -1224,6 +1224,8 @@ function CycleDevice({ id }: { id: string }) {
                 values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
               },
             }, id)
+            console.log(changed)
+          }
           } /></>
       )}
       {cycle.type == proto.CycleType.pickup && (
