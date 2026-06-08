@@ -413,7 +413,7 @@
   },
   "delete_device_dialog": {
     "title": "Deleting device",
-    "desc": "Are you sure you wish to delete this device?",
+    "desc": "Are you sure you wish to delete this device? Note that this will also remove any mappings that rely on this input!",
     "confirm": "Delete device",
     "cancel": "Cancel"
   },
