@@ -19,11 +19,13 @@ export class MappingStatus {
     this.mapping = mapping;
     this.state = 0;
     this.stateRaw = 0;
+    this.stateNonZero = 0;
   }
   id: number;
   mapping: proto.IMapping;
   state: number;
   stateRaw: number;
+  stateNonZero: number;
 }
 export class LedStatus {
   [immerable] = true;
@@ -32,11 +34,13 @@ export class LedStatus {
     this.led = led;
     this.state = 0;
     this.stateRaw = 0;
+    this.stateNonZero = 0;
   }
   id: number;
   led: proto.ILed;
   state: number;
   stateRaw: number;
+  stateNonZero: number;
 }
 export class ActivationStatus {
   [immerable] = true;
@@ -998,6 +1002,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 const mapping = mappings[deviceEvent.button!.id];
                 mapping.state = deviceEvent.button?.state ? 65535 : 0;
                 mapping.stateRaw = deviceEvent.button?.stateRaw ? 65535 : 0;
+                mapping.stateNonZero = deviceEvent.button?.state ? 65535 : 0;
               }
             }
           });
@@ -1010,6 +1015,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 const mapping = mappings[deviceEvent.axis!.id];
                 mapping.state = deviceEvent.axis?.state!;
                 mapping.stateRaw = deviceEvent.axis?.stateRaw!;
+                if (mapping.state) {
+                  mapping.stateNonZero = mapping.state;
+                }
               }
             }
           });
@@ -1040,6 +1048,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 const mapping = mappings[deviceEvent.led!.id];
                 mapping.state = deviceEvent.led?.state!;
                 mapping.stateRaw = deviceEvent.led?.stateRaw!;
+                if (mapping.state) {
+                  mapping.stateNonZero = mapping.state;
+                }
               }
             }
           });

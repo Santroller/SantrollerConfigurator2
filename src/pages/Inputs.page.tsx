@@ -78,8 +78,7 @@ import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
 import { DeviceStatus, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
-
-function StateLabel({
+function StateLabelLabel({
   profileIdx,
   mappingIdx,
   listIdx,
@@ -106,9 +105,26 @@ function StateLabel({
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : state.mappingStatus[profileIdx][mappingIdx]?.state
+        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
   );
-  return <Center h="100%">{raw ? stateRaw : state}</Center>;
+  return <span>{raw ? stateRaw : state}</span>;
+}
+function StateLabel({
+  profileIdx,
+  mappingIdx,
+  listIdx,
+  raw,
+  activationBased,
+  ledBased,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  listIdx?: number;
+  raw?: boolean;
+  activationBased?: boolean;
+  ledBased?: boolean;
+}) {
+  return <Center h="100%"><StateLabelLabel profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} raw={raw} activationBased={activationBased} ledBased={ledBased} /></Center>;
 }
 function StateSection({
   profileIdx,
@@ -149,7 +165,7 @@ function StateSection({
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
           ? 65535
           : 0
-        : state.mappingStatus[profileIdx][mappingIdx]?.state
+        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
   );
   if (min > max) {
     const temp = min;
@@ -205,7 +221,7 @@ function StateBox({
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : state.mappingStatus[profileIdx][mappingIdx]?.state
+        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
   );
   return (
     <>
@@ -2987,13 +3003,7 @@ function SantrollerAssignment({
     [label]
   );
 
-  const analogInput =
-    mapping.input?.input.gpio?.analog ||
-    mapping.input?.input.ads1115 ||
-    mapping.input?.input.wiiAxis ||
-    mapping.inputAnyTime?.input.gpio?.analog ||
-    mapping.inputAnyTime?.input.ads1115 ||
-    mapping.inputAnyTime?.input.wiiAxis;
+  const analogInput = mapping.input?.input && isAnalog(mapping.input?.input) || mapping.inputAnyTime?.input && isAnalog(mapping.inputAnyTime?.input);
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_assignment_dialog.title')} centered>

@@ -1224,7 +1224,6 @@ function CycleDevice({ id }: { id: string }) {
                 values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
               },
             }, id)
-            console.log(changed)
           }
           } /></>
       )}
