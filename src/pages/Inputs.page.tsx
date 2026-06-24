@@ -3173,8 +3173,35 @@ function SantrollerAssignment({
                 dispatch={(consoleType) => dispatch({ consoleType: { consoleType } })}
               ></DropdownBox>
             )}
+            <Space h="md" />
+            <Switch
+              label={t('assignments.forcedType')}
+              checked={!!mapping.consoleType.forcedType}
+              onChange={(event) =>
+                dispatch({
+                  consoleType: {
+                    forcedType: event.currentTarget.checked ? proto.ConsoleMode.ModeXbox360 : null,
+                  },
+                })
+              }
+            />
+            <Text fz="xs" opacity="0.7">
+              {t('assignments.forcedTypeDesc')}
+            </Text>
+            <Space h="md" />
+            
+            {mapping.consoleType.forcedType && (
+              <DropdownBox
+                title="activation.forcedType"
+                e={proto.ConsoleMode}
+                val={mapping.consoleType!.forcedType!}
+                label="forcedType"
+                dispatch={(forcedType) => dispatch({ consoleType: { forcedType } })}
+              ></DropdownBox>
+            )}
           </>
         )}
+        
         {mapping.bluetooth && (
           <DropdownBox
             title="activation.bluetooth"
