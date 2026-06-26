@@ -429,6 +429,16 @@ function WorldTourDrumDevice({ id }: { id: string }) {
           )
         }
       />
+      
+      <PinBox
+        label="worldTourDrum.csPin"
+        pin={worldTourDrum.csPin}
+        valid={AllPinsNamed}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, csPin: pin } }, id)
+        }
+      />
+
     </DeviceCard>
   );
 }
