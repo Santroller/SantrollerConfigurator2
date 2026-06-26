@@ -292,7 +292,7 @@ export function LabeledDropdown({
 }) {
   const { t } = useTranslation();
   const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
   });
 
   if (!dispatch) {
@@ -320,34 +320,31 @@ export function LabeledDropdown({
       rightSectionPointerEvents="none"
       onClick={() => combobox.toggleDropdown()}
     >
-      {t(value)}
+      {t(value.toLowerCase())}
     </InputBase>
   );
 
-  if (combobox.dropdownOpened) {
-    return (
-      <Combobox
-        store={combobox}
-        onOptionSubmit={(val) => {
-          dispatch(val);
-          combobox.closeDropdown();
-        }}
-      >
-        <Combobox.Target>{mainElement}</Combobox.Target>
+  return (
+    <Combobox
+      store={combobox}
+      onOptionSubmit={(val) => {
+        dispatch(val);
+        combobox.closeDropdown();
+      }}
+    >
+      <Combobox.Target>{mainElement}</Combobox.Target>
 
-        <Combobox.Dropdown>
-          <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
-            {Object.entries(data).map((item) => (
-              <Combobox.Option value={item[0]} key={item[0]}>
-                {t(item[1].label, item[1])}
-              </Combobox.Option>
-            ))}
-          </Combobox.Options>
-        </Combobox.Dropdown>
-      </Combobox>
-    );
-  }
-  return mainElement;
+      <Combobox.Dropdown>
+        <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
+          {combobox.dropdownOpened && Object.entries(data).map((item) => (
+            <Combobox.Option value={item[0]} key={item[0]} selected={item[1].label.toLowerCase() == value.toLowerCase()}>
+              {t(item[1].label, item[1])}
+            </Combobox.Option>
+          ))}
+        </Combobox.Options>
+      </Combobox.Dropdown>
+    </Combobox>
+  );
 }
 
 function WiiExtensionDevice({ id }: { id: string }) {

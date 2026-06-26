@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -39,6 +39,7 @@ import {
   Card,
   Center,
   Checkbox,
+  CheckIcon,
   Chip,
   ChipGroup,
   ColorInput,
@@ -85,6 +86,7 @@ function StateLabelLabel({
   raw,
   activationBased,
   ledBased,
+  zeroBased
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -92,6 +94,7 @@ function StateLabelLabel({
   raw?: boolean;
   activationBased?: boolean;
   ledBased?: boolean;
+  zeroBased?: boolean;
 }) {
   const stateRaw = useConfigStore((state) =>
     ledBased
@@ -105,7 +108,9 @@ function StateLabelLabel({
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+        : zeroBased
+          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+          : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   return <span>{raw ? stateRaw : state}</span>;
 }
@@ -116,6 +121,7 @@ function StateLabel({
   raw,
   activationBased,
   ledBased,
+  zeroBased
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -123,8 +129,9 @@ function StateLabel({
   raw?: boolean;
   activationBased?: boolean;
   ledBased?: boolean;
+  zeroBased?: boolean;
 }) {
-  return <Center h="100%"><StateLabelLabel profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} raw={raw} activationBased={activationBased} ledBased={ledBased} /></Center>;
+  return <Center h="100%"><StateLabelLabel profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} raw={raw} activationBased={activationBased} ledBased={ledBased} zeroBased={zeroBased} /></Center>;
 }
 function StateSection({
   profileIdx,
@@ -138,6 +145,7 @@ function StateSection({
   trigger,
   activationBased,
   ledBased,
+  zeroBased
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -150,6 +158,7 @@ function StateSection({
   trigger?: boolean;
   activationBased?: boolean;
   ledBased?: boolean;
+  zeroBased?: boolean;
 }) {
   const stateRaw = useConfigStore((state) =>
     ledBased
@@ -165,7 +174,9 @@ function StateSection({
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
           ? 65535
           : 0
-        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+        : zeroBased
+          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+          : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   if (min > max) {
     const temp = min;
@@ -208,12 +219,14 @@ function StateBox({
   listIdx,
   activationBased,
   ledBased,
+  zeroBased
 }: {
   profileIdx: number;
   mappingIdx: number;
   listIdx?: number;
   activationBased?: boolean;
   ledBased?: boolean;
+  zeroBased?: boolean;
 }) {
   const { t } = useTranslation();
   const state = useConfigStore((state) =>
@@ -221,7 +234,9 @@ function StateBox({
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+        : zeroBased
+          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
+          : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   return (
     <>
@@ -246,6 +261,7 @@ function StateSlider({
   trigger,
   activationBased,
   ledBased,
+  zeroBased
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -257,6 +273,7 @@ function StateSlider({
   trigger?: boolean;
   activationBased?: boolean;
   ledBased?: boolean;
+  zeroBased?: boolean;
 }) {
   if (min > max) {
     const temp = min;
@@ -274,6 +291,7 @@ function StateSlider({
               profileIdx={profileIdx}
               activationBased={activationBased}
               ledBased={ledBased}
+              zeroBased={zeroBased}
               raw
             ></StateLabel>
           </Progress.Label>
@@ -287,6 +305,7 @@ function StateSlider({
             activationBased={activationBased}
             ledBased={ledBased}
             trigger={trigger}
+            zeroBased={zeroBased}
             raw
           ></StateSection>
         </Progress.Root>
@@ -303,6 +322,7 @@ function StateSlider({
             mappingIdx={mappingIdx}
             profileIdx={profileIdx}
             activationBased={activationBased}
+            zeroBased={zeroBased}
           ></StateLabel>
         </Progress.Label>
         <StateSection
@@ -313,6 +333,7 @@ function StateSlider({
           max={max}
           deadzone={deadzone}
           activationBased={activationBased}
+          zeroBased={zeroBased}
         ></StateSection>
       </Progress.Root>
       <Space h="md" />
@@ -601,24 +622,8 @@ function DropdownBox<T extends StandardEnum<unknown>>({
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownClose: () => inputCombobox.resetSelectedOption(),
+    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
   });
-  const base = (
-    <InputBase
-      label={t(title)}
-      component="button"
-      type="button"
-      pointer
-      rightSection={<Combobox.Chevron />}
-      rightSectionPointerEvents="none"
-      onClick={() => inputCombobox.toggleDropdown()}
-    >
-      {t(`${label}.${e[val as keyof T]}`)}
-    </InputBase>
-  );
-  if (!inputCombobox.dropdownOpened) {
-    return base;
-  }
   return (
     <Combobox
       store={inputCombobox}
@@ -630,12 +635,24 @@ function DropdownBox<T extends StandardEnum<unknown>>({
         inputCombobox.closeDropdown();
       }}
     >
-      <Combobox.Target>{base}</Combobox.Target>
+      <Combobox.Target>
+        <InputBase
+          label={t(title)}
+          component="button"
+          type="button"
+          pointer
+          rightSection={<Combobox.Chevron />}
+          rightSectionPointerEvents="none"
+          onClick={() => { inputCombobox.toggleDropdown() }}
+        >
+          {t(`${label}.${e[val as keyof T]}`)}
+        </InputBase>
+      </Combobox.Target>
 
       <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
         <Combobox.Options>
-          {Object.keys(e).map((item) => (
-            <Combobox.Option value={item} key={item}>
+          {inputCombobox.dropdownOpened && Object.keys(e).map((item) => (
+            <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item} >
               {t(`${label}.${item}`)}
             </Combobox.Option>
           ))}
@@ -674,8 +691,9 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownClose: () => inputCombobox.resetSelectedOption(),
+    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
   });
+  const v = (e[val as keyof T] || e2[val2 as keyof T2] || val3) as string
   const base = mode ? (
     <InputBase
       label={t(title)}
@@ -703,9 +721,6 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       {t(`${label}.${e[val as keyof T] || e2[val2 as keyof T2] || val3}`)}
     </InputBase>
   );
-  if (!inputCombobox.dropdownOpened) {
-    return base;
-  }
   return (
     <Combobox
       store={inputCombobox}
@@ -736,26 +751,26 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         <Combobox.Options>
           {midi && (
             <>
-              <Combobox.Option value="midiNote">{t('input.midiNote')}</Combobox.Option>
-              <Combobox.Option value="midiControlChange">
+              <Combobox.Option value="midiNote" selected={v == "midiNote"}>{t('input.midiNote')}</Combobox.Option>
+              <Combobox.Option value="midiControlChange" selected={v == "midiControlChange"}>
                 {t('input.midiControlChange')}
               </Combobox.Option>
-              <Combobox.Option value="midiPitchBend">{t('input.midiPitchBend')}</Combobox.Option>
-              <Combobox.Option value="midiProGuitarButton">
+              <Combobox.Option value="midiPitchBend" selected={v == "midiPitchBend"}>{t('input.midiPitchBend')}</Combobox.Option>
+              <Combobox.Option value="midiProGuitarButton" selected={v == "midiProGuitarButton"}>
                 {t('input.midiProGuitarButton')}
               </Combobox.Option>
-              <Combobox.Option value="midiProGuitarAxis">
+              <Combobox.Option value="midiProGuitarAxis" selected={v == "midiProGuitarAxis"}>
                 {t('input.midiProGuitarAxis')}
               </Combobox.Option>
             </>
           )}
           {Object.keys(e).map((item) => (
-            <Combobox.Option value={item} key={item}>
+            <Combobox.Option value={item} key={item} selected={item == v}>
               {t(`${label}.${item}`)}
             </Combobox.Option>
           ))}
           {Object.keys(e2).map((item) => (
-            <Combobox.Option value={item} key={item}>
+            <Combobox.Option value={item} key={item} selected={item == v}>
               {t(`${label}.${item}`)}
             </Combobox.Option>
           ))}
@@ -1796,8 +1811,12 @@ function SantrollerMapping({
     proto.GamepadAxisType[mapping.gamepadAxis ?? -1] ||
     proto.GuitarHeroGuitarButtonType[mapping.ghButton ?? -1] ||
     proto.GuitarHeroGuitarAxisType[mapping.ghAxis ?? -1] ||
+    proto.GuitarHeroDrumsButtonType[mapping.ghDrumButton ?? -1] ||
+    proto.GuitarHeroDrumsAxisType[mapping.ghDrumAxis ?? -1] ||
     proto.RockBandGuitarButtonType[mapping.rbButton ?? -1] ||
     proto.RockBandGuitarAxisType[mapping.rbAxis ?? -1] ||
+    proto.RockBandDrumsButtonType[mapping.rbDrumButton ?? -1] ||
+    proto.RockBandDrumsAxisType[mapping.rbDrumAxis ?? -1] ||
     proto.ProGuitarButtonType[mapping.proButton ?? -1] ||
     proto.ProGuitarAxisType[mapping.proAxis ?? -1] ||
     proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
@@ -1808,6 +1827,7 @@ function SantrollerMapping({
   const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = Object.entries(mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
+  const drum = label?.includes('Pad') || label?.includes("Cymbal")
   const analogInput = isAnalog(mapping.input);
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -1855,6 +1875,7 @@ function SantrollerMapping({
             min={mapping.min!}
             max={mapping.max!}
             deadzone={mapping.deadzone!}
+            zeroBased={drum}
           ></StateSlider>
         )}
         <OutputBox dispatch={dispatch} type={type} mode={mode} mapping={mapping}></OutputBox>
@@ -2980,7 +3001,7 @@ function SantrollerAssignment({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const assignmentTypeCombobox = useCombobox({
-    onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
+    onDropdownOpen: () => assignmentTypeCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
   });
   const label = t(
     'assignmentType.' +
@@ -3106,21 +3127,21 @@ function SantrollerAssignment({
             <Combobox.Options>
               <Combobox.Group label="Generic">
                 {OtherAssignmentTypes.map((item) => (
-                  <Combobox.Option value={item} key={item}>
+                  <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
                     <AssignmentOption value={FixLabel(mode, item)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
               <Combobox.Group label="Host (Connecting something to this device)">
                 {HostProfileAssignmentTypes.map((item) => (
-                  <Combobox.Option value={item} key={item}>
+                  <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
                     <AssignmentOption value={FixLabel(mode, item)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
               <Combobox.Group label="Emulation (Connecting this device to something)">
                 {DeviceProfileAssignmentTypes.map((item) => (
-                  <Combobox.Option value={item} key={item}>
+                  <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
                     <AssignmentOption value={FixLabel(mode, item)} />
                   </Combobox.Option>
                 ))}
@@ -3189,7 +3210,7 @@ function SantrollerAssignment({
               {t('assignments.forcedTypeDesc')}
             </Text>
             <Space h="md" />
-            
+
             {mapping.consoleType.forcedType && (
               <DropdownBox
                 title="activation.forcedType"
@@ -3201,7 +3222,7 @@ function SantrollerAssignment({
             )}
           </>
         )}
-        
+
         {mapping.bluetooth && (
           <DropdownBox
             title="activation.bluetooth"
