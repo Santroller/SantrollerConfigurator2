@@ -622,7 +622,7 @@ function DropdownBox<T extends StandardEnum<unknown>>({
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
+    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
   });
   return (
     <Combobox
@@ -691,7 +691,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
+    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
   });
   const v = (e[val as keyof T] || e2[val2 as keyof T2] || val3) as string
   const base = mode ? (
@@ -1960,6 +1960,12 @@ function SantrollerMapping({
                       max={65535}
                       onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
                     />
+                    <NumberInput
+                      value={mapping.triggerValue!}
+                      min={0}
+                      max={65535}
+                      onChange={(e) => dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })}
+                    />
                     <Button
                       onClick={() => {
                         dispatch({
@@ -1980,6 +1986,13 @@ function SantrollerMapping({
                           min={0}
                           max={65535}
                           onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
+                        />
+
+                        <NumberInput
+                          value={mapping.maxTriggerValue!}
+                          min={0}
+                          max={65535}
+                          onChange={(e) => dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })}
                         />
 
                         <Button
@@ -2024,6 +2037,13 @@ function SantrollerMapping({
                   max={65535}
                   onChange={(val) => dispatch({ ...mapping, released: val })}
                 />
+
+                <NumberInput
+                  value={mapping.released!}
+                  min={0}
+                  max={65535}
+                  onChange={(e) => dispatch({ ...mapping, released: parseInt(e.toString()) })}
+                />
               </>
             )}
             <Text size="sm">{t('axis.pressed')}</Text>
@@ -2032,6 +2052,13 @@ function SantrollerMapping({
               min={0}
               max={65535}
               onChange={(val) => dispatch({ ...mapping, pressed: val })}
+            />
+
+            <NumberInput
+              value={mapping.pressed!}
+              min={0}
+              max={65535}
+              onChange={(e) => dispatch({ ...mapping, pressed: parseInt(e.toString()) })}
             />
           </>
         )}
@@ -2062,6 +2089,13 @@ function SantrollerMapping({
                             max={65535}
                             onChange={(val) => dispatch({ ...mapping, center: val })}
                           />
+
+                          <NumberInput
+                            value={mapping.center!}
+                            min={0}
+                            max={65535}
+                            onChange={(e) => dispatch({ ...mapping, center: parseInt(e.toString()) })}
+                          />
                           <Button
                             onClick={() => {
                               dispatch({
@@ -2083,6 +2117,13 @@ function SantrollerMapping({
                         min={0}
                         max={65535}
                         onChange={(val) => dispatch({ ...mapping, min: val })}
+                      />
+
+                      <NumberInput
+                        value={mapping.min!}
+                        min={0}
+                        max={65535}
+                        onChange={(e) => dispatch({ ...mapping, min: parseInt(e.toString()) })}
                       />
                       <Button
                         onClick={() => {
@@ -2121,6 +2162,13 @@ function SantrollerMapping({
                         min={0}
                         max={65535}
                         onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+                      />
+
+                      <NumberInput
+                        value={mapping.deadzone!}
+                        min={0}
+                        max={65535}
+                        onChange={(e) => dispatch({ ...mapping, deadzone: parseInt(e.toString()) })}
                       />
                       <Space h="md" />
                     </>
@@ -2921,6 +2969,12 @@ function ActivationTrigger({
               onChange={(val) => dispatch({ ...input, triggerValue: val })}
             />
 
+            <NumberInput
+              value={input.triggerValue!}
+              min={0}
+              max={65535}
+              onChange={(e) => dispatch({ ...input, triggerValue: parseInt(e.toString()) })}
+            />
             <Button
               onClick={() => {
                 dispatch({
@@ -2941,6 +2995,12 @@ function ActivationTrigger({
                   min={0}
                   max={65535}
                   onChange={(val) => dispatch({ ...input, maxTriggerValue: val })}
+                />
+                <NumberInput
+                  value={input.maxTriggerValue!}
+                  min={0}
+                  max={65535}
+                  onChange={(e) => dispatch({ ...input, maxTriggerValue: parseInt(e.toString()) })}
                 />
 
                 <Button
@@ -3001,7 +3061,7 @@ function SantrollerAssignment({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const assignmentTypeCombobox = useCombobox({
-    onDropdownOpen: () => assignmentTypeCombobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
+    onDropdownOpen: () => assignmentTypeCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
   });
   const label = t(
     'assignmentType.' +
