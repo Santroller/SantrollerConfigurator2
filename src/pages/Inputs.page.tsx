@@ -577,6 +577,7 @@ function isInput(deviceStatus: DeviceStatus) {
     case 'apa102':
     case 'stp16cpc':
     case 'bt':
+    case 'dmx':
       return false;
     default:
       return true;
@@ -1929,12 +1930,14 @@ function SantrollerMapping({
               ...mapping,
               input,
               pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
+              debounce: drum ? (mapping.debounce ?? 30) : undefined,
+              peakBased: drum ? true : undefined
             });
           }}
           mappingIdx={mappingIdx}
         ></SantrollerInput>
         <Space h="md" />
-        {button && (
+        {(button || drum) && (
           <NumberInput
             label={t('debounce.label')}
             description={t('debounce.desc')}
