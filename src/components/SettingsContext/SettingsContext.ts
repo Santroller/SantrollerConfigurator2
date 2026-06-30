@@ -65,10 +65,12 @@ export class DeviceStatus {
     this.usbDevices = {};
     this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
     this.cycleState = 0;
+    this.toggleState = false;
   }
   id: string;
   type: string;
   cycleState: number;
+  toggleState: boolean;
   connected: boolean = false;
   device: proto.IDevice;
   wiiExtType: proto.WiiExtType;
@@ -255,6 +257,7 @@ export interface Actions {
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
   updateCycle: (id: number, state: number) => void;
+  updateToggle: (id: number, state: boolean) => void;
   addProfile: () => void;
   deleteProfile: (id: number) => void;
   updateConfig: (config: proto.IConfig) => void;
@@ -608,6 +611,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
+    updateToggle: (id: number, val: boolean) => {
+      set((state) => {
+        state.deviceStatus[id].toggleState = val;
+      });
+      get().saveConfig();
+    },
     setActiveProfile: async (id: string | null) => {
       console.log('set active', id);
       if (id == 'add') {
@@ -954,6 +963,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
           });
         }
+        if (deviceEvent.toggle) {
+          set((state) => {
+            if (deviceEvent.toggle) {
+              if (deviceEvent.toggle.id in state.deviceStatus) {
+                state.deviceStatus[deviceEvent.toggle.id].toggleState = deviceEvent.toggle.state
+              }
+            }
+          });
+        }
         if (deviceEvent.console) {
           set((state) => {
             if (deviceEvent.console) {
@@ -1178,7 +1196,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
         mappings: Object.values(x).map((x) => x.mapping),
       }));
       const states = Object.values(state.deviceStatus).filter(x => x.type == "cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }))
-      const aux = { states: states };
+      const toggleStates = Object.values(state.deviceStatus).filter(x => x.type == "toggle").map(x => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }))
+      const aux = { states, toggleStates };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
       const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);

@@ -21,6 +21,7 @@ import {
   SegmentedControl,
   SimpleGrid,
   Space,
+  Switch,
   Table,
   TagsInput,
   Title,
@@ -1242,6 +1243,28 @@ function CycleDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function ToggleDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const updateToggle = useConfigStore((state) => state.updateToggle);
+  const { t } = useTranslation();
+  const device = status.device;
+  if (!device.toggle) {
+    throw new Error('device null!');
+  }
+  const toggle = device.toggle;
+  return (
+    <DeviceCard
+      title="toggle.title"
+      id={id}
+      image="covers/devices/toggle.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Switch label={t("toggle.state")} checked={status.toggleState} onChange={(e) => updateToggle(parseInt(id), e.currentTarget.checked)}/>
+    </DeviceCard>
+  );
+}
 
 function SNESDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
@@ -1309,6 +1332,34 @@ function JoybusDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice({ deviceid: parseInt(id), joybus: { ...joybus, dataPin: pin } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
+function DMXDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.dmx) {
+    throw new Error('device null!');
+  }
+
+  const dmx = device.dmx;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.dmx"
+      image="covers/devices/dmx.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <PinBox
+        label="dmx.pin"
+        pin={dmx.pin}
+        valid={AllPinsNamed}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, pin } }, id)
         }
       />
     </DeviceCard>
@@ -1658,7 +1709,9 @@ const types: {
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
   matrix: MatrixDevice,
-  cycle: CycleDevice
+  cycle: CycleDevice,
+  toggle: ToggleDevice,
+  dmx: DMXDevice
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);

@@ -1051,6 +1051,14 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'toggle':
+                  dispatch({
+                    toggle: {
+                      input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
               }
               return;
             }
@@ -1299,6 +1307,38 @@ function SantrollerInput({
             }
             mappingIdx={mappingIdx}
             innerIdx={1}
+          ></SantrollerInput>}
+        </>
+      )}
+      {input.toggle && (
+        <>
+          <Switch checked={deviceStatus[input.toggle.deviceid].toggleState} />
+          <Switch
+            label={t('cycle.forward_input')}
+            checked={input.toggle.input !== null}
+            onChange={(event) => {
+              dispatch({
+                toggle: {
+                  ...input.toggle!,
+                  input: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
+                }
+              })
+            }}
+          />
+          {input.toggle.input && <SantrollerInput
+            axis={!!axis}
+            button={!!button}
+            input={input.toggle.input}
+            dispatch={(changed) =>
+              dispatch({
+                toggle: {
+                  ...input.toggle!,
+                  input: changed,
+                },
+              })
+            }
+            innerIdx={0}
+            mappingIdx={mappingIdx}
           ></SantrollerInput>}
         </>
       )}
