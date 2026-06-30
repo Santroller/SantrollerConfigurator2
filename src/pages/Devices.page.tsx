@@ -52,6 +52,7 @@ import {
   TxPins,
   UARTGroups,
 } from '@/devices/pico/pins';
+import { t } from 'i18next';
 
 function I2CDevice({
   device,
@@ -1361,6 +1362,13 @@ function DMXDevice({ id }: { id: string }) {
         dispatch={(pin) =>
           updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, pin } }, id)
         }
+      />
+      <NumberInput
+        label={t("dmx.channelCount")}
+        min={1}
+        max={512}
+        value={dmx.channelCount}
+        onChange={e => updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, channelCount: parseInt(e.toString()) } }, id)}
       />
     </DeviceCard>
   );

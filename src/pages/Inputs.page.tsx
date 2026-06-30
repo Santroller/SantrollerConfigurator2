@@ -2383,6 +2383,17 @@ function SantrollerLed({
                       },
                     });
                     break;
+                  case 'dmx':
+                    dispatch({
+                      ...led,
+                      device: {
+                        dmx: {
+                          channel: 0,
+                          deviceId: parseInt(val),
+                        },
+                      },
+                    });
+                    break;
                   case 'vtechExpander':
                     dispatch({
                       ...led,
@@ -2575,6 +2586,14 @@ function SantrollerLed({
             valid={led.device.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
             pin={led.device.gpio.pin}
             dispatch={(pin) => dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })}
+          />
+        )}
+        {led.device.dmx && (
+          <NumberInput
+            value={led.device.dmx.channel}
+            min={0}
+            max={device.device.dmx?.channelCount!}
+            onChange={(e) => dispatch({ ...led, device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } }  })}
           />
         )}
         {led.device.vtechExpander && (
