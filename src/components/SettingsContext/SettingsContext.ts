@@ -556,6 +556,12 @@ function createDefault(type: string, id: string) {
     case 'cycle':
       device = { values: [0] };
       break;
+    case 'toggle':
+      device = {};
+      break;
+    case 'dmx':
+      device = { pin: -1, channelCount: 1 };
+      break;
   }
   return new DeviceStatus(id, type, { deviceid: parseInt(id), [type]: { ...device, mappingMode } });
 }
