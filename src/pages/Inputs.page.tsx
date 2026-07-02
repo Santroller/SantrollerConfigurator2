@@ -1002,6 +1002,22 @@ function SantrollerInput({
                     },
                   });
                   break;
+                case 'bhDrum':
+                  dispatch({
+                    midiNote: {
+                      note: 1,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
+                case 'worldTourDrum':
+                  dispatch({
+                    midiNote: {
+                      note: 1,
+                      deviceid: parseInt(val),
+                    },
+                  });
+                  break;
                 case 'crkdDrum':
                   dispatch({
                     crkdDrum: {
