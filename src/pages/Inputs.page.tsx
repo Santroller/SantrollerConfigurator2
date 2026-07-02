@@ -677,8 +677,8 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   dispatch2,
   dispatch3,
 }: {
-  e: T;
-  e2: T2;
+  e?: T;
+  e2?: T2;
   val?: T[keyof T];
   val2?: T2[keyof T2];
   val3?: string;
@@ -694,7 +694,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   const inputCombobox = useCombobox({
     onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
   });
-  const v = (e[val as keyof T] || e2[val2 as keyof T2] || val3) as string
+  const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string
   const base = mode ? (
     <InputBase
       label={t(title)}
@@ -706,7 +706,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       onClick={() => inputCombobox.toggleDropdown()}
     >
       {t(
-        `${label}.${FixLabel(mode, (e[val as keyof T] || e2[val2 as keyof T2] || val3) as string)}`
+        `${label}.${FixLabel(mode, v)}`
       )}
     </InputBase>
   ) : (
@@ -719,20 +719,25 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       rightSectionPointerEvents="none"
       onClick={() => inputCombobox.toggleDropdown()}
     >
-      {t(`${label}.${e[val as keyof T] || e2[val2 as keyof T2] || val3}`)}
+      {t(`${label}.${v}`)}
     </InputBase>
   );
   return (
     <Combobox
       store={inputCombobox}
       onOptionSubmit={(val) => {
-        const button = e[val as keyof T];
-        const axis = e2[val as keyof T2];
-        if (button !== undefined) {
-          dispatch(button);
+        if (e) {
+
+          const button = e[val as keyof T];
+          if (button !== undefined) {
+            dispatch(button);
+          }
         }
-        if (axis !== undefined) {
-          dispatch2(axis);
+        if (e2) {
+          const axis = e2[val as keyof T2];
+          if (axis !== undefined) {
+            dispatch2(axis);
+          }
         }
         if (
           val == 'midiNote' ||
@@ -765,12 +770,12 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
               </Combobox.Option>
             </>
           )}
-          {Object.keys(e).map((item) => (
+          {e && Object.keys(e).map((item) => (
             <Combobox.Option value={item} key={item} selected={item == v}>
               {t(`${label}.${item}`)}
             </Combobox.Option>
           ))}
-          {Object.keys(e2).map((item) => (
+          {e2 && Object.keys(e2).map((item) => (
             <Combobox.Option value={item} key={item} selected={item == v}>
               {t(`${label}.${item}`)}
             </Combobox.Option>
@@ -1358,6 +1363,71 @@ function SantrollerInput({
             mappingIdx={mappingIdx}
           ></SantrollerInput>}
         </>
+      )}
+      {(device?.type == 'worldTourDrum' || device?.type == 'bhDrum') && (
+        <DropdownOutputBox
+          title="input"
+          val3={
+            input.midiNote
+              ? 'midiNote'
+              : input.midiControlChange
+                ? 'midiControlChange'
+                : input.midiPitchBend
+                  ? 'midiPitchBend'
+                  : input.midiProGuitarButton
+                    ? 'midiProGuitarButton'
+                    : input.midiProGuitarAxis
+                      ? 'midiProGuitarAxis'
+                      : undefined
+          }
+          label={`${device?.type}.inputs`}
+          midi
+          dispatch={(axis) => { }
+          }
+          dispatch2={(button) => { }
+          }
+          dispatch3={(type) => {
+            switch (type) {
+              case 'midiNote':
+                dispatch({
+                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
+                });
+                break;
+              case 'midiControlChange':
+                dispatch({
+                  midiControlChange: {
+                    ...input.midiControlChange!,
+                    cc: 1,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiPitchBend':
+                dispatch({
+                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
+                });
+                break;
+              case 'midiProGuitarButton':
+                dispatch({
+                  midiProGuitarButton: {
+                    ...input.midiProGuitarButton!,
+                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+              case 'midiProGuitarAxis':
+                dispatch({
+                  midiProGuitarAxis: {
+                    ...input.midiProGuitarAxis!,
+                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    deviceid: deviceId,
+                  },
+                });
+                break;
+            }
+          }}
+        ></DropdownOutputBox>
       )}
       {device?.type == 'wii' && (
         <DropdownOutputBox
@@ -2609,7 +2679,7 @@ function SantrollerLed({
             value={led.device.dmx.channel}
             min={0}
             max={device.device.dmx?.channelCount!}
-            onChange={(e) => dispatch({ ...led, device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } }  })}
+            onChange={(e) => dispatch({ ...led, device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } } })}
           />
         )}
         {led.device.vtechExpander && (
