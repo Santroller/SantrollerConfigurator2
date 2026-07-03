@@ -509,7 +509,7 @@ function createDefault(type: string, id: string) {
       device = { i2c: i2c4, interrupt: -1 };
       break;
     case 'worldTourDrum':
-      device = { spi };
+      device = { spi, csPin: -1 };
       break;
     case 'apa102':
       device = { spi: { ...spi, clock: 12000000 }, count: 0, type: proto.APA102Type.Apa102Rgb };
