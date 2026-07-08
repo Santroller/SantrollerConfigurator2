@@ -290,8 +290,8 @@ export interface Actions {
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, i) => [
-      i,
-      new DeviceStatus(i.toString(10), Object.keys(x).find(x => x != "deviceid")!, x),
+      x.deviceid,
+      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find(x => x != "deviceid")!, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
