@@ -524,7 +524,7 @@ function createDefault(type: string, id: string) {
       device = { firstPin: -1, dmFirst: true };
       break;
     case 'midiSerial':
-      device = { uart };
+      device = { uart: {...uart, clock: 31250} };
       break;
     case 'crkdDrum':
     case 'crkdNeck':
