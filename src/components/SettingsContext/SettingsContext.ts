@@ -8,6 +8,7 @@ import type {} from '@redux-devtools/extension';
 
 import { disconnect } from 'process';
 import { BufferReader } from 'protobufjs';
+import { decodeBlock, encodeBlock, familyMap, UF2BlockData } from 'uf2';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
@@ -114,7 +115,7 @@ export class DeviceStatus {
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
-  crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType] :proto.ICrkdCalibrationData};
+  crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType]: proto.ICrkdCalibrationData };
   static label(status: DeviceStatus) {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
@@ -319,7 +320,12 @@ export interface Actions {
   loadDefaults: (device: DeviceStatus | undefined) => void;
   clearConsole: () => void;
   clearMidi: () => void;
-  updateCrkdDrumCalibration: (id: string, type: proto.CrkdDrumCalibrationType, key: keyof proto.ICrkdCalibrationData, val: number) => void;
+  updateCrkdDrumCalibration: (
+    id: string,
+    type: proto.CrkdDrumCalibrationType,
+    key: keyof proto.ICrkdCalibrationData,
+    val: number
+  ) => void;
   detectPins: (
     activation: number | undefined,
     mapping: number | undefined,
@@ -639,7 +645,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
     ...initialConfig,
     updateCrkdDrumCalibration: async (id, type, key, val) => {
       set((state) => {
-        state.deviceStatus[id].crkdDrumCalibration = { ...state.deviceStatus[id].crkdDrumCalibration, [type]: {...state.deviceStatus[id].crkdDrumCalibration[type], [key]: val} };
+        state.deviceStatus[id].crkdDrumCalibration = {
+          ...state.deviceStatus[id].crkdDrumCalibration,
+          [type]: { ...state.deviceStatus[id].crkdDrumCalibration[type], [key]: val },
+        };
       });
       const state = get();
       const infoBuffer2 = proto.Command.encode(
@@ -647,8 +656,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
           crkdDrum: proto.CrkdCalibrationUpdateCommand.create({
             id: parseInt(id),
             type,
-            axisType: proto.CrkdDrumAxisType[`Crkd${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof proto.CrkdDrumAxisType],
-            val
+            axisType:
+              proto.CrkdDrumAxisType[
+                `Crkd${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof proto.CrkdDrumAxisType
+              ],
+            val,
           }),
         })
       )
@@ -1097,7 +1109,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (deviceEvent.crkdDrum) {
           set((state) => {
             if (deviceEvent.crkdDrum!.id in state.deviceStatus) {
-              state.deviceStatus[deviceEvent.crkdDrum!.id].crkdDrumCalibration[deviceEvent.crkdDrum!.type] = deviceEvent.crkdDrum!.data;
+              state.deviceStatus[deviceEvent.crkdDrum!.id].crkdDrumCalibration[
+                deviceEvent.crkdDrum!.type
+              ] = deviceEvent.crkdDrum!.data;
             }
           });
         }
@@ -1512,4 +1526,100 @@ if (import.meta.hot) {
   import.meta.hot.on('vite:beforeUpdate', () => {
     useConfigStore.getState().disconnect();
   });
+}
+function* range(start: number, stop: number, step: number = 1) {
+  if (stop == null) {
+    // one param defined
+    stop = start;
+    start = 0;
+  }
+
+  for (let i = start; step > 0 ? i < stop : i > stop; i += step) {
+    yield i;
+  }
+}
+
+export async function buildUf2FromJson(file: File | null, pico2: boolean) {
+  try {
+    let uf2File = new Uint8Array(
+      await (await fetch(pico2 ? '/santroller_pico2.uf2' : '/santroller_pico1.uf2')).arrayBuffer()
+    );
+    const data = JSON.parse((await file?.text()) ?? '');
+    const config = proto.Config.fromObject(data['config']);
+    const aux = proto.AuxConfigBlock.fromObject(data['aux']);
+    const bufferMain = proto.Config.encode(config).finish();
+    const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
+    const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
+    buffer.set(bufferMain, 0);
+    buffer.set(bufferAux, bufferMain.length);
+    const crc = new CRC32().calculate(buffer);
+
+    let infoBuffer = new Uint8Array(24);
+    const dataView = new DataView(infoBuffer.buffer);
+    dataView.setUint32(0, buffer.length, true);
+    dataView.setUint32(4, crc, true);
+    dataView.setUint32(8, bufferMain.length, true);
+    dataView.setUint32(12, bufferAux.length, true);
+    dataView.setUint32(16, magic, true);
+    dataView.setUint32(20, 0, true);
+    const sectorSize = 4 * 1024;
+    const blockSize = 256;
+    const uf2BlockSize = 512;
+    const flashSize = 2 * 1024 * 1024;
+    const rawSize = buffer.length + infoBuffer.length;
+    let outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
+    const padding = outBuffer.length - rawSize;
+    outBuffer.set(buffer, padding);
+    outBuffer.set(infoBuffer, padding + buffer.length);
+    let baseAddr = 0x10000000;
+    let eepromAddr = baseAddr + flashSize - outBuffer.length;
+    let blockCount = Math.ceil(outBuffer.length / blockSize);
+    let firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
+    let blocks: UF2BlockData[] = [];
+    for (let i = 0; i < firstBlock.totalBlocks; i++) {
+      blocks.push(decodeBlock(uf2File.slice(i * 512, (i + 1) * 512)));
+    }
+    for (let i = 0; i < blockCount; i++) {
+      blocks.push({
+        flags: firstBlock.flags,
+        flashAddress: eepromAddr + i * blockSize,
+        payload: outBuffer.slice(i * blockSize, (i + 1) * blockSize),
+        blockNumber: 0,
+        totalBlocks: 0,
+        boardFamily: firstBlock.boardFamily,
+      });
+    }
+    let blockMap = new Set<number>(blocks.map((x) => x.flashAddress));
+    let sectorMap = new Set([...blockMap].map((b) => Math.floor(b / sectorSize) * sectorSize));
+    let blocksToFill = new Set<number>(
+      Array.from([...sectorMap].flatMap((x) => Array.from(range(x, x + sectorSize, blockSize))))
+    ).difference(blockMap);
+    blocks.push(
+      ...Array.from(blocksToFill).map((x) => ({
+        flags: firstBlock.flags,
+        flashAddress: x,
+        payload: new Uint8Array(256),
+        blockNumber: 0,
+        totalBlocks: 0,
+        boardFamily: firstBlock.boardFamily,
+      }))
+    );
+    blocks.sort((x, y) => x.flashAddress - y.flashAddress);
+    blocks = blocks.map((x, i) => ({ ...x, blockNumber: i, totalBlocks: blocks.length }));
+
+    const outUf2 = new Uint8Array(blocks.length * uf2BlockSize);
+    let i = 0;
+    for (let block of blocks) {
+      encodeBlock(block, outUf2, i * 512);
+      i++;
+    }
+    var blob = new Blob([outUf2.buffer], { type: 'application/octet-stream' });
+    var blobUrl = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.download = 'santroller.uf2';
+    link.href = blobUrl;
+    link.click();
+  } catch (e) {
+    console.log(e);
+  }
 }

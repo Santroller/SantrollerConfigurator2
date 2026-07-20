@@ -2,7 +2,7 @@ import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, FileButton, FileInput, Progress, Space, Text } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useConfigStore, buildUf2FromJson } from '@/components/SettingsContext/SettingsContext';
 
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
@@ -115,6 +115,14 @@ export function ConnectPage() {
         <Button component="a" download="santroller_pico2.uf2" href="santroller_pico2.uf2" target="_blank">
           Download UF2 (Pico 2 / RP2350)
         </Button>
+        <Space h="md" />
+        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, true)} accept="application/json">
+          {(props) => <Button disabled={updating}  {...props}>Build UF2 based on config (Pico 1 / RP2040)</Button>}
+        </FileButton>
+        <Space h="md" />
+        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, true)} accept="application/json">
+          {(props) => <Button disabled={updating}  {...props}>Build UF2 based on config (Pico 2 / RP2350)</Button>}
+        </FileButton>
       </Layout>
     </>
   );
