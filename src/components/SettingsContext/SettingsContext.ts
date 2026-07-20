@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { } from '@redux-devtools/extension';
+import type {} from '@redux-devtools/extension';
 
 import { disconnect } from 'process';
 import { BufferReader } from 'protobufjs';
@@ -66,6 +66,44 @@ export class DeviceStatus {
     this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
     this.cycleState = 0;
     this.toggleState = false;
+    this.crkdDrumCalibration = {
+      [proto.CrkdDrumCalibrationType.Debounce]: {
+        redPad: 0,
+        yellowPad: 0,
+        bluePad: 0,
+        greenPad: 0,
+        orangePad: 0,
+        yellowCymbal: 0,
+        blueCymbal: 0,
+        greenCymbal: 0,
+        kick1: 0,
+        kick2: 0,
+      },
+      [proto.CrkdDrumCalibrationType.Min]: {
+        redPad: 0,
+        yellowPad: 0,
+        bluePad: 0,
+        greenPad: 0,
+        orangePad: 0,
+        yellowCymbal: 0,
+        blueCymbal: 0,
+        greenCymbal: 0,
+        kick1: 0,
+        kick2: 0,
+      },
+      [proto.CrkdDrumCalibrationType.Max]: {
+        redPad: 0,
+        yellowPad: 0,
+        bluePad: 0,
+        greenPad: 0,
+        orangePad: 0,
+        yellowCymbal: 0,
+        blueCymbal: 0,
+        greenCymbal: 0,
+        kick1: 0,
+        kick2: 0,
+      },
+    };
   }
   id: string;
   type: string;
@@ -76,6 +114,7 @@ export class DeviceStatus {
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
+  crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType] :proto.ICrkdCalibrationData};
   static label(status: DeviceStatus) {
     let label = DeviceStatus.pins(status)
       ?.map((x) => `GP${x}`)
@@ -98,7 +137,7 @@ export class DeviceStatus {
         break;
 
       case 'cycle':
-        label = `${status.id}`
+        label = `${status.id}`;
         break;
       default:
         label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
@@ -159,18 +198,18 @@ export class DeviceStatus {
       case 'multiplexer':
         return status.device.multiplexer?.sixteenChannel
           ? [
-            status.device.multiplexer?.s0Pin,
-            status.device.multiplexer?.s1Pin,
-            status.device.multiplexer?.s2Pin,
-            status.device.multiplexer?.s3Pin,
-            status.device.multiplexer?.inputPin,
-          ]
+              status.device.multiplexer?.s0Pin,
+              status.device.multiplexer?.s1Pin,
+              status.device.multiplexer?.s2Pin,
+              status.device.multiplexer?.s3Pin,
+              status.device.multiplexer?.inputPin,
+            ]
           : [
-            status.device.multiplexer?.s0Pin,
-            status.device.multiplexer?.s1Pin,
-            status.device.multiplexer?.s2Pin,
-            status.device.multiplexer?.inputPin,
-          ];
+              status.device.multiplexer?.s0Pin,
+              status.device.multiplexer?.s1Pin,
+              status.device.multiplexer?.s2Pin,
+              status.device.multiplexer?.inputPin,
+            ];
       case 'psx':
         return [
           status.device.psx?.spi.mosi,
@@ -213,7 +252,9 @@ export class DeviceStatus {
         ];
       case 'matrix':
         return Array.from(Array(32).keys())
-          .filter((x) => (status.device.matrix?.outPins! | status.device.matrix?.inPins!) & (1 << x))
+          .filter(
+            (x) => (status.device.matrix?.outPins! | status.device.matrix?.inPins!) & (1 << x)
+          )
           .map((x) => x.toString());
       case 'joybusEmulation':
         return [status.device.joybusEmulation?.dataPin];
@@ -278,6 +319,7 @@ export interface Actions {
   loadDefaults: (device: DeviceStatus | undefined) => void;
   clearConsole: () => void;
   clearMidi: () => void;
+  updateCrkdDrumCalibration: (id: string, type: proto.CrkdDrumCalibrationType, key: keyof proto.ICrkdCalibrationData, val: number) => void;
   detectPins: (
     activation: number | undefined,
     mapping: number | undefined,
@@ -291,7 +333,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, i) => [
       x.deviceid,
-      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find(x => x != "deviceid")!, x),
+      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x != 'deviceid')!, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
@@ -308,7 +350,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
-  aux.states.forEach(x => deviceStatus[x.id].cycleState = x.state);
+  aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
   return {
     deviceStatus,
     mappingStatus,
@@ -341,7 +383,7 @@ export const initialConfig = InitState(
     profiles: [],
   }),
   proto.AuxConfigBlock.create({
-    states: []
+    states: [],
   })
 );
 
@@ -524,7 +566,7 @@ function createDefault(type: string, id: string) {
       device = { firstPin: -1, dmFirst: true };
       break;
     case 'midiSerial':
-      device = { uart: {...uart, clock: 31250} };
+      device = { uart: { ...uart, clock: 31250 } };
       break;
     case 'crkdDrum':
     case 'crkdNeck':
@@ -595,6 +637,27 @@ function fixInput(mapping: proto.IMapping) {
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    updateCrkdDrumCalibration: async (id, type, key, val) => {
+      set((state) => {
+        state.deviceStatus[id].crkdDrumCalibration = { ...state.deviceStatus[id].crkdDrumCalibration, [type]: {...state.deviceStatus[id].crkdDrumCalibration[type], [key]: val} };
+      });
+      const state = get();
+      const infoBuffer2 = proto.Command.encode(
+        proto.Command.create({
+          crkdDrum: proto.CrkdCalibrationUpdateCommand.create({
+            id: parseInt(id),
+            type,
+            axisType: proto.CrkdDrumAxisType[`Crkd${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof proto.CrkdDrumAxisType],
+            val
+          }),
+        })
+      )
+        .ldelim()
+        .finish();
+      let outBuffer2 = new ArrayBuffer(63);
+      new Uint8Array(outBuffer2).set(infoBuffer2);
+      await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+    },
     clearConsole: () => {
       set((state) => {
         state.console = '';
@@ -918,17 +981,30 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     deleteDevice: (id: string) => {
       set((state) => {
-        const idNum = parseInt(id)
-        const type = state.deviceStatus[id].type as keyof proto.IInput
-        if (type == "gpio" || type == "fixed" || type == "shortcut" || type == "held") return;
+        const idNum = parseInt(id);
+        const type = state.deviceStatus[id].type as keyof proto.IInput;
+        if (type == 'gpio' || type == 'fixed' || type == 'shortcut' || type == 'held') return;
         delete state.deviceStatus[id];
-        state.mappingStatus = state.mappingStatus.map(x => Object.fromEntries(Object.entries(x).filter(([i, x]) => x.mapping.input[type]?.deviceid != idNum)))
-        state.config.profiles = state.config.profiles!.map(p => ({
+        state.mappingStatus = state.mappingStatus.map((x) =>
+          Object.fromEntries(
+            Object.entries(x).filter(([i, x]) => x.mapping.input[type]?.deviceid != idNum)
+          )
+        );
+        state.config.profiles = state.config.profiles!.map((p) => ({
           ...p,
-          mappings: p.mappings?.filter(x => x.input[type]?.deviceid != idNum),
-          assignments: p.assignments?.map(x => ({ ...x, assignments: x.assignments?.filter(y => (!y.input || y.input.input[type]?.deviceid != idNum) && (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid != idNum)) })),
-          leds: p.leds?.filter(x => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid != idNum)
-        }))
+          mappings: p.mappings?.filter((x) => x.input[type]?.deviceid != idNum),
+          assignments: p.assignments?.map((x) => ({
+            ...x,
+            assignments: x.assignments?.filter(
+              (y) =>
+                (!y.input || y.input.input[type]?.deviceid != idNum) &&
+                (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid != idNum)
+            ),
+          })),
+          leds: p.leds?.filter(
+            (x) => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid != idNum
+          ),
+        }));
       });
       get().saveConfig();
     },
@@ -964,7 +1040,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.cycle) {
               if (deviceEvent.cycle.id in state.deviceStatus) {
-                state.deviceStatus[deviceEvent.cycle.id].cycleState = deviceEvent.cycle.state
+                state.deviceStatus[deviceEvent.cycle.id].cycleState = deviceEvent.cycle.state;
               }
             }
           });
@@ -973,7 +1049,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.toggle) {
               if (deviceEvent.toggle.id in state.deviceStatus) {
-                state.deviceStatus[deviceEvent.toggle.id].toggleState = deviceEvent.toggle.state
+                state.deviceStatus[deviceEvent.toggle.id].toggleState = deviceEvent.toggle.state;
               }
             }
           });
@@ -1015,6 +1091,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.device!.id in state.deviceStatus) {
               state.deviceStatus[deviceEvent.device!.id].connected = deviceEvent.device!.connected;
+            }
+          });
+        }
+        if (deviceEvent.crkdDrum) {
+          set((state) => {
+            if (deviceEvent.crkdDrum!.id in state.deviceStatus) {
+              state.deviceStatus[deviceEvent.crkdDrum!.id].crkdDrumCalibration[deviceEvent.crkdDrum!.type] = deviceEvent.crkdDrum!.data;
             }
           });
         }
@@ -1098,7 +1181,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             },
           ],
         };
-        console.log(state.config)
+        console.log(state.config);
         state.currentProfile = state.config.profiles!.length - 1;
         state.mappingStatus[state.config.profiles!.length - 1] = [];
         state.activationStatus[state.config.profiles!.length - 1] = [];
@@ -1143,12 +1226,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
-      const aux = { states: Object.entries(state.deviceStatus).filter(x => x[1].type == "cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x[0]), state: x[1].cycleState })) };
+      const aux = {
+        states: Object.entries(state.deviceStatus)
+          .filter((x) => x[1].type == 'cycle')
+          .map((x) =>
+            proto.CyclingInputState.create({ id: parseInt(x[0]), state: x[1].cycleState })
+          ),
+      };
 
       const buffer = proto.Config.create(config).toJSON();
       const bufferAux = proto.AuxConfigBlock.create(aux).toJSON();
       const element = document.createElement('a');
-      const file = new Blob([JSON.stringify({ "config": buffer, "aux": bufferAux })], {
+      const file = new Blob([JSON.stringify({ config: buffer, aux: bufferAux })], {
         type: 'text/json',
       });
       element.href = URL.createObjectURL(file);
@@ -1158,9 +1247,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     loadConfig: async (file: File | null) => {
       try {
-        const data = JSON.parse((await file?.text()) ?? '')
-        const config = proto.Config.fromObject(data["config"]);
-        const aux = proto.AuxConfigBlock.fromObject(data["aux"]);
+        const data = JSON.parse((await file?.text()) ?? '');
+        const config = proto.Config.fromObject(data['config']);
+        const aux = proto.AuxConfigBlock.fromObject(data['aux']);
         const timeout = setInterval(() => get().sendKeepAlive(), 10);
         set(
           (old) => ({
@@ -1201,8 +1290,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
-      const states = Object.values(state.deviceStatus).filter(x => x.type == "cycle").map(x => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }))
-      const toggleStates = Object.values(state.deviceStatus).filter(x => x.type == "toggle").map(x => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }))
+      const states = Object.values(state.deviceStatus)
+        .filter((x) => x.type == 'cycle')
+        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }));
+      const toggleStates = Object.values(state.deviceStatus)
+        .filter((x) => x.type == 'toggle')
+        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }));
       const aux = { states, toggleStates };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
@@ -1365,10 +1458,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         console.log('type: ', deviceType);
         try {
-          console.log(info)
+          console.log(info);
           const config = proto.Config.decode(data, info.mainSize);
-          const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize)
-          console.log(config, aux)
+          const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
+          console.log(config, aux);
           const timeout = setInterval(() => get().sendKeepAlive(), 10);
           set(
             (old) => ({
@@ -1387,7 +1480,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           );
           await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
         } catch (e) {
-          console.log(e)
+          console.log(e);
           set(
             (old) => ({
               ...old,

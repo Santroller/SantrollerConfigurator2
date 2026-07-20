@@ -79,6 +79,7 @@ import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
 import { DeviceStatus, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
+
 function StateLabelLabel({
   profileIdx,
   mappingIdx,
@@ -86,7 +87,7 @@ function StateLabelLabel({
   raw,
   activationBased,
   ledBased,
-  zeroBased
+  zeroBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -121,7 +122,7 @@ function StateLabel({
   raw,
   activationBased,
   ledBased,
-  zeroBased
+  zeroBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -131,7 +132,19 @@ function StateLabel({
   ledBased?: boolean;
   zeroBased?: boolean;
 }) {
-  return <Center h="100%"><StateLabelLabel profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} raw={raw} activationBased={activationBased} ledBased={ledBased} zeroBased={zeroBased} /></Center>;
+  return (
+    <Center h="100%">
+      <StateLabelLabel
+        profileIdx={profileIdx}
+        mappingIdx={mappingIdx}
+        listIdx={listIdx}
+        raw={raw}
+        activationBased={activationBased}
+        ledBased={ledBased}
+        zeroBased={zeroBased}
+      />
+    </Center>
+  );
 }
 function StateSection({
   profileIdx,
@@ -145,7 +158,7 @@ function StateSection({
   trigger,
   activationBased,
   ledBased,
-  zeroBased
+  zeroBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -219,7 +232,7 @@ function StateBox({
   listIdx,
   activationBased,
   ledBased,
-  zeroBased
+  zeroBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -261,7 +274,7 @@ function StateSlider({
   trigger,
   activationBased,
   ledBased,
-  zeroBased
+  zeroBased,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -379,7 +392,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, gamepadButton: button, gamepadAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.GuitarHeroGuitar:
@@ -403,7 +416,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghButton: button, ghAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.RockBandGuitar:
@@ -427,7 +440,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -452,7 +465,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghDrumButton: button, ghDrumAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -477,7 +490,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, rbDrumButton: button, rbDrumAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -502,7 +515,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, ghlButton: button, ghlAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -527,7 +540,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, djhButton: button, djhAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
       break;
@@ -553,7 +566,7 @@ function OutputBox({
             })
           }
           dispatch2={(button) => dispatch({ ...mapping, proButton: button, proAxis: null })}
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       );
     case proto.SubType.ProKeys:
@@ -623,7 +636,8 @@ function DropdownBox<T extends StandardEnum<unknown>>({
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
+    onDropdownOpen: () =>
+      inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   return (
     <Combobox
@@ -644,7 +658,9 @@ function DropdownBox<T extends StandardEnum<unknown>>({
           pointer
           rightSection={<Combobox.Chevron />}
           rightSectionPointerEvents="none"
-          onClick={() => { inputCombobox.toggleDropdown() }}
+          onClick={() => {
+            inputCombobox.toggleDropdown();
+          }}
         >
           {t(`${label}.${e[val as keyof T]}`)}
         </InputBase>
@@ -652,11 +668,12 @@ function DropdownBox<T extends StandardEnum<unknown>>({
 
       <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
         <Combobox.Options>
-          {inputCombobox.dropdownOpened && Object.keys(e).map((item) => (
-            <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item} >
-              {t(`${label}.${item}`)}
-            </Combobox.Option>
-          ))}
+          {inputCombobox.dropdownOpened &&
+            Object.keys(e).map((item) => (
+              <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item}>
+                {t(`${label}.${item}`)}
+              </Combobox.Option>
+            ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -692,9 +709,10 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
-    onDropdownOpen: () => inputCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
+    onDropdownOpen: () =>
+      inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
-  const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string
+  const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string;
   const base = mode ? (
     <InputBase
       label={t(title)}
@@ -705,9 +723,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       rightSectionPointerEvents="none"
       onClick={() => inputCombobox.toggleDropdown()}
     >
-      {t(
-        `${label}.${FixLabel(mode, v)}`
-      )}
+      {t(`${label}.${FixLabel(mode, v)}`)}
     </InputBase>
   ) : (
     <InputBase
@@ -727,7 +743,6 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       store={inputCombobox}
       onOptionSubmit={(val) => {
         if (e) {
-
           const button = e[val as keyof T];
           if (button !== undefined) {
             dispatch(button);
@@ -757,29 +772,35 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         <Combobox.Options>
           {midi && (
             <>
-              <Combobox.Option value="midiNote" selected={v == "midiNote"}>{t('input.midiNote')}</Combobox.Option>
-              <Combobox.Option value="midiControlChange" selected={v == "midiControlChange"}>
+              <Combobox.Option value="midiNote" selected={v == 'midiNote'}>
+                {t('input.midiNote')}
+              </Combobox.Option>
+              <Combobox.Option value="midiControlChange" selected={v == 'midiControlChange'}>
                 {t('input.midiControlChange')}
               </Combobox.Option>
-              <Combobox.Option value="midiPitchBend" selected={v == "midiPitchBend"}>{t('input.midiPitchBend')}</Combobox.Option>
-              <Combobox.Option value="midiProGuitarButton" selected={v == "midiProGuitarButton"}>
+              <Combobox.Option value="midiPitchBend" selected={v == 'midiPitchBend'}>
+                {t('input.midiPitchBend')}
+              </Combobox.Option>
+              <Combobox.Option value="midiProGuitarButton" selected={v == 'midiProGuitarButton'}>
                 {t('input.midiProGuitarButton')}
               </Combobox.Option>
-              <Combobox.Option value="midiProGuitarAxis" selected={v == "midiProGuitarAxis"}>
+              <Combobox.Option value="midiProGuitarAxis" selected={v == 'midiProGuitarAxis'}>
                 {t('input.midiProGuitarAxis')}
               </Combobox.Option>
             </>
           )}
-          {e && Object.keys(e).map((item) => (
-            <Combobox.Option value={item} key={item} selected={item == v}>
-              {t(`${label}.${item}`)}
-            </Combobox.Option>
-          ))}
-          {e2 && Object.keys(e2).map((item) => (
-            <Combobox.Option value={item} key={item} selected={item == v}>
-              {t(`${label}.${item}`)}
-            </Combobox.Option>
-          ))}
+          {e &&
+            Object.keys(e).map((item) => (
+              <Combobox.Option value={item} key={item} selected={item == v}>
+                {t(`${label}.${item}`)}
+              </Combobox.Option>
+            ))}
+          {e2 &&
+            Object.keys(e2).map((item) => (
+              <Combobox.Option value={item} key={item} selected={item == v}>
+                {t(`${label}.${item}`)}
+              </Combobox.Option>
+            ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -911,8 +932,13 @@ function SantrollerInput({
   ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
-  if (detectedLed !== undefined && detectedLed == ledIdx && detected != -1 && (
-    innerIdx == null || detectedInnerMapping == innerIdx) && input.gpio) {
+  if (
+    detectedLed !== undefined &&
+    detectedLed == ledIdx &&
+    detected != -1 &&
+    (innerIdx == null || detectedInnerMapping == innerIdx) &&
+    input.gpio
+  ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
   return (
@@ -1170,18 +1196,18 @@ function SantrollerInput({
           </Combobox.Dropdown>
         </Combobox>
       )) || (
-          <InputBase
-            label="Device"
-            component="button"
-            type="button"
-            pointer
-            rightSection={<Combobox.Chevron />}
-            rightSectionPointerEvents="none"
-            onClick={() => deviceCombobox.toggleDropdown()}
-          >
-            {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
-          </InputBase>
-        )}
+        <InputBase
+          label="Device"
+          component="button"
+          type="button"
+          pointer
+          rightSection={<Combobox.Chevron />}
+          rightSectionPointerEvents="none"
+          onClick={() => deviceCombobox.toggleDropdown()}
+        >
+          {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
+        </InputBase>
+      )}
       <Space h="md" />
       {input.shortcut && (
         <ActionIcon
@@ -1275,7 +1301,12 @@ function SantrollerInput({
       )}
       {input.cycle && (
         <>
-          <SegmentedControl data={device.device.cycle!.values?.map(x => x.toString())!} value={device.device.cycle!.values![deviceStatus[input.cycle.deviceid].cycleState].toString()} />
+          <SegmentedControl
+            data={device.device.cycle!.values?.map((x) => x.toString())!}
+            value={device.device.cycle!.values![
+              deviceStatus[input.cycle.deviceid].cycleState
+            ].toString()}
+          />
           <Switch
             label={t('cycle.forward_input')}
             checked={input.cycle.input !== null}
@@ -1283,26 +1314,30 @@ function SantrollerInput({
               dispatch({
                 cycle: {
                   ...input.cycle!,
-                  input: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
-                }
-              })
+                  input: event.currentTarget.checked
+                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
+                    : null,
+                },
+              });
             }}
           />
-          {input.cycle.input && <SantrollerInput
-            axis={!!axis}
-            button={!!button}
-            input={input.cycle.input}
-            dispatch={(changed) =>
-              dispatch({
-                cycle: {
-                  ...input.cycle!,
-                  input: changed,
-                },
-              })
-            }
-            innerIdx={0}
-            mappingIdx={mappingIdx}
-          ></SantrollerInput>}
+          {input.cycle.input && (
+            <SantrollerInput
+              axis={!!axis}
+              button={!!button}
+              input={input.cycle.input}
+              dispatch={(changed) =>
+                dispatch({
+                  cycle: {
+                    ...input.cycle!,
+                    input: changed,
+                  },
+                })
+              }
+              innerIdx={0}
+              mappingIdx={mappingIdx}
+            ></SantrollerInput>
+          )}
           <Switch
             label={t('cycle.reverse_input')}
             checked={input.cycle.inputReverse !== null}
@@ -1310,26 +1345,30 @@ function SantrollerInput({
               dispatch({
                 cycle: {
                   ...input.cycle!,
-                  inputReverse: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
-                }
-              })
+                  inputReverse: event.currentTarget.checked
+                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
+                    : null,
+                },
+              });
             }}
           />
-          {input.cycle.inputReverse && <SantrollerInput
-            axis={!!axis}
-            button={!!button}
-            input={input.cycle.inputReverse}
-            dispatch={(changed) =>
-              dispatch({
-                cycle: {
-                  ...input.cycle!,
-                  inputReverse: changed,
-                },
-              })
-            }
-            mappingIdx={mappingIdx}
-            innerIdx={1}
-          ></SantrollerInput>}
+          {input.cycle.inputReverse && (
+            <SantrollerInput
+              axis={!!axis}
+              button={!!button}
+              input={input.cycle.inputReverse}
+              dispatch={(changed) =>
+                dispatch({
+                  cycle: {
+                    ...input.cycle!,
+                    inputReverse: changed,
+                  },
+                })
+              }
+              mappingIdx={mappingIdx}
+              innerIdx={1}
+            ></SantrollerInput>
+          )}
         </>
       )}
       {input.toggle && (
@@ -1342,26 +1381,30 @@ function SantrollerInput({
               dispatch({
                 toggle: {
                   ...input.toggle!,
-                  input: event.currentTarget.checked ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } } : null,
-                }
-              })
+                  input: event.currentTarget.checked
+                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
+                    : null,
+                },
+              });
             }}
           />
-          {input.toggle.input && <SantrollerInput
-            axis={!!axis}
-            button={!!button}
-            input={input.toggle.input}
-            dispatch={(changed) =>
-              dispatch({
-                toggle: {
-                  ...input.toggle!,
-                  input: changed,
-                },
-              })
-            }
-            innerIdx={0}
-            mappingIdx={mappingIdx}
-          ></SantrollerInput>}
+          {input.toggle.input && (
+            <SantrollerInput
+              axis={!!axis}
+              button={!!button}
+              input={input.toggle.input}
+              dispatch={(changed) =>
+                dispatch({
+                  toggle: {
+                    ...input.toggle!,
+                    input: changed,
+                  },
+                })
+              }
+              innerIdx={0}
+              mappingIdx={mappingIdx}
+            ></SantrollerInput>
+          )}
         </>
       )}
       {(device?.type == 'worldTourDrum' || device?.type == 'bhDrum') && (
@@ -1382,10 +1425,8 @@ function SantrollerInput({
           }
           label={`${device?.type}.inputs`}
           midi
-          dispatch={(axis) => { }
-          }
-          dispatch2={(button) => { }
-          }
+          dispatch={(axis) => {}}
+          dispatch2={(button) => {}}
           dispatch3={(type) => {
             switch (type) {
               case 'midiNote':
@@ -1514,7 +1555,7 @@ function SantrollerInput({
           dispatch2={(button) =>
             dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
           }
-          dispatch3={() => { }}
+          dispatch3={() => {}}
         ></DropdownOutputBox>
       )}
       {device?.type == 'usbHost' && (
@@ -1730,18 +1771,18 @@ function SantrollerInput({
               </Combobox.Dropdown>
             </Combobox>
           )) || (
-              <InputBase
-                label="Channel"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => pinModeCombobox.toggleDropdown()}
-              >
-                {input.ads1115.channel}
-              </InputBase>
-            )}
+            <InputBase
+              label="Channel"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => pinModeCombobox.toggleDropdown()}
+            >
+              {input.ads1115.channel}
+            </InputBase>
+          )}
         </>
       )}
       {input.multiplexer && (
@@ -1801,18 +1842,18 @@ function SantrollerInput({
               </Combobox.Dropdown>
             </Combobox>
           )) || (
-              <InputBase
-                label="Channel"
-                component="button"
-                type="button"
-                pointer
-                rightSection={<Combobox.Chevron />}
-                rightSectionPointerEvents="none"
-                onClick={() => pinModeCombobox.toggleDropdown()}
-              >
-                {input.multiplexer.channel}
-              </InputBase>
-            )}
+            <InputBase
+              label="Channel"
+              component="button"
+              type="button"
+              pointer
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              onClick={() => pinModeCombobox.toggleDropdown()}
+            >
+              {input.multiplexer.channel}
+            </InputBase>
+          )}
         </>
       )}
       {input.accelerometer && (
@@ -1954,7 +1995,7 @@ function SantrollerMapping({
   const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = Object.entries(mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
-  const drum = label?.includes('Pad') || label?.includes("Cymbal")
+  const drum = label?.includes('Pad') || label?.includes('Cymbal');
   const analogInput = isAnalog(mapping.input);
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -2017,7 +2058,7 @@ function SantrollerMapping({
               input,
               pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
               debounce: drum ? (mapping.debounce ?? 30) : undefined,
-              peakBased: drum ? true : undefined
+              peakBased: drum ? true : undefined,
             });
           }}
           mappingIdx={mappingIdx}
@@ -2093,7 +2134,9 @@ function SantrollerMapping({
                       value={mapping.triggerValue!}
                       min={0}
                       max={65535}
-                      onChange={(e) => dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })}
+                      onChange={(e) =>
+                        dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })
+                      }
                     />
                     <Button
                       onClick={() => {
@@ -2121,7 +2164,9 @@ function SantrollerMapping({
                           value={mapping.maxTriggerValue!}
                           min={0}
                           max={65535}
-                          onChange={(e) => dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })}
+                          onChange={(e) =>
+                            dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })
+                          }
                         />
 
                         <Button
@@ -2223,7 +2268,9 @@ function SantrollerMapping({
                             value={mapping.center!}
                             min={0}
                             max={65535}
-                            onChange={(e) => dispatch({ ...mapping, center: parseInt(e.toString()) })}
+                            onChange={(e) =>
+                              dispatch({ ...mapping, center: parseInt(e.toString()) })
+                            }
                           />
                           <Button
                             onClick={() => {
@@ -2569,18 +2616,18 @@ function SantrollerLed({
             </Combobox.Dropdown>
           </Combobox>
         )) || (
-            <InputBase
-              label="LED Device"
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => deviceCombobox.toggleDropdown()}
-            >
-              {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
-            </InputBase>
-          )}
+          <InputBase
+            label="LED Device"
+            component="button"
+            type="button"
+            pointer
+            rightSection={<Combobox.Chevron />}
+            rightSectionPointerEvents="none"
+            onClick={() => deviceCombobox.toggleDropdown()}
+          >
+            {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
+          </InputBase>
+        )}
         <Space h="md" />
         {(typeCombobox.dropdownOpened && (
           <Combobox
@@ -2653,18 +2700,18 @@ function SantrollerLed({
             </Combobox.Dropdown>
           </Combobox>
         )) || (
-            <InputBase
-              label="LED Mode"
-              component="button"
-              type="button"
-              pointer
-              rightSection={<Combobox.Chevron />}
-              rightSectionPointerEvents="none"
-              onClick={() => typeCombobox.toggleDropdown()}
-            >
-              {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
-            </InputBase>
-          )}
+          <InputBase
+            label="LED Mode"
+            component="button"
+            type="button"
+            pointer
+            rightSection={<Combobox.Chevron />}
+            rightSectionPointerEvents="none"
+            onClick={() => typeCombobox.toggleDropdown()}
+          >
+            {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
+          </InputBase>
+        )}
         <Space h="md" />
         {led.device.gpio && (
           <PinBox
@@ -2679,7 +2726,12 @@ function SantrollerLed({
             value={led.device.dmx.channel}
             min={0}
             max={device.device.dmx?.channelCount!}
-            onChange={(e) => dispatch({ ...led, device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } } })}
+            onChange={(e) =>
+              dispatch({
+                ...led,
+                device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } },
+              })
+            }
           />
         )}
         {led.device.vtechExpander && (
@@ -3209,11 +3261,12 @@ function SantrollerAssignment({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const assignmentTypeCombobox = useCombobox({
-    onDropdownOpen: () => assignmentTypeCombobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
+    onDropdownOpen: () =>
+      assignmentTypeCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   const label = t(
     'assignmentType.' +
-    AllProfileAssignmentTypes.filter((x) => mapping[x] != null && mapping[x] != undefined)
+      AllProfileAssignmentTypes.filter((x) => mapping[x] != null && mapping[x] != undefined)
   );
   const base = useMemo(
     () => (
@@ -3232,7 +3285,9 @@ function SantrollerAssignment({
     [label]
   );
 
-  const analogInput = mapping.input?.input && isAnalog(mapping.input?.input) || mapping.inputAnyTime?.input && isAnalog(mapping.inputAnyTime?.input);
+  const analogInput =
+    (mapping.input?.input && isAnalog(mapping.input?.input)) ||
+    (mapping.inputAnyTime?.input && isAnalog(mapping.inputAnyTime?.input));
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_assignment_dialog.title')} centered>
@@ -3490,15 +3545,6 @@ function SantrollerAssignment({
             />
           </>
         )}
-        {mapping.input && (
-          <SantrollerInput
-            axis={false}
-            button={true}
-            input={mapping.input.input}
-            dispatch={(input) => dispatch({ ...mapping, input: { input } })}
-            activationIdx={activationIdx}
-          ></SantrollerInput>
-        )}
         {mapping.inputAnyTime && (
           <>
             <SantrollerInput
@@ -3508,7 +3554,7 @@ function SantrollerAssignment({
               activationIdx={activationIdx}
               dispatch={(input) => dispatch({ ...mapping, inputAnyTime: { input } })}
             ></SantrollerInput>
-            {analogInput && (
+            {(analogInput && (
               <ActivationTrigger
                 input={mapping.inputAnyTime}
                 profileIdx={profileIdx}
@@ -3516,6 +3562,17 @@ function SantrollerAssignment({
                 activationIdx={activationIdx}
                 dispatch={(inputAnyTime) => dispatch({ ...mapping, inputAnyTime })}
               ></ActivationTrigger>
+            )) || (
+              <Switch
+                label="inverted"
+                checked={!!mapping.inputAnyTime.inverted}
+                onChange={(evt) =>
+                  dispatch({
+                    ...mapping,
+                    inputAnyTime: { ...mapping.inputAnyTime!, inverted: evt.currentTarget.checked },
+                  })
+                }
+              />
             )}
           </>
         )}
@@ -3536,6 +3593,17 @@ function SantrollerAssignment({
                 activationIdx={activationIdx}
                 dispatch={(input) => dispatch({ ...mapping, input })}
               ></ActivationTrigger>
+            ) || (
+              <Switch
+                label="inverted"
+                checked={!!mapping.input.inverted}
+                onChange={(evt) =>
+                  dispatch({
+                    ...mapping,
+                    input: { ...mapping.input!, inverted: evt.currentTarget.checked },
+                  })
+                }
+              />
             )}
           </>
         )}
@@ -3602,13 +3670,13 @@ function SantrollerAssignmentList({
         {!mapping.assignments?.some(
           (x) => x.catchall || DeviceProfileAssignmentTypes.some((y) => x[y])
         ) && (
-            <>
-              <Alert variant="light" color="red" title="Error" icon={errorIcon}>
-                {t('assignments.missingDevice')}
-              </Alert>
-              <Space h="md" />
-            </>
-          )}
+          <>
+            <Alert variant="light" color="red" title="Error" icon={errorIcon}>
+              {t('assignments.missingDevice')}
+            </Alert>
+            <Space h="md" />
+          </>
+        )}
         <Button
           onClick={() =>
             dispatch({

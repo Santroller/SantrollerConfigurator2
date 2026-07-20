@@ -1,6 +1,7 @@
 import { createElement, useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import {
+  Accordion,
   ActionIcon,
   Affix,
   Badge,
@@ -35,6 +36,7 @@ import { proto, useConfigStore } from '../components/SettingsContext/SettingsCon
 
 import '@/i18n/config';
 
+import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
@@ -52,7 +54,6 @@ import {
   TxPins,
   UARTGroups,
 } from '@/devices/pico/pins';
-import { t } from 'i18next';
 
 function I2CDevice({
   device,
@@ -294,7 +295,7 @@ export function LabeledDropdown({
 }) {
   const { t } = useTranslation();
   const combobox = useCombobox({
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex("selected", { scrollIntoView: true })
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
 
   if (!dispatch) {
@@ -338,11 +339,16 @@ export function LabeledDropdown({
 
       <Combobox.Dropdown>
         <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
-          {combobox.dropdownOpened && Object.entries(data).map((item) => (
-            <Combobox.Option value={item[0]} key={item[0]} selected={item[1].label.toLowerCase() == value.toLowerCase()}>
-              {t(item[1].label, item[1])}
-            </Combobox.Option>
-          ))}
+          {combobox.dropdownOpened &&
+            Object.entries(data).map((item) => (
+              <Combobox.Option
+                value={item[0]}
+                key={item[0]}
+                selected={item[1].label.toLowerCase() == value.toLowerCase()}
+              >
+                {t(item[1].label, item[1])}
+              </Combobox.Option>
+            ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -431,16 +437,18 @@ function WorldTourDrumDevice({ id }: { id: string }) {
           )
         }
       />
-      
+
       <PinBox
         label="worldTourDrum.csPin"
         pin={worldTourDrum.csPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, csPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, csPin: pin } },
+            id
+          )
         }
       />
-
     </DeviceCard>
   );
 }
@@ -735,6 +743,29 @@ function CrkdNeckDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function CrkdDrumCalibration({
+  id,
+  type,
+  data,
+}: {
+  id: string;
+  type: proto.CrkdDrumCalibrationType;
+  data: proto.ICrkdCalibrationData;
+}) {
+  const updateCrkdDrumCalibration = useConfigStore((state) => state.updateCrkdDrumCalibration);
+  const keys = Object.keys(data) as Array<keyof proto.ICrkdCalibrationData>;
+  return (
+    <>
+      {keys.map((key) => (
+        <NumberInput
+          label={t('crkdDrum.calibration.' + key)}
+          value={data[key]}
+          onChange={(val) => updateCrkdDrumCalibration(id, type, key, parseInt(val.toString()))}
+        />
+      ))}
+    </>
+  );
+}
 function CrkdDrumDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -763,6 +794,44 @@ function CrkdDrumDevice({ id }: { id: string }) {
           )
         }
       />
+      <Accordion>
+        <Accordion.Item value="debounce">
+          <Accordion.Control>Debounce</Accordion.Control>
+          <Accordion.Panel>
+            <>
+              <CrkdDrumCalibration
+                id={id}
+                type={proto.CrkdDrumCalibrationType.Debounce}
+                data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Debounce]}
+              ></CrkdDrumCalibration>
+            </>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item value="min">
+          <Accordion.Control>Min Threshold</Accordion.Control>
+          <Accordion.Panel>
+            <>
+              <CrkdDrumCalibration
+                id={id}
+                type={proto.CrkdDrumCalibrationType.Min}
+                data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Min]}
+              ></CrkdDrumCalibration>
+            </>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item value="max">
+          <Accordion.Control>Max Threshold</Accordion.Control>
+          <Accordion.Panel>
+            <>
+              <CrkdDrumCalibration
+                id={id}
+                type={proto.CrkdDrumCalibrationType.Max}
+                data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Max]}
+              ></CrkdDrumCalibration>
+            </>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
     </DeviceCard>
   );
 }
@@ -1209,7 +1278,6 @@ function CycleDevice({ id }: { id: string }) {
       image="covers/devices/cycle.png"
       deleteDevice={() => deleteDevice(id)}
     >
-
       <LabeledDropdown
         data={cycleData}
         label="Type"
@@ -1217,28 +1285,59 @@ function CycleDevice({ id }: { id: string }) {
         description="cycle.description"
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), cycle: { ...cycle, type: parseInt(val) + 1, values: (parseInt(val) + 1) == proto.CycleType.pickup ? [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500] : [0] } },
+            {
+              deviceid: parseInt(id),
+              cycle: {
+                ...cycle,
+                type: parseInt(val) + 1,
+                values:
+                  parseInt(val) + 1 == proto.CycleType.pickup
+                    ? [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500]
+                    : [0],
+              },
+            },
             id
           )
         }
       />
       {cycle.type == proto.CycleType.custom && (
         <>
-          <SegmentedControl data={cycle.values?.map((x, i) => ({ label: x.toString(), value: i.toString() }))!} value={status.cycleState.toString()} onChange={(val) => updateCycle(parseInt(id), parseInt(val))} />
-          <TagsInput label="Enter a value" placeholder="Enter value" splitChars={[',', ' ', '|']} withPillsReorder allowDuplicates value={cycle.values?.map(x => x.toString())} onChange={(changed) => {
-            updateDevice({
-              deviceid: parseInt(id),
-              cycle: {
-                ...cycle,
-                values: changed.filter((tag) => /^\d+$/.test(tag)).map(x => parseInt(x)),
-              },
-            }, id)
-          }
-          } /></>
+          <SegmentedControl
+            data={cycle.values?.map((x, i) => ({ label: x.toString(), value: i.toString() }))!}
+            value={status.cycleState.toString()}
+            onChange={(val) => updateCycle(parseInt(id), parseInt(val))}
+          />
+          <TagsInput
+            label="Enter a value"
+            placeholder="Enter value"
+            splitChars={[',', ' ', '|']}
+            withPillsReorder
+            allowDuplicates
+            value={cycle.values?.map((x) => x.toString())}
+            onChange={(changed) => {
+              updateDevice(
+                {
+                  deviceid: parseInt(id),
+                  cycle: {
+                    ...cycle,
+                    values: changed.filter((tag) => /^\d+$/.test(tag)).map((x) => parseInt(x)),
+                  },
+                },
+                id
+              );
+            }}
+          />
+        </>
       )}
       {cycle.type == proto.CycleType.pickup && (
         <>
-          <SegmentedControl data={cycle.values?.map((x, i) => ({ label: t(`pickup.notch.${i}`), value: i.toString() }))!} value={status.cycleState.toString()} onChange={(val) => updateCycle(parseInt(id), parseInt(val))} />
+          <SegmentedControl
+            data={
+              cycle.values?.map((x, i) => ({ label: t(`pickup.notch.${i}`), value: i.toString() }))!
+            }
+            value={status.cycleState.toString()}
+            onChange={(val) => updateCycle(parseInt(id), parseInt(val))}
+          />
         </>
       )}
     </DeviceCard>
@@ -1262,7 +1361,11 @@ function ToggleDevice({ id }: { id: string }) {
       image="covers/devices/toggle.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <Switch label={t("toggle.state")} checked={status.toggleState} onChange={(e) => updateToggle(parseInt(id), e.currentTarget.checked)}/>
+      <Switch
+        label={t('toggle.state')}
+        checked={status.toggleState}
+        onChange={(e) => updateToggle(parseInt(id), e.currentTarget.checked)}
+      />
     </DeviceCard>
   );
 }
@@ -1359,16 +1462,19 @@ function DMXDevice({ id }: { id: string }) {
         label="dmx.pin"
         pin={dmx.pin}
         valid={AllPinsNamed}
-        dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, pin } }, id)
-        }
+        dispatch={(pin) => updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, pin } }, id)}
       />
       <NumberInput
-        label={t("dmx.channelCount")}
+        label={t('dmx.channelCount')}
         min={1}
         max={512}
         value={dmx.channelCount}
-        onChange={e => updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, channelCount: parseInt(e.toString()) } }, id)}
+        onChange={(e) =>
+          updateDevice(
+            { deviceid: parseInt(id), dmx: { ...dmx, channelCount: parseInt(e.toString()) } },
+            id
+          )
+        }
       />
     </DeviceCard>
   );
@@ -1538,11 +1644,14 @@ function MatrixDevice({ id }: { id: string }) {
       deleteDevice={() => deleteDevice(id)}
     >
       <MultiSelect
-        label={t("matrix.output_pins")}
+        label={t('matrix.output_pins')}
         value={Array.from(Array(32).keys())
           .filter((x) => matrix.outPins! & (1 << x))
           .map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map(item => ({ value: item[0], label: t(item[1].label, item[1]) }))}
+        data={Object.entries(AllPinsNamed).map((item) => ({
+          value: item[0],
+          label: t(item[1].label, item[1]),
+        }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -1560,11 +1669,14 @@ function MatrixDevice({ id }: { id: string }) {
         searchable
       />
       <MultiSelect
-        label={t("matrix.input_pins")}
+        label={t('matrix.input_pins')}
         value={Array.from(Array(32).keys())
           .filter((x) => matrix.inPins! & (1 << x))
           .map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map(item => ({ value: item[0], label: t(item[1].label, item[1]) }))}
+        data={Object.entries(AllPinsNamed).map((item) => ({
+          value: item[0],
+          label: t(item[1].label, item[1]),
+        }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -1719,7 +1831,7 @@ const types: {
   matrix: MatrixDevice,
   cycle: CycleDevice,
   toggle: ToggleDevice,
-  dmx: DMXDevice
+  dmx: DMXDevice,
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);
