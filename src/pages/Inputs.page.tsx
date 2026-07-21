@@ -4209,7 +4209,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             device: {
                               gpio: {
                                 analog: false,
-                                pin: 0,
+                                pin: -1,
                               },
                             },
                             mapping: {
