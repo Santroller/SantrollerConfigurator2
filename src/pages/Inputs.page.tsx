@@ -3585,7 +3585,7 @@ function SantrollerAssignment({
               input={mapping.input.input}
               dispatch={(input) => dispatch({ ...mapping, input: { input } })}
             ></SantrollerInput>
-            {analogInput && (
+            {(analogInput && (
               <ActivationTrigger
                 input={mapping.input}
                 profileIdx={profileIdx}
@@ -3593,7 +3593,7 @@ function SantrollerAssignment({
                 activationIdx={activationIdx}
                 dispatch={(input) => dispatch({ ...mapping, input })}
               ></ActivationTrigger>
-            ) || (
+            )) || (
               <Switch
                 label="inverted"
                 checked={!!mapping.input.inverted}
@@ -3962,6 +3962,18 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           updateProfile({ ...profile, xinputOnWindows: event.currentTarget.checked }, profileIdx)
         }
       />
+      {profile.deviceToEmulate == proto.SubType.GuitarHeroGuitar && (
+        <>
+          <Space h="md" />
+          <Switch
+            label={t('guitar.supportsSlider')}
+            checked={!!profile.supportsSlider}
+            onChange={(event) =>
+              updateProfile({ ...profile, supportsSlider: event.currentTarget.checked }, profileIdx)
+            }
+          />
+        </>
+      )}
       <Space h="md" />
       <Switch
         label={t('mode.supportsPs4')}
