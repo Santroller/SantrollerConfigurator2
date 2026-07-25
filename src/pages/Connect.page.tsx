@@ -116,7 +116,7 @@ export function ConnectPage() {
           Download UF2 (Pico 2 / RP2350)
         </Button>
         <Space h="md" />
-        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, true)} accept="application/json">
+        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, false)} accept="application/json">
           {(props) => <Button disabled={updating}  {...props}>Build UF2 based on config (Pico 1 / RP2040)</Button>}
         </FileButton>
         <Space h="md" />

@@ -1606,7 +1606,6 @@ export async function buildUf2FromJson(file: File | null, pico2: boolean) {
     );
     blocks.sort((x, y) => x.flashAddress - y.flashAddress);
     blocks = blocks.map((x, i) => ({ ...x, blockNumber: i, totalBlocks: blocks.length }));
-
     const outUf2 = new Uint8Array(blocks.length * uf2BlockSize);
     let i = 0;
     for (let block of blocks) {
