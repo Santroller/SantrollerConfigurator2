@@ -1338,8 +1338,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       const config = { ...state.config };
       config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+      // If we are using any of the tap frets then we need slider mappings, otherwise we don't
       config.profiles = state.mappingStatus.map((x, i) => ({
         ...config.profiles![i],
+        supportsSlider: Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) != undefined,
         mappings: Object.values(x).map((x) => x.mapping),
       }));
       config.guiConfig = Object.values(state.guiDevices);
