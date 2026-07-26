@@ -11,6 +11,7 @@ import {
   IconPlus,
   IconSettings,
   IconSun,
+  IconTag,
 } from '@tabler/icons-react';
 import {
   Link as RouterLink,
@@ -98,6 +99,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 }}
                 label="Devices"
                 leftSection={<IconSettings size={16} stroke={1.5} />}
+              />
+              <NavLink
+                disabled={updating}
+                component={RouterNavLink}
+                to="/labels"
+                onClick={() => {
+                  pollInputs(false);
+                  nav('/labels');
+                }}
+                label="Pin Labels"
+                leftSection={<IconTag size={16} stroke={1.5} />}
               />
               <NavLink
                 disabled={updating}

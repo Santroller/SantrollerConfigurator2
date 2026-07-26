@@ -150,117 +150,118 @@ export class DeviceStatus {
     }
     return label;
   }
-  static pins(status: DeviceStatus) {
+  static pins(status: DeviceStatus): number[] {
     switch (status.type) {
       case 'ws2812':
-        return [status.device.ws2812?.pin];
+        return [status.device.ws2812!.pin];
       case 'apa102':
-        return [status.device.apa102?.spi.mosi, status.device.apa102?.spi.sck];
+        return [status.device.apa102!.spi.mosi, status.device.apa102!.spi.sck];
       case 'stp16cpc':
         return [
-          status.device.stp16cpc?.spi.mosi,
-          status.device.stp16cpc?.spi.miso,
-          status.device.stp16cpc?.spi.sck,
-          status.device.stp16cpc?.le,
-          status.device.stp16cpc?.oe,
+          status.device.stp16cpc!.spi.mosi,
+          status.device.stp16cpc!.spi.miso,
+          status.device.stp16cpc!.spi.sck,
+          status.device.stp16cpc!.le,
+          status.device.stp16cpc!.oe,
         ];
       case 'wii':
-        return [status.device.wii?.i2c.sda, status.device.wii?.i2c.scl];
+        return [status.device.wii!.i2c.sda, status.device.wii!.i2c.scl];
       case 'ads1115':
-        return [status.device.ads1115?.i2c.sda, status.device.ads1115?.i2c.scl];
+        return [status.device.ads1115!.i2c.sda, status.device.ads1115!.i2c.scl];
       case 'accelerometer':
-        return [status.device.accelerometer?.i2c.sda, status.device.accelerometer?.i2c.scl];
+        return [status.device.accelerometer!.i2c.sda, status.device.accelerometer!.i2c.scl];
       case 'bhDrum':
-        return [status.device.bhDrum?.i2c.sda, status.device.bhDrum?.i2c.scl];
+        return [status.device.bhDrum!.i2c.sda, status.device.bhDrum!.i2c.scl];
       case 'mpu6050':
-        return [status.device.accelerometer?.i2c.sda, status.device.accelerometer?.i2c.scl];
+        return [status.device.accelerometer!.i2c.sda, status.device.accelerometer!.i2c.scl];
       case 'worldTourDrum':
         return [
-          status.device.worldTourDrum?.spi.mosi,
-          status.device.worldTourDrum?.spi.miso,
-          status.device.worldTourDrum?.spi.sck,
+          status.device.worldTourDrum!.spi.mosi,
+          status.device.worldTourDrum!.spi.miso,
+          status.device.worldTourDrum!.spi.sck,
         ];
       case 'usbHost':
         return [status.device.usbHost!.firstPin, status.device.usbHost!.firstPin + 1];
       case 'mpr121':
-        return [status.device.mpr121?.i2c.sda, status.device.mpr121?.i2c.scl];
+        return [status.device.mpr121!.i2c.sda, status.device.mpr121!.i2c.scl];
       case 'crazyGuitarNeck':
-        return [status.device.crazyGuitarNeck?.i2c.sda, status.device.crazyGuitarNeck?.i2c.scl];
+        return [status.device.crazyGuitarNeck!.i2c.sda, status.device.crazyGuitarNeck!.i2c.scl];
       case 'gh5Neck':
-        return [status.device.gh5Neck?.i2c.sda, status.device.gh5Neck?.i2c.scl];
+        return [status.device.gh5Neck!.i2c.sda, status.device.gh5Neck!.i2c.scl];
       case 'djhTurntable':
-        return [status.device.djhTurntable?.i2c.sda, status.device.djhTurntable?.i2c.scl];
+        return [status.device.djhTurntable!.i2c.sda, status.device.djhTurntable!.i2c.scl];
       case 'midiSerial':
-        return [status.device.midiSerial?.uart.tx, status.device.midiSerial?.uart.rx];
+        return [status.device.midiSerial!.uart.tx, status.device.midiSerial!.uart.rx];
       case 'crkdNeck':
-        return [status.device.crkdNeck?.uart.tx, status.device.crkdNeck?.uart.rx];
+        return [status.device.crkdNeck!.uart.tx, status.device.crkdNeck!.uart.rx];
       case 'crkdDrum':
-        return [status.device.crkdDrum?.uart.tx, status.device.crkdDrum?.uart.rx];
+        return [status.device.crkdDrum!.uart.tx, status.device.crkdDrum!.uart.rx];
       case 'multiplexer':
-        return status.device.multiplexer?.sixteenChannel
+        return status.device.multiplexer!.sixteenChannel
           ? [
-              status.device.multiplexer?.s0Pin,
-              status.device.multiplexer?.s1Pin,
-              status.device.multiplexer?.s2Pin,
-              status.device.multiplexer?.s3Pin,
-              status.device.multiplexer?.inputPin,
+              status.device.multiplexer!.s0Pin,
+              status.device.multiplexer!.s1Pin,
+              status.device.multiplexer!.s2Pin,
+              status.device.multiplexer!.s3Pin,
+              status.device.multiplexer!.inputPin,
             ]
           : [
-              status.device.multiplexer?.s0Pin,
-              status.device.multiplexer?.s1Pin,
-              status.device.multiplexer?.s2Pin,
-              status.device.multiplexer?.inputPin,
+              status.device.multiplexer!.s0Pin,
+              status.device.multiplexer!.s1Pin,
+              status.device.multiplexer!.s2Pin,
+              status.device.multiplexer!.inputPin,
             ];
       case 'psx':
         return [
-          status.device.psx?.spi.mosi,
-          status.device.psx?.spi.miso,
-          status.device.psx?.spi.sck,
-          status.device.psx?.ackPin,
-          status.device.psx?.attPin,
+          status.device.psx!.spi.mosi,
+          status.device.psx!.spi.miso,
+          status.device.psx!.spi.sck,
+          status.device.psx!.ackPin,
+          status.device.psx!.attPin,
         ];
       case 'protarNeck':
         return [
-          status.device.protarNeck?.spi.mosi,
-          status.device.protarNeck?.spi.miso,
-          status.device.protarNeck?.spi.sck,
-          status.device.protarNeck?.attPin,
+          status.device.protarNeck!.spi.mosi,
+          status.device.protarNeck!.spi.miso,
+          status.device.protarNeck!.spi.sck,
+          status.device.protarNeck!.attPin,
         ];
       case 'snes':
         return [
-          status.device.snes?.clockPin,
-          status.device.snes?.latchPin,
-          status.device.snes?.dataPin,
+          status.device.snes!.clockPin,
+          status.device.snes!.latchPin,
+          status.device.snes!.dataPin,
         ];
       case 'joybus':
-        return [status.device.joybus?.dataPin];
+        return [status.device.joybus!.dataPin];
       case 'wiiEmulation':
-        return [status.device.wiiEmulation?.i2c.sda, status.device.wiiEmulation?.i2c.scl];
+        return [status.device.wiiEmulation!.i2c.sda, status.device.wiiEmulation!.i2c.scl];
       case 'psxEmulation':
         return [
-          status.device.psxEmulation?.commandPin,
-          status.device.psxEmulation?.attentionPin,
-          status.device.psxEmulation?.acknowledgePin,
-          status.device.psxEmulation?.dataPin,
-          status.device.psxEmulation?.clockPin,
+          status.device.psxEmulation!.commandPin,
+          status.device.psxEmulation!.attentionPin,
+          status.device.psxEmulation!.acknowledgePin,
+          status.device.psxEmulation!.dataPin,
+          status.device.psxEmulation!.clockPin,
         ];
       case 'vtechExpander':
         return [
-          status.device.vtechExpander?.spi.mosi,
-          status.device.vtechExpander?.spi.miso,
-          status.device.vtechExpander?.spi.sck,
-          status.device.vtechExpander?.attPin,
+          status.device.vtechExpander!.spi.mosi,
+          status.device.vtechExpander!.spi.miso,
+          status.device.vtechExpander!.spi.sck,
+          status.device.vtechExpander!.attPin,
         ];
       case 'matrix':
         return Array.from(Array(32).keys())
           .filter(
-            (x) => (status.device.matrix?.outPins! | status.device.matrix?.inPins!) & (1 << x)
+            (x) => (status.device.matrix!.outPins! | status.device.matrix!.inPins!) & (1 << x)
           )
-          .map((x) => x.toString());
       case 'joybusEmulation':
-        return [status.device.joybusEmulation?.dataPin];
+        return [status.device.joybusEmulation!.dataPin];
       case 'peripheral':
-        return [status.device.peripheral?.i2c.sda, status.device.peripheral?.i2c.scl];
+        return [status.device.peripheral!.i2c.sda, status.device.peripheral!.i2c.scl];
+      default:
+        return [];
     }
   }
 }
@@ -269,6 +270,7 @@ export interface ConfigState {
   mappingStatus: { [id: number]: MappingStatus }[];
   ledStatus: { [id: number]: LedStatus }[];
   activationStatus: { [id: number]: ActivationStatus[] }[];
+  guiDevices: { [id: number]: proto.IGuiConfig };
   config: proto.IConfig;
   connected: boolean;
   latest: boolean;
@@ -296,6 +298,10 @@ export interface ConfigState {
   sendingKeepAlive: boolean;
 }
 export interface Actions {
+  updateLabel: (config: proto.IGuiConfig, id: number) => void;
+  deleteLabel: (id: number) => void;
+  addLabel: () => void;
+  deleteAllLabels: () => void;
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
   updateCycle: (id: number, state: number) => void;
@@ -356,6 +362,9 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
+  const guiDevices = Object.fromEntries(
+    config.guiConfig.filter((x) => x.config == 'label').map((x) => [x.deviceid, x])
+  );
   aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
   return {
     deviceStatus,
@@ -377,6 +386,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     lastProfile: 0,
     activeProfiles: [],
     midiData: [],
+    guiDevices,
     console: '',
     type: '',
     sendingKeepAlive: false,
@@ -643,6 +653,34 @@ function fixInput(mapping: proto.IMapping) {
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    updateLabel: (label: proto.IGuiConfig, id: number) => {
+      set((state) => {
+        state.guiDevices[id] = label;
+      });
+      get().saveConfig();
+    },
+    deleteLabel: (id: number) => {
+      set((state) => {
+        state.guiDevices = Object.fromEntries(
+          Object.entries(state.guiDevices).filter((x) => x[0] != id.toString())
+        );
+      });
+      get().saveConfig();
+    },
+    addLabel: () => {
+      set((state) => {
+        let id = 0;
+        if (Object.keys(state.guiDevices).length) {
+          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
+        }
+        state.guiDevices[id] = {
+          deviceid: id,
+          label: { label: 'Label', pin: -1 },
+        };
+      });
+      get().saveConfig();
+    },
+    deleteAllLabels: () => {},
     updateCrkdDrumCalibration: async (id, type, key, val) => {
       set((state) => {
         state.deviceStatus[id].crkdDrumCalibration = {
@@ -1304,6 +1342,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         ...config.profiles![i],
         mappings: Object.values(x).map((x) => x.mapping),
       }));
+      config.guiConfig = Object.values(state.guiDevices);
       const states = Object.values(state.deviceStatus)
         .filter((x) => x.type == 'cycle')
         .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }));

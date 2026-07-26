@@ -3,6 +3,7 @@ import { ConnectPage } from './pages/Connect.page';
 import { DevicesPage } from './pages/Devices.page';
 import { InputsPage } from './pages/Inputs.page';
 import { DebugPage } from './pages/Debug.page';
+import { LabelsPage } from './pages/Labels.page';
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,9 @@ const router = createBrowserRouter([
   },{
     path: '/debug',
     element: <DebugPage />,
+  },{
+    path: '/labels',
+    element: <LabelsPage />,
   },
 ]);
 

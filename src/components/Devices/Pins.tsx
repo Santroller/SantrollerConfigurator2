@@ -1,13 +1,23 @@
-import {
-  Combobox,
-  Input,
-  InputBase,
-  useCombobox,
-} from '@mantine/core';
+import { Combobox, Input, InputBase, useCombobox } from '@mantine/core';
 
 import '@/i18n/config';
 
 import { useTranslation } from 'react-i18next';
+import { DeviceStatus, proto, useConfigStore } from '../SettingsContext/SettingsContext';
+import { TFunction } from 'i18next';
+
+function getLabel(t: TFunction<"translation", undefined>, guiDevices: proto.IGuiConfig[], devices: DeviceStatus[], pin: number) {
+  const labels = Object.entries(guiDevices)
+    .filter((x) => x[1].label?.pin == pin)
+    .map((x) => x[1].label?.label)
+    .concat(
+      Object.entries(devices)
+        .filter((x) => DeviceStatus.pins(x[1]).includes(pin))
+        .map((x) => `${t(`devices.${x[1].type}`)}`)
+    );
+  const labelsText = labels.length > 0 && `- ${labels.join(' - ')}`;
+  return labelsText;
+}
 
 export function PinBox({
   pin,
@@ -23,8 +33,11 @@ export function PinBox({
   dispatch?: (pin: number) => void;
 }) {
   const { t } = useTranslation();
+  const guiDevices = useConfigStore((state) => state.guiDevices);
+  const devices = useConfigStore((state) => state.deviceStatus);
+  const labelsText = getLabel(t, Object.values(guiDevices), [], pin);
   const combobox = useCombobox({
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex("selected", {scrollIntoView: true})
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
 
   if (!dispatch) {
@@ -37,7 +50,7 @@ export function PinBox({
         rightSection={<Combobox.Chevron />}
         rightSectionPointerEvents="none"
       >
-        {t(valid[pin]?.label, valid[pin])}
+        {t(valid[pin]?.label, valid[pin])} {labelsText}
       </InputBase>
     );
   }
@@ -56,7 +69,8 @@ export function PinBox({
     >
       {t(valid[pin]?.label, valid[pin]) || (
         <Input.Placeholder>{t('invalid_pin')}</Input.Placeholder>
-      )}
+      )}{' '}
+      {labelsText}
     </InputBase>
   );
 
@@ -72,11 +86,12 @@ export function PinBox({
 
       <Combobox.Dropdown>
         <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
-          {combobox.dropdownOpened && Object.entries(valid).map((item) => (
-            <Combobox.Option value={item[0]} key={item[0]} selected={pin==item[1].pin}>
-              {t(item[1].label, item[1])}
-            </Combobox.Option>
-          ))}
+          {combobox.dropdownOpened &&
+            Object.entries(valid).map((item) => (
+              <Combobox.Option value={item[0]} key={item[0]} selected={pin == item[1].pin}>
+                {t(item[1].label, item[1])} {getLabel(t, Object.values(guiDevices), pin == item[1].pin ? [] : Object.values(devices), item[1].pin)}
+              </Combobox.Option>
+            ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
