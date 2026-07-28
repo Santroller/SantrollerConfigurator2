@@ -29,7 +29,6 @@ export function TestingPage() {
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const enableAdvancedMode = useConfigStore((state) => state.enableAdvancedMode);
   const { t } = useTranslation();
-  console.log(toolInfo?.name)
   return (
     <>
       <Layout>

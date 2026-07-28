@@ -184,17 +184,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </NavLink>
             </>
           )}
-          {!simpleMode &&<NavLink
-            disabled={updating}
-            component={RouterNavLink}
-            to="/testing"
-            onClick={() => {
-              pollInputs(false);
-              nav('/testing');
-            }}
-            label="Testing"
-            leftSection={<IconSettings size={16} stroke={1.5} />}
-          />}
         </AppShell.Navbar>
         <AppShell.Main>{children}</AppShell.Main>
       </AppShell>
