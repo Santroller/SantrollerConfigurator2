@@ -317,6 +317,7 @@ export interface Actions {
   deleteDevice: (id: string) => void;
   connect: () => void;
   firmwareUpdate: () => void;
+  login: () => void;
   disconnect: () => void;
   bootloader: () => void;
   deleteAllDevices: () => void;
@@ -668,9 +669,32 @@ function fixInput(mapping: proto.IMapping) {
   }
   return mapping;
 }
+async function sha256(message: string) {
+    // encode as UTF-8
+    const msgBuffer = new TextEncoder().encode(message);                    
+
+    // hash the message
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+    // convert ArrayBuffer to Array
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+    // convert bytes to hex string                  
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    login: async () => {
+      const login = {state: "test", code_challenge: "test"};
+      localStorage.setItem('login', JSON.stringify(login));
+      const url = new URL("https://worker.tangentmc.net/github-auth-endpoint")
+      url.searchParams.set('state', login.state);
+      url.searchParams.set('code_challenge', await sha256(login.code_challenge));
+      window.location.href = url.href;
+
+    },
     enableAdvancedMode: () => {
       set((state) => {
         state.simpleMode = false;
@@ -738,7 +762,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         state.guiDevices[id] = {
           deviceid: id,
-          ledLabel: { label: 'Label', deviceid: -1, pin: -1 },
+          ledLabel: { label: 'Label', deviceid: -1, activeLed: [] },
         };
       });
       get().saveConfig();

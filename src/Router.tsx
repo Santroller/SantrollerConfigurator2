@@ -6,6 +6,7 @@ import { DebugPage } from './pages/Debug.page';
 import { LabelsPage } from './pages/Labels.page';
 import { TestingPage } from './pages/Testing.page';
 import { SetupPage } from './pages/Setup.page';
+import { AuthPage } from './pages/Auth.page';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,9 @@ const router = createBrowserRouter([
   },{
     path: '/testing',
     element: <TestingPage />,
+  },{
+    path: '/github-oauth-callback',
+    element: <AuthPage />,
   },
 ]);
 

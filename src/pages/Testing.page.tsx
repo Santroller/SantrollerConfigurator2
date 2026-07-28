@@ -1,11 +1,11 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import {
-  Image,
   Alert,
   Button,
   FileButton,
   FileInput,
+  Image,
   Progress,
   Space,
   Text,
@@ -29,9 +29,14 @@ export function TestingPage() {
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const enableAdvancedMode = useConfigStore((state) => state.enableAdvancedMode);
   const { t } = useTranslation();
+  const login = useConfigStore((state) => state.login);
   return (
     <>
       <Layout>
+        <Space h="md" />
+        <Button onClick={login}>
+          Login with github
+        </Button>
         <Space h="md" />
         {navigator.hid && !connected && (
           <Button disabled={updating} onClick={connect}>
@@ -65,7 +70,16 @@ export function TestingPage() {
                 </Button>
               )}
             </FileButton>
-            <Image w={200} src={toolInfo?.logo ? URL.createObjectURL(new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })) : ''}></Image>
+            <Image
+              w={200}
+              src={
+                toolInfo?.logo
+                  ? URL.createObjectURL(
+                      new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })
+                    )
+                  : ''
+              }
+            ></Image>
           </>
         )}
         <Space h="md" />
