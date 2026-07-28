@@ -48,6 +48,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const profiles = useConfigStore((state) => state.config.profiles!);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
+  const toolInfo = useConfigStore((state) => state.toolInfo);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const nav = useNavigate();
   const profilePage = useMatch('/profiles');
   return (
@@ -63,7 +65,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Burger opened={opened} h={40} onClick={toggle} hiddenFrom="sm" size="sm" />
             </Grid.Col>
             <Grid.Col span={0}>
-              <Image src="Icons/logoSide.png" height={40} fit="scale-down" alt="santroller" />
+              <Image
+                src={
+                  toolInfo?.logo
+                    ? URL.createObjectURL(
+                        new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })
+                      )
+                    : 'Icons/logoSide.png'
+                }
+                height={40}
+                fit="scale-down"
+                alt="santroller"
+              />
             </Grid.Col>
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
@@ -87,41 +100,58 @@ export function Layout({ children }: { children: React.ReactNode }) {
             label="Main"
             leftSection={<IconSettings size={16} stroke={1.5} />}
           />
+          {!connected && (
+            <NavLink
+              component={RouterNavLink}
+              to="/setup"
+              onClick={() => {
+                nav('/setup');
+              }}
+              label="Setup a new device"
+              leftSection={<IconChevronRight size={16} stroke={1.5} />}
+            />
+          )}
           {connected && (
             <>
-              <NavLink
-                disabled={updating}
-                component={RouterNavLink}
-                to="/devices"
-                onClick={() => {
-                  pollInputs(false);
-                  nav('/devices');
-                }}
-                label="Devices"
-                leftSection={<IconSettings size={16} stroke={1.5} />}
-              />
-              <NavLink
-                disabled={updating}
-                component={RouterNavLink}
-                to="/labels"
-                onClick={() => {
-                  pollInputs(false);
-                  nav('/labels');
-                }}
-                label="Pin Labels"
-                leftSection={<IconTag size={16} stroke={1.5} />}
-              />
-              <NavLink
-                disabled={updating}
-                component={RouterNavLink}
-                to="/debug"
-                onClick={() => {
-                  pollInputs(false);
-                  nav('/debug');
-                }}
-                label="Debug"
-                leftSection={<IconPiano size={16} stroke={1.5} />}
-              />
+              {!simpleMode && (
+                <NavLink
+                  disabled={updating}
+                  component={RouterNavLink}
+                  to="/devices"
+                  onClick={() => {
+                    pollInputs(false);
+                    nav('/devices');
+                  }}
+                  label="Devices"
+                  leftSection={<IconSettings size={16} stroke={1.5} />}
+                />
+              )}
+              {!simpleMode && (
+                <NavLink
+                  disabled={updating}
+                  component={RouterNavLink}
+                  to="/labels"
+                  onClick={() => {
+                    pollInputs(false);
+                    nav('/labels');
+                  }}
+                  label="Pin Labels"
+                  leftSection={<IconTag size={16} stroke={1.5} />}
+                />
+              )}
+              {!simpleMode && (
+                <NavLink
+                  disabled={updating}
+                  component={RouterNavLink}
+                  to="/debug"
+                  onClick={() => {
+                    pollInputs(false);
+                    nav('/debug');
+                  }}
+                  label="Debug"
+                  leftSection={<IconPiano size={16} stroke={1.5} />}
+                />
+              )}
               <NavLink
                 disabled={updating}
                 href="#profiles"
@@ -142,16 +172,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     rightSection={activeProfiles?.includes(x.uid) && <Badge>Active</Badge>}
                   />
                 ))}
-                <NavLink
-                  disabled={updating}
-                  href="#add-profile"
-                  label="Add profile"
-                  onClick={addProfile}
-                  leftSection={<IconPlus size={16} stroke={1.5} />}
-                ></NavLink>
+                {!simpleMode && (
+                  <NavLink
+                    disabled={updating}
+                    href="#add-profile"
+                    label="Add profile"
+                    onClick={addProfile}
+                    leftSection={<IconPlus size={16} stroke={1.5} />}
+                  ></NavLink>
+                )}
               </NavLink>
             </>
           )}
+          {!simpleMode &&<NavLink
+            disabled={updating}
+            component={RouterNavLink}
+            to="/testing"
+            onClick={() => {
+              pollInputs(false);
+              nav('/testing');
+            }}
+            label="Testing"
+            leftSection={<IconSettings size={16} stroke={1.5} />}
+          />}
         </AppShell.Navbar>
         <AppShell.Main>{children}</AppShell.Main>
       </AppShell>

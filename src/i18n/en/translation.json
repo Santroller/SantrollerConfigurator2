@@ -230,7 +230,7 @@
     "inactive": "Not matching"
   },
   "trigger_type": {
-    "label": "Label",
+    "label": "Trigger Mode",
     "JoyHigh": "Active High",
     "JoyLow": "Active Low",
     "Exact": "Exact Value",
@@ -325,6 +325,7 @@
     "incorrect_group": "I2C Pins are not from the same group"
   },
   "leds": {
+    "label": "Leds",
     "add": "Add Led Mapping",
     "type": {
       "input": "Input Based",

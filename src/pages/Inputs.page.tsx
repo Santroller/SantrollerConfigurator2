@@ -73,7 +73,7 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted, useTimeout } from '@mantine/hooks';
-import { PinBox } from '@/components/Devices/Pins';
+import { hasDefaults, isLed, PinBox } from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
@@ -253,7 +253,7 @@ function StateBox({
   );
   return (
     <>
-      <Text size="sm">Value</Text>
+      <Text size="sm">State</Text>
       <Badge color={state ? 'blue' : 'gray'}>
         {state
           ? t(activationBased ? 'state.active' : 'state.pressed')
@@ -594,27 +594,6 @@ function isInput(deviceStatus: DeviceStatus) {
       return false;
     default:
       return true;
-  }
-}
-function isLed(deviceStatus: DeviceStatus) {
-  switch (deviceStatus.type) {
-    case 'ws2812':
-    case 'apa102':
-    case 'vtechExpander':
-    case 'stp16cpc':
-      return true;
-    default:
-      return false;
-  }
-}
-function hasDefaults(deviceStatus: DeviceStatus) {
-  switch (deviceStatus.type) {
-    case 'crkdNeck':
-      return true;
-    case 'wii':
-      return true;
-    default:
-      return false;
   }
 }
 type StandardEnum<T> = {
@@ -1967,6 +1946,7 @@ function SantrollerMapping({
     id: mappingIdx,
   });
 
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition: isSorting ? transition : '',
@@ -2019,17 +1999,21 @@ function SantrollerMapping({
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
         <Card.Section h="60px">
-          <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
-            <IconGripVertical size={18} stroke={1.5} />
-          </div>
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
-            <ActionIcon color="red">
-              <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
-            </ActionIcon>
-            <ActionIcon>
-              <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
-            </ActionIcon>
-          </div>
+          {!simpleMode && (
+            <>
+              <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
+                <IconGripVertical size={18} stroke={1.5} />
+              </div>
+              <div style={{ position: 'absolute', top: 0, right: 0 }}>
+                <ActionIcon color="red">
+                  <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+                </ActionIcon>
+                <ActionIcon>
+                  <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
+                </ActionIcon>
+              </div>
+            </>
+          )}
           <Center>
             <Image src={img} height={75} w="auto" fit="contain" alt={img} />
           </Center>
@@ -2046,37 +2030,42 @@ function SantrollerMapping({
             zeroBased={drum}
           ></StateSlider>
         )}
-        <OutputBox dispatch={dispatch} type={type} mode={mode} mapping={mapping}></OutputBox>
-        <Space h="md" />
-        <SantrollerInput
-          axis={!!axis}
-          button={!!button}
-          input={mapping.input}
-          dispatch={(input) => {
-            dispatch({
-              ...mapping,
-              input,
-              pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
-              debounce: drum ? (mapping.debounce ?? 30) : undefined,
-              peakBased: drum ? true : undefined,
-            });
-          }}
-          mappingIdx={mappingIdx}
-        ></SantrollerInput>
-        <Space h="md" />
-        {(button || drum) && (
-          <NumberInput
-            label={t('debounce.label')}
-            description={t('debounce.desc')}
-            value={mapping.debounce ?? 0}
-            onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
-          ></NumberInput>
+
+        {!simpleMode && (
+          <>
+            <OutputBox dispatch={dispatch} type={type} mode={mode} mapping={mapping}></OutputBox>
+            <Space h="md" />
+            <SantrollerInput
+              axis={!!axis}
+              button={!!button}
+              input={mapping.input}
+              dispatch={(input) => {
+                dispatch({
+                  ...mapping,
+                  input,
+                  pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
+                  debounce: drum ? (mapping.debounce ?? 30) : undefined,
+                  peakBased: drum ? true : undefined,
+                });
+              }}
+              mappingIdx={mappingIdx}
+            ></SantrollerInput>
+            <Space h="md" />
+            {(button || drum) && (
+              <NumberInput
+                label={t('debounce.label')}
+                description={t('debounce.desc')}
+                value={mapping.debounce ?? 0}
+                onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
+              ></NumberInput>
+            )}
+          </>
         )}
         <Space h="md" />
         {button && analogInput && (
           <>
             <Space h="md" />
-            <Accordion>
+            <Accordion defaultValue={simpleMode ? 'main' : undefined}>
               <Accordion.Item value="main">
                 <Accordion.Control>Button Mapping</Accordion.Control>
                 <Accordion.Panel>
@@ -2189,7 +2178,7 @@ function SantrollerMapping({
             </Accordion>
           </>
         )}
-        {axis && !analogInput && (
+        {axis && !analogInput && !simpleMode && (
           <>
             <Switch
               label={t('axis.released_toggle')}
@@ -2239,7 +2228,7 @@ function SantrollerMapping({
         {axis && analogInput && (
           <>
             <Space h="md" />
-            <Accordion>
+            <Accordion defaultValue={simpleMode ? 'main' : undefined}>
               <Accordion.Item value="main">
                 <Accordion.Control>{t('axis.calibration')}</Accordion.Control>
                 <Accordion.Panel>
@@ -2358,6 +2347,7 @@ function SantrollerMapping({
     </div>
   );
 }
+
 function SantrollerLed({
   led,
   type,
@@ -2400,12 +2390,60 @@ function SantrollerLed({
   } else if (led.device.vtechExpander) {
     deviceId = led.device.vtechExpander.deviceId;
   }
+  const guiDevices = useConfigStore((state) => state.guiDevices);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
+  const mapping = useConfigStore(
+    (state) =>
+      Object.values(state.mappingStatus[profileIdx]).find(
+        (x) => JSON.stringify(x.mapping.input) == JSON.stringify(led.mapping.inputMapping?.input)
+      )?.mapping
+  );
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
-  let img = `Icons/Generic.png`;
   const analog = led.mapping.inputMapping && isAnalog(led.mapping.inputMapping.input);
+  const img = useMemo(() => {
+    if (led.mapping.inputMapping) {
+      if (mapping) {
+        const label =
+          proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
+          proto.GamepadAxisType[mapping.gamepadAxis ?? -1] ||
+          proto.GuitarHeroGuitarButtonType[mapping.ghButton ?? -1] ||
+          proto.GuitarHeroGuitarAxisType[mapping.ghAxis ?? -1] ||
+          proto.GuitarHeroDrumsButtonType[mapping.ghDrumButton ?? -1] ||
+          proto.GuitarHeroDrumsAxisType[mapping.ghDrumAxis ?? -1] ||
+          proto.RockBandGuitarButtonType[mapping.rbButton ?? -1] ||
+          proto.RockBandGuitarAxisType[mapping.rbAxis ?? -1] ||
+          proto.RockBandDrumsButtonType[mapping.rbDrumButton ?? -1] ||
+          proto.RockBandDrumsAxisType[mapping.rbDrumAxis ?? -1] ||
+          proto.ProGuitarButtonType[mapping.proButton ?? -1] ||
+          proto.ProGuitarAxisType[mapping.proAxis ?? -1] ||
+          proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
+          proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
+
+        let fixedLabel = FixLabel(mode, label);
+        return `Icons/Input/${fixedLabel}.png`;
+      }
+    }
+    return `Icons/Generic.png`;
+  }, [led, mode, mapping]);
+  let labels: string[] = [];
+  let allLabels = Object.entries(guiDevices)
+    .filter((x) => x[1].ledLabel?.deviceid == deviceId)
+    .flatMap((x) =>
+      x[1].ledLabel?.activeLed?.map((y) => ({ led: y, label: x[1].ledLabel?.label! }))
+    )
+    .reduce(
+      (prev, next) => ({ ...prev, [next!.led]: [...(prev[next!.led] ?? []), next!.label] }),
+      {} as Record<number, string[]>
+    );
+  const getLedLabel = (led: number) => {
+    if (allLabels[led]) {
+      return ' - ' + allLabels[led].join(' - ');
+    }
+    return '';
+  };
   let deviceValue = <></>;
   if (led.device.gpio) {
     deviceValue = (
@@ -2430,6 +2468,16 @@ function SantrollerLed({
         </Text>
       </Group>
     );
+    if (led.device.rgb) {
+      labels = Object.entries(guiDevices)
+        .filter(
+          (x) =>
+            x[1].ledLabel?.deviceid == deviceId &&
+            new Set(x[1].ledLabel?.activeLed).intersection(new Set(led.device.rgb?.activeLed))
+              .size > 0
+        )
+        .map((x) => x[1].ledLabel?.label!);
+    }
   }
   let mappingValue = '';
   if (led.mapping.inputMapping) {
@@ -2439,6 +2487,7 @@ function SantrollerLed({
   } else if (led.mapping.staticMapping) {
     mappingValue = t(`leds.type.static`);
   }
+
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <Modal opened={opened} onClose={close} title={t('delete_device_dialog.title')} centered>
@@ -2461,107 +2510,166 @@ function SantrollerLed({
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
         <Card.Section h="60px">
-          <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
-            <IconGripVertical size={18} stroke={1.5} />
-          </div>
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
-            <ActionIcon color="red">
-              <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
-            </ActionIcon>
-            <ActionIcon>
-              <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
-            </ActionIcon>
-          </div>
+          {!simpleMode && (
+            <>
+              <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
+                <IconGripVertical size={18} stroke={1.5} />
+              </div>
+              <div style={{ position: 'absolute', top: 0, right: 0 }}>
+                <ActionIcon color="red">
+                  <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+                </ActionIcon>
+                <ActionIcon>
+                  <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
+                </ActionIcon>
+              </div>
+            </>
+          )}
           <Center>
             <Image src={img} height={75} w="auto" fit="contain" alt={img} />
           </Center>
         </Card.Section>
+        {!simpleMode && (
+          <>
+            {(deviceCombobox.dropdownOpened && (
+              <Combobox
+                store={deviceCombobox}
+                onOptionSubmit={(val) => {
+                  deviceCombobox.closeDropdown();
+                  if (isNumberLike(val)) {
+                    switch (deviceStatus[parseInt(val)].type) {
+                      case 'ws2812':
+                      case 'apa102':
+                        dispatch({
+                          ...led,
+                          device: {
+                            rgb: {
+                              activeLed: [],
+                              deviceId: parseInt(val),
+                              startR: 0,
+                              startG: 0,
+                              startB: 0,
+                              startW: 255,
+                              endR: 0,
+                              endG: 0,
+                              endB: 0,
+                              endW: 255,
+                              hasStart: true,
+                            },
+                          },
+                        });
+                        break;
+                      case 'stp16cpc':
+                        dispatch({
+                          ...led,
+                          device: {
+                            stp16: {
+                              activeLed: [],
+                              deviceId: parseInt(val),
+                            },
+                          },
+                        });
+                        break;
+                      case 'dmx':
+                        dispatch({
+                          ...led,
+                          device: {
+                            dmx: {
+                              channel: 0,
+                              deviceId: parseInt(val),
+                            },
+                          },
+                        });
+                        break;
+                      case 'vtechExpander':
+                        dispatch({
+                          ...led,
+                          device: {
+                            vtechExpander: {
+                              activeLed: 0,
+                              deviceId: parseInt(val),
+                            },
+                          },
+                        });
+                        break;
+                    }
+                    return;
+                  }
+                  switch (val) {
+                    case 'gpio_analog':
+                      dispatch({
+                        ...led,
+                        device: {
+                          gpio: { pin: -1, analog: true },
+                        },
+                      });
+                      break;
+                    case 'gpio_digital':
+                      dispatch({
+                        ...led,
+                        device: {
+                          gpio: { pin: -1, analog: false },
+                        },
+                      });
+                      break;
+                  }
+                }}
+              >
+                <Combobox.Target>
+                  <InputBase
+                    label="LED Device"
+                    component="button"
+                    type="button"
+                    pointer
+                    rightSection={<Combobox.Chevron />}
+                    rightSectionPointerEvents="none"
+                    onClick={() => deviceCombobox.toggleDropdown()}
+                  >
+                    {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
+                  </InputBase>
+                </Combobox.Target>
 
-        {(deviceCombobox.dropdownOpened && (
-          <Combobox
-            store={deviceCombobox}
-            onOptionSubmit={(val) => {
-              deviceCombobox.closeDropdown();
-              if (isNumberLike(val)) {
-                switch (deviceStatus[parseInt(val)].type) {
-                  case 'ws2812':
-                  case 'apa102':
-                    dispatch({
-                      ...led,
-                      device: {
-                        rgb: {
-                          activeLed: [],
-                          deviceId: parseInt(val),
-                          startR: 0,
-                          startG: 0,
-                          startB: 0,
-                          startW: 255,
-                          endR: 0,
-                          endG: 0,
-                          endB: 0,
-                          endW: 255,
-                          hasStart: true,
-                        },
-                      },
-                    });
-                    break;
-                  case 'stp16cpc':
-                    dispatch({
-                      ...led,
-                      device: {
-                        stp16: {
-                          activeLed: [],
-                          deviceId: parseInt(val),
-                        },
-                      },
-                    });
-                    break;
-                  case 'dmx':
-                    dispatch({
-                      ...led,
-                      device: {
-                        dmx: {
-                          channel: 0,
-                          deviceId: parseInt(val),
-                        },
-                      },
-                    });
-                    break;
-                  case 'vtechExpander':
-                    dispatch({
-                      ...led,
-                      device: {
-                        vtechExpander: {
-                          activeLed: 0,
-                          deviceId: parseInt(val),
-                        },
-                      },
-                    });
-                    break;
-                }
-                return;
-              }
-              switch (val) {
-                case 'gpio_analog':
-                  dispatch({
-                    ...led,
-                    device: {
-                      gpio: { pin: -1, analog: true },
-                    },
-                  });
-                  break;
-                case 'gpio_digital':
-                  dispatch({
-                    ...led,
-                    device: {
-                      gpio: { pin: -1, analog: false },
-                    },
-                  });
-                  break;
-              }
-            }}
-          >
-            <Combobox.Target>
+                <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                  <Combobox.Options>
+                    {Object.values(deviceStatus)
+                      .filter(isLed)
+                      .map((item) => (
+                        <Combobox.Option value={item.id} key={item.id}>
+                          <Group gap="2">
+                            <Text fz="sm" span>
+                              {t(`devices.${item.type}`)}
+                            </Text>
+
+                            <Text fz="xs" span opacity="0.7">
+                              ({DeviceStatus.label(item)})
+                            </Text>
+                          </Group>
+                        </Combobox.Option>
+                      ))}
+                    <Combobox.Option value="gpio_analog">
+                      <Group gap="2">
+                        <Text fz="sm" span>
+                          {t('devices.gpio')}
+                        </Text>
+                        <Text fz="xs" span opacity="0.7">
+                          {t('devices.gpio_analog')}
+                        </Text>
+                      </Group>
+                    </Combobox.Option>
+                    <Combobox.Option value="gpio_digital">
+                      <Group gap="2">
+                        <Text fz="sm" span>
+                          {t('devices.gpio')}
+                        </Text>
+                        <Text fz="xs" span opacity="0.7">
+                          {t('devices.gpio_digital')}
+                        </Text>
+                      </Group>
+                    </Combobox.Option>
+                  </Combobox.Options>
+                </Combobox.Dropdown>
+              </Combobox>
+            )) || (
               <InputBase
                 label="LED Device"
                 component="button"
@@ -2573,111 +2681,79 @@ function SantrollerLed({
               >
                 {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
               </InputBase>
-            </Combobox.Target>
+            )}
+            <Space h="md" />
+            {(typeCombobox.dropdownOpened && (
+              <Combobox
+                store={typeCombobox}
+                onOptionSubmit={(val) => {
+                  typeCombobox.closeDropdown();
 
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                {Object.values(deviceStatus)
-                  .filter(isLed)
-                  .map((item) => (
-                    <Combobox.Option value={item.id} key={item.id}>
-                      <Group gap="2">
-                        <Text fz="sm" span>
-                          {t(`devices.${item.type}`)}
-                        </Text>
-
-                        <Text fz="xs" span opacity="0.7">
-                          ({DeviceStatus.label(item)})
-                        </Text>
-                      </Group>
-                    </Combobox.Option>
-                  ))}
-                <Combobox.Option value="gpio_analog">
-                  <Group gap="2">
-                    <Text fz="sm" span>
-                      {t('devices.gpio')}
-                    </Text>
-                    <Text fz="xs" span opacity="0.7">
-                      {t('devices.gpio_analog')}
-                    </Text>
-                  </Group>
-                </Combobox.Option>
-                <Combobox.Option value="gpio_digital">
-                  <Group gap="2">
-                    <Text fz="sm" span>
-                      {t('devices.gpio')}
-                    </Text>
-                    <Text fz="xs" span opacity="0.7">
-                      {t('devices.gpio_digital')}
-                    </Text>
-                  </Group>
-                </Combobox.Option>
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-        )) || (
-          <InputBase
-            label="LED Device"
-            component="button"
-            type="button"
-            pointer
-            rightSection={<Combobox.Chevron />}
-            rightSectionPointerEvents="none"
-            onClick={() => deviceCombobox.toggleDropdown()}
-          >
-            {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
-          </InputBase>
-        )}
-        <Space h="md" />
-        {(typeCombobox.dropdownOpened && (
-          <Combobox
-            store={typeCombobox}
-            onOptionSubmit={(val) => {
-              typeCombobox.closeDropdown();
-
-              switch (val) {
-                case 'input':
-                  dispatch({
-                    ...led,
-                    mapping: {
-                      inputMapping: {
-                        input: {
-                          gpio: {
-                            analog: false,
-                            pin: -1,
-                            pinMode: proto.PinMode.PullUp,
+                  switch (val) {
+                    case 'input':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          inputMapping: {
+                            input: {
+                              gpio: {
+                                analog: false,
+                                pin: -1,
+                                pinMode: proto.PinMode.PullUp,
+                              },
+                            },
+                            max: 65535,
+                            min: 0,
                           },
                         },
-                        max: 65535,
-                        min: 0,
-                      },
-                    },
-                  });
-                  break;
-                case 'pattern':
-                  dispatch({
-                    ...led,
-                    mapping: {
-                      patternMapping: {
-                        pattern: proto.RgbPatternType.PatternRainbow,
-                        speed: 4,
-                        brightness: 255,
-                      },
-                    },
-                  });
-                  break;
-                case 'static':
-                  dispatch({
-                    ...led,
-                    mapping: {
-                      staticMapping: {},
-                    },
-                  });
-                  break;
-              }
-            }}
-          >
-            <Combobox.Target>
+                      });
+                      break;
+                    case 'pattern':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          patternMapping: {
+                            pattern: proto.RgbPatternType.PatternRainbow,
+                            speed: 4,
+                            brightness: 255,
+                          },
+                        },
+                      });
+                      break;
+                    case 'static':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          staticMapping: {},
+                        },
+                      });
+                      break;
+                  }
+                }}
+              >
+                <Combobox.Target>
+                  <InputBase
+                    label="LED Mode"
+                    component="button"
+                    type="button"
+                    pointer
+                    rightSection={<Combobox.Chevron />}
+                    rightSectionPointerEvents="none"
+                    onClick={() => typeCombobox.toggleDropdown()}
+                  >
+                    {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
+                  </InputBase>
+                </Combobox.Target>
+
+                <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+                  <Combobox.Options>
+                    <Combobox.Option value="input">{t('leds.type.input')}</Combobox.Option>
+                    <Combobox.Option value="pattern">{t('leds.type.pattern')}</Combobox.Option>
+                    <Combobox.Option value="static">{t('leds.type.static')}</Combobox.Option>
+                  </Combobox.Options>
+                </Combobox.Dropdown>
+              </Combobox>
+            )) || (
               <InputBase
                 label="LED Mode"
                 component="button"
@@ -2689,244 +2765,250 @@ function SantrollerLed({
               >
                 {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
               </InputBase>
-            </Combobox.Target>
-
-            <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-              <Combobox.Options>
-                <Combobox.Option value="input">{t('leds.type.input')}</Combobox.Option>
-                <Combobox.Option value="pattern">{t('leds.type.pattern')}</Combobox.Option>
-                <Combobox.Option value="static">{t('leds.type.static')}</Combobox.Option>
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-        )) || (
-          <InputBase
-            label="LED Mode"
-            component="button"
-            type="button"
-            pointer
-            rightSection={<Combobox.Chevron />}
-            rightSectionPointerEvents="none"
-            onClick={() => typeCombobox.toggleDropdown()}
-          >
-            {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
-          </InputBase>
-        )}
-        <Space h="md" />
-        {led.device.gpio && (
-          <PinBox
-            label="pin_label"
-            valid={led.device.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
-            pin={led.device.gpio.pin}
-            dispatch={(pin) => dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })}
-          />
-        )}
-        {led.device.dmx && (
-          <NumberInput
-            value={led.device.dmx.channel}
-            min={0}
-            max={device.device.dmx?.channelCount!}
-            onChange={(e) =>
-              dispatch({
-                ...led,
-                device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } },
-              })
-            }
-          />
-        )}
-        {led.device.vtechExpander && (
-          <MultiSelect
-            label="Leds"
-            value={Array.from(Array(8).keys())
-              .filter((x) => led.device.vtechExpander?.activeLed! & (1 << x))
-              .map((x) => x.toString())}
-            data={Array.from({ length: 8 }, (_, x) => x.toString())}
-            clearable
-            maxValues={8}
-            onChange={(val) =>
-              dispatch({
-                ...led,
-                device: {
-                  vtechExpander: {
-                    ...led.device.vtechExpander!,
-                    activeLed: val.reduce((prev, current) => prev | (1 << parseInt(current)), 0),
-                  },
-                },
-              })
-            }
-            searchable
-          />
-        )}
-        {led.mapping.inputMapping?.input && (
-          <>
-            <DropdownBox
-              title="leds.pattern.label"
-              e={proto.ReactiveRgbPatternType}
-              val={led.mapping.inputMapping.pattern ?? proto.ReactiveRgbPatternType.PatternStatic}
-              label="leds.pattern"
-              dispatch={(pattern) =>
-                dispatch({
-                  ...led,
-                  mapping: { inputMapping: { ...led.mapping.inputMapping!, pattern } },
-                })
-              }
-            ></DropdownBox>
-            <SantrollerInput
-              axis={!!analog}
-              button={!analog}
-              input={led.mapping.inputMapping?.input}
-              dispatch={(input) => {
-                dispatch({
-                  ...led,
-                  mapping: { inputMapping: { ...led.mapping.inputMapping, input } },
-                });
-              }}
-              ledIdx={ledIdx}
-            ></SantrollerInput>
-          </>
-        )}
-        <Space h="md" />
-        {led.mapping.patternMapping && (
-          <>
-            <DropdownBox
-              title="leds.pattern.label"
-              e={proto.RgbPatternType}
-              val={led.mapping.patternMapping.pattern}
-              label="leds.pattern"
-              dispatch={(pattern) =>
-                dispatch({
-                  ...led,
-                  mapping: { patternMapping: { ...led.mapping.patternMapping!, pattern } },
-                })
-              }
-            ></DropdownBox>
-            <Text size="sm">{t('leds.speed')}</Text>
-            <Slider
-              value={led.mapping.patternMapping?.speed}
-              min={1}
-              max={20}
-              onChange={(speed) =>
-                dispatch({
-                  ...led,
-                  mapping: {
-                    patternMapping: { ...led.mapping.patternMapping!, speed },
-                  },
-                })
-              }
-            />
-            <Text size="sm">{t('leds.brightness')}</Text>
-            {led.mapping.patternMapping.pattern == proto.RgbPatternType.PatternRainbow && (
-              <Slider
-                value={led.mapping.patternMapping?.brightness}
-                min={1}
-                max={255}
-                onChange={(brightness) =>
+            )}
+            <Space h="md" />
+            {led.device.gpio && (
+              <PinBox
+                label="pin_label"
+                valid={led.device.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
+                pin={led.device.gpio.pin}
+                dispatch={(pin) =>
+                  dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })
+                }
+              />
+            )}
+            {led.device.dmx && (
+              <NumberInput
+                value={led.device.dmx.channel}
+                min={0}
+                max={device.device.dmx?.channelCount!}
+                onChange={(e) =>
                   dispatch({
                     ...led,
-                    mapping: {
-                      patternMapping: { ...led.mapping.patternMapping!, brightness },
-                    },
+                    device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } },
                   })
                 }
               />
             )}
-          </>
-        )}
-        <Space h="md" />
-        {led.device.rgb && (
-          <>
-            <MultiSelect
-              label="Leds"
-              value={led.device.rgb?.activeLed?.map((x) => x.toString())}
-              data={Array.from(
-                { length: device.device.ws2812?.count || device.device.apa102?.count || 0 },
-                (_, x) => x.toString()
-              )}
-              clearable
-              maxValues={255}
-              onChange={(val) =>
-                dispatch({
-                  ...led,
-                  device: { rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x)) } },
-                })
-              }
-              searchable
-            />
-            <Space h="md" />
-            {led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
-              <Switch
-                label={t('leds.set_off')}
-                checked={led.device.rgb.hasStart}
-                onChange={(event) => {
-                  console.log(event.currentTarget.checked);
+            {led.device.vtechExpander && (
+              <MultiSelect
+                label="Leds"
+                value={Array.from(Array(8).keys())
+                  .filter((x) => led.device.vtechExpander?.activeLed! & (1 << x))
+                  .map((x) => x.toString())}
+                data={Array.from({ length: 8 }, (_, x) => x.toString())}
+                clearable
+                maxValues={8}
+                onChange={(val) =>
                   dispatch({
                     ...led,
                     device: {
-                      rgb: {
-                        ...led.device.rgb!,
-                        hasStart: event.currentTarget.checked,
+                      vtechExpander: {
+                        ...led.device.vtechExpander!,
+                        activeLed: val.reduce(
+                          (prev, current) => prev | (1 << parseInt(current)),
+                          0
+                        ),
                       },
                     },
-                  });
-                }}
+                  })
+                }
+                searchable
               />
             )}
-            {(led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow &&
-              led.device.rgb.hasStart &&
-              !led.mapping.staticMapping && (
-                <Group>
-                  <ColorInput
-                    label="Off Colour"
-                    placeholder="Input placeholder"
-                    format="rgba"
-                    value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb?.startW! / 255).toFixed(2)})`}
-                    onChange={(val) => {
-                      if (!val) return;
-                      const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
+            {led.mapping.inputMapping?.input && (
+              <>
+                <DropdownBox
+                  title="leds.pattern.label"
+                  e={proto.ReactiveRgbPatternType}
+                  val={
+                    led.mapping.inputMapping.pattern ?? proto.ReactiveRgbPatternType.PatternStatic
+                  }
+                  label="leds.pattern"
+                  dispatch={(pattern) =>
+                    dispatch({
+                      ...led,
+                      mapping: { inputMapping: { ...led.mapping.inputMapping!, pattern } },
+                    })
+                  }
+                ></DropdownBox>
+                <SantrollerInput
+                  axis={!!analog}
+                  button={!analog}
+                  input={led.mapping.inputMapping?.input}
+                  dispatch={(input) => {
+                    dispatch({
+                      ...led,
+                      mapping: { inputMapping: { ...led.mapping.inputMapping, input } },
+                    });
+                  }}
+                  ledIdx={ledIdx}
+                ></SantrollerInput>
+              </>
+            )}
+            <Space h="md" />
+            {led.mapping.patternMapping && (
+              <>
+                <DropdownBox
+                  title="leds.pattern.label"
+                  e={proto.RgbPatternType}
+                  val={led.mapping.patternMapping.pattern}
+                  label="leds.pattern"
+                  dispatch={(pattern) =>
+                    dispatch({
+                      ...led,
+                      mapping: { patternMapping: { ...led.mapping.patternMapping!, pattern } },
+                    })
+                  }
+                ></DropdownBox>
+                <Text size="sm">{t('leds.speed')}</Text>
+                <Slider
+                  value={led.mapping.patternMapping?.speed}
+                  min={1}
+                  max={20}
+                  onChange={(speed) =>
+                    dispatch({
+                      ...led,
+                      mapping: {
+                        patternMapping: { ...led.mapping.patternMapping!, speed },
+                      },
+                    })
+                  }
+                />
+                <Text size="sm">{t('leds.brightness')}</Text>
+                {led.mapping.patternMapping.pattern == proto.RgbPatternType.PatternRainbow && (
+                  <Slider
+                    value={led.mapping.patternMapping?.brightness}
+                    min={1}
+                    max={255}
+                    onChange={(brightness) =>
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          patternMapping: { ...led.mapping.patternMapping!, brightness },
+                        },
+                      })
+                    }
+                  />
+                )}
+              </>
+            )}
+            <Space h="md" />
+          </>
+        )}
+
+        {led.device.rgb && (
+          <>
+            {(simpleMode && labels.length && (
+              <>
+                <Text fz="sm" fw={700}>
+                  {t('leds.label')}
+                </Text>
+                <Text size="sm">{labels.join(' - ')}</Text>
+              </>
+            )) ||
+              undefined}
+            {!simpleMode && (
+              <MultiSelect
+                label={t('leds.label')}
+                value={led.device.rgb?.activeLed?.map((x) => x.toString())}
+                data={Array.from(
+                  { length: device.device.ws2812?.count || device.device.apa102?.count || 0 },
+                  (_, x) => ({ value: x.toString(), label: x.toString() + getLedLabel(x) })
+                )}
+                clearable
+                maxValues={255}
+                onChange={(val) =>
+                  dispatch({
+                    ...led,
+                    device: { rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x)) } },
+                  })
+                }
+                searchable
+              />
+            )}
+            {!led.mapping.staticMapping &&
+              !simpleMode &&
+              led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
+                <>
+                  <Space h="md" />
+                  <Switch
+                    label={t('leds.set_off')}
+                    checked={led.device.rgb.hasStart}
+                    onChange={(event) => {
+                      console.log(event.currentTarget.checked);
                       dispatch({
                         ...led,
                         device: {
-                          ...led.device,
                           rgb: {
                             ...led.device.rgb!,
-                            startR: parseInt(r),
-                            startG: parseInt(g),
-                            startB: parseInt(b),
-                            startW: parseFloat(w) * 255,
+                            hasStart: event.currentTarget.checked,
                           },
                         },
                       });
                     }}
                   />
-                  <Input.Wrapper label=" " description=" " error=" ">
-                    <Button
-                      onClick={() =>
+                </>
+              )}
+            {(led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow &&
+              led.device.rgb.hasStart &&
+              !led.mapping.staticMapping && (
+                <>
+                  <Space h="md" />
+                  <Group>
+                    <ColorInput
+                      label="Released Colour"
+                      placeholder="Input placeholder"
+                      format="rgba"
+                      value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb?.startW! / 255).toFixed(2)})`}
+                      onChange={(val) => {
+                        if (!val) return;
+                        const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
                         dispatch({
                           ...led,
                           device: {
                             ...led.device,
                             rgb: {
                               ...led.device.rgb!,
-                              endR: led.device.rgb?.startR!,
-                              endG: led.device.rgb?.startG!,
-                              endB: led.device.rgb?.startB!,
-                              endW: led.device.rgb?.startW!,
+                              startR: parseInt(r),
+                              startG: parseInt(g),
+                              startB: parseInt(b),
+                              startW: parseFloat(w) * 255,
                             },
                           },
-                        })
-                      }
-                    >
-                      Copy to on
-                    </Button>
-                  </Input.Wrapper>
-                </Group>
+                        });
+                      }}
+                    />
+                    <Input.Wrapper label=" " description=" " error=" ">
+                      <Button
+                        onClick={() =>
+                          dispatch({
+                            ...led,
+                            device: {
+                              ...led.device,
+                              rgb: {
+                                ...led.device.rgb!,
+                                endR: led.device.rgb?.startR!,
+                                endG: led.device.rgb?.startG!,
+                                endB: led.device.rgb?.startB!,
+                                endW: led.device.rgb?.startW!,
+                              },
+                            },
+                          })
+                        }
+                      >
+                        Copy to pressed
+                      </Button>
+                    </Input.Wrapper>
+                  </Group>
+                </>
               )) ||
               undefined}
             <Space h="md" />
             {led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
               <Group>
                 <ColorInput
-                  label="On Colour"
+                  label={led.mapping.staticMapping ? 'Colour' : 'Pressed Colour'}
                   placeholder="Input placeholder"
                   format="rgba"
                   value={`rgba(${led.device.rgb?.endR}, ${led.device.rgb?.endG}, ${led.device.rgb?.endB}, ${(led.device.rgb?.endW! / 255).toFixed(2)})`}
@@ -2967,7 +3049,7 @@ function SantrollerLed({
                         })
                       }
                     >
-                      Copy to off
+                      Copy to released
                     </Button>
                   </Input.Wrapper>
                 )}
@@ -3057,7 +3139,6 @@ function SantrollerLed({
         {led.mapping.inputMapping && !analog && (
           <>
             <Space h="md" />
-            <Text size="sm">Active</Text>
             <StateBox mappingIdx={ledIdx} profileIdx={profileIdx} ledBased></StateBox>
           </>
         )}
@@ -3782,9 +3863,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const { t } = useTranslation();
   const profiles = useConfigStore((state) => state.config.profiles!);
   const updateProfile = useConfigStore((state) => state.updateProfile);
+  const updateProfiles = useConfigStore((state) => state.updateProfiles);
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const loadDefaults = useConfigStore((state) => state.loadDefaults);
+  const setSyncMode = useConfigStore((state) => state.setSyncMode);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
+  const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -3909,31 +3994,36 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </Flex>
       </Modal>
       <Space h="md" />
-      <Group>
-        <Title order={2}>Settings</Title>
-        <ActionIcon color="red">
-          <IconTrash
-            style={{ width: '70%', height: '70%' }}
-            onClick={() => deleteProfile(profileIdx)}
+      {!simpleMode && (
+        <>
+          <Group>
+            <Title order={2}>Settings</Title>
+            <ActionIcon color="red">
+              <IconTrash
+                style={{ width: '70%', height: '70%' }}
+                onClick={() => deleteProfile(profileIdx)}
+              />
+            </ActionIcon>
+          </Group>
+          <Space h="md" />
+          <TextInput
+            value={profile.name}
+            onChange={(e) => updateProfile({ ...profile, name: e.currentTarget.value }, profileIdx)}
+            label="Profile name"
           />
-        </ActionIcon>
-      </Group>
-      <Space h="md" />
-      <TextInput
-        value={profile.name}
-        onChange={(e) => updateProfile({ ...profile, name: e.currentTarget.value }, profileIdx)}
-        label="Profile name"
-      />
-      <Space h="md" />
-      <Space h="md" />
-
-      <DropdownBox
-        title="device_to_emulate"
-        e={proto.SubType}
-        val={profile.deviceToEmulate!}
-        label="subType"
-        dispatch={(deviceToEmulate) => updateProfile({ ...profile, deviceToEmulate }, profileIdx)}
-      ></DropdownBox>
+          <Space h="md" />
+          <Space h="md" />
+          <DropdownBox
+            title="device_to_emulate"
+            e={proto.SubType}
+            val={profile.deviceToEmulate!}
+            label="subType"
+            dispatch={(deviceToEmulate) =>
+              updateProfile({ ...profile, deviceToEmulate }, profileIdx)
+            }
+          ></DropdownBox>
+        </>
+      )}
 
       {profile.deviceToEmulate == proto.SubType.Gamepad && (
         <>
@@ -3964,188 +4054,229 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       />
       <Space h="md" />
       <Switch
-        label={t('mode.supportsPs4')}
-        checked={!!profile.ps4OrPs5Mode}
-        onChange={(event) =>
-          updateProfile({ ...profile, ps4OrPs5Mode: event.currentTarget.checked }, profileIdx)
-        }
+        label={t('main.syncCalibrations')}
+        checked={syncCalibrations}
+        onChange={(event) => setSyncMode(event.currentTarget.checked)}
       />
-      <Space h="md" />
-      <Title order={3}>{t('assignments.title')}</Title>
-      <Space h="md" />
+      {!simpleMode && (
+        <>
+          <Space h="md" />
+          <Switch
+            label={t('mode.supportsPs4')}
+            checked={!!profile.ps4OrPs5Mode}
+            onChange={(event) =>
+              updateProfile({ ...profile, ps4OrPs5Mode: event.currentTarget.checked }, profileIdx)
+            }
+          />
+          <Space h="md" />
+          <Title order={3}>{t('assignments.title')}</Title>
+          <Space h="md" />
 
-      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Td>
-              {profile.assignments?.length == 0 && (
-                <>
-                  <Alert variant="light" color="red" title="Error" icon={errorIcon}>
-                    {t('assignments.missing')}
-                  </Alert>
+          <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Td>
+                  {profile.assignments?.length == 0 && (
+                    <>
+                      <Alert variant="light" color="red" title="Error" icon={errorIcon}>
+                        {t('assignments.missing')}
+                      </Alert>
+                      <Space h="md" />
+                    </>
+                  )}
+                  <Group>
+                    <Button
+                      variant="filled"
+                      onClick={() =>
+                        updateProfile(
+                          {
+                            ...profile,
+                            assignments: [
+                              ...profile.assignments!,
+                              { assignments: [{ input: { input: {} } }] },
+                            ],
+                          },
+                          profileIdx
+                        )
+                      }
+                    >
+                      {t('assignments.add')}
+                    </Button>
+                    <Button variant="filled" onClick={open3}>
+                      {t('clear_all_button')}
+                    </Button>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              <Table.Tr>
+                <Table.Td>
                   <Space h="md" />
-                </>
-              )}
-              <Group>
-                <Button
-                  variant="filled"
-                  onClick={() =>
-                    updateProfile(
-                      {
-                        ...profile,
-                        assignments: [
-                          ...profile.assignments!,
-                          { assignments: [{ input: { input: {} } }] },
-                        ],
-                      },
-                      profileIdx
-                    )
-                  }
-                >
-                  {t('assignments.add')}
-                </Button>
-                <Button variant="filled" onClick={open3}>
-                  {t('clear_all_button')}
-                </Button>
-              </Group>
-            </Table.Td>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          <Table.Tr>
-            <Table.Td>
-              <Space h="md" />
-              <Group>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={profile.assignments?.map((mapping, mappingIdx) => mappingIdx)!}
-                    strategy={rectSortingStrategy}
-                  >
-                    {profile.assignments?.map((mapping, mappingIdx) => (
-                      <SantrollerAssignmentList
-                        key={mappingIdx}
-                        mapping={mapping}
-                        profileIdx={profileIdx}
-                        listIdx={mappingIdx}
-                        mode={profile.faceButtonMappingMode}
-                        dispatch={(val) =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              assignments: [
-                                ...profile.assignments!.map((cMapping, cMappingIdx) =>
-                                  cMappingIdx == mappingIdx ? val : cMapping
-                                ),
-                              ],
-                            },
-                            profileIdx
-                          )
-                        }
-                        deleteAssignment={() =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              assignments: [
-                                ...profile.assignments!.filter(
-                                  (_, cMappingIdx) => cMappingIdx != mappingIdx
-                                ),
-                              ],
-                            },
-                            profileIdx
-                          )
-                        }
-                        copyAssignment={() =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              assignments: [...profile.assignments!, { ...mapping }],
-                            },
-                            profileIdx
-                          )
-                        }
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </Group>
-            </Table.Td>
-          </Table.Tr>
-        </Table.Tbody>
-      </Table>
+                  <Group>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={profile.assignments?.map((mapping, mappingIdx) => mappingIdx)!}
+                        strategy={rectSortingStrategy}
+                      >
+                        {profile.assignments?.map((mapping, mappingIdx) => (
+                          <SantrollerAssignmentList
+                            key={mappingIdx}
+                            mapping={mapping}
+                            profileIdx={profileIdx}
+                            listIdx={mappingIdx}
+                            mode={profile.faceButtonMappingMode}
+                            dispatch={(val) =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [
+                                    ...profile.assignments!.map((cMapping, cMappingIdx) =>
+                                      cMappingIdx == mappingIdx ? val : cMapping
+                                    ),
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                            deleteAssignment={() =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [
+                                    ...profile.assignments!.filter(
+                                      (_, cMappingIdx) => cMappingIdx != mappingIdx
+                                    ),
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                            copyAssignment={() =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [...profile.assignments!, { ...mapping }],
+                                },
+                                profileIdx
+                              )
+                            }
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            </Table.Tbody>
+          </Table>
+        </>
+      )}
 
       <Space h="md" />
       <Title order={3}>Inputs</Title>
       <Space h="md" />
       <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
         <Table.Thead>
-          <Table.Tr>
-            <Table.Td>
-              <Group align="stretch">
-                <Button
-                  variant="filled"
-                  onClick={() =>
-                    updateProfile(
-                      {
-                        ...profile,
-                        mappings: [
-                          ...profile.mappings!,
-                          {
-                            input: {
-                              gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp },
+          {!simpleMode && (
+            <Table.Tr>
+              <Table.Td>
+                <Group align="stretch">
+                  <Button
+                    variant="filled"
+                    onClick={() =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          mappings: [
+                            ...profile.mappings!,
+                            {
+                              input: {
+                                gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp },
+                              },
                             },
-                          },
-                        ],
-                      },
-                      profileIdx
-                    )
-                  }
-                >
-                  {t('inputs.add')}
-                </Button>
-                <Button variant="filled" onClick={open}>
-                  Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
-                </Button>
-                <Button variant="filled" onClick={open2}>
-                  {t('clear_all_button')}
-                </Button>
-                {Object.values(deviceStatus)
-                  .filter(hasDefaults)
-                  .map((item) => (
-                    <Button value={item.id} key={item.id} onClick={() => loadDefaults(item)}>
-                      Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
-                    </Button>
-                  ))}
-              </Group>
-            </Table.Td>
-          </Table.Tr>
+                          ],
+                        },
+                        profileIdx
+                      )
+                    }
+                  >
+                    {t('inputs.add')}
+                  </Button>
+                  <Button variant="filled" onClick={open}>
+                    Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
+                  </Button>
+                  <Button variant="filled" onClick={open2}>
+                    {t('clear_all_button')}
+                  </Button>
+                  {Object.values(deviceStatus)
+                    .filter(hasDefaults)
+                    .map((item) => (
+                      <Button value={item.id} key={item.id} onClick={() => loadDefaults(item)}>
+                        Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                      </Button>
+                    ))}
+                </Group>
+              </Table.Td>
+            </Table.Tr>
+          )}
         </Table.Thead>
         <Table.Tbody>
           <Table.Tr>
             <Table.Td>
               <Space h="md" />
               <Group align="stretch">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={profile.mappings?.map((mapping, mappingIdx) => mappingIdx)!}
-                    strategy={rectSortingStrategy}
-                  >
-                    {profile.mappings?.map((mapping, mappingIdx) => (
-                      <SantrollerMapping
-                        key={mappingIdx}
-                        mapping={mapping}
-                        type={profile.deviceToEmulate}
-                        profileIdx={profileIdx}
-                        mappingIdx={mappingIdx}
-                        mode={profile.faceButtonMappingMode}
-                        dispatch={(val) =>
+                {simpleMode &&
+                  profile.mappings?.map((mapping, mappingIdx) => (
+                    <SantrollerMapping
+                      key={mappingIdx}
+                      mapping={mapping}
+                      type={profile.deviceToEmulate}
+                      profileIdx={profileIdx}
+                      mappingIdx={mappingIdx}
+                      mode={profile.faceButtonMappingMode}
+                      dispatch={(val) => {
+                        if (syncCalibrations) {
+                          updateProfiles([
+                            ...profiles.map((profilea) => ({
+                              ...profilea,
+                              mappings: [
+                                ...profilea.mappings!.map((cMapping, cMappingIdx) =>
+                                  JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
+                                  cMapping.trigger == val.trigger
+                                    ? val
+                                    : cMapping
+                                ),
+                              ],
+                              assignments: [
+                                ...profilea.assignments!.map((cMapping, cMappingIdx) => ({
+                                  ...cMapping,
+                                  assignments: [
+                                    ...cMapping.assignments!.map((cAssignment, cAssignmentIdx) =>
+                                      JSON.stringify(cAssignment.input?.input) ==
+                                        JSON.stringify(val.input) &&
+                                      cAssignment.input?.trigger == val.trigger
+                                        ? { ...cAssignment, input: val }
+                                        : cAssignment
+                                    ),
+                                  ],
+                                })),
+                              ],
+                              leds: [
+                                ...profilea.leds!.map((cMapping, cMappingIdx) =>
+                                  JSON.stringify(cMapping.mapping.inputMapping?.input) ==
+                                  JSON.stringify(val.input)
+                                    ? { ...cMapping, input: val }
+                                    : cMapping
+                                ),
+                              ],
+                            })),
+                          ]);
+                        } else {
                           updateProfile(
                             {
                               ...profile,
@@ -4156,34 +4287,130 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               ],
                             },
                             profileIdx
-                          )
+                          );
                         }
-                        deleteInput={() =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              mappings: [
-                                ...profile.mappings!.filter(
-                                  (_, cMappingIdx) => cMappingIdx != mappingIdx
-                                ),
-                              ],
-                            },
-                            profileIdx
-                          )
-                        }
-                        copyInput={() =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              mappings: [...profile.mappings!, { ...mapping }],
-                            },
-                            profileIdx
-                          )
-                        }
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
+                      }}
+                      deleteInput={() =>
+                        updateProfile(
+                          {
+                            ...profile,
+                            mappings: [
+                              ...profile.mappings!.filter(
+                                (_, cMappingIdx) => cMappingIdx != mappingIdx
+                              ),
+                            ],
+                          },
+                          profileIdx
+                        )
+                      }
+                      copyInput={() =>
+                        updateProfile(
+                          {
+                            ...profile,
+                            mappings: [...profile.mappings!, { ...mapping }],
+                          },
+                          profileIdx
+                        )
+                      }
+                    />
+                  ))}
+                {!simpleMode && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={profile.mappings?.map((mapping, mappingIdx) => mappingIdx)!}
+                      strategy={rectSortingStrategy}
+                    >
+                      {profile.mappings?.map((mapping, mappingIdx) => (
+                        <SantrollerMapping
+                          key={mappingIdx}
+                          mapping={mapping}
+                          type={profile.deviceToEmulate}
+                          profileIdx={profileIdx}
+                          mappingIdx={mappingIdx}
+                          mode={profile.faceButtonMappingMode}
+                          dispatch={(val) => {
+                            if (syncCalibrations) {
+                              updateProfiles([
+                                ...profiles.map((profilea) => ({
+                                  ...profilea,
+                                  mappings: [
+                                    ...profilea.mappings!.map((cMapping, cMappingIdx) =>
+                                      JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
+                                      cMapping.trigger == val.trigger
+                                        ? val
+                                        : cMapping
+                                    ),
+                                  ],
+                                  assignments: [
+                                    ...profilea.assignments!.map((cMapping, cMappingIdx) => ({
+                                      ...cMapping,
+                                      assignments: [
+                                        ...cMapping.assignments!.map(
+                                          (cAssignment, cAssignmentIdx) =>
+                                            JSON.stringify(cAssignment.input?.input) ==
+                                              JSON.stringify(val.input) &&
+                                            cAssignment.input?.trigger == val.trigger
+                                              ? { ...cAssignment, input: val }
+                                              : cAssignment
+                                        ),
+                                      ],
+                                    })),
+                                  ],
+                                  leds: [
+                                    ...profilea.leds!.map((cMapping, cMappingIdx) =>
+                                      JSON.stringify(cMapping.mapping.inputMapping?.input) ==
+                                      JSON.stringify(val.input)
+                                        ? { ...cMapping, input: val }
+                                        : cMapping
+                                    ),
+                                  ],
+                                })),
+                              ]);
+                            } else {
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  mappings: [
+                                    ...profile.mappings!.map((cMapping, cMappingIdx) =>
+                                      cMappingIdx == mappingIdx ? val : cMapping
+                                    ),
+                                  ],
+                                },
+                                profileIdx
+                              );
+                            }
+                          }}
+                          deleteInput={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                mappings: [
+                                  ...profile.mappings!.filter(
+                                    (_, cMappingIdx) => cMappingIdx != mappingIdx
+                                  ),
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                          copyInput={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                mappings: [...profile.mappings!, { ...mapping }],
+                              },
+                              profileIdx
+                            )
+                          }
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
               </Group>
             </Table.Td>
           </Table.Tr>

@@ -4,6 +4,8 @@ import { DevicesPage } from './pages/Devices.page';
 import { InputsPage } from './pages/Inputs.page';
 import { DebugPage } from './pages/Debug.page';
 import { LabelsPage } from './pages/Labels.page';
+import { TestingPage } from './pages/Testing.page';
+import { SetupPage } from './pages/Setup.page';
 
 const router = createBrowserRouter([
   {
@@ -21,6 +23,12 @@ const router = createBrowserRouter([
   },{
     path: '/labels',
     element: <LabelsPage />,
+  },{
+    path: '/setup',
+    element: <SetupPage />,
+  },{
+    path: '/testing',
+    element: <TestingPage />,
   },
 ]);
 

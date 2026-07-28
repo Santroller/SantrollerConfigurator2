@@ -15,43 +15,11 @@ export function ConnectPage() {
   const updating = useConfigStore((state) => state.updating);
   const updatePercentage = useConfigStore((state) => state.updatePercentage);
   const latest = useConfigStore((state) => state.latest);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const { t } = useTranslation();
   return (
     <>
       <Layout>
-        <Alert
-          variant="light"
-          color="red"
-          title="Santroller 2 is incomplete!"
-          icon={<IconExclamationCircle />}
-        >
-          Santroller 2 is currently not finished. Right now, several features are missing in 
-          comparison to the normal tool, and there are likely to be a lot of crashes and unfinished features.
-          <Space h="md" />
-          Disclaimer: There may be situations where your configuration completely wipes itself. 
-          There is no documentation right now, and this tool mostly exists for experimental sake, there are currently many bugs and issues.
-          <Space h="md" />
-          Notable missing features:
-          <ul>
-            <li>USB Host - Not all devices aren't supported yet</li>
-            <li>Bluetooth - You can emulate a gamepad, but connecting devices to a receiver is not supported yet.</li>
-            <li>Wii Extension Emulation (as in, plugging the Pico into a Wii Remote)</li>
-            <li>
-              PS2 Emulation (as in, plugging the Pico into the PS2 controller port on your console)
-            </li>
-          </ul>
-        </Alert>
-        <Space h="md" />
-        <Alert
-          variant="light"
-          color="red"
-          title="Santroller 2 is incomplete!"
-          icon={<IconExclamationCircle />}
-        >
-          Make sure the BOOTSEL button is easily accessible! Santroller 2 isn't 100% stable, and
-          sometimes it may not load correctly after programming.
-        </Alert>
-
         {!navigator.hid && (
           <Alert
             variant="light"
@@ -59,7 +27,7 @@ export function ConnectPage() {
             title="Browser Unsupported"
             icon={<IconExclamationCircle />}
           >
-            This browser does not support WebHID, therefor will not work.
+            This browser does not support WebHID, therefore it will not work.
             <Space h="md" />
             You need to use a Chromium based browser, Firefox based browsers don't support WebHID.
           </Alert>
@@ -70,6 +38,10 @@ export function ConnectPage() {
             <Button disabled={updating} onClick={disconnect}>
               Disconnect from Santroller
             </Button>
+          </>
+        )}
+        {navigator.hid && connected && !simpleMode && (
+          <>
             <Space h="md" />
             <Button disabled={updating} onClick={bootloader}>
               Jump to Bootloader
@@ -85,7 +57,7 @@ export function ConnectPage() {
         <Space h="md" />
         {navigator.hid && !connected && (
           <Button disabled={updating} onClick={connect}>
-            Connect to Santroller
+            Connect to a Santroller powered device
           </Button>
         )}
 
@@ -102,27 +74,6 @@ export function ConnectPage() {
             <Progress size="xl" value={updatePercentage}></Progress>
           </Alert>
         )}
-
-        <Space h="md" />
-        <Space h="md" />
-        <Text size="h1">{t('getting_started.title')}</Text>
-        <Text size="sm">{t('getting_started.text')}</Text>
-        <Space h="md" />
-        <Button component="a" download="santroller_pico1.uf2" href="santroller_pico1.uf2" target="_blank">
-          Download UF2 (Pico 1 / RP2040)
-        </Button>
-        <Space h="md" />
-        <Button component="a" download="santroller_pico2.uf2" href="santroller_pico2.uf2" target="_blank">
-          Download UF2 (Pico 2 / RP2350)
-        </Button>
-        <Space h="md" />
-        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, false)} accept="application/json">
-          {(props) => <Button disabled={updating}  {...props}>Build UF2 based on config (Pico 1 / RP2040)</Button>}
-        </FileButton>
-        <Space h="md" />
-        <FileButton disabled={updating} onChange={(f)=>buildUf2FromJson(f, true)} accept="application/json">
-          {(props) => <Button disabled={updating}  {...props}>Build UF2 based on config (Pico 2 / RP2350)</Button>}
-        </FileButton>
       </Layout>
     </>
   );

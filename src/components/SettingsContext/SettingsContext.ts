@@ -252,10 +252,9 @@ export class DeviceStatus {
           status.device.vtechExpander!.attPin,
         ];
       case 'matrix':
-        return Array.from(Array(32).keys())
-          .filter(
-            (x) => (status.device.matrix!.outPins! | status.device.matrix!.inPins!) & (1 << x)
-          )
+        return Array.from(Array(32).keys()).filter(
+          (x) => (status.device.matrix!.outPins! | status.device.matrix!.inPins!) & (1 << x)
+        );
       case 'joybusEmulation':
         return [status.device.joybusEmulation!.dataPin];
       case 'peripheral':
@@ -296,14 +295,20 @@ export interface ConfigState {
   midiData: number[][];
   console: string;
   sendingKeepAlive: boolean;
+  toolInfo?: proto.ISellerConfig;
+  simpleMode: boolean;
+  syncInputs: boolean;
 }
 export interface Actions {
+  setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
   deleteLabel: (id: number) => void;
   addLabel: () => void;
+  addLedLabel: () => void;
   deleteAllLabels: () => void;
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
+  updateProfiles: (profiles: proto.IProfile[]) => void;
   updateCycle: (id: number, state: number) => void;
   updateToggle: (id: number, state: boolean) => void;
   addProfile: () => void;
@@ -320,12 +325,18 @@ export interface Actions {
   setActiveProfile: (id: string | null) => void;
   sendKeepAlive: () => void;
   saveConfig: () => void;
+  buildConfigBuffer: () => { buffer: Uint8Array; mainLen: number; auxLen: number };
+  buildConfig: () => { config: proto.IConfig; aux: proto.IAuxConfigBlock };
   exportConfig: () => void;
   loadConfig: (file: File | null) => void;
   pollInputs: (poll: boolean) => void;
   loadDefaults: (device: DeviceStatus | undefined) => void;
   clearConsole: () => void;
   clearMidi: () => void;
+  buildUf2: (pico2: boolean) => void;
+  setSellerToolName: (name: string) => void;
+  setSellerToolLogo: (image: File) => void;
+  enableAdvancedMode: () => void;
   updateCrkdDrumCalibration: (
     id: string,
     type: proto.CrkdDrumCalibrationType,
@@ -363,9 +374,13 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
   const guiDevices = Object.fromEntries(
-    config.guiConfig.filter((x) => x.config == 'label').map((x) => [x.deviceid, x])
+    config.guiConfig
+      .filter((x) => x.config == 'label' || x.config == 'ledLabel')
+      .map((x) => [x.deviceid, x])
   );
   aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
+  const toolInfo = config.guiConfig.find((x) => x.config == 'seller')?.seller || undefined;
+  document.title = toolInfo?.name || 'Santroller';
   return {
     deviceStatus,
     mappingStatus,
@@ -390,6 +405,9 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     console: '',
     type: '',
     sendingKeepAlive: false,
+    toolInfo,
+    simpleMode: !!toolInfo,
+    syncInputs: config.syncCalibrations || false,
   };
 }
 
@@ -653,6 +671,37 @@ function fixInput(mapping: proto.IMapping) {
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    enableAdvancedMode: () => {
+      set((state) => {
+        state.simpleMode = false;
+      });
+    },
+    setSyncMode: (mode: boolean) => {
+      set((state) => {
+        state.syncInputs = mode;
+      });
+      get().saveConfig();
+    },
+    setSellerToolName: async (name: string) => {
+      const image = new Uint8Array(await (await fetch('/icons/logo.png')).arrayBuffer());
+      set((state) => {
+        if (!state.toolInfo) {
+          state.toolInfo = { name, logo: image };
+        }
+        state.toolInfo = { ...state.toolInfo, name };
+      });
+      get().saveConfig();
+    },
+    setSellerToolLogo: async (image: File) => {
+      const logo = new Uint8Array(await image.arrayBuffer());
+      set((state) => {
+        if (!state.toolInfo) {
+          state.toolInfo = { name: 'Seller Tool', logo: new Uint8Array() };
+        }
+        state.toolInfo = { ...state.toolInfo, logo };
+      });
+      get().saveConfig();
+    },
     updateLabel: (label: proto.IGuiConfig, id: number) => {
       set((state) => {
         state.guiDevices[id] = label;
@@ -667,6 +716,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
+
     addLabel: () => {
       set((state) => {
         let id = 0;
@@ -676,6 +726,19 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.guiDevices[id] = {
           deviceid: id,
           label: { label: 'Label', pin: -1 },
+        };
+      });
+      get().saveConfig();
+    },
+    addLedLabel: () => {
+      set((state) => {
+        let id = 0;
+        if (Object.keys(state.guiDevices).length) {
+          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
+        }
+        state.guiDevices[id] = {
+          deviceid: id,
+          ledLabel: { label: 'Label', deviceid: -1, pin: -1 },
         };
       });
       get().saveConfig();
@@ -785,6 +848,37 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.ledStatus[id] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
         );
+      });
+      get().saveConfig();
+    },
+    updateProfiles: (profiles: proto.IProfile[]) => {
+      set((state) => {
+        profiles.forEach((profile, id) => {
+          if (state.config.profiles![id].faceButtonMappingMode != profile.faceButtonMappingMode) {
+            profile.mappings = profile.mappings?.map(fixInput);
+          }
+          state.config = {
+            ...state.config,
+            profiles: [
+              ...state.config.profiles!.map((prevProfile, prevIndex) =>
+                prevIndex == id ? profile : prevProfile
+              ),
+            ],
+          };
+          state.detected = -1;
+          state.mappingStatus[id] = Object.fromEntries(
+            profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+          );
+          state.activationStatus[id] = Object.fromEntries(
+            profile.assignments!.map((x, listIdx) => [
+              listIdx,
+              x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
+            ])
+          );
+          state.ledStatus[id] = Object.fromEntries(
+            profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
+          );
+        });
       });
       get().saveConfig();
     },
@@ -1272,20 +1366,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       if (state.hidDevice == null || !state.connected) {
         return;
       }
-      const config = { ...state.config };
-      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
-      config.profiles = state.mappingStatus.map((x, i) => ({
-        ...config.profiles![i],
-        mappings: Object.values(x).map((x) => x.mapping),
-      }));
-      const aux = {
-        states: Object.entries(state.deviceStatus)
-          .filter((x) => x[1].type == 'cycle')
-          .map((x) =>
-            proto.CyclingInputState.create({ id: parseInt(x[0]), state: x[1].cycleState })
-          ),
-      };
-
+      const { config, aux } = get().buildConfig();
       const buffer = proto.Config.create(config).toJSON();
       const bufferAux = proto.AuxConfigBlock.create(aux).toJSON();
       const element = document.createElement('a');
@@ -1317,6 +1398,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
         console.log(e);
       }
     },
+    buildUf2: (pico2: boolean) => {
+      const { buffer, mainLen, auxLen } = get().buildConfigBuffer();
+      buildUf2FromConfig(pico2, { buffer, mainLen, auxLen });
+    },
     saveConfig: async () => {
       const state = get();
       if (state.hidDevice == null || !state.connected) {
@@ -1336,27 +1421,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.lastUpdate = now;
       });
-      const config = { ...state.config };
-      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
-      // If we are using any of the tap frets then we need slider mappings, otherwise we don't
-      config.profiles = state.mappingStatus.map((x, i) => ({
-        ...config.profiles![i],
-        supportsSlider: Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) != undefined,
-        mappings: Object.values(x).map((x) => x.mapping),
-      }));
-      config.guiConfig = Object.values(state.guiDevices);
-      const states = Object.values(state.deviceStatus)
-        .filter((x) => x.type == 'cycle')
-        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }));
-      const toggleStates = Object.values(state.deviceStatus)
-        .filter((x) => x.type == 'toggle')
-        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }));
-      const aux = { states, toggleStates };
-      const bufferMain = proto.Config.encode(config).finish();
-      const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
-      const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
-      buffer.set(bufferMain, 0);
-      buffer.set(bufferAux, bufferMain.length);
+      const { buffer, mainLen, auxLen } = get().buildConfigBuffer();
       const crc = new CRC32().calculate(buffer);
       // Don't write if nothing has changed
       if (crc == state.crc) {
@@ -1366,13 +1431,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.writing = true;
         state.crc = crc;
         state.detecting = false;
+        state.polling = false;
       });
       let infoBuffer = proto.ConfigInfo.encode(
         proto.ConfigInfo.create({
           dataSize: buffer.length,
           dataCrc: crc,
-          auxSize: bufferAux.length,
-          mainSize: bufferMain.length,
+          auxSize: auxLen,
+          mainSize: mainLen,
           magic,
         })
       )
@@ -1381,7 +1447,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       console.log('save');
       let outBuffer = new ArrayBuffer(63);
       new Uint8Array(outBuffer).set(infoBuffer);
+      console.log('sending info');
       await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfigInfo, outBuffer);
+      console.log('sent info');
       if (buffer.length == 0) {
         set((state) => {
           state.writing = false;
@@ -1400,6 +1468,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       await new Promise((r) => setTimeout(r, 500));
       set((state) => {
         state.writing = false;
+        state.polling = true;
       });
       await state.hidDevice.sendFeatureReport(
         proto.ReportId.ReportIdKeepalive,
@@ -1420,6 +1489,48 @@ export const useConfigStore = create<ConfigState & Actions>()(
         new Uint8Array(outBuffer2).set(infoBuffer2);
         await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       }
+    },
+    buildConfigBuffer: () => {
+      const { config, aux } = get().buildConfig();
+      const bufferMain = proto.Config.encode(config).finish();
+      const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
+      const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
+      buffer.set(bufferMain, 0);
+      buffer.set(bufferAux, bufferMain.length);
+      return { buffer, mainLen: bufferMain.length, auxLen: bufferAux.length };
+    },
+    buildConfig: () => {
+      const state = get();
+      const config = { ...state.config };
+      config.syncCalibrations = state.syncInputs;
+      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+      // If we are using any of the tap frets then we need slider mappings, otherwise we don't
+      config.profiles = state.mappingStatus.map((x, i) => ({
+        ...config.profiles![i],
+        supportsSlider:
+          Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) != undefined,
+        mappings: Object.values(x).map((x) => x.mapping),
+      }));
+      config.guiConfig = Object.values(state.guiDevices);
+      if (state.toolInfo) {
+        config.guiConfig.push({
+          deviceid: 0,
+          seller: state.toolInfo,
+        });
+      }
+      const states = Object.values(state.deviceStatus)
+        .filter((x) => x.type == 'cycle')
+        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }));
+      const toggleStates = Object.values(state.deviceStatus)
+        .filter((x) => x.type == 'toggle')
+        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }));
+      const aux = { states, toggleStates };
+      const bufferMain = proto.Config.encode(config).finish();
+      const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
+      const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
+      buffer.set(bufferMain, 0);
+      buffer.set(bufferAux, bufferMain.length);
+      return { config, aux };
     },
     firmwareUpdate: async () => {
       const state = get();
@@ -1580,11 +1691,82 @@ function* range(start: number, stop: number, step: number = 1) {
   }
 }
 
+export async function buildUf2FromConfig(
+  pico2: boolean,
+  { buffer, mainLen, auxLen }: { buffer: Uint8Array; mainLen: number; auxLen: number }
+) {
+  let uf2File = new Uint8Array(
+    await (await fetch(pico2 ? '/santroller_pico2.uf2' : '/santroller_pico1.uf2')).arrayBuffer()
+  );
+  const crc = new CRC32().calculate(buffer);
+
+  let infoBuffer = new Uint8Array(24);
+  const dataView = new DataView(infoBuffer.buffer);
+  dataView.setUint32(0, buffer.length, true);
+  dataView.setUint32(4, crc, true);
+  dataView.setUint32(8, mainLen, true);
+  dataView.setUint32(12, auxLen, true);
+  dataView.setUint32(16, magic, true);
+  dataView.setUint32(20, 0, true);
+  const sectorSize = 4 * 1024;
+  const blockSize = 256;
+  const uf2BlockSize = 512;
+  const flashSize = 2 * 1024 * 1024;
+  const rawSize = buffer.length + infoBuffer.length;
+  let outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
+  const padding = outBuffer.length - rawSize;
+  outBuffer.set(buffer, padding);
+  outBuffer.set(infoBuffer, padding + buffer.length);
+  let baseAddr = 0x10000000;
+  let eepromAddr = baseAddr + flashSize - outBuffer.length;
+  let blockCount = Math.ceil(outBuffer.length / blockSize);
+  let firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
+  let blocks: UF2BlockData[] = [];
+  for (let i = 0; i < firstBlock.totalBlocks; i++) {
+    blocks.push(decodeBlock(uf2File.slice(i * 512, (i + 1) * 512)));
+  }
+  for (let i = 0; i < blockCount; i++) {
+    blocks.push({
+      flags: firstBlock.flags,
+      flashAddress: eepromAddr + i * blockSize,
+      payload: outBuffer.slice(i * blockSize, (i + 1) * blockSize),
+      blockNumber: 0,
+      totalBlocks: 0,
+      boardFamily: firstBlock.boardFamily,
+    });
+  }
+  let blockMap = new Set<number>(blocks.map((x) => x.flashAddress));
+  let sectorMap = new Set([...blockMap].map((b) => Math.floor(b / sectorSize) * sectorSize));
+  let blocksToFill = new Set<number>(
+    Array.from([...sectorMap].flatMap((x) => Array.from(range(x, x + sectorSize, blockSize))))
+  ).difference(blockMap);
+  blocks.push(
+    ...Array.from(blocksToFill).map((x) => ({
+      flags: firstBlock.flags,
+      flashAddress: x,
+      payload: new Uint8Array(256),
+      blockNumber: 0,
+      totalBlocks: 0,
+      boardFamily: firstBlock.boardFamily,
+    }))
+  );
+  blocks.sort((x, y) => x.flashAddress - y.flashAddress);
+  blocks = blocks.map((x, i) => ({ ...x, blockNumber: i, totalBlocks: blocks.length }));
+  const outUf2 = new Uint8Array(blocks.length * uf2BlockSize);
+  let i = 0;
+  for (let block of blocks) {
+    encodeBlock(block, outUf2, i * 512);
+    i++;
+  }
+  var blob = new Blob([outUf2.buffer], { type: 'application/octet-stream' });
+  var blobUrl = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.download = 'santroller.uf2';
+  link.href = blobUrl;
+  link.click();
+}
 export async function buildUf2FromJson(file: File | null, pico2: boolean) {
   try {
-    let uf2File = new Uint8Array(
-      await (await fetch(pico2 ? '/santroller_pico2.uf2' : '/santroller_pico1.uf2')).arrayBuffer()
-    );
     const data = JSON.parse((await file?.text()) ?? '');
     const config = proto.Config.fromObject(data['config']);
     const aux = proto.AuxConfigBlock.fromObject(data['aux']);
@@ -1593,72 +1775,7 @@ export async function buildUf2FromJson(file: File | null, pico2: boolean) {
     const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
     buffer.set(bufferMain, 0);
     buffer.set(bufferAux, bufferMain.length);
-    const crc = new CRC32().calculate(buffer);
-
-    let infoBuffer = new Uint8Array(24);
-    const dataView = new DataView(infoBuffer.buffer);
-    dataView.setUint32(0, buffer.length, true);
-    dataView.setUint32(4, crc, true);
-    dataView.setUint32(8, bufferMain.length, true);
-    dataView.setUint32(12, bufferAux.length, true);
-    dataView.setUint32(16, magic, true);
-    dataView.setUint32(20, 0, true);
-    const sectorSize = 4 * 1024;
-    const blockSize = 256;
-    const uf2BlockSize = 512;
-    const flashSize = 2 * 1024 * 1024;
-    const rawSize = buffer.length + infoBuffer.length;
-    let outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
-    const padding = outBuffer.length - rawSize;
-    outBuffer.set(buffer, padding);
-    outBuffer.set(infoBuffer, padding + buffer.length);
-    let baseAddr = 0x10000000;
-    let eepromAddr = baseAddr + flashSize - outBuffer.length;
-    let blockCount = Math.ceil(outBuffer.length / blockSize);
-    let firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
-    let blocks: UF2BlockData[] = [];
-    for (let i = 0; i < firstBlock.totalBlocks; i++) {
-      blocks.push(decodeBlock(uf2File.slice(i * 512, (i + 1) * 512)));
-    }
-    for (let i = 0; i < blockCount; i++) {
-      blocks.push({
-        flags: firstBlock.flags,
-        flashAddress: eepromAddr + i * blockSize,
-        payload: outBuffer.slice(i * blockSize, (i + 1) * blockSize),
-        blockNumber: 0,
-        totalBlocks: 0,
-        boardFamily: firstBlock.boardFamily,
-      });
-    }
-    let blockMap = new Set<number>(blocks.map((x) => x.flashAddress));
-    let sectorMap = new Set([...blockMap].map((b) => Math.floor(b / sectorSize) * sectorSize));
-    let blocksToFill = new Set<number>(
-      Array.from([...sectorMap].flatMap((x) => Array.from(range(x, x + sectorSize, blockSize))))
-    ).difference(blockMap);
-    blocks.push(
-      ...Array.from(blocksToFill).map((x) => ({
-        flags: firstBlock.flags,
-        flashAddress: x,
-        payload: new Uint8Array(256),
-        blockNumber: 0,
-        totalBlocks: 0,
-        boardFamily: firstBlock.boardFamily,
-      }))
-    );
-    blocks.sort((x, y) => x.flashAddress - y.flashAddress);
-    blocks = blocks.map((x, i) => ({ ...x, blockNumber: i, totalBlocks: blocks.length }));
-    const outUf2 = new Uint8Array(blocks.length * uf2BlockSize);
-    let i = 0;
-    for (let block of blocks) {
-      encodeBlock(block, outUf2, i * 512);
-      i++;
-    }
-    var blob = new Blob([outUf2.buffer], { type: 'application/octet-stream' });
-    var blobUrl = URL.createObjectURL(blob);
-    var link = document.createElement('a');
-    link.download = 'santroller.uf2';
-    link.href = blobUrl;
-    link.click();
+    buildUf2FromConfig(pico2, { buffer, mainLen: bufferMain.length, auxLen: bufferAux.length });
   } catch (e) {
     console.log(e);
   }

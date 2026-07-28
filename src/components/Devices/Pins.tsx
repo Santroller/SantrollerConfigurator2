@@ -97,3 +97,26 @@ export function PinBox({
     </Combobox>
   );
 }
+
+
+export function isLed(deviceStatus: DeviceStatus) {
+  switch (deviceStatus.type) {
+    case 'ws2812':
+    case 'apa102':
+    case 'vtechExpander':
+    case 'stp16cpc':
+      return true;
+    default:
+      return false;
+  }
+}
+export function hasDefaults(deviceStatus: DeviceStatus) {
+  switch (deviceStatus.type) {
+    case 'crkdNeck':
+      return true;
+    case 'wii':
+      return true;
+    default:
+      return false;
+  }
+}
