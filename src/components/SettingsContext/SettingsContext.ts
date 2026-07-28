@@ -670,7 +670,7 @@ function fixInput(mapping: proto.IMapping) {
   return mapping;
 }
 async function sha256(message: string) {     
-    const hashBuffer = await crypto.subtle.digest('SHA-256', Buffer.from(message, "base64"));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', Uint8Array.fromBase64(message));
     return new Uint8Array(hashBuffer).toBase64();
 }
 export const useConfigStore = create<ConfigState & Actions>()(
