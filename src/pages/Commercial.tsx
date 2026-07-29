@@ -31,13 +31,40 @@ export function CommercialToolPage() {
   const { t } = useTranslation();
   const login = useConfigStore((state) => state.login);
   const seller = useConfigStore((state) => state.seller);
+  const sellerCheck = useConfigStore((state) => state.sellerCheck);
+  const loggedIn = localStorage.getItem('auth') !== null;
   if (!seller) {
+    if (sellerCheck) {
+      return (
+        <>
+          <Layout>
+            <Alert
+              variant="light"
+              color="red"
+              title="Invalid account"
+              icon={<IconExclamationCircle />}
+            >
+              The account you are logged in with does not have access to this tool. Please check you
+              are paying for the correct tier on GitHub to access the tool.
+            </Alert>
+            <Space h="md" />
+            <Button onClick={login}>Login with github</Button>
+          </Layout>
+        </>
+      );
+    }
+    if (!loggedIn) {
+      return (
+        <>
+          <Layout>
+            <Space h="md" />
+            <Button onClick={login}>Login with github</Button>
+          </Layout>
+        </>
+      );
+    }
     return (
       <>
-        <Layout>
-          <Space h="md" />
-          <Button onClick={login}>Login with github</Button>
-        </Layout>
       </>
     );
   }

@@ -299,6 +299,7 @@ export interface ConfigState {
   simpleMode: boolean;
   syncInputs: boolean;
   seller: boolean;
+  sellerCheck: boolean;
 }
 export interface Actions {
   checkLogin: () => void;
@@ -395,6 +396,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     connected: false,
     detecting: false,
     seller: false,
+    sellerCheck: false,
     latest: true,
     detected: -1,
     crc: 0,
@@ -698,11 +700,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
         const url = new URL('https://worker.tangentmc.net/github-auth-check-access-endpoint');
         url.searchParams.set('access_token', authJson.access_token);
         const response = await fetch(url);
-        if (response.ok) {
-          set((state) => {
-            state.seller = true;
-          });
-        }
+        set((state) => {
+          state.sellerCheck = true;
+          state.seller = response.ok;
+        });
       }
     },
     login: async () => {
