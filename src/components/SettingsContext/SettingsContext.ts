@@ -669,22 +669,28 @@ function fixInput(mapping: proto.IMapping) {
   }
   return mapping;
 }
-async function sha256(message: string) {     
-    const hashBuffer = await crypto.subtle.digest('SHA-256', Uint8Array.fromBase64(message));
-    return new Uint8Array(hashBuffer).toBase64();
+function encodeBase64Url(message: Uint8Array) {
+  return message.toBase64().replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
+async function sha256(message: string) {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', Uint8Array.from(message));
+  return encodeBase64Url(new Uint8Array(hashBuffer));
+}
+
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
     login: async () => {
-      const login = {state: crypto.getRandomValues(new Uint8Array(32)).toBase64(), code_challenge: crypto.getRandomValues(new Uint8Array(32)).toBase64()};
+      const login = {
+        state: encodeBase64Url(crypto.getRandomValues(new Uint8Array(32))),
+        code_challenge: encodeBase64Url(crypto.getRandomValues(new Uint8Array(32))),
+      };
       localStorage.setItem('login', JSON.stringify(login));
-      const url = new URL("https://worker.tangentmc.net/github-auth-endpoint")
+      const url = new URL('https://worker.tangentmc.net/github-auth-endpoint');
       url.searchParams.set('state', login.state);
       url.searchParams.set('code_challenge', await sha256(login.code_challenge));
       url.searchParams.set('code_challenge_method', 'S256');
       window.location.href = url.href;
-
     },
     enableAdvancedMode: () => {
       set((state) => {
