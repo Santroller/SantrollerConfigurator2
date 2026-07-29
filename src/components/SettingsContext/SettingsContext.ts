@@ -298,8 +298,10 @@ export interface ConfigState {
   toolInfo?: proto.ISellerConfig;
   simpleMode: boolean;
   syncInputs: boolean;
+  seller: boolean;
 }
 export interface Actions {
+  checkLogin: () => void;
   setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
   deleteLabel: (id: number) => void;
@@ -337,7 +339,7 @@ export interface Actions {
   buildUf2: (pico2: boolean) => void;
   setSellerToolName: (name: string) => void;
   setSellerToolLogo: (image: File) => void;
-  enableAdvancedMode: () => void;
+  setSimpleMode: (mode: boolean) => void;
   updateCrkdDrumCalibration: (
     id: string,
     type: proto.CrkdDrumCalibrationType,
@@ -392,6 +394,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     updating: false,
     connected: false,
     detecting: false,
+    seller: false,
     latest: true,
     detected: -1,
     crc: 0,
@@ -407,7 +410,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     type: '',
     sendingKeepAlive: false,
     toolInfo,
-    simpleMode: !!toolInfo,
+    simpleMode: !!toolInfo && !localStorage.getItem('auth'),
     syncInputs: config.syncCalibrations || false,
   };
 }
@@ -673,13 +676,35 @@ function encodeBase64Url(message: Uint8Array) {
   return message.toBase64().replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 async function sha256(message: string) {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', Uint8Array.from(message));
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message));
   return encodeBase64Url(new Uint8Array(hashBuffer));
 }
 
 export const useConfigStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
+    checkLogin: async () => {
+      const auth = localStorage.getItem('auth');
+      if (auth) {
+        let authJson = JSON.parse(auth);
+        if (Date.now() > authJson.expires_at) {
+          const url = new URL('https://worker.tangentmc.net/github-auth-refresh-token-endpoint');
+          url.searchParams.set('refresh_token', authJson.refresh_token);
+          const data = await fetch(url.href);
+          authJson = await data.json();
+          authJson.expires_at = Date.now() + authJson.expires_in * 1000;
+          localStorage.setItem('auth', JSON.stringify(authJson));
+        }
+        const url = new URL('https://worker.tangentmc.net/github-auth-check-access-endpoint');
+        url.searchParams.set('access_token', authJson.access_token);
+        const response = await fetch(url);
+        if (response.ok) {
+          set((state) => {
+            state.seller = true;
+          });
+        }
+      }
+    },
     login: async () => {
       const login = {
         state: encodeBase64Url(crypto.getRandomValues(new Uint8Array(32))),
@@ -692,9 +717,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       url.searchParams.set('code_challenge_method', 'S256');
       window.location.href = url.href;
     },
-    enableAdvancedMode: () => {
+    setSimpleMode: (mode: boolean) => {
       set((state) => {
-        state.simpleMode = false;
+        state.simpleMode = mode;
       });
     },
     setSyncMode: (mode: boolean) => {
@@ -1654,6 +1679,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             (old) => ({
               ...old,
               ...InitState(config, aux),
+              seller: old.seller,
               connected: true,
               updating: false,
               hidDevice: device,
@@ -1700,6 +1726,7 @@ if (import.meta.hot) {
     useConfigStore.getState().disconnect();
   });
 }
+useConfigStore.getState().checkLogin();
 function* range(start: number, stop: number, step: number = 1) {
   if (stop == null) {
     // one param defined

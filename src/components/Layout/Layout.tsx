@@ -1,6 +1,7 @@
 import { useReducer, useState } from 'react';
 import {
   IconActivity,
+  IconBuildingStore,
   IconChevronRight,
   IconCircleOff,
   IconDeviceGamepad3,
@@ -12,6 +13,7 @@ import {
   IconSettings,
   IconSun,
   IconTag,
+  IconUser,
 } from '@tabler/icons-react';
 import {
   Link as RouterLink,
@@ -52,6 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const nav = useNavigate();
   const profilePage = useMatch('/profiles');
+  const seller = useConfigStore((state) => state.seller);
   return (
     <>
       <AppShell
@@ -183,6 +186,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               </NavLink>
             </>
+          )}
+          {(!simpleMode || seller) && (
+            <NavLink
+              disabled={updating}
+              component={RouterNavLink}
+              to="/commercial-tool"
+              onClick={() => {
+                pollInputs(false);
+                nav('/commercial-tool');
+              }}
+              label="Commercial Tooling"
+              leftSection={<IconBuildingStore size={16} stroke={1.5} />}
+            />
           )}
         </AppShell.Navbar>
         <AppShell.Main>{children}</AppShell.Main>

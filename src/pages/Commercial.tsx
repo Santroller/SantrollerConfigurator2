@@ -14,7 +14,7 @@ import {
 import { Layout } from '@/components/Layout/Layout';
 import { buildUf2FromJson, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
-export function TestingPage() {
+export function CommercialToolPage() {
   const connect = useConfigStore((state) => state.connect);
   const disconnect = useConfigStore((state) => state.disconnect);
   const bootloader = useConfigStore((state) => state.bootloader);
@@ -24,27 +24,53 @@ export function TestingPage() {
   const buildUf2 = useConfigStore((state) => state.buildUf2);
   const connected = useConfigStore((state) => state.connected);
   const updating = useConfigStore((state) => state.updating);
-  const updatePercentage = useConfigStore((state) => state.updatePercentage);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const latest = useConfigStore((state) => state.latest);
   const toolInfo = useConfigStore((state) => state.toolInfo);
-  const enableAdvancedMode = useConfigStore((state) => state.enableAdvancedMode);
+  const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const { t } = useTranslation();
   const login = useConfigStore((state) => state.login);
+  const seller = useConfigStore((state) => state.seller);
+  if (!seller) {
+    return (
+      <>
+        <Layout>
+          <Space h="md" />
+          <Button onClick={login}>Login with github</Button>
+        </Layout>
+      </>
+    );
+  }
   return (
     <>
       <Layout>
-        <Space h="md" />
-        <Button onClick={login}>
-          Login with github
-        </Button>
-        <Space h="md" />
+        {!connected && (
+          <Alert
+            variant="light"
+            color="red"
+            title="Device required"
+            icon={<IconExclamationCircle />}
+          >
+            Configuring this tool requires a connected device.
+          </Alert>
+        )}
         {navigator.hid && !connected && (
-          <Button disabled={updating} onClick={connect}>
-            Connect to a Santroller powered device
-          </Button>
+          <>
+            <Space h="md" />
+            <Button disabled={updating} onClick={connect}>
+              Connect to a Santroller powered device
+            </Button>
+          </>
         )}
         {navigator.hid && connected && (
           <>
+            <Space h="md" />
+            {simpleMode ? (
+              <Button onClick={() => setSimpleMode(false)}>Show full version of tool</Button>
+            ) : (
+              <Button onClick={() => setSimpleMode(true)}>Show customer version of tool</Button>
+            )}
+            <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(false)}>
               Build UF2 from Current Config (Pico 1 / RP2040)
             </Button>
@@ -82,33 +108,6 @@ export function TestingPage() {
             ></Image>
           </>
         )}
-        <Space h="md" />
-        <FileButton
-          disabled={updating}
-          onChange={(f) => buildUf2FromJson(f, false)}
-          accept="application/json"
-        >
-          {(props) => (
-            <Button disabled={updating} {...props}>
-              Build UF2 from config file (Pico 1 / RP2040)
-            </Button>
-          )}
-        </FileButton>
-        <Space h="md" />
-        <FileButton
-          disabled={updating}
-          onChange={(f) => buildUf2FromJson(f, true)}
-          accept="application/json"
-        >
-          {(props) => (
-            <Button disabled={updating} {...props}>
-              Build UF2 from config file (Pico 2 / RP2350)
-            </Button>
-          )}
-        </FileButton>
-        <Button disabled={updating} onClick={() => enableAdvancedMode()}>
-          Enable Advanced mode
-        </Button>
       </Layout>
     </>
   );
