@@ -296,7 +296,9 @@ function StateSlider({
   if (raw) {
     return (
       <>
-        <Text size="sm" fw={700}>Raw Value</Text>
+        <Text size="sm" fw={700}>
+          Raw Value
+        </Text>
         <Progress.Root size={40} transitionDuration={0}>
           <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
             <StateLabel
@@ -328,7 +330,9 @@ function StateSlider({
   }
   return (
     <>
-      <Text size="sm" fw={700}>Value</Text>
+      <Text size="sm" fw={700}>
+        Value
+      </Text>
       <Progress.Root size={40} transitionDuration={0}>
         <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
           <StateLabel
@@ -1673,7 +1677,7 @@ function SantrollerInput({
       )}
       {input.gpio && (
         <>
-          <Group>
+          <Group grow>
             <PinBox
               label="pin_label"
               valid={input.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
@@ -1689,6 +1693,7 @@ function SantrollerInput({
             ></DropdownBox>
             <Input.Wrapper label=" " description=" " error=" ">
               <Button
+                w="100%"
                 onClick={() => {
                   detectPins(
                     activationIdx,
@@ -3051,6 +3056,7 @@ function SantrollerLed({
                     />
                     <Input.Wrapper label=" " description=" " error=" ">
                       <Button
+                        w="100%"
                         onClick={() =>
                           dispatch({
                             ...led,
@@ -3103,6 +3109,7 @@ function SantrollerLed({
                 {!led.mapping.staticMapping && led.device.rgb.hasStart && (
                   <Input.Wrapper label=" " description=" " error=" " mr="0">
                     <Button
+                      w="100%"
                       onClick={() =>
                         dispatch({
                           ...led,
