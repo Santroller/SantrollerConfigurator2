@@ -20,9 +20,11 @@ export function SetupPage() {
     <>
       <Layout>
         <Alert variant="light" color="red" title="Note" icon={<IconExclamationCircle />}>
-          Note that if you have purchased this device from a seller, you should be obtaining a UF2
-          file from them instead of using the UF2 files below, as they will have everything set up
-          for you.
+          If you have purchased this device from a seller, it should already have Santroller on it,
+          and you should be able to just use the Connect button. If for some reason you need to
+          reset the device to factory settings, you should ask the Seller for a UF2 file instead of
+          using the ones below, as the Seller can provie a UF2 that has everything set up already,
+          while the UF2 files below are blank and have no configuration.
         </Alert>
         <Space h="md" />
         <Alert

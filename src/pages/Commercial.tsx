@@ -12,20 +12,16 @@ import {
   TextInput,
 } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { buildUf2FromJson, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function CommercialToolPage() {
   const connect = useConfigStore((state) => state.connect);
-  const disconnect = useConfigStore((state) => state.disconnect);
-  const bootloader = useConfigStore((state) => state.bootloader);
-  const exportConfig = useConfigStore((state) => state.exportConfig);
   const setSellerToolName = useConfigStore((state) => state.setSellerToolName);
   const setSellerToolLogo = useConfigStore((state) => state.setSellerToolLogo);
   const buildUf2 = useConfigStore((state) => state.buildUf2);
   const connected = useConfigStore((state) => state.connected);
   const updating = useConfigStore((state) => state.updating);
   const simpleMode = useConfigStore((state) => state.simpleMode);
-  const latest = useConfigStore((state) => state.latest);
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const { t } = useTranslation();
@@ -55,18 +51,22 @@ export function CommercialToolPage() {
     }
     if (!loggedIn) {
       return (
-        <>
-          <Layout>
-            <Space h="md" />
-            <Button onClick={login}>Login with github</Button>
-          </Layout>
-        </>
+        <Layout>
+          <Alert
+            variant="light"
+            color="red"
+            title="Invalid account"
+            icon={<IconExclamationCircle />}
+          >
+            This page is for commercial users who are building custom tools for devices they are
+            selling. If you are just a user, please use the normal tool.
+          </Alert>
+          <Space h="md" />
+          <Button onClick={login}>Login with github</Button>
+        </Layout>
       );
     }
-    return (
-      <>
-      </>
-    );
+    return <></>;
   }
   return (
     <>
