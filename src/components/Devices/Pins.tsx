@@ -1,12 +1,17 @@
-import { Combobox, Input, InputBase, useCombobox } from '@mantine/core';
+import { Combobox, Group, Input, InputBase, Text, useCombobox } from '@mantine/core';
 
 import '@/i18n/config';
 
+import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { DeviceStatus, proto, useConfigStore } from '../SettingsContext/SettingsContext';
-import { TFunction } from 'i18next';
 
-function getLabel(t: TFunction<"translation", undefined>, guiDevices: proto.IGuiConfig[], devices: DeviceStatus[], pin: number) {
+function getLabel(
+  t: TFunction<'translation', undefined>,
+  guiDevices: proto.IGuiConfig[],
+  devices: DeviceStatus[],
+  pin: number
+) {
   const labels = Object.entries(guiDevices)
     .filter((x) => x[1].label?.pin == pin)
     .map((x) => x[1].label?.label)
@@ -15,8 +20,7 @@ function getLabel(t: TFunction<"translation", undefined>, guiDevices: proto.IGui
         .filter((x) => DeviceStatus.pins(x[1]).includes(pin))
         .map((x) => `${t(`devices.${x[1].type}`)}`)
     );
-  const labelsText = labels.length > 0 && `- ${labels.join(' - ')}`;
-  return labelsText;
+  return labels.length > 0 && `(${labels.join(', ')})`;
 }
 
 export function PinBox({
@@ -50,7 +54,16 @@ export function PinBox({
         rightSection={<Combobox.Chevron />}
         rightSectionPointerEvents="none"
       >
-        {t(valid[pin]?.label, valid[pin])} {labelsText}
+        <Group gap="2">
+          <Text fz="sm" span>
+            {t(valid[pin]?.label, valid[pin]) || (
+              <Input.Placeholder>{t('invalid_pin')}</Input.Placeholder>
+            )}
+          </Text>
+          <Text fz="xs" span opacity="0.7">
+            {labelsText}
+          </Text>
+        </Group>
       </InputBase>
     );
   }
@@ -67,10 +80,16 @@ export function PinBox({
       rightSectionPointerEvents="none"
       onClick={() => combobox.toggleDropdown()}
     >
-      {t(valid[pin]?.label, valid[pin]) || (
-        <Input.Placeholder>{t('invalid_pin')}</Input.Placeholder>
-      )}{' '}
-      {labelsText}
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t(valid[pin]?.label, valid[pin]) || (
+            <Input.Placeholder>{t('invalid_pin')}</Input.Placeholder>
+          )}
+        </Text>
+        <Text fz="xs" span opacity="0.7">
+          {labelsText}
+        </Text>
+      </Group>
     </InputBase>
   );
 
@@ -89,7 +108,19 @@ export function PinBox({
           {combobox.dropdownOpened &&
             Object.entries(valid).map((item) => (
               <Combobox.Option value={item[0]} key={item[0]} selected={pin == item[1].pin}>
-                {t(item[1].label, item[1])} {getLabel(t, Object.values(guiDevices), pin == item[1].pin ? [] : Object.values(devices), item[1].pin)}
+                <Group gap="2">
+                  <Text fz="sm" span>
+                    {t(item[1].label, item[1])}
+                  </Text>
+                  <Text fz="xs" span opacity="0.7">
+                    {getLabel(
+                      t,
+                      Object.values(guiDevices),
+                      pin == item[1].pin ? [] : Object.values(devices),
+                      item[1].pin
+                    )}
+                  </Text>
+                </Group>
               </Combobox.Option>
             ))}
         </Combobox.Options>
@@ -97,7 +128,6 @@ export function PinBox({
     </Combobox>
   );
 }
-
 
 export function isLed(deviceStatus: DeviceStatus) {
   switch (deviceStatus.type) {

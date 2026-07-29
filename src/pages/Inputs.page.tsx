@@ -296,7 +296,7 @@ function StateSlider({
   if (raw) {
     return (
       <>
-        <Text size="sm">Raw Value</Text>
+        <Text size="sm" fw={700}>Raw Value</Text>
         <Progress.Root size={40} transitionDuration={0}>
           <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
             <StateLabel
@@ -328,7 +328,7 @@ function StateSlider({
   }
   return (
     <>
-      <Text size="sm">Value</Text>
+      <Text size="sm" fw={700}>Value</Text>
       <Progress.Root size={40} transitionDuration={0}>
         <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
           <StateLabel
@@ -1674,14 +1674,12 @@ function SantrollerInput({
       {input.gpio && (
         <>
           <Group>
-            <div style={{ flexGrow: 1 }}>
-              <PinBox
-                label="pin_label"
-                valid={input.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
-                pin={input.gpio.pin}
-                dispatch={(pin) => dispatch({ gpio: { ...input.gpio!, pin } })}
-              />
-            </div>
+            <PinBox
+              label="pin_label"
+              valid={input.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
+              pin={input.gpio.pin}
+              dispatch={(pin) => dispatch({ gpio: { ...input.gpio!, pin } })}
+            />
             <DropdownBox
               title="gpio.mode.label"
               e={proto.PinMode}
@@ -1689,22 +1687,24 @@ function SantrollerInput({
               label="gpio.mode"
               dispatch={(pinMode) => dispatch({ gpio: { ...input.gpio!, pinMode } })}
             ></DropdownBox>
-            <Button
-              onClick={() => {
-                detectPins(
-                  activationIdx,
-                  mappingIdx,
-                  ledIdx,
-                  innerIdx,
-                  input.gpio!.analog
-                    ? proto.PinDetectType.DetectAnalog
-                    : proto.PinDetectType.DetectDigital
-                );
-              }}
-              disabled={detecting}
-            >
-              {t('pin_detect')}
-            </Button>
+            <Input.Wrapper label=" " description=" " error=" ">
+              <Button
+                onClick={() => {
+                  detectPins(
+                    activationIdx,
+                    mappingIdx,
+                    ledIdx,
+                    innerIdx,
+                    input.gpio!.analog
+                      ? proto.PinDetectType.DetectAnalog
+                      : proto.PinDetectType.DetectDigital
+                  );
+                }}
+                disabled={detecting}
+              >
+                {t('pin_detect')}
+              </Button>
+            </Input.Wrapper>
           </Group>
         </>
       )}
@@ -3025,7 +3025,7 @@ function SantrollerLed({
               !led.mapping.staticMapping && (
                 <>
                   <Space h="md" />
-                  <Group>
+                  <Group grow>
                     <ColorInput
                       label="Released Colour"
                       placeholder="Input placeholder"
@@ -3076,7 +3076,7 @@ function SantrollerLed({
               undefined}
             <Space h="md" />
             {led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
-              <Group>
+              <Group grow>
                 <ColorInput
                   label={led.mapping.staticMapping ? 'Colour' : 'Pressed Colour'}
                   placeholder="Input placeholder"
@@ -3101,7 +3101,7 @@ function SantrollerLed({
                   }}
                 />
                 {!led.mapping.staticMapping && led.device.rgb.hasStart && (
-                  <Input.Wrapper label=" " description=" " error=" ">
+                  <Input.Wrapper label=" " description=" " error=" " mr="0">
                     <Button
                       onClick={() =>
                         dispatch({
