@@ -1689,24 +1689,22 @@ function SantrollerInput({
               label="gpio.mode"
               dispatch={(pinMode) => dispatch({ gpio: { ...input.gpio!, pinMode } })}
             ></DropdownBox>
-            <Input.Wrapper label=" " description=" " error=" ">
-              <Button
-                onClick={() => {
-                  detectPins(
-                    activationIdx,
-                    mappingIdx,
-                    ledIdx,
-                    innerIdx,
-                    input.gpio!.analog
-                      ? proto.PinDetectType.DetectAnalog
-                      : proto.PinDetectType.DetectDigital
-                  );
-                }}
-                disabled={detecting}
-              >
-                {t('pin_detect')}
-              </Button>
-            </Input.Wrapper>
+            <Button
+              onClick={() => {
+                detectPins(
+                  activationIdx,
+                  mappingIdx,
+                  ledIdx,
+                  innerIdx,
+                  input.gpio!.analog
+                    ? proto.PinDetectType.DetectAnalog
+                    : proto.PinDetectType.DetectDigital
+                );
+              }}
+              disabled={detecting}
+            >
+              {t('pin_detect')}
+            </Button>
           </Group>
         </>
       )}
@@ -2111,65 +2109,84 @@ function SantrollerMapping({
                       ></StateSlider>
                     )}
                     {(mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
-                      <Text size="sm">{t('trigger.min')}</Text>
-                    )) || <Text size="sm">{t('trigger.trigger')}</Text>}
-                    <Slider
-                      value={mapping.triggerValue!}
-                      min={0}
-                      max={65535}
-                      onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
-                    />
-                    <NumberInput
-                      value={mapping.triggerValue!}
-                      min={0}
-                      max={65535}
-                      onChange={(e) =>
-                        dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })
-                      }
-                    />
-                    <Button
-                      onClick={() => {
-                        dispatch({
-                          ...mapping,
-                          triggerValue:
-                            useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                              .stateRaw,
-                        });
-                      }}
-                    >
-                      {t('pin_use_current')}
-                    </Button>
+                      <Text size="sm" fw={700}>
+                        {t('trigger.min')}
+                      </Text>
+                    )) || (
+                      <Text size="sm" fw={700}>
+                        {t('trigger.trigger')}
+                      </Text>
+                    )}
+                    <Group>
+                      <Slider
+                        flex={1}
+                        value={mapping.triggerValue!}
+                        min={0}
+                        max={65535}
+                        onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
+                      />
+                      <NumberInput
+                        value={mapping.triggerValue!}
+                        min={0}
+                        max={65535}
+                        onChange={(e) =>
+                          dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })
+                        }
+                        w={100}
+                      />
+                    </Group>
+                    <Group>
+                      <Button
+                        onClick={() => {
+                          dispatch({
+                            ...mapping,
+                            triggerValue:
+                              useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                .stateRaw,
+                          });
+                        }}
+                      >
+                        {t('pin_use_current')}
+                      </Button>
+                    </Group>
                     {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
                       <>
-                        <Text size="sm">{t('trigger.max')}</Text>
-                        <Slider
-                          value={mapping.maxTriggerValue!}
-                          min={0}
-                          max={65535}
-                          onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
-                        />
+                        <Text size="sm" fw={700}>
+                          {t('trigger.max')}
+                        </Text>
+                        <Group>
+                          <Slider
+                            flex={1}
+                            value={mapping.maxTriggerValue!}
+                            min={0}
+                            max={65535}
+                            onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
+                          />
 
-                        <NumberInput
-                          value={mapping.maxTriggerValue!}
-                          min={0}
-                          max={65535}
-                          onChange={(e) =>
-                            dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })
-                          }
-                        />
-
-                        <Button
-                          onClick={() => {
-                            dispatch({
-                              ...mapping,
-                              maxTriggerValue:
-                                useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                                  .stateRaw,
-                            });
-                          }}
-                        >
-                          {t('pin_use_current')}
-                        </Button>
+                          <NumberInput
+                            value={mapping.maxTriggerValue!}
+                            min={0}
+                            max={65535}
+                            onChange={(e) =>
+                              dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })
+                            }
+                            w={100}
+                          />
+                        </Group>
+                        <Group>
+                          <Button
+                            onClick={() => {
+                              dispatch({
+                                ...mapping,
+                                maxTriggerValue:
+                                  useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                    .stateRaw,
+                              });
+                            }}
+                          >
+                            {t('pin_use_current')}
+                          </Button>
+                        </Group>
                       </>
                     )}
                   </>
@@ -2193,36 +2210,48 @@ function SantrollerMapping({
             <Space h="md" />
             {mapping.released !== null && (
               <>
-                <Text size="sm">{t('axis.released')}</Text>
-                <Slider
-                  value={mapping.released!}
-                  min={0}
-                  max={65535}
-                  onChange={(val) => dispatch({ ...mapping, released: val })}
-                />
+                <Text size="sm" fw={700}>
+                  {t('axis.released')}
+                </Text>
+                <Group>
+                  <Slider
+                    flex={1}
+                    value={mapping.released!}
+                    min={0}
+                    max={65535}
+                    onChange={(val) => dispatch({ ...mapping, released: val })}
+                  />
 
-                <NumberInput
-                  value={mapping.released!}
-                  min={0}
-                  max={65535}
-                  onChange={(e) => dispatch({ ...mapping, released: parseInt(e.toString()) })}
-                />
+                  <NumberInput
+                    value={mapping.released!}
+                    min={0}
+                    max={65535}
+                    onChange={(e) => dispatch({ ...mapping, released: parseInt(e.toString()) })}
+                    w={100}
+                  />
+                </Group>
               </>
             )}
-            <Text size="sm">{t('axis.pressed')}</Text>
-            <Slider
-              value={mapping.pressed!}
-              min={0}
-              max={65535}
-              onChange={(val) => dispatch({ ...mapping, pressed: val })}
-            />
+            <Text size="sm" fw={700}>
+              {t('axis.pressed')}
+            </Text>
+            <Group>
+              <Slider
+                flex={1}
+                value={mapping.pressed!}
+                min={0}
+                max={65535}
+                onChange={(val) => dispatch({ ...mapping, pressed: val })}
+              />
 
-            <NumberInput
-              value={mapping.pressed!}
-              min={0}
-              max={65535}
-              onChange={(e) => dispatch({ ...mapping, pressed: parseInt(e.toString()) })}
-            />
+              <NumberInput
+                value={mapping.pressed!}
+                min={0}
+                max={65535}
+                onChange={(e) => dispatch({ ...mapping, pressed: parseInt(e.toString()) })}
+                w={100}
+              />
+            </Group>
           </>
         )}
         {axis && analogInput && (
@@ -2245,96 +2274,135 @@ function SantrollerMapping({
                       ></StateSlider>
                       {stick && (
                         <>
-                          <Text size="sm">Center</Text>
-                          <Slider
-                            value={mapping.center!}
-                            min={0}
-                            max={65535}
-                            onChange={(val) => dispatch({ ...mapping, center: val })}
-                          />
+                          <Text size="sm" fw={700}>
+                            Center
+                          </Text>
+                          <Group>
+                            <Slider
+                              flex={1}
+                              value={mapping.center!}
+                              min={0}
+                              max={65535}
+                              onChange={(val) => dispatch({ ...mapping, center: val })}
+                            />
 
-                          <NumberInput
-                            value={mapping.center!}
-                            min={0}
-                            max={65535}
-                            onChange={(e) =>
-                              dispatch({ ...mapping, center: parseInt(e.toString()) })
-                            }
-                          />
-                          <Button
-                            onClick={() => {
-                              dispatch({
-                                ...mapping,
-                                center:
-                                  useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                                    .stateRaw,
-                              });
-                            }}
-                          >
-                            {t('pin_use_current')}
-                          </Button>
+                            <NumberInput
+                              value={mapping.center!}
+                              min={0}
+                              max={65535}
+                              onChange={(e) =>
+                                dispatch({ ...mapping, center: parseInt(e.toString()) })
+                              }
+                              w={100}
+                            />
+                          </Group>
+
+                          <Group>
+                            <Button
+                              onClick={() => {
+                                dispatch({
+                                  ...mapping,
+                                  center:
+                                    useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                      .stateRaw,
+                                });
+                              }}
+                            >
+                              {t('pin_use_current')}
+                            </Button>
+                          </Group>
                           <Space h="md" />
                         </>
                       )}
-                      <Text size="sm">Min</Text>
-                      <Slider
-                        value={mapping.min!}
-                        min={0}
-                        max={65535}
-                        onChange={(val) => dispatch({ ...mapping, min: val })}
-                      />
+                      <Text size="sm" fw={700}>
+                        Min
+                      </Text>
+                      <Group>
+                        <Slider
+                          flex={1}
+                          value={mapping.min!}
+                          min={0}
+                          max={65535}
+                          onChange={(val) => dispatch({ ...mapping, min: val })}
+                        />
 
-                      <NumberInput
-                        value={mapping.min!}
-                        min={0}
-                        max={65535}
-                        onChange={(e) => dispatch({ ...mapping, min: parseInt(e.toString()) })}
-                      />
-                      <Button
-                        onClick={() => {
-                          dispatch({
-                            ...mapping,
-                            min: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                              .stateRaw,
-                          });
-                        }}
-                      >
-                        {t('pin_use_current')}
-                      </Button>
+                        <NumberInput
+                          value={mapping.min!}
+                          min={0}
+                          max={65535}
+                          onChange={(e) => dispatch({ ...mapping, min: parseInt(e.toString()) })}
+                          w={100}
+                        />
+                      </Group>
+                      <Group>
+                        <Button
+                          onClick={() => {
+                            dispatch({
+                              ...mapping,
+                              min: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                .stateRaw,
+                            });
+                          }}
+                        >
+                          {t('pin_use_current')}
+                        </Button>
+                      </Group>
                       <Space h="md" />
-                      <Text size="sm">Max</Text>
-                      <Slider
-                        value={mapping.max!}
-                        min={0}
-                        max={65535}
-                        onChange={(val) => dispatch({ ...mapping, max: val })}
-                      />
-                      <Button
-                        onClick={() => {
-                          dispatch({
-                            ...mapping,
-                            max: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                              .stateRaw,
-                          });
-                        }}
-                      >
-                        {t('pin_use_current')}
-                      </Button>
+                      <Text size="sm" fw={700}>
+                        Max
+                      </Text>
+                      <Group>
+                        <Slider
+                          flex={1}
+                          value={mapping.max!}
+                          min={0}
+                          max={65535}
+                          onChange={(val) => dispatch({ ...mapping, max: val })}
+                        />
+                        <NumberInput
+                          value={mapping.max!}
+                          min={0}
+                          max={65535}
+                          onChange={(e) => dispatch({ ...mapping, max: parseInt(e.toString()) })}
+                          w={100}
+                        />
+                      </Group>
+                      <Group>
+                        <Button
+                          onClick={() => {
+                            dispatch({
+                              ...mapping,
+                              max: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                .stateRaw,
+                            });
+                          }}
+                        >
+                          {t('pin_use_current')}
+                        </Button>
+                      </Group>
                       <Space h="md" />
-                      <Text size="sm">Deadzone</Text>
-                      <Slider
-                        value={mapping.deadzone!}
-                        min={0}
-                        max={65535}
-                        onChange={(val) => dispatch({ ...mapping, deadzone: val })}
-                      />
+                      <Text size="sm" fw={700}>
+                        Deadzone
+                      </Text>
+                      <Group>
+                        <Slider
+                          flex={1}
+                          value={mapping.deadzone!}
+                          min={0}
+                          max={65535}
+                          onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+                        />
 
-                      <NumberInput
-                        value={mapping.deadzone!}
-                        min={0}
-                        max={65535}
-                        onChange={(e) => dispatch({ ...mapping, deadzone: parseInt(e.toString()) })}
-                      />
+                        <NumberInput
+                          value={mapping.deadzone!}
+                          min={0}
+                          max={65535}
+                          onChange={(e) =>
+                            dispatch({ ...mapping, deadzone: parseInt(e.toString()) })
+                          }
+                          w={100}
+                        />
+                      </Group>
                       <Space h="md" />
                     </>
                   )}
@@ -2904,7 +2972,9 @@ function SantrollerLed({
                 <Text fz="sm" fw={700}>
                   {t('leds.label')}
                 </Text>
-                <Text size="sm">{labels.join(' - ')}</Text>
+                {labels.map((x) => (
+                  <Text size="sm">{x}</Text>
+                ))}
               </>
             )) ||
               undefined}
