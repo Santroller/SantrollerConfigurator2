@@ -6,11 +6,12 @@ import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { DeviceStatus, proto, useConfigStore } from '../SettingsContext/SettingsContext';
 
-function getLabel(
+export function getLabel(
   t: TFunction<'translation', undefined>,
   guiDevices: proto.IGuiConfig[],
   devices: DeviceStatus[],
-  pin: number
+  pin: number,
+  bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
     .filter((x) => x[1].label?.pin == pin)
@@ -20,8 +21,34 @@ function getLabel(
         .filter((x) => DeviceStatus.pins(x[1]).includes(pin))
         .map((x) => `${t(`devices.${x[1].type}`)}`)
     );
-  return labels.length > 0 && `(${labels.join(', ')})`;
+  return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
+export function getMultiplexerLabel(
+  t: TFunction<'translation', undefined>,
+  guiDevices: proto.IGuiConfig[],
+  devices: DeviceStatus[],
+  channel: number,
+  bracketed: boolean = true
+) {
+  const labels = Object.entries(guiDevices)
+    .filter((x) => x[1].multiplexerLabel?.channel == channel)
+    .map((x) => x[1].multiplexerLabel?.label);
+  return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
+}
+export function getMatrixLabel(
+  t: TFunction<'translation', undefined>,
+  guiDevices: proto.IGuiConfig[],
+  devices: DeviceStatus[],
+  inPin: number,
+  outPin: number,
+  bracketed: boolean = true
+) {
+  const labels = Object.entries(guiDevices)
+    .filter((x) => x[1].matrixLabel?.inputPin == inPin && x[1].matrixLabel?.outputPin == outPin)
+    .map((x) => x[1].matrixLabel?.label);
+  return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
+}
+
 
 export function PinBox({
   pin,

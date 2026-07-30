@@ -308,6 +308,8 @@ export interface Actions {
   deleteLabel: (id: number) => void;
   addLabel: () => void;
   addLedLabel: () => void;
+  addMultiplexerLabel: () => void;
+  addMatrixLabel: () => void;
   deleteAllLabels: () => void;
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
@@ -379,7 +381,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   );
   const guiDevices = Object.fromEntries(
     config.guiConfig
-      .filter((x) => x.config == 'label' || x.config == 'ledLabel')
+      .filter((x) => x.config == 'label' || x.config == 'ledLabel' || x.config == 'matrixLabel' || x.config == 'multiplexerLabel')
       .map((x) => [x.deviceid, x])
   );
   aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
@@ -786,6 +788,32 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.guiDevices[id] = {
           deviceid: id,
           ledLabel: { label: 'Label', deviceid: -1, activeLed: [] },
+        };
+      });
+      get().saveConfig();
+    },
+    addMultiplexerLabel: () => {
+      set((state) => {
+        let id = 0;
+        if (Object.keys(state.guiDevices).length) {
+          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
+        }
+        state.guiDevices[id] = {
+          deviceid: id,
+          multiplexerLabel: { label: 'Label', deviceid: -1, channel: 0},
+        };
+      });
+      get().saveConfig();
+    },
+    addMatrixLabel: () => {
+      set((state) => {
+        let id = 0;
+        if (Object.keys(state.guiDevices).length) {
+          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
+        }
+        state.guiDevices[id] = {
+          deviceid: id,
+          matrixLabel: { label: 'Label', deviceid: -1, inputPin: -1, outputPin: -1 },
         };
       });
       get().saveConfig();

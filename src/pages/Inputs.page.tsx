@@ -73,7 +73,14 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted, useTimeout } from '@mantine/hooks';
-import { hasDefaults, isLed, PinBox } from '@/components/Devices/Pins';
+import {
+  getLabel,
+  getMatrixLabel,
+  getMultiplexerLabel,
+  hasDefaults,
+  isLed,
+  PinBox,
+} from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
@@ -852,6 +859,9 @@ function SantrollerInput({
   const detecting = useConfigStore((state) => state.detecting);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
   const updateCycle = useConfigStore((state) => state.updateCycle);
+  const guiDevices = useConfigStore((state) => state.guiDevices);
+  const devices = useConfigStore((state) => state.deviceStatus);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -896,6 +906,86 @@ function SantrollerInput({
         </Text>
       </Group>
     );
+    if (simpleMode) {
+      const label =
+        proto.AccelerometerInputType[input.accelerometer?.type ?? -1] ||
+        proto.WiiAxisType[input.wiiAxis?.axis ?? -1] ||
+        proto.WiiButtonType[input.wiiButton?.button ?? -1] ||
+        proto.PS2AxisType[input.ps2Axis?.axis ?? -1] ||
+        proto.PS2ButtonType[input.ps2Button?.button ?? -1] ||
+        proto.CrkdNeckButtonType[input.crkd?.button ?? -1] ||
+        proto.CrkdDrumAxisType[input.crkdDrum?.axis ?? -1] ||
+        proto.Gh5NeckButtonType[input.gh5Neck?.button ?? -1] ||
+        proto.ProGuitarAxisType[input.midiProGuitarAxis?.axis ?? -1] ||
+        proto.ProGuitarButtonType[input.midiProGuitarButton?.button ?? -1] ||
+        proto.ProGuitarNeckAxisType[input.protarNeckAxis?.axis ?? -1] ||
+        proto.ProGuitarNeckButtonType[input.protarNeckButton?.button ?? -1] ||
+        proto.UsbButtonType[input.usbButton?.button ?? -1] ||
+        proto.UsbAxisType[input.usbAxis?.axis ?? -1];
+      if (label) {
+        return <Text>{t(`inputs.${label}`)}</Text>;
+      }
+      switch (device.type) {
+        case 'ads1115':
+          const labelsText = getMultiplexerLabel(
+            t,
+            Object.values(guiDevices),
+            [],
+            input.ads1115!.channel,
+            false
+          );
+          if (labelsText) {
+            return <Text>{labelsText}</Text>;
+          }
+          return <Text>{t('ads1115.channel', { channel: input.ads1115?.channel })}</Text>;
+        case 'multiplexer':
+          const labelsText2 = getMultiplexerLabel(
+            t,
+            Object.values(guiDevices),
+            [],
+            input.multiplexer!.channel,
+            false
+          );
+          if (labelsText2) {
+            return <Text>{labelsText2}</Text>;
+          }
+          return <Text>{input.multiplexer?.channel}</Text>;
+        case 'vtechExpander':
+          return <Text>{input.vtechExpander?.button}</Text>;
+        case 'matrix':
+          const labelsText3 = getMatrixLabel(
+            t,
+            Object.values(guiDevices),
+            [],
+            input.matrix!.pin,
+            input.matrix!.outputPin,
+            false
+          );
+          if (labelsText3) {
+            return <Text>{labelsText3}</Text>;
+          }
+          return (
+            <Text>
+              {input.matrix?.pin}: {input.matrix?.outputPin}
+            </Text>
+          );
+        case 'bhDrum':
+          return <Text>{input.midiNote?.note}</Text>;
+        case 'worldTourDrum':
+          return <Text>{input.midiNote?.note}</Text>;
+        case 'cycle':
+          return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
+        case 'toggle':
+          return <Text>{input.toggle?.input?.gpio?.pin}</Text>;
+      }
+    }
+  }
+  if (simpleMode) {
+    if (input.gpio) {
+      const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, false);
+      return <Text>{labelsText}</Text>;
+    }
+    return <></>;
   }
   if (
     detectedMapping !== undefined &&
@@ -1691,26 +1781,24 @@ function SantrollerInput({
               label="gpio.mode"
               dispatch={(pinMode) => dispatch({ gpio: { ...input.gpio!, pinMode } })}
             ></DropdownBox>
-            <Input.Wrapper label=" " description=" " error=" ">
-              <Button
-                w="100%"
-                onClick={() => {
-                  detectPins(
-                    activationIdx,
-                    mappingIdx,
-                    ledIdx,
-                    innerIdx,
-                    input.gpio!.analog
-                      ? proto.PinDetectType.DetectAnalog
-                      : proto.PinDetectType.DetectDigital
-                  );
-                }}
-                disabled={detecting}
-              >
-                {t('pin_detect')}
-              </Button>
-            </Input.Wrapper>
           </Group>
+          <Button
+            w="100%"
+            onClick={() => {
+              detectPins(
+                activationIdx,
+                mappingIdx,
+                ledIdx,
+                innerIdx,
+                input.gpio!.analog
+                  ? proto.PinDetectType.DetectAnalog
+                  : proto.PinDetectType.DetectDigital
+              );
+            }}
+            disabled={detecting}
+          >
+            {t('pin_detect')}
+          </Button>
         </>
       )}
       {input.ads1115 && (
@@ -2021,6 +2109,26 @@ function SantrollerMapping({
             <Image src={img} height={75} w="auto" fit="contain" alt={img} />
           </Center>
         </Card.Section>
+        {simpleMode && (
+          <>
+            <Space h="md" />
+            <SantrollerInput
+              axis={!!axis}
+              button={!!button}
+              input={mapping.input}
+              dispatch={(input) => {
+                dispatch({
+                  ...mapping,
+                  input,
+                  pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
+                  debounce: drum ? (mapping.debounce ?? 30) : undefined,
+                  peakBased: drum ? true : undefined,
+                });
+              }}
+              mappingIdx={mappingIdx}
+            ></SantrollerInput>
+          </>
+        )}
         {button && <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx}></StateBox>}
         {axis && (
           <StateSlider
@@ -2033,7 +2141,6 @@ function SantrollerMapping({
             zeroBased={drum}
           ></StateSlider>
         )}
-
         {!simpleMode && (
           <>
             <OutputBox dispatch={dispatch} type={type} mode={mode} mapping={mapping}></OutputBox>
@@ -4323,10 +4430,18 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               ...profilea,
                               mappings: [
                                 ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                  JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
-                                  cMapping.trigger == val.trigger
+                                  cMappingIdx == mappingIdx
                                     ? val
-                                    : cMapping
+                                    : JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
+                                        cMapping.trigger == val.trigger
+                                      ? {
+                                          ...cMapping,
+                                          center: val.center,
+                                          deadzone: val.deadzone,
+                                          min: val.min,
+                                          max: val.max,
+                                        }
+                                      : cMapping
                                 ),
                               ],
                               assignments: [
@@ -4337,7 +4452,16 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                       JSON.stringify(cAssignment.input?.input) ==
                                         JSON.stringify(val.input) &&
                                       cAssignment.input?.trigger == val.trigger
-                                        ? { ...cAssignment, input: val }
+                                        ? {
+                                            ...cAssignment,
+                                            input: {
+                                              ...cAssignment!.input!,
+                                              center: val.center,
+                                              deadzone: val.deadzone,
+                                              min: val.min,
+                                              max: val.max,
+                                            },
+                                          }
                                         : cAssignment
                                     ),
                                   ],
@@ -4347,7 +4471,19 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                 ...profilea.leds!.map((cMapping, cMappingIdx) =>
                                   JSON.stringify(cMapping.mapping.inputMapping?.input) ==
                                   JSON.stringify(val.input)
-                                    ? { ...cMapping, input: val }
+                                    ? {
+                                        ...cMapping,
+                                        mapping: {
+                                          ...cMapping.mapping,
+                                          inputMapping: {
+                                            ...cMapping.mapping.inputMapping!,
+                                            center: val.center,
+                                            deadzone: val.deadzone,
+                                            min: val.min,
+                                            max: val.max,
+                                          },
+                                        },
+                                      }
                                     : cMapping
                                 ),
                               ],
@@ -4416,10 +4552,19 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profilea,
                                   mappings: [
                                     ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                      JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
-                                      cMapping.trigger == val.trigger
+                                      cMappingIdx == mappingIdx
                                         ? val
-                                        : cMapping
+                                        : JSON.stringify(cMapping.input) ==
+                                              JSON.stringify(val.input) &&
+                                            cMapping.trigger == val.trigger
+                                          ? {
+                                              ...cMapping,
+                                              center: val.center,
+                                              deadzone: val.deadzone,
+                                              min: val.min,
+                                              max: val.max,
+                                            }
+                                          : cMapping
                                     ),
                                   ],
                                   assignments: [
@@ -4431,7 +4576,16 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                             JSON.stringify(cAssignment.input?.input) ==
                                               JSON.stringify(val.input) &&
                                             cAssignment.input?.trigger == val.trigger
-                                              ? { ...cAssignment, input: val }
+                                              ? {
+                                                  ...cAssignment,
+                                                  input: {
+                                                    ...cAssignment!.input!,
+                                                    center: val.center,
+                                                    deadzone: val.deadzone,
+                                                    min: val.min,
+                                                    max: val.max,
+                                                  },
+                                                }
                                               : cAssignment
                                         ),
                                       ],
@@ -4441,7 +4595,19 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                     ...profilea.leds!.map((cMapping, cMappingIdx) =>
                                       JSON.stringify(cMapping.mapping.inputMapping?.input) ==
                                       JSON.stringify(val.input)
-                                        ? { ...cMapping, input: val }
+                                        ? {
+                                            ...cMapping,
+                                            mapping: {
+                                              ...cMapping.mapping,
+                                              inputMapping: {
+                                                ...cMapping.mapping.inputMapping!,
+                                                center: val.center,
+                                                deadzone: val.deadzone,
+                                                min: val.min,
+                                                max: val.max,
+                                              },
+                                            },
+                                          }
                                         : cMapping
                                     ),
                                   ],
