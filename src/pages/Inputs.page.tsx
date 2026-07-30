@@ -4548,11 +4548,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           dispatch={(val) => {
                             if (syncCalibrations) {
                               updateProfiles([
-                                ...profiles.map((profilea) => ({
+                                ...profiles.map((profilea, profileIdxa) => ({
                                   ...profilea,
                                   mappings: [
                                     ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx == mappingIdx
+                                      cMappingIdx == mappingIdx && profileIdxa == profileIdx
                                         ? val
                                         : JSON.stringify(cMapping.input) ==
                                               JSON.stringify(val.input) &&
