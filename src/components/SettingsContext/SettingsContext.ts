@@ -306,6 +306,7 @@ export interface Actions {
   setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
   deleteLabel: (id: number) => void;
+  copyLabel: (config: proto.IGuiConfig) => void;
   addLabel: () => void;
   addLedLabel: () => void;
   addMultiplexerLabel: () => void;
@@ -762,6 +763,20 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.guiDevices = Object.fromEntries(
           Object.entries(state.guiDevices).filter((x) => x[0] != id.toString())
         );
+      });
+      get().saveConfig();
+    },
+
+    copyLabel: (label: proto.IGuiConfig) => {
+      set((state) => {
+        let id = 0;
+        if (Object.keys(state.guiDevices).length) {
+          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
+        }
+        state.guiDevices[id] = {
+          ...label,
+          deviceid: id
+        };
       });
       get().saveConfig();
     },

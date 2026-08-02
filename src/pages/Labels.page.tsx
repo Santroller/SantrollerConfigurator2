@@ -1,4 +1,4 @@
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   ActionIcon,
   Affix,
@@ -43,6 +43,7 @@ function Label({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
+  const copyLabel = useConfigStore((state) => state.copyLabel);
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_label_dialog.title')} centered>
@@ -67,6 +68,9 @@ function Label({
         <Flex justify="flex-end">
           <ActionIcon color="red">
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+          <ActionIcon>
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
           </ActionIcon>
         </Flex>
         <TextInput
@@ -110,6 +114,7 @@ function LedLabel({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
+  const copyLabel = useConfigStore((state) => state.copyLabel);
   const device = useConfigStore((state) => state.deviceStatus[label.ledLabel?.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
@@ -153,6 +158,9 @@ function LedLabel({
         <Flex justify="flex-end">
           <ActionIcon color="red">
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+          <ActionIcon>
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
@@ -268,6 +276,7 @@ function MatrixLabel({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
+  const copyLabel = useConfigStore((state) => state.copyLabel);
   const device = useConfigStore((state) => state.deviceStatus[label.matrixLabel?.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
@@ -311,6 +320,9 @@ function MatrixLabel({
         <Flex justify="flex-end">
           <ActionIcon color="red">
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+          <ActionIcon>
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
@@ -434,6 +446,7 @@ function MultiplexerLabel({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
+  const copyLabel = useConfigStore((state) => state.copyLabel);
   const device = useConfigStore((state) => state.deviceStatus[label.multiplexerLabel?.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
@@ -480,6 +493,9 @@ function MultiplexerLabel({
         <Flex justify="flex-end">
           <ActionIcon color="red">
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+          <ActionIcon>
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
