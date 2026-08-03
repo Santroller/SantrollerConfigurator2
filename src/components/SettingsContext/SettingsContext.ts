@@ -606,7 +606,7 @@ function createDefault(type: string, id: string) {
       device = { pin: -1, count: 0, type: proto.WS2812Type.Ws2812Rgb };
       break;
     case 'usbHost':
-      device = { firstPin: -1, dmFirst: true };
+      device = { firstPin: -1, dmFirst: false };
       break;
     case 'midiSerial':
       device = { uart: { ...uart, clock: 31250 } };
