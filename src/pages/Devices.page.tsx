@@ -36,7 +36,7 @@ import { proto, useConfigStore } from '../components/SettingsContext/SettingsCon
 
 import '@/i18n/config';
 
-import { t } from 'i18next';
+import { t, TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
@@ -1486,7 +1486,20 @@ const usbHostData = [
   { label: 'usb.selector.dpFirst', value: 'false' },
   { label: 'usb.selector.dmFirst', value: 'true' },
 ];
+function getName(x: string, t: TFunction) {
+  const match = x.match(/X360 Wireless (.+)/);
+  console.log(x, match);
+  if (match) {
+    const subtype = parseInt(match[1]);
+    if (isNaN(subtype)) {
+      return 'Xbox 360 Wireless ' + match[1];
+    }
+    return 'Xbox 360 Wireless ' + t(`subType.${proto.SubType[subtype]}`);
+  }
+  return x
+}
 function USBHostDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -1511,7 +1524,7 @@ function USBHostDevice({ id }: { id: string }) {
         <Table.Tbody>
           {Object.values(status.usbDevices).map((x) => (
             <Table.Tr key={x.port * 127 + x.interface}>
-              <Table.Td>{x.name}</Table.Td>
+              <Table.Td>{getName(x.name, t)}</Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>
