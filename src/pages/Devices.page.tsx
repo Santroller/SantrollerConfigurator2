@@ -1488,7 +1488,6 @@ const usbHostData = [
 ];
 function getName(x: string, t: TFunction) {
   const match = x.match(/X360 Wireless (.+)/);
-  console.log(x, match);
   if (match) {
     const subtype = parseInt(match[1]);
     if (isNaN(subtype)) {
