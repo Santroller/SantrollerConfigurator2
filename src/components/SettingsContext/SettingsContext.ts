@@ -275,6 +275,7 @@ export interface ConfigState {
   latest: boolean;
   hidDevice?: HIDDevice;
   crc: number;
+  waitingForReload: boolean;
   writing: boolean;
   polling: boolean;
   updating: boolean;
@@ -325,6 +326,7 @@ export interface Actions {
   firmwareUpdate: () => void;
   login: () => void;
   disconnect: () => void;
+  reconnect: (device: HIDDevice) => void;
   bootloader: () => void;
   deleteAllDevices: () => void;
   addDevice: (type: string) => void;
@@ -382,7 +384,13 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   );
   const guiDevices = Object.fromEntries(
     config.guiConfig
-      .filter((x) => x.config == 'label' || x.config == 'ledLabel' || x.config == 'matrixLabel' || x.config == 'multiplexerLabel')
+      .filter(
+        (x) =>
+          x.config == 'label' ||
+          x.config == 'ledLabel' ||
+          x.config == 'matrixLabel' ||
+          x.config == 'multiplexerLabel'
+      )
       .map((x) => [x.deviceid, x])
   );
   aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
@@ -395,6 +403,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     ledStatus,
     config,
     updatePercentage: 0,
+    waitingForReload: false,
     updating: false,
     connected: false,
     detecting: false,
@@ -775,7 +784,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         state.guiDevices[id] = {
           ...label,
-          deviceid: id
+          deviceid: id,
         };
       });
       get().saveConfig();
@@ -815,7 +824,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         state.guiDevices[id] = {
           deviceid: id,
-          multiplexerLabel: { label: 'Label', deviceid: -1, channel: 0},
+          multiplexerLabel: { label: 'Label', deviceid: -1, channel: 0 },
         };
       });
       get().saveConfig();
@@ -1295,6 +1304,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
           });
         }
+        if (deviceEvent.reload) {
+          set((state) => {
+            console.log('RELOAD');
+            state.waitingForReload = true;
+          });
+        }
         if (deviceEvent.ps2) {
           set((state) => {
             if (deviceEvent.ps2!.id in state.deviceStatus) {
@@ -1431,6 +1446,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
+
     disconnect: () =>
       set((state) => {
         state.hidDevice?.removeEventListener('inputreport', state.onReport);
@@ -1438,10 +1454,35 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (state.keepaliveTimeout) {
           clearInterval(state.keepaliveTimeout);
         }
-        state.connected = false;
+        state.connected = state.waitingForReload;
         state.updating = false;
         state.hidDevice = undefined;
       }),
+    reconnect: async (device: HIDDevice) => {
+      if (!device.opened) {
+        await device.open();
+      }
+      device.addEventListener('inputreport', get().onReport);
+      const timeout = setInterval(() => get().sendKeepAlive(), 10);
+
+      const profileData = await device.receiveFeatureReport(
+        proto.ReportId.ReportIdGetActiveProfiles
+      );
+      const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
+        new Uint8Array(profileData.buffer).slice(1)
+      );
+      set(
+        (state) => ({
+          ...state,
+          hidDevice: device,
+          connected: true,
+          keepaliveTimeout: timeout,
+          activeProfiles: activeProfiles.profiles,
+          waitingForReload: false,
+        }),
+        true
+      );
+    },
     bootloader: async () => {
       const dev = get().hidDevice;
       if (!dev) return;
@@ -1756,10 +1797,13 @@ if (navigator.hid) {
   navigator.hid.addEventListener('disconnect', (e) => {
     if (useConfigStore.getState().hidDevice == e.device) {
       useConfigStore.getState().disconnect();
-      useConfigStore.setState((state) => {
-        state.connected = false;
-        state.hidDevice = undefined;
-      });
+    }
+  });
+  navigator.hid.addEventListener('connect', (e) => {
+    if (!useConfigStore.getState().waitingForReload) return;
+    if (e.device.collections[0].usagePage != 0xff00) return;
+    if (useConfigStore.getState().hidDevice == null) {
+      useConfigStore.getState().reconnect(e.device);
     }
   });
 }

@@ -39,6 +39,9 @@
   "ads1115": {
     "channel": "Channel {{channel}}"
   },
+  "main": {
+    "syncCalibrations": "Sync calibrations across profiles"
+  },
   "held": {
     "time": "Time (ms)"
   },

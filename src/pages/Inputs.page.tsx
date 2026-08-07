@@ -815,6 +815,91 @@ function FixLabel(mode: proto.FaceButtonMappingMode, label: string) {
   return label;
 }
 
+function SantrollerLabel({ input, label }: { input: proto.IInput; label: string }) {
+  let deviceId = -1;
+  for (const key of Object.keys(input)) {
+    const key2 = key as keyof typeof input;
+    if (
+      key2 != 'fixed' &&
+      key2 != 'gpio' &&
+      key2 != 'shortcut' &&
+      key2 != 'held' &&
+      input[key2]!.deviceid !== undefined
+    ) {
+      deviceId = input[key2]!.deviceid;
+      break;
+    }
+  }
+  const { t } = useTranslation();
+  const device = useConfigStore((state) => state.deviceStatus[deviceId]);
+  const guiDevices = useConfigStore((state) => state.guiDevices);
+  const simpleMode = useConfigStore((state) => state.simpleMode);
+
+  let deviceValue = <></>;
+  if (device) {
+    switch (device.type) {
+      case 'ads1115':
+        const labelsText = getMultiplexerLabel(
+          t,
+          Object.values(guiDevices),
+          [],
+          input.ads1115!.channel,
+          false
+        );
+        if (labelsText) {
+          return <Text>{labelsText}</Text>;
+        }
+        return <Text>{t('ads1115.channel', { channel: input.ads1115?.channel })}</Text>;
+      case 'multiplexer':
+        const labelsText2 = getMultiplexerLabel(
+          t,
+          Object.values(guiDevices),
+          [],
+          input.multiplexer!.channel,
+          false
+        );
+        if (labelsText2) {
+          return <Text>{labelsText2}</Text>;
+        }
+        return <Text>{input.multiplexer?.channel}</Text>;
+      case 'vtechExpander':
+        return <Text>{input.vtechExpander?.button}</Text>;
+      case 'matrix':
+        const labelsText3 = getMatrixLabel(
+          t,
+          Object.values(guiDevices),
+          [],
+          input.matrix!.pin,
+          input.matrix!.outputPin,
+          false
+        );
+        if (labelsText3) {
+          return <Text>{labelsText3}</Text>;
+        }
+        return (
+          <Text>
+            {input.matrix?.pin}: {input.matrix?.outputPin}
+          </Text>
+        );
+      case 'bhDrum':
+        return <Text>{input.midiNote?.note}</Text>;
+      case 'worldTourDrum':
+        return <Text>{input.midiNote?.note}</Text>;
+      case 'cycle':
+        return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
+      case 'toggle':
+        return <Text>{input.toggle?.input?.gpio?.pin}</Text>;
+    }
+  }
+  if (input.gpio) {
+    const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, false);
+    if (labelsText) {
+      return <Text>{labelsText}</Text>;
+    }
+  }
+  return <Text>{t(`outputs.${label}`)}</Text>;
+}
+
 function SantrollerInput({
   input,
   axis,
@@ -907,24 +992,24 @@ function SantrollerInput({
       </Group>
     );
     if (simpleMode) {
-      const label =
-        proto.AccelerometerInputType[input.accelerometer?.type ?? -1] ||
-        proto.WiiAxisType[input.wiiAxis?.axis ?? -1] ||
-        proto.WiiButtonType[input.wiiButton?.button ?? -1] ||
-        proto.PS2AxisType[input.ps2Axis?.axis ?? -1] ||
-        proto.PS2ButtonType[input.ps2Button?.button ?? -1] ||
-        proto.CrkdNeckButtonType[input.crkd?.button ?? -1] ||
-        proto.CrkdDrumAxisType[input.crkdDrum?.axis ?? -1] ||
-        proto.Gh5NeckButtonType[input.gh5Neck?.button ?? -1] ||
-        proto.ProGuitarAxisType[input.midiProGuitarAxis?.axis ?? -1] ||
-        proto.ProGuitarButtonType[input.midiProGuitarButton?.button ?? -1] ||
-        proto.ProGuitarNeckAxisType[input.protarNeckAxis?.axis ?? -1] ||
-        proto.ProGuitarNeckButtonType[input.protarNeckButton?.button ?? -1] ||
-        proto.UsbButtonType[input.usbButton?.button ?? -1] ||
-        proto.UsbAxisType[input.usbAxis?.axis ?? -1];
-      if (label) {
-        return <Text>{t(`inputs.${label}`)}</Text>;
-      }
+      // const label =
+      //   proto.AccelerometerInputType[input.accelerometer?.type ?? -1] ||
+      //   proto.WiiAxisType[input.wiiAxis?.axis ?? -1] ||
+      //   proto.WiiButtonType[input.wiiButton?.button ?? -1] ||
+      //   proto.PS2AxisType[input.ps2Axis?.axis ?? -1] ||
+      //   proto.PS2ButtonType[input.ps2Button?.button ?? -1] ||
+      //   proto.CrkdNeckButtonType[input.crkd?.button ?? -1] ||
+      //   proto.CrkdDrumAxisType[input.crkdDrum?.axis ?? -1] ||
+      //   proto.Gh5NeckButtonType[input.gh5Neck?.button ?? -1] ||
+      //   proto.ProGuitarAxisType[input.midiProGuitarAxis?.axis ?? -1] ||
+      //   proto.ProGuitarButtonType[input.midiProGuitarButton?.button ?? -1] ||
+      //   proto.ProGuitarNeckAxisType[input.protarNeckAxis?.axis ?? -1] ||
+      //   proto.ProGuitarNeckButtonType[input.protarNeckButton?.button ?? -1] ||
+      //   proto.UsbButtonType[input.usbButton?.button ?? -1] ||
+      //   proto.UsbAxisType[input.usbAxis?.axis ?? -1];
+      // if (label) {
+      //   return <Text>{t(`inputs.${label}`)}</Text>;
+      // }
       switch (device.type) {
         case 'ads1115':
           const labelsText = getMultiplexerLabel(
@@ -2112,21 +2197,7 @@ function SantrollerMapping({
         {simpleMode && (
           <>
             <Space h="md" />
-            <SantrollerInput
-              axis={!!axis}
-              button={!!button}
-              input={mapping.input}
-              dispatch={(input) => {
-                dispatch({
-                  ...mapping,
-                  input,
-                  pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
-                  debounce: drum ? (mapping.debounce ?? 30) : undefined,
-                  peakBased: drum ? true : undefined,
-                });
-              }}
-              mappingIdx={mappingIdx}
-            ></SantrollerInput>
+            <SantrollerLabel input={mapping.input} label={fixedLabel}></SantrollerLabel>
           </>
         )}
         {button && <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx}></StateBox>}
@@ -2180,13 +2251,16 @@ function SantrollerMapping({
                 <Accordion.Control>Button Mapping</Accordion.Control>
                 <Accordion.Panel>
                   <>
-                    <DropdownBox
-                      title="trigger_type.label"
-                      e={proto.AnalogToDigitalTriggerType}
-                      val={mapping.trigger!}
-                      label="trigger_type"
-                      dispatch={(trigger) => dispatch({ ...mapping, trigger })}
-                    ></DropdownBox>
+                    {!simpleMode && (
+                      <DropdownBox
+                        title="trigger_type.label"
+                        e={proto.AnalogToDigitalTriggerType}
+                        val={mapping.trigger!}
+                        label="trigger_type"
+                        dispatch={(trigger) => dispatch({ ...mapping, trigger })}
+                      ></DropdownBox>
+                    )}
+
                     {mapping.trigger == proto.AnalogToDigitalTriggerType.JoyHigh && (
                       <StateSlider
                         mappingIdx={mappingIdx}
