@@ -1432,7 +1432,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
             },
           ],
         };
-        console.log(state.config);
         state.currentProfile = state.config.profiles!.length - 1;
         state.mappingStatus[state.config.profiles!.length - 1] = [];
         state.activationStatus[state.config.profiles!.length - 1] = [];
@@ -1462,20 +1461,43 @@ export const useConfigStore = create<ConfigState & Actions>()(
       if (!device.opened) {
         await device.open();
       }
+      set(
+        (state) => ({
+          ...state,
+          hidDevice: device,
+          connected: true,
+          polling: true,
+          waitingForReload: false,
+        }),
+        true
+      );
       device.addEventListener('inputreport', get().onReport);
       const timeout = setInterval(() => get().sendKeepAlive(), 10);
-
+      await device.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
       const profileData = await device.receiveFeatureReport(
         proto.ReportId.ReportIdGetActiveProfiles
       );
       const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
         new Uint8Array(profileData.buffer).slice(1)
       );
+      const state = get();
+      if (state.config.profiles![state.currentProfile] != null) {
+        const infoBuffer2 = proto.Command.encode(
+          proto.Command.create({
+            setProfile: proto.SetProfileCommand.create({
+              profileId: state.config.profiles![state.currentProfile].uid,
+            }),
+          })
+        )
+          .ldelim()
+          .finish();
+        let outBuffer2 = new ArrayBuffer(63);
+        new Uint8Array(outBuffer2).set(infoBuffer2);
+        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+      }
       set(
         (state) => ({
           ...state,
-          hidDevice: device,
-          connected: true,
           keepaliveTimeout: timeout,
           activeProfiles: activeProfiles.profiles,
           waitingForReload: false,
@@ -1596,30 +1618,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
         console.log('saving!', start);
         await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
-      await new Promise((r) => setTimeout(r, 500));
       set((state) => {
         state.writing = false;
         state.polling = true;
+        state.waitingForReload = true;
       });
-      await state.hidDevice.sendFeatureReport(
-        proto.ReportId.ReportIdKeepalive,
-        new Uint8Array([0])
-      );
-
-      if (state.config.profiles![state.currentProfile] != null) {
-        const infoBuffer2 = proto.Command.encode(
-          proto.Command.create({
-            setProfile: proto.SetProfileCommand.create({
-              profileId: state.config.profiles![state.currentProfile].uid,
-            }),
-          })
-        )
-          .ldelim()
-          .finish();
-        let outBuffer2 = new ArrayBuffer(63);
-        new Uint8Array(outBuffer2).set(infoBuffer2);
-        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
-      }
+      
     },
     buildConfigBuffer: () => {
       const { config, aux } = get().buildConfig();
@@ -1778,7 +1782,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
           );
           await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
         } catch (e) {
-          console.log(e);
           set(
             (old) => ({
               ...old,
