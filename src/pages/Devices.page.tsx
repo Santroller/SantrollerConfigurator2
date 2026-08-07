@@ -1650,7 +1650,6 @@ function MatrixDevice({ id }: { id: string }) {
   const matrix = device.matrix;
   return (
     <DeviceCard
-      connected={status.connected}
       title="devices.matrix"
       image="covers/devices/matrix.png"
       deleteDevice={() => deleteDevice(id)}
