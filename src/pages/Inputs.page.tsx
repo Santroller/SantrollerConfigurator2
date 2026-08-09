@@ -2209,7 +2209,7 @@ function SantrollerMapping({
             min={mapping.min!}
             max={mapping.max!}
             deadzone={mapping.deadzone!}
-            zeroBased={drum}
+            zeroBased={drum && !!analogInput}
           ></StateSlider>
         )}
         {!simpleMode && (
@@ -4327,6 +4327,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             }
           />
           <Space h="md" />
+          <Switch
+            label={t('mode.cymbalGlitchFix')}
+            checked={!!profile.cymbalGlitchFix}
+            onChange={(event) =>
+              updateProfile({ ...profile, cymbalGlitchFix: event.currentTarget.checked }, profileIdx)
+            }
+          />
+          <Space h="md" />
           <Title order={3}>{t('assignments.title')}</Title>
           <Space h="md" />
 
@@ -4468,9 +4476,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   <Button variant="filled" onClick={open}>
                     Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
                   </Button>
-                  <Button variant="filled" onClick={open2}>
-                    {t('clear_all_button')}
-                  </Button>
                   {Object.values(deviceStatus)
                     .filter(hasDefaults)
                     .map((item) => (
@@ -4478,6 +4483,9 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
                       </Button>
                     ))}
+                  <Button variant="filled" onClick={open2}>
+                    {t('clear_all_button')}
+                  </Button>
                 </Group>
               </Table.Td>
             </Table.Tr>

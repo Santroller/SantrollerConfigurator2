@@ -1,11 +1,11 @@
 {
   "devices": {
     "wii": "Wii Extension",
-    "bhDrum": "Band Hero Drums",
+    "bhDrum": "Band Hero Drum Body",
     "adxl": "ADXL345 Accelerometer",
     "mpu6050": "MPU6050 Accelerometer",
     "lis3dh": "LIS3DH Accelerometer",
-    "worldTourDrum": "World Tour Drums",
+    "worldTourDrum": "World Tour Drum Body",
     "usbHost": "USB Host",
     "max1704x": "MAX1704X",
     "multiplexer": "74HC Style Multiplexer",
@@ -17,6 +17,7 @@
     "peripheral": "Peripheral",
     "gh5Neck": "Guitar Hero 5 Guitar Neck",
     "crkdNeck": "CRKD Guitar Neck",
+    "crkdDrum": "CRKD Drum Body",
     "crazyGuitarNeck": "Crazy Guitar Neck",
     "djhTurntable": "DJ Hero Turntable Platter",
     "wiiEmulation": "Wii Extension Emulation",

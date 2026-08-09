@@ -169,6 +169,8 @@ export function isLed(deviceStatus: DeviceStatus) {
 }
 export function hasDefaults(deviceStatus: DeviceStatus) {
   switch (deviceStatus.type) {
+    case 'crkdDrum':
+      return true;
     case 'crkdNeck':
       return true;
     case 'wii':
