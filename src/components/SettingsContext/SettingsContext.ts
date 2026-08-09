@@ -1446,17 +1446,33 @@ export const useConfigStore = create<ConfigState & Actions>()(
       get().saveConfig();
     },
 
-    disconnect: () =>
+    disconnect: async () => {
+      const state = get();
+      const dev = state.hidDevice;
+      if (dev?.opened) {
+        const infoBuffer2 = proto.Command.encode(
+          proto.Command.create({
+            disconnect: proto.DisconnectCommand.create({}),
+          })
+        )
+          .ldelim()
+          .finish();
+        let outBuffer2 = new ArrayBuffer(63);
+        new Uint8Array(outBuffer2).set(infoBuffer2);
+        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+      }
+      dev?.removeEventListener('inputreport', state.onReport);
+      dev?.close();
+      if (state.keepaliveTimeout) {
+        clearInterval(state.keepaliveTimeout);
+      }
       set((state) => {
-        state.hidDevice?.removeEventListener('inputreport', state.onReport);
-        state.hidDevice?.close();
-        if (state.keepaliveTimeout) {
-          clearInterval(state.keepaliveTimeout);
-        }
+        state.keepaliveTimeout = undefined;;
         state.connected = state.waitingForReload;
         state.updating = false;
         state.hidDevice = undefined;
-      }),
+      });
+    },
     reconnect: async (device: HIDDevice) => {
       if (!device.opened) {
         await device.open();
@@ -1623,7 +1639,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.polling = true;
         state.waitingForReload = true;
       });
-      
     },
     buildConfigBuffer: () => {
       const { config, aux } = get().buildConfig();
