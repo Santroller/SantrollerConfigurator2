@@ -4126,6 +4126,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const loadDefaults = useConfigStore((state) => state.loadDefaults);
   const setSyncMode = useConfigStore((state) => state.setSyncMode);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const [defaultTarget, setDefaultTarget] = useState<DeviceStatus | undefined>(undefined);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
@@ -4168,7 +4169,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           <Group align="flex-end">
             <Button
               onClick={() => {
-                loadDefaults(undefined);
+                loadDefaults(defaultTarget);
                 close();
               }}
               color="red"
@@ -4331,7 +4332,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             label={t('mode.cymbalGlitchFix')}
             checked={!!profile.cymbalGlitchFix}
             onChange={(event) =>
-              updateProfile({ ...profile, cymbalGlitchFix: event.currentTarget.checked }, profileIdx)
+              updateProfile(
+                { ...profile, cymbalGlitchFix: event.currentTarget.checked },
+                profileIdx
+              )
             }
           />
           <Space h="md" />
@@ -4473,13 +4477,26 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   >
                     {t('inputs.add')}
                   </Button>
-                  <Button variant="filled" onClick={open}>
+                  <Button
+                    variant="filled"
+                    onClick={() => {
+                      setDefaultTarget(undefined);
+                      open();
+                    }}
+                  >
                     Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
                   </Button>
                   {Object.values(deviceStatus)
                     .filter(hasDefaults)
                     .map((item) => (
-                      <Button value={item.id} key={item.id} onClick={() => loadDefaults(item)}>
+                      <Button
+                        value={item.id}
+                        key={item.id}
+                        onClick={() => {
+                          setDefaultTarget(item);
+                          open();
+                        }}
+                      >
                         Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
                       </Button>
                     ))}

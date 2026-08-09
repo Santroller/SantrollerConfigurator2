@@ -517,8 +517,8 @@
   },
   "defaults_dialog": {
     "title": "Load defaults",
-    "desc": "Are you sure you wish to load defaults (will remove all inputs)?",
-    "confirm": "Delete device",
+    "desc": "Are you sure you wish to load defaults?",
+    "confirm": "Load defaults",
     "cancel": "Cancel"
   },
   "clear_all_button": "Clear All",

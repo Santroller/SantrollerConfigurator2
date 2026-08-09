@@ -1482,6 +1482,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 );
                 break;
             }
+            break;
           case 'crkdNeck':
             switch (profile.deviceToEmulate) {
               case proto.SubType.GuitarHeroGuitar:
@@ -1790,7 +1791,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
           new Uint8Array(outBuffer2).set(infoBuffer2);
           await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
         } catch (e) {
-          console.error('Failed to send disconnect', e);}
+          console.error('Failed to send disconnect', e);
+        }
       }
       dev?.removeEventListener('inputreport', state.onReport);
       dev?.close();
