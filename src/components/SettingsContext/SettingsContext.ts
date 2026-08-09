@@ -1778,16 +1778,19 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const state = get();
       const dev = state.hidDevice;
       if (dev?.opened) {
-        const infoBuffer2 = proto.Command.encode(
-          proto.Command.create({
-            disconnect: proto.DisconnectCommand.create({}),
-          })
-        )
-          .ldelim()
-          .finish();
-        let outBuffer2 = new ArrayBuffer(63);
-        new Uint8Array(outBuffer2).set(infoBuffer2);
-        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+        try {
+          const infoBuffer2 = proto.Command.encode(
+            proto.Command.create({
+              disconnect: proto.DisconnectCommand.create({}),
+            })
+          )
+            .ldelim()
+            .finish();
+          let outBuffer2 = new ArrayBuffer(63);
+          new Uint8Array(outBuffer2).set(infoBuffer2);
+          await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+        } catch (e) {
+          console.error('Failed to send disconnect', e);}
       }
       dev?.removeEventListener('inputreport', state.onReport);
       dev?.close();
