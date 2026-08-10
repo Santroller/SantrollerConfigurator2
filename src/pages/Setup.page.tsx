@@ -1,30 +1,15 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, FileButton, FileInput, Progress, Space, Text } from '@mantine/core';
+import { Alert, Button, Space, Text } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { buildUf2FromJson, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function SetupPage() {
-  const connect = useConfigStore((state) => state.connect);
-  const disconnect = useConfigStore((state) => state.disconnect);
-  const bootloader = useConfigStore((state) => state.bootloader);
-  const exportConfig = useConfigStore((state) => state.exportConfig);
-  const loadConfig = useConfigStore((state) => state.loadConfig);
-  const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
-  const connected = useConfigStore((state) => state.connected);
-  const updating = useConfigStore((state) => state.updating);
-  const updatePercentage = useConfigStore((state) => state.updatePercentage);
-  const latest = useConfigStore((state) => state.latest);
   const { t } = useTranslation();
   return (
     <>
       <Layout>
         <Alert variant="light" color="red" title="Note" icon={<IconExclamationCircle />}>
-          If you have purchased this device from a seller, it should already have Santroller on it,
-          and you should be able to just use the Connect button. If for some reason you need to
-          reset the device to factory settings, you should ask the Seller for a UF2 file instead of
-          using the ones below, as the Seller can provie a UF2 that has everything set up already,
-          while the UF2 files below are blank and have no configuration.
+          {t('connect.sellerWarning')}
         </Alert>
         <Space h="md" />
         <Alert
@@ -34,12 +19,7 @@ export function SetupPage() {
           icon={<IconExclamationCircle />}
         >
           Santroller 2 is currently not finished. Right now, several features are missing in
-          comparison to the normal tool, and there are likely to be a lot of crashes and unfinished
-          features.
-          <Space h="md" />
-          Disclaimer: There may be situations where your configuration completely wipes itself.
-          There is no documentation right now, and this tool mostly exists for experimental sake,
-          there are currently many bugs and issues.
+          comparison to the normal tool
           <Space h="md" />
           Notable missing features:
           <ul>
@@ -55,65 +35,6 @@ export function SetupPage() {
           </ul>
         </Alert>
 
-        {!navigator.hid && (
-          <Alert
-            variant="light"
-            color="red"
-            title="Browser Unsupported"
-            icon={<IconExclamationCircle />}
-          >
-            This browser does not support WebHID, therefor will not work.
-            <Space h="md" />
-            You need to use a Chromium based browser, Firefox based browsers don't support WebHID.
-          </Alert>
-        )}
-        {navigator.hid && connected && (
-          <>
-            <Space h="md" />
-            <Button disabled={updating} onClick={disconnect}>
-              Disconnect from Santroller
-            </Button>
-            <Space h="md" />
-            <Button disabled={updating} onClick={bootloader}>
-              Jump to Bootloader
-            </Button>
-            <Space h="md" />
-            <Button disabled={updating} onClick={exportConfig}>
-              Export Current Config
-            </Button>
-            <Space h="md" />
-            <FileButton disabled={updating} onChange={loadConfig} accept="application/json">
-              {(props) => (
-                <Button disabled={updating} {...props}>
-                  Load Config from File
-                </Button>
-              )}
-            </FileButton>
-          </>
-        )}
-        <Space h="md" />
-        {navigator.hid && !connected && (
-          <Button disabled={updating} onClick={connect}>
-            Connect to Santroller
-          </Button>
-        )}
-
-        {!latest && connected && (
-          <Alert
-            variant="light"
-            color="red"
-            title="Controller firmware out of date"
-            icon={<IconExclamationCircle />}
-          >
-            Firmware outdated! Click the button below to update!
-            <Space h="md" />
-            <Button disabled={updating} onClick={firmwareUpdate}>
-              Start update
-            </Button>
-            <Progress size="xl" value={updatePercentage}></Progress>
-          </Alert>
-        )}
-
         <Space h="md" />
         <Space h="md" />
         <Text size="h1">{t('getting_started.title')}</Text>
@@ -125,7 +46,7 @@ export function SetupPage() {
           href="santroller_pico1.uf2"
           target="_blank"
         >
-          Download UF2 (Pico 1 / RP2040)
+          {t('connect.downloadPico1')}
         </Button>
         <Space h="md" />
         <Button
@@ -134,7 +55,7 @@ export function SetupPage() {
           href="santroller_pico2.uf2"
           target="_blank"
         >
-          Download UF2 (Pico 2 / RP2350)
+          {t('connect.downloadPico2')}
         </Button>
       </Layout>
     </>

@@ -24,19 +24,17 @@ export function ConnectPage() {
           <Alert
             variant="light"
             color="red"
-            title="Browser Unsupported"
+            title={t('connect.browserNotSupported')}
             icon={<IconExclamationCircle />}
           >
-            This browser does not support WebHID, therefore it will not work.
-            <Space h="md" />
-            You need to use a Chromium based browser, Firefox based browsers don't support WebHID.
+            {t('connect.webHidNotSupported')}
           </Alert>
         )}
         {navigator.hid && connected && (
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={disconnect}>
-              Disconnect from Santroller
+            {t('connect.disconnect')}
             </Button>
           </>
         )}
@@ -44,20 +42,20 @@ export function ConnectPage() {
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={bootloader}>
-              Jump to Bootloader
+            {t('connect.bootloader')}
             </Button>
             <Space h="md" />
-            <Button disabled={updating} onClick={exportConfig}>Export Current Config</Button>
+            <Button disabled={updating} onClick={exportConfig}>{t('connect.export')}</Button>
             <Space h="md" />
             <FileButton disabled={updating} onChange={loadConfig} accept="application/json">
-              {(props) => <Button disabled={updating}  {...props}>Load Config from File</Button>}
+              {(props) => <Button disabled={updating}  {...props}>{t('connect.load')}</Button>}
             </FileButton>
           </>
         )}
         <Space h="md" />
         {navigator.hid && !connected && (
           <Button disabled={updating} onClick={connect}>
-            Connect to a Santroller powered device
+            {t('connect.connect')}
           </Button>
         )}
 
@@ -68,9 +66,9 @@ export function ConnectPage() {
             title="Controller firmware out of date"
             icon={<IconExclamationCircle />}
           >
-            Firmware outdated! Click the button below to update!
+            {t('connect.outdated')}
             <Space h="md" />
-            <Button disabled={updating} onClick={firmwareUpdate}>Start update</Button>
+            <Button disabled={updating} onClick={firmwareUpdate}>{t('connect.startUpdate')}</Button>
             <Progress size="xl" value={updatePercentage}></Progress>
           </Alert>
         )}

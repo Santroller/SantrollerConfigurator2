@@ -1932,10 +1932,10 @@ export function DevicesPage() {
 
               <Menu.Dropdown>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={open}>
-                  Add Device
+                  {t('add_device_dialog.title')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconTrash size={14} />} onClick={deleteAllDevices}>
-                  Remove all devices
+                  {t('add_device_dialog.remove_all')}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

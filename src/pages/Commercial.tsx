@@ -37,14 +37,13 @@ export function CommercialToolPage() {
             <Alert
               variant="light"
               color="red"
-              title="Invalid account"
+              title={t('commercial.invalid')}
               icon={<IconExclamationCircle />}
             >
-              The account you are logged in with does not have access to this tool. Please check you
-              are paying for the correct tier on GitHub to access the tool.
+              {t('commercial.incorrectAccount')}
             </Alert>
             <Space h="md" />
-            <Button onClick={login}>Login with github</Button>
+            <Button onClick={login}>{t('commercial.login')}</Button>
           </Layout>
         </>
       );
@@ -55,14 +54,13 @@ export function CommercialToolPage() {
           <Alert
             variant="light"
             color="red"
-            title="Invalid account"
+              title={t('commercial.invalid')}
             icon={<IconExclamationCircle />}
           >
-            This page is for commercial users who are building custom tools for devices they are
-            selling. If you are just a user, please use the normal tool.
+            {t('commercial.notLoggedIn')}
           </Alert>
           <Space h="md" />
-          <Button onClick={login}>Login with github</Button>
+          <Button onClick={login}>{t('commercial.login')}</Button>
         </Layout>
       );
     }
@@ -75,10 +73,10 @@ export function CommercialToolPage() {
           <Alert
             variant="light"
             color="red"
-            title="Device required"
+            title={t('commercial.requiredDevice.title')}
             icon={<IconExclamationCircle />}
           >
-            Configuring this tool requires a connected device.
+            {t('commercial.requiredDevice.description')}
           </Alert>
         )}
         {navigator.hid && !connected && (
@@ -93,21 +91,21 @@ export function CommercialToolPage() {
           <>
             <Space h="md" />
             {simpleMode ? (
-              <Button onClick={() => setSimpleMode(false)}>Show full version of tool</Button>
+              <Button onClick={() => setSimpleMode(false)}>{t('commecrial.showFull')}</Button>
             ) : (
-              <Button onClick={() => setSimpleMode(true)}>Show customer version of tool</Button>
+              <Button onClick={() => setSimpleMode(true)}>{t('commecrial.showCustomer')}</Button>
             )}
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(false)}>
-              Build UF2 from Current Config (Pico 1 / RP2040)
+             {t('commecrial.buildUf2Pico')}
             </Button>
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(true)}>
-              Build UF2 from Current Config (Pico 2 / RP2350)
+             {t('commecrial.buildUf2Pico2')}
             </Button>
             <Space h="md" />
             <TextInput
-              label="Tool name"
+              label={t('commecrial.toolName')}
               value={toolInfo?.name ?? ''}
               onChange={(event) => setSellerToolName(event.currentTarget.value)}
             />
@@ -119,7 +117,7 @@ export function CommercialToolPage() {
             >
               {(props) => (
                 <Button disabled={updating} {...props}>
-                  Tool Logo
+                  {t('commecrial.toolLogo')}
                 </Button>
               )}
             </FileButton>

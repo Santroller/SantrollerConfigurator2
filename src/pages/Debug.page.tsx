@@ -9,6 +9,7 @@ import { useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 const MIDI_NOTE_OFF = 0x80;
 const MIDI_NOTE_ON = 0x90;
@@ -19,19 +20,20 @@ const MIDI_CHANNEL_PRESSURE = 0xD0;
 const MIDI_PITCH_BEND_CHANGE = 0xE0;
 const MIDI_SYSEX = 0xF0;
 const types: { [key: number]: string } = {
-  [MIDI_NOTE_OFF]: 'Note Off',
-  [MIDI_NOTE_ON]: 'Note On',
-  [MIDI_POLY_KEYPRESS]: 'Poly Key Pressure',
-  [MIDI_CONTROL_CHANGE]: 'Control Change',
-  [MIDI_PROGRAM_CHANGE]: 'Program Change',
-  [MIDI_CHANNEL_PRESSURE]: 'Channel Pressure',
-  [MIDI_PITCH_BEND_CHANGE]: 'Pitch Bend Change',
-  [MIDI_SYSEX]: 'SysEx',
+  [MIDI_NOTE_OFF]: 'noteOff',
+  [MIDI_NOTE_ON]: 'noteOn',
+  [MIDI_POLY_KEYPRESS]: 'polyAftertouch',
+  [MIDI_CONTROL_CHANGE]: 'controlChange',
+  [MIDI_PROGRAM_CHANGE]: 'programChange',
+  [MIDI_CHANNEL_PRESSURE]: 'channelAftertouch',
+  [MIDI_PITCH_BEND_CHANGE]: 'pitchBend',
+  [MIDI_SYSEX]: 'sysEx',
 };
 function MidiRow({ data, i }: { data: number[]; i: number }) {
+  const { t } = useTranslation();
   return (
     <Table.Tr key={i}>
-      <Table.Td>{types[data[0] & 0xf0] || 'Unknown'}</Table.Td>
+      <Table.Td>{t(types[data[0] & 0xf0] || 'unknown')}</Table.Td>
       <Table.Td>{(data[0] & 0x0f) + 1}</Table.Td>
       <Table.Td>
         <Text>
@@ -50,6 +52,7 @@ export function DebugPage() {
   const consoleData = useConfigStore((state) => state.console);
   const clearMidi = useConfigStore((state) => state.clearMidi);
   const clearConsole = useConfigStore((state) => state.clearConsole);
+  const { t } = useTranslation();
   const mounted = useMounted();
   if (!mounted) {
     return <Loader></Loader>;
@@ -58,15 +61,15 @@ export function DebugPage() {
     <>
       <Layout>
         <RequireDevice>
-          <Text>Logs</Text> <Button onClick={clearConsole}>Clear</Button>
+          <Text>{t('debug.title')}</Text> <Button onClick={clearConsole}>{t('debug.clear')}</Button>
           <Code block>{consoleData}</Code>
-          <Text>MIDI Monitor</Text> <Button onClick={clearMidi}>Clear</Button>
+          <Text>{t('midi.title')}</Text> <Button onClick={clearMidi}>{t('midi.clear')}</Button>
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Type</Table.Th>
-                <Table.Th>Channel</Table.Th>
-                <Table.Th>Data</Table.Th>
+                <Table.Th>{t('midi.type')}</Table.Th>
+                <Table.Th>{t('midi.channel')}</Table.Th>
+                <Table.Th>{t('midi.data')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

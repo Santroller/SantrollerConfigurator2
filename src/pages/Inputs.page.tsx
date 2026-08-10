@@ -87,6 +87,13 @@ import { proto } from '@/components/SettingsContext/config';
 import { DeviceStatus, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
 
+const ps4Subtypes = [
+  proto.SubType.GuitarHeroDrums,
+  proto.SubType.RockBandDrums,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+];
+
 function StateLabelLabel({
   profileIdx,
   mappingIdx,
@@ -368,11 +375,13 @@ function OutputBox({
   mapping,
   type,
   mode,
+  legendMode,
   dispatch,
 }: {
   mapping: proto.IMapping;
   type: proto.SubType;
   mode: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   dispatch: (mapping: proto.IMapping) => void;
 }) {
   const outputCombobox = useCombobox({
@@ -387,6 +396,7 @@ function OutputBox({
           label="outputs"
           title="output"
           mode={mode}
+          legendMode={legendMode}
           e={proto.GamepadAxisType}
           e2={proto.GamepadButtonType}
           val={mapping.gamepadAxis!}
@@ -415,6 +425,7 @@ function OutputBox({
           e2={proto.GuitarHeroGuitarButtonType}
           val={mapping.ghAxis!}
           val2={mapping.ghButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               min: 0,
@@ -439,6 +450,7 @@ function OutputBox({
           e2={proto.RockBandGuitarButtonType}
           val={mapping.rbAxis!}
           val2={mapping.rbButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               center: proto.RockBandGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
@@ -462,6 +474,7 @@ function OutputBox({
           title="output"
           e={proto.GuitarHeroDrumsAxisType}
           e2={proto.GuitarHeroDrumsButtonType}
+          legendMode={legendMode}
           val={mapping.ghDrumAxis!}
           val2={mapping.ghDrumButton!}
           dispatch={(axis) =>
@@ -489,6 +502,7 @@ function OutputBox({
           e2={proto.RockBandDrumsButtonType}
           val={mapping.rbDrumAxis!}
           val2={mapping.rbDrumButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               center: proto.RockBandDrumsAxisType[axis].includes('Stick') ? 32767 : 0,
@@ -514,6 +528,7 @@ function OutputBox({
           e2={proto.GuitarHeroLiveGuitarButtonType}
           val={mapping.ghlAxis!}
           val2={mapping.ghlButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               center: proto.GuitarHeroLiveGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
@@ -539,6 +554,7 @@ function OutputBox({
           e2={proto.DJHTurntableButtonType}
           val={mapping.djhAxis!}
           val2={mapping.djhButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               center: 32767,
@@ -565,6 +581,7 @@ function OutputBox({
           e2={proto.ProGuitarButtonType}
           val={mapping.proAxis!}
           val2={mapping.proButton!}
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
               center: proto.ProGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
@@ -616,12 +633,14 @@ function DropdownBox<T extends StandardEnum<unknown>>({
   val,
   title,
   label,
+  description,
   dispatch,
 }: {
   e: T;
   val: T[keyof T];
   title: string;
   label: string;
+  description?: string;
   dispatch: (input: T[keyof T]) => void;
 }) {
   const { t } = useTranslation();
@@ -643,6 +662,7 @@ function DropdownBox<T extends StandardEnum<unknown>>({
       <Combobox.Target>
         <InputBase
           label={t(title)}
+          description={description && t(description)}
           component="button"
           type="button"
           pointer
@@ -659,11 +679,13 @@ function DropdownBox<T extends StandardEnum<unknown>>({
       <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
         <Combobox.Options>
           {inputCombobox.dropdownOpened &&
-            Object.keys(e).map((item) => (
-              <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item}>
-                {t(`${label}.${item}`)}
-              </Combobox.Option>
-            ))}
+            Object.keys(e)
+              .filter((e) => isNaN(Number(e)))
+              .map((item) => (
+                <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item}>
+                  {t(`${label}.${item}`)}
+                </Combobox.Option>
+              ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -679,6 +701,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   title,
   label,
   mode,
+  legendMode,
   midi,
   dispatch,
   dispatch2,
@@ -692,6 +715,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   title: string;
   label: string;
   mode?: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   midi?: boolean;
   dispatch: (input: T[keyof T]) => void;
   dispatch2: (input: T2[keyof T2]) => void;
@@ -703,31 +727,32 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
       inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string;
-  const base = mode ? (
-    <InputBase
-      label={t(title)}
-      component="button"
-      type="button"
-      pointer
-      rightSection={<Combobox.Chevron />}
-      rightSectionPointerEvents="none"
-      onClick={() => inputCombobox.toggleDropdown()}
-    >
-      {t(`${label}.${FixLabel(mode, v)}`)}
-    </InputBase>
-  ) : (
-    <InputBase
-      label={t(title)}
-      component="button"
-      type="button"
-      pointer
-      rightSection={<Combobox.Chevron />}
-      rightSectionPointerEvents="none"
-      onClick={() => inputCombobox.toggleDropdown()}
-    >
-      {t(`${label}.${v}`)}
-    </InputBase>
-  );
+  const base =
+    label == 'outputs' ? (
+      <InputBase
+        label={t(title)}
+        component="button"
+        type="button"
+        pointer
+        rightSection={<Combobox.Chevron />}
+        rightSectionPointerEvents="none"
+        onClick={() => inputCombobox.toggleDropdown()}
+      >
+        {t(`${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, v, legendMode)}`)}
+      </InputBase>
+    ) : (
+      <InputBase
+        label={t(title)}
+        component="button"
+        type="button"
+        pointer
+        rightSection={<Combobox.Chevron />}
+        rightSectionPointerEvents="none"
+        onClick={() => inputCombobox.toggleDropdown()}
+      >
+        {t(`${label}.${v}`)}
+      </InputBase>
+    );
   return (
     <Combobox
       store={inputCombobox}
@@ -782,13 +807,17 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
           {e &&
             Object.keys(e).map((item) => (
               <Combobox.Option value={item} key={item} selected={item == v}>
-                {t(`${label}.${item}`)}
+                {t(
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
+                )}
               </Combobox.Option>
             ))}
           {e2 &&
             Object.keys(e2).map((item) => (
               <Combobox.Option value={item} key={item} selected={item == v}>
-                {t(`${label}.${item}`)}
+                {t(
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
+                )}
               </Combobox.Option>
             ))}
         </Combobox.Options>
@@ -797,19 +826,104 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   );
 }
 
-function FixLabel(mode: proto.FaceButtonMappingMode, label: string) {
+function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
+  if (
+    proto.GamepadButtonType[
+      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadButtonType
+    ] !== undefined
+  ) {
+    label = `Gamepad_${label.split('_')[1]}`;
+  }
+  if (
+    proto.GamepadAxisType[
+      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadAxisType
+    ] !== undefined
+  ) {
+    label = `Gamepad_${label.split('_')[1]}`;
+  }
   if (mode == proto.FaceButtonMappingMode.PositionBased) {
-    if (label == 'GamepadA') {
-      return 'GamepadSouth';
+    if (label == 'Gamepad_A') {
+      return 'Generic/Gamepad_South';
     }
-    if (label == 'GamepadB') {
-      return 'GamepadEast';
+    if (label == 'Gamepad_B') {
+      return 'Generic/Gamepad_East';
     }
-    if (label == 'GamepadX') {
-      return 'GamepadWest';
+    if (label == 'Gamepad_X') {
+      return 'Generic/Gamepad_West';
     }
-    if (label == 'GamepadY') {
-      return 'GamepadNorth';
+    if (label == 'Gamepad_Y') {
+      return 'Generic/Gamepad_North';
+    }
+  }
+  if (label.startsWith('Gamepad_')) {
+    switch (legendMode) {
+      case LegendMode.Nintendo:
+        return `Nintendo/${label}`;
+      case LegendMode.PlayStation:
+        return `PlayStation/${label}`;
+      case LegendMode.Xbox360:
+        return `Xbox360/${label}`;
+      case LegendMode.XboxOne:
+        return `XboxOne/${label}`;
+    }
+  }
+  return label;
+}
+function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
+  if (
+    proto.GamepadButtonType[
+      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadButtonType
+    ] !== undefined
+  ) {
+    label = `Gamepad_${label.split('_')[1]}`;
+  }
+  if (
+    proto.GamepadAxisType[
+      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadAxisType
+    ] !== undefined
+  ) {
+    label = `Gamepad_${label.split('_')[1]}`;
+  }
+  if (mode == proto.FaceButtonMappingMode.PositionBased) {
+    if (label == 'Gamepad_A') {
+      return 'Gamepad_South';
+    }
+    if (label == 'Gamepad_B') {
+      return 'Gamepad_East';
+    }
+    if (label == 'Gamepad_X') {
+      return 'Gamepad_West';
+    }
+    if (label == 'Gamepad_Y') {
+      return 'Gamepad_North';
+    }
+  }
+  if (label.startsWith('Gamepad_')) {
+    switch (label) {
+      case 'Gamepad_A':
+      case 'Gamepad_B':
+      case 'Gamepad_X':
+      case 'Gamepad_Y':
+      case 'Gamepad_Back':
+      case 'Gamepad_Start':
+      case 'Gamepad_Guide':
+      case 'Gamepad_Capture':
+      case 'Gamepad_LeftShoulder':
+      case 'Gamepad_RightShoulder':
+      case 'Gamepad_LeftTrigger':
+      case 'Gamepad_RightTrigger':
+        switch (legendMode) {
+          case LegendMode.Nintendo:
+            return `Nintendo.${label}`;
+          case LegendMode.PlayStation:
+            return `PlayStation.${label}`;
+          case LegendMode.Xbox360:
+            return `Xbox360.${label}`;
+          case LegendMode.XboxOne:
+            return `XboxOne.${label}`;
+        }
+      default:
+        return `Generic.${label}`;
     }
   }
   return label;
@@ -849,7 +963,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
         if (labelsText) {
           return <Text>{labelsText}</Text>;
         }
-        return <Text>{t('ads1115.channel', { channel: input.ads1115?.channel })}</Text>;
+        return <Text>{t('multiplexer.channel', { channel: input.ads1115?.channel })}</Text>;
       case 'multiplexer':
         const labelsText2 = getMultiplexerLabel(
           t,
@@ -904,6 +1018,7 @@ function SantrollerInput({
   input,
   axis,
   button,
+  legendMode,
   mappingIdx,
   activationIdx,
   ledIdx,
@@ -913,6 +1028,7 @@ function SantrollerInput({
   input: proto.IInput;
   axis: boolean;
   button: boolean;
+  legendMode: LegendMode;
   mappingIdx?: number;
   activationIdx?: number;
   ledIdx?: number;
@@ -992,24 +1108,6 @@ function SantrollerInput({
       </Group>
     );
     if (simpleMode) {
-      // const label =
-      //   proto.AccelerometerInputType[input.accelerometer?.type ?? -1] ||
-      //   proto.WiiAxisType[input.wiiAxis?.axis ?? -1] ||
-      //   proto.WiiButtonType[input.wiiButton?.button ?? -1] ||
-      //   proto.PS2AxisType[input.ps2Axis?.axis ?? -1] ||
-      //   proto.PS2ButtonType[input.ps2Button?.button ?? -1] ||
-      //   proto.CrkdNeckButtonType[input.crkd?.button ?? -1] ||
-      //   proto.CrkdDrumAxisType[input.crkdDrum?.axis ?? -1] ||
-      //   proto.Gh5NeckButtonType[input.gh5Neck?.button ?? -1] ||
-      //   proto.ProGuitarAxisType[input.midiProGuitarAxis?.axis ?? -1] ||
-      //   proto.ProGuitarButtonType[input.midiProGuitarButton?.button ?? -1] ||
-      //   proto.ProGuitarNeckAxisType[input.protarNeckAxis?.axis ?? -1] ||
-      //   proto.ProGuitarNeckButtonType[input.protarNeckButton?.button ?? -1] ||
-      //   proto.UsbButtonType[input.usbButton?.button ?? -1] ||
-      //   proto.UsbAxisType[input.usbAxis?.axis ?? -1];
-      // if (label) {
-      //   return <Text>{t(`inputs.${label}`)}</Text>;
-      // }
       switch (device.type) {
         case 'ads1115':
           const labelsText = getMultiplexerLabel(
@@ -1022,7 +1120,7 @@ function SantrollerInput({
           if (labelsText) {
             return <Text>{labelsText}</Text>;
           }
-          return <Text>{t('ads1115.channel', { channel: input.ads1115?.channel })}</Text>;
+          return <Text>{t('multiplexer.channel', { channel: input.ads1115?.channel })}</Text>;
         case 'multiplexer':
           const labelsText2 = getMultiplexerLabel(
             t,
@@ -1299,7 +1397,7 @@ function SantrollerInput({
         >
           <Combobox.Target>
             <InputBase
-              label="Device"
+              label={t('device')}
               component="button"
               type="button"
               pointer
@@ -1355,7 +1453,7 @@ function SantrollerInput({
         </Combobox>
       )) || (
         <InputBase
-          label="Device"
+          label={t('device')}
           component="button"
           type="button"
           pointer
@@ -1417,6 +1515,7 @@ function SantrollerInput({
               <SantrollerInput
                 axis={!!axis}
                 button={!!button}
+                legendMode={legendMode}
                 input={innerInput}
                 dispatch={(changed) =>
                   dispatch({
@@ -1444,6 +1543,7 @@ function SantrollerInput({
           <SantrollerInput
             axis={!!axis}
             button={!!button}
+            legendMode={legendMode}
             input={input.held.input}
             dispatch={(changed) =>
               dispatch({
@@ -1483,6 +1583,7 @@ function SantrollerInput({
             <SantrollerInput
               axis={!!axis}
               button={!!button}
+              legendMode={legendMode}
               input={input.cycle.input}
               dispatch={(changed) =>
                 dispatch({
@@ -1514,6 +1615,7 @@ function SantrollerInput({
             <SantrollerInput
               axis={!!axis}
               button={!!button}
+              legendMode={legendMode}
               input={input.cycle.inputReverse}
               dispatch={(changed) =>
                 dispatch({
@@ -1550,6 +1652,7 @@ function SantrollerInput({
             <SantrollerInput
               axis={!!axis}
               button={!!button}
+              legendMode={legendMode}
               input={input.toggle.input}
               dispatch={(changed) =>
                 dispatch({
@@ -1583,6 +1686,7 @@ function SantrollerInput({
           }
           label={`${device?.type}.inputs`}
           midi
+          legendMode={legendMode}
           dispatch={(axis) => {}}
           dispatch2={(button) => {}}
           dispatch3={(type) => {
@@ -1610,7 +1714,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarButton: {
                     ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    button: proto.ProGuitarButtonType.ProGuitar_A,
                     deviceid: deviceId,
                   },
                 });
@@ -1619,7 +1723,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarAxis: {
                     ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
                     deviceid: deviceId,
                   },
                 });
@@ -1633,6 +1737,7 @@ function SantrollerInput({
           title="input"
           e={proto.WiiAxisType}
           e2={proto.WiiButtonType}
+          legendMode={legendMode}
           val={input.wiiAxis?.axis}
           val2={input.wiiButton?.button}
           val3={
@@ -1681,7 +1786,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarButton: {
                     ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    button: proto.ProGuitarButtonType.ProGuitar_A,
                     deviceid: deviceId,
                   },
                 });
@@ -1690,7 +1795,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarAxis: {
                     ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
                     deviceid: deviceId,
                   },
                 });
@@ -1707,6 +1812,7 @@ function SantrollerInput({
           val={input.ps2Axis?.axis}
           val2={input.ps2Button?.button}
           label="ps2.inputs"
+          legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({ ps2Axis: { ...input.ps2Axis!, axis, deviceid: deviceId } })
           }
@@ -1721,6 +1827,7 @@ function SantrollerInput({
           title="input"
           e={proto.UsbAxisType}
           e2={proto.UsbButtonType}
+          legendMode={legendMode}
           val={input.usbAxis?.axis}
           val2={input.usbButton?.button}
           val3={
@@ -1768,7 +1875,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarButton: {
                     ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitarA,
+                    button: proto.ProGuitarButtonType.ProGuitar_A,
                     deviceid: deviceId,
                   },
                 });
@@ -1777,7 +1884,7 @@ function SantrollerInput({
                 dispatch({
                   midiProGuitarAxis: {
                     ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitarAFret,
+                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
                     deviceid: deviceId,
                   },
                 });
@@ -1791,7 +1898,7 @@ function SantrollerInput({
           title="input"
           e={proto.CrkdNeckButtonType}
           val={input.crkd?.button}
-          label="crkd.inputs"
+          label="inputs"
           dispatch={(button) => dispatch({ crkd: { ...input.crkd!, button } })}
         ></DropdownBox>
       )}
@@ -1800,7 +1907,7 @@ function SantrollerInput({
           title="input"
           e={proto.CrkdDrumAxisType}
           val={input.crkdDrum?.axis}
-          label="crkd_drum.inputs"
+          label="inputs"
           dispatch={(axis) => dispatch({ crkdDrum: { ...input.crkdDrum!, axis } })}
         ></DropdownBox>
       )}
@@ -1809,7 +1916,7 @@ function SantrollerInput({
           title="input"
           e={proto.Gh5NeckButtonType}
           val={input.gh5Neck?.button}
-          label="gh5Neck.inputs"
+          label="inputs"
           dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
         ></DropdownBox>
       )}
@@ -1904,7 +2011,7 @@ function SantrollerInput({
             >
               <Combobox.Target>
                 <InputBase
-                  label="Channel"
+                  label={t('multiplexer.channel_label')}
                   component="button"
                   type="button"
                   pointer
@@ -1912,22 +2019,23 @@ function SantrollerInput({
                   rightSectionPointerEvents="none"
                   onClick={() => pinModeCombobox.toggleDropdown()}
                 >
-                  {input.ads1115.channel}
+                  {t('multiplexer.channel', { channel: input.ads1115.channel })}
                 </InputBase>
               </Combobox.Target>
 
               <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
                 <Combobox.Options>
-                  <Combobox.Option value="0">Channel 0</Combobox.Option>
-                  <Combobox.Option value="1">Channel 1</Combobox.Option>
-                  <Combobox.Option value="2">Channel 2</Combobox.Option>
-                  <Combobox.Option value="3">Channel 3</Combobox.Option>
+                  {[...Array(4)].map((_, i) => (
+                    <Combobox.Option key={i} value={i.toString()}>
+                      {t('multiplexer.channel', { channel: i + 1 })}
+                    </Combobox.Option>
+                  ))}
                 </Combobox.Options>
               </Combobox.Dropdown>
             </Combobox>
           )) || (
             <InputBase
-              label="Channel"
+              label={t('multiplexer.channel_label')}
               component="button"
               type="button"
               pointer
@@ -1935,7 +2043,7 @@ function SantrollerInput({
               rightSectionPointerEvents="none"
               onClick={() => pinModeCombobox.toggleDropdown()}
             >
-              {input.ads1115.channel}
+              {t('multiplexer.channel', { channel: input.ads1115.channel })}
             </InputBase>
           )}
         </>
@@ -1958,7 +2066,7 @@ function SantrollerInput({
             >
               <Combobox.Target>
                 <InputBase
-                  label="Channel"
+                  label={t('multiplexer.channel_label')}
                   component="button"
                   type="button"
                   pointer
@@ -1966,39 +2074,23 @@ function SantrollerInput({
                   rightSectionPointerEvents="none"
                   onClick={() => pinModeCombobox.toggleDropdown()}
                 >
-                  {input.multiplexer.channel}
+                  {t('multiplexer.channel', { channel: input.multiplexer.channel })}
                 </InputBase>
               </Combobox.Target>
 
               <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
                 <Combobox.Options>
-                  <Combobox.Option value="0">Channel 0</Combobox.Option>
-                  <Combobox.Option value="1">Channel 1</Combobox.Option>
-                  <Combobox.Option value="2">Channel 2</Combobox.Option>
-                  <Combobox.Option value="3">Channel 3</Combobox.Option>
-                  <Combobox.Option value="4">Channel 4</Combobox.Option>
-                  <Combobox.Option value="5">Channel 5</Combobox.Option>
-                  <Combobox.Option value="6">Channel 6</Combobox.Option>
-                  <Combobox.Option value="7">Channel 7</Combobox.Option>
-
-                  {device.device.multiplexer?.sixteenChannel && (
-                    <>
-                      <Combobox.Option value="8">Channel 8</Combobox.Option>
-                      <Combobox.Option value="9">Channel 9</Combobox.Option>
-                      <Combobox.Option value="10">Channel 10</Combobox.Option>
-                      <Combobox.Option value="11">Channel 11</Combobox.Option>
-                      <Combobox.Option value="12">Channel 12</Combobox.Option>
-                      <Combobox.Option value="13">Channel 13</Combobox.Option>
-                      <Combobox.Option value="14">Channel 14</Combobox.Option>
-                      <Combobox.Option value="15">Channel 15</Combobox.Option>
-                    </>
-                  )}
+                  {[...Array(device.device.multiplexer?.sixteenChannel ? 16 : 8)].map((_, i) => (
+                    <Combobox.Option key={i} value={i.toString()}>
+                      {t('multiplexer.channel', { channel: i + 1 })}
+                    </Combobox.Option>
+                  ))}
                 </Combobox.Options>
               </Combobox.Dropdown>
             </Combobox>
           )) || (
             <InputBase
-              label="Channel"
+              label={t('multiplexer.channel_label')}
               component="button"
               type="button"
               pointer
@@ -2006,7 +2098,7 @@ function SantrollerInput({
               rightSectionPointerEvents="none"
               onClick={() => pinModeCombobox.toggleDropdown()}
             >
-              {input.multiplexer.channel}
+              {t('multiplexer.channel', { channel: input.multiplexer.channel })}
             </InputBase>
           )}
         </>
@@ -2105,6 +2197,7 @@ function SantrollerMapping({
   profileIdx,
   mappingIdx,
   mode,
+  legendMode,
   dispatch,
   deleteInput,
   copyInput,
@@ -2114,6 +2207,7 @@ function SantrollerMapping({
   profileIdx: number;
   mappingIdx: number;
   mode: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   dispatch: (mapping: proto.IMapping) => void;
   deleteInput: () => void;
   copyInput: () => void;
@@ -2146,8 +2240,8 @@ function SantrollerMapping({
     proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
     proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
 
-  let fixedLabel = FixLabel(mode, label);
-  let img = `Icons/Input/${fixedLabel}.png`;
+  let fixedLabel = FixLabel(mode, label, legendMode);
+  let img = `Icons/Input/${FixIcon(mode, label, legendMode)}.png`;
   const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = Object.entries(mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
@@ -2214,12 +2308,19 @@ function SantrollerMapping({
         )}
         {!simpleMode && (
           <>
-            <OutputBox dispatch={dispatch} type={type} mode={mode} mapping={mapping}></OutputBox>
+            <OutputBox
+              dispatch={dispatch}
+              type={type}
+              mode={mode}
+              mapping={mapping}
+              legendMode={legendMode}
+            ></OutputBox>
             <Space h="md" />
             <SantrollerInput
               axis={!!axis}
               button={!!button}
               input={mapping.input}
+              legendMode={legendMode}
               dispatch={(input) => {
                 dispatch({
                   ...mapping,
@@ -2608,6 +2709,7 @@ function SantrollerLed({
   profileIdx,
   ledIdx,
   mode,
+  legendMode,
   dispatch,
   deleteLed,
   copyInput,
@@ -2617,6 +2719,7 @@ function SantrollerLed({
   profileIdx: number;
   ledIdx: number;
   mode: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   dispatch: (led: proto.ILed) => void;
   deleteLed: () => void;
   copyInput: () => void;
@@ -2676,7 +2779,7 @@ function SantrollerLed({
           proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
           proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
 
-        let fixedLabel = FixLabel(mode, label);
+        let fixedLabel = FixLabel(mode, label, legendMode);
         return `Icons/Input/${fixedLabel}.png`;
       }
     }
@@ -2871,7 +2974,7 @@ function SantrollerLed({
               >
                 <Combobox.Target>
                   <InputBase
-                    label="LED Device"
+                    label={t('leds.device')}
                     component="button"
                     type="button"
                     pointer
@@ -2925,7 +3028,7 @@ function SantrollerLed({
               </Combobox>
             )) || (
               <InputBase
-                label="LED Device"
+                label={t('leds.device')}
                 component="button"
                 type="button"
                 pointer
@@ -2987,7 +3090,7 @@ function SantrollerLed({
               >
                 <Combobox.Target>
                   <InputBase
-                    label="LED Mode"
+                    label={t('leds.mode')}
                     component="button"
                     type="button"
                     pointer
@@ -3009,7 +3112,7 @@ function SantrollerLed({
               </Combobox>
             )) || (
               <InputBase
-                label="LED Mode"
+                label={t('leds.mode')}
                 component="button"
                 type="button"
                 pointer
@@ -3046,7 +3149,7 @@ function SantrollerLed({
             )}
             {led.device.vtechExpander && (
               <MultiSelect
-                label="Leds"
+                label={t('leds.label')}
                 value={Array.from(Array(8).keys())
                   .filter((x) => led.device.vtechExpander?.activeLed! & (1 << x))
                   .map((x) => x.toString())}
@@ -3089,6 +3192,7 @@ function SantrollerLed({
                 <SantrollerInput
                   axis={!!analog}
                   button={!analog}
+                  legendMode={legendMode}
                   input={led.mapping.inputMapping?.input}
                   dispatch={(input) => {
                     dispatch({
@@ -3213,7 +3317,7 @@ function SantrollerLed({
                   <Space h="md" />
                   <Group grow>
                     <ColorInput
-                      label="Released Colour"
+                      label={t('leds.released')}
                       placeholder="Input placeholder"
                       format="rgba"
                       value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb?.startW! / 255).toFixed(2)})`}
@@ -3254,7 +3358,7 @@ function SantrollerLed({
                           })
                         }
                       >
-                        Copy to pressed
+                        {t('leds.copyToPressed')}
                       </Button>
                     </Input.Wrapper>
                   </Group>
@@ -3265,7 +3369,7 @@ function SantrollerLed({
             {led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
               <Group grow>
                 <ColorInput
-                  label={led.mapping.staticMapping ? 'Colour' : 'Pressed Colour'}
+                  label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
                   placeholder="Input placeholder"
                   format="rgba"
                   value={`rgba(${led.device.rgb?.endR}, ${led.device.rgb?.endG}, ${led.device.rgb?.endB}, ${(led.device.rgb?.endW! / 255).toFixed(2)})`}
@@ -3307,7 +3411,7 @@ function SantrollerLed({
                         })
                       }
                     >
-                      Copy to released
+                      {t('leds.copyToReleased')}
                     </Button>
                   </Input.Wrapper>
                 )}
@@ -3328,7 +3432,7 @@ function SantrollerLed({
               raw
               ledBased
             ></StateSlider>
-            <Text size="sm">Min</Text>
+            <Text size="sm">{t('calibration.min')}</Text>
             <Slider
               value={led.mapping.inputMapping!.min!}
               min={0}
@@ -3360,7 +3464,7 @@ function SantrollerLed({
             >
               {t('pin_use_current')}
             </Button>
-            <Text size="sm">Max</Text>
+            <Text size="sm">{t('calibration.max')}</Text>
             <Slider
               value={led.mapping.inputMapping!.max!}
               min={0}
@@ -3451,7 +3555,7 @@ function ActivationTrigger({
   return (
     <Accordion>
       <Accordion.Item value="main">
-        <Accordion.Control>Button Mapping</Accordion.Control>
+        <Accordion.Control>{t('calibration.buttonMapping')}</Accordion.Control>
         <Accordion.Panel>
           <>
             <DropdownBox
@@ -3582,6 +3686,7 @@ function SantrollerAssignment({
   listIdx,
   activationIdx,
   mode,
+  legendMode,
   filterSingle,
   dispatch,
   deleteAssignment,
@@ -3592,6 +3697,7 @@ function SantrollerAssignment({
   listIdx: number;
   activationIdx: number;
   mode: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   filterSingle: boolean;
   dispatch: (mapping: proto.IProfileAssignmentInfo) => void;
   deleteAssignment: () => void;
@@ -3610,7 +3716,7 @@ function SantrollerAssignment({
   const base = useMemo(
     () => (
       <InputBase
-        label="Assignment Type"
+        label={t('assignments.type')}
         component="button"
         type="button"
         pointer
@@ -3727,24 +3833,24 @@ function SantrollerAssignment({
 
           <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
             <Combobox.Options>
-              <Combobox.Group label="Generic">
+              <Combobox.Group label={t('assignments.generic')}>
                 {OtherAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item)} />
+                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
-              <Combobox.Group label="Host (Connecting something to this device)">
+              <Combobox.Group label={t('assignments.host')}>
                 {HostProfileAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item)} />
+                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
-              <Combobox.Group label="Emulation (Connecting this device to something)">
+              <Combobox.Group label={t('assignments.emulation')}>
                 {DeviceProfileAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item)} />
+                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
@@ -3762,7 +3868,7 @@ function SantrollerAssignment({
         )}
         {mapping.midiChannel && (
           <NumberInput
-            label="MIDI Channel"
+            label={t('assignments.midiChannel')}
             value={mapping.midiChannel}
             min={1}
             max={17}
@@ -3818,7 +3924,7 @@ function SantrollerAssignment({
                 title="activation.forcedType"
                 e={proto.ConsoleMode}
                 val={mapping.consoleType!.forcedType!}
-                label="forcedType"
+                label="consoleMode"
                 dispatch={(forcedType) => dispatch({ consoleType: { forcedType } })}
               ></DropdownBox>
             )}
@@ -3855,7 +3961,7 @@ function SantrollerAssignment({
         {mapping.usbDevice && (
           <>
             <TextInput
-              label="Vendor ID"
+              label={t('assignments.vendorId')}
               leftSection="0x"
               accept="\w"
               value={mapping.usbDevice.vid.toString(16)}
@@ -3869,7 +3975,7 @@ function SantrollerAssignment({
               }
             />
             <TextInput
-              label="Product ID"
+              label={t('assignments.productId')}
               leftSection="0x"
               accept="\w"
               value={mapping.usbDevice.pid.toString(16)}
@@ -3890,6 +3996,7 @@ function SantrollerAssignment({
               axis={false}
               button={true}
               input={mapping.inputAnyTime.input}
+              legendMode={legendMode}
               activationIdx={activationIdx}
               dispatch={(input) => dispatch({ ...mapping, inputAnyTime: { input } })}
             ></SantrollerInput>
@@ -3903,7 +4010,7 @@ function SantrollerAssignment({
               ></ActivationTrigger>
             )) || (
               <Switch
-                label="inverted"
+                label={t('calibration.inverted')}
                 checked={!!mapping.inputAnyTime.inverted}
                 onChange={(evt) =>
                   dispatch({
@@ -3921,6 +4028,7 @@ function SantrollerAssignment({
               axis={false}
               button={true}
               activationIdx={activationIdx}
+              legendMode={legendMode}
               input={mapping.input.input}
               dispatch={(input) => dispatch({ ...mapping, input: { input } })}
             ></SantrollerInput>
@@ -3934,7 +4042,7 @@ function SantrollerAssignment({
               ></ActivationTrigger>
             )) || (
               <Switch
-                label="inverted"
+                label={t('calibration.inverted')}
                 checked={!!mapping.input.inverted}
                 onChange={(evt) =>
                   dispatch({
@@ -3956,6 +4064,7 @@ function SantrollerAssignmentList({
   profileIdx,
   listIdx,
   mode,
+  legendMode,
   dispatch,
   deleteAssignment,
   copyAssignment,
@@ -3964,6 +4073,7 @@ function SantrollerAssignmentList({
   profileIdx: number;
   listIdx: number;
   mode: proto.FaceButtonMappingMode;
+  legendMode: LegendMode;
   dispatch: (mapping: proto.IProfileAssignment) => void;
   deleteAssignment: () => void;
   copyAssignment: () => void;
@@ -4033,6 +4143,7 @@ function SantrollerAssignmentList({
             activationIdx={assignmentIdx}
             listIdx={listIdx}
             mapping={assignment}
+            legendMode={legendMode}
             filterSingle={
               mapping.assignments?.some(
                 (x) => x != assignment && SingleProfileAssignmentTypes.some((y) => x[y])
@@ -4112,6 +4223,12 @@ function FaceButtonMappingMode({
     </Input.Wrapper>
   );
 }
+enum LegendMode {
+  Xbox360 = 1,
+  XboxOne = 2,
+  Nintendo = 3,
+  PlayStation = 4,
+}
 function Profile({ profileIdx }: { profileIdx: number }) {
   const errorIcon = <IconExclamationCircle />;
   const [opened, { open, close }] = useDisclosure(false);
@@ -4125,6 +4242,9 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const loadDefaults = useConfigStore((state) => state.loadDefaults);
   const setSyncMode = useConfigStore((state) => state.setSyncMode);
+  const [legendMode, setLegendMode] = useState<LegendMode>(
+    LegendMode[(localStorage.getItem('legendMode') ?? 'Xbox') as keyof typeof LegendMode]
+  );
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const [defaultTarget, setDefaultTarget] = useState<DeviceStatus | undefined>(undefined);
   const simpleMode = useConfigStore((state) => state.simpleMode);
@@ -4134,6 +4254,9 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
+  useEffect(() => {
+    localStorage.setItem('legendMode', LegendMode[legendMode]);
+  }, [legendMode]);
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) {
@@ -4268,18 +4391,27 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           <TextInput
             value={profile.name}
             onChange={(e) => updateProfile({ ...profile, name: e.currentTarget.value }, profileIdx)}
-            label="Profile name"
+            label={t('main.profile_name.label')}
           />
           <Space h="md" />
-          <Space h="md" />
           <DropdownBox
-            title="device_to_emulate"
+            title="main.device_to_emulate.label"
+            description="main.device_to_emulate.description"
             e={proto.SubType}
             val={profile.deviceToEmulate!}
             label="subType"
             dispatch={(deviceToEmulate) =>
               updateProfile({ ...profile, deviceToEmulate }, profileIdx)
             }
+          ></DropdownBox>
+          <Space h="md" />
+          <DropdownBox
+            title="main.legendMode.label"
+            description="main.legendMode.description"
+            e={LegendMode}
+            val={legendMode}
+            label="legendMode"
+            dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
           ></DropdownBox>
         </>
       )}
@@ -4295,7 +4427,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
           <Space h="md" />
           <Switch
-            label={t('axis.invert_y_hid')}
+            label={t('main.invert_y_hid.label')}
+            description={t('main.invert_y_hid.description')}
             checked={!!profile.invertYAxisHid}
             onChange={(event) =>
               updateProfile({ ...profile, invertYAxisHid: event.currentTarget.checked }, profileIdx)
@@ -4305,7 +4438,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       )}
       <Space h="md" />
       <Switch
-        label={t('mode.xinput_on_windows')}
+        label={t('main.xinput_on_windows.label')}
+        description={t('main.xinput_on_windows.description')}
         checked={!!profile.xinputOnWindows}
         onChange={(event) =>
           updateProfile({ ...profile, xinputOnWindows: event.currentTarget.checked }, profileIdx)
@@ -4313,33 +4447,57 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       />
       <Space h="md" />
       <Switch
-        label={t('main.syncCalibrations')}
+        label={t('main.syncCalibrations.label')}
+        description={t('main.syncCalibrations.description')}
         checked={syncCalibrations}
         onChange={(event) => setSyncMode(event.currentTarget.checked)}
       />
       {!simpleMode && (
         <>
+          {profile.deviceToEmulate == proto.SubType.RockBandDrums && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.cymbalGlitchFix.label')}
+                description={t('main.cymbalGlitchFix.description')}
+                checked={!!profile.cymbalGlitchFix}
+                onChange={(event) =>
+                  updateProfile(
+                    { ...profile, cymbalGlitchFix: event.currentTarget.checked },
+                    profileIdx
+                  )
+                }
+              />
+            </>
+          )}
+          {ps4Subtypes.includes(profile.deviceToEmulate!) && (
+            <>
+              <Space h="md" />
+              <Input.Wrapper
+                label={t('main.ps4EmulationMode.label')}
+                description={t('main.ps4EmulationMode.description')}
+              >
+                <SegmentedControl
+                  data={[
+                    { label: t('main.ps4EmulationMode.PS3'), value: false },
+                    { label: t('main.ps4EmulationMode.PS4'), value: true },
+                  ]}
+                  value={!!profile.ps4OrPs5Mode}
+                  onChange={(event) =>
+                    updateProfile({ ...profile, ps4OrPs5Mode: event }, profileIdx)
+                  }
+                />
+              </Input.Wrapper>
+            </>
+          )}
+
           <Space h="md" />
-          <Switch
-            label={t('mode.supportsPs4')}
-            checked={!!profile.ps4OrPs5Mode}
-            onChange={(event) =>
-              updateProfile({ ...profile, ps4OrPs5Mode: event.currentTarget.checked }, profileIdx)
-            }
-          />
-          <Space h="md" />
-          <Switch
-            label={t('mode.cymbalGlitchFix')}
-            checked={!!profile.cymbalGlitchFix}
-            onChange={(event) =>
-              updateProfile(
-                { ...profile, cymbalGlitchFix: event.currentTarget.checked },
-                profileIdx
-              )
-            }
-          />
-          <Space h="md" />
-          <Title order={3}>{t('assignments.title')}</Title>
+          <Input.Wrapper
+            inputWrapperOrder={['label', 'error', 'input', 'description']}
+            description={t('assignments.description')}
+          >
+            <Title order={3}>{t('assignments.title')}</Title>
+          </Input.Wrapper>
           <Space h="md" />
 
           <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
@@ -4400,6 +4558,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             profileIdx={profileIdx}
                             listIdx={mappingIdx}
                             mode={profile.faceButtonMappingMode}
+                            legendMode={legendMode}
                             dispatch={(val) =>
                               updateProfile(
                                 {
@@ -4497,7 +4656,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           open();
                         }}
                       >
-                        Load defaults for: {t(`devices.${item.type}`)} ({DeviceStatus.label(item)})
+                        {t(`defaults_dialog.for`, {
+                          device: t(`devices.${item.type}`),
+                          status: DeviceStatus.label(item),
+                        })}
                       </Button>
                     ))}
                   <Button variant="filled" onClick={open2}>
@@ -4521,6 +4683,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                       type={profile.deviceToEmulate}
                       profileIdx={profileIdx}
                       mappingIdx={mappingIdx}
+                      legendMode={legendMode}
                       mode={profile.faceButtonMappingMode}
                       dispatch={(val) => {
                         if (syncCalibrations) {
@@ -4644,6 +4807,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           profileIdx={profileIdx}
                           mappingIdx={mappingIdx}
                           mode={profile.faceButtonMappingMode}
+                          legendMode={legendMode}
                           dispatch={(val) => {
                             if (syncCalibrations) {
                               updateProfiles([
@@ -4759,7 +4923,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </Table.Tbody>
       </Table>
       <Space h="md" />
-      <Title order={3}>Leds</Title>
+      <Title order={3}>{t('leds.label')}</Title>
       <Space h="md" />
       <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
         <Table.Thead>
@@ -4828,6 +4992,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         profileIdx={profileIdx}
                         ledIdx={ledIdx}
                         mode={profile.faceButtonMappingMode}
+                        legendMode={legendMode}
                         dispatch={(val) =>
                           updateProfile(
                             {

@@ -70,7 +70,7 @@ function Label({
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
           </ActionIcon>
           <ActionIcon>
-            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} />
           </ActionIcon>
         </Flex>
         <TextInput
@@ -84,7 +84,7 @@ function Label({
               parseInt(id.toString())
             )
           }
-          label="Label"
+          label={t('label.title')}
         />
         <PinBox
           label={'pin_label'}
@@ -160,7 +160,7 @@ function LedLabel({
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
           </ActionIcon>
           <ActionIcon>
-            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
@@ -179,7 +179,7 @@ function LedLabel({
           >
             <Combobox.Target>
               <InputBase
-                label="LED Device"
+                label={t('leds.device')}
                 component="button"
                 type="button"
                 pointer
@@ -213,7 +213,7 @@ function LedLabel({
           </Combobox>
         )) || (
           <InputBase
-            label="LED Device"
+            label={t('leds.device')}
             component="button"
             type="button"
             pointer
@@ -235,11 +235,11 @@ function LedLabel({
               parseInt(id.toString())
             )
           }
-          label="Label"
+          label={t('label.title')}
         />
         {(device?.device.ws2812 || device?.device.apa102) && (
           <MultiSelect
-            label="Leds"
+            label={t('leds.label')}
             value={label.ledLabel!.activeLed?.map((x) => x.toString())}
             data={Array.from(
               { length: device.device.ws2812?.count || device.device.apa102?.count || 0 },
@@ -322,7 +322,7 @@ function MatrixLabel({
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
           </ActionIcon>
           <ActionIcon>
-            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
@@ -341,7 +341,7 @@ function MatrixLabel({
           >
             <Combobox.Target>
               <InputBase
-                label="Matrix Device"
+                label={t('matrix.device')}
                 component="button"
                 type="button"
                 pointer
@@ -375,7 +375,7 @@ function MatrixLabel({
           </Combobox>
         )) || (
           <InputBase
-            label="Matrix Device"
+            label={t('matrix.device')}
             component="button"
             type="button"
             pointer
@@ -397,7 +397,7 @@ function MatrixLabel({
               parseInt(id.toString())
             )
           }
-          label="Label"
+          label={t('labels.title')}
         />
         <PinBox
           label={'matrix.input_pin'}
@@ -495,7 +495,7 @@ function MultiplexerLabel({
             <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
           </ActionIcon>
           <ActionIcon>
-            <IconCopy style={{ width: '70%', height: '70%' }} onClick={()=>copyLabel(label)} />
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} />
           </ActionIcon>
         </Flex>
         {(deviceCombobox.dropdownOpened && (
@@ -514,7 +514,7 @@ function MultiplexerLabel({
           >
             <Combobox.Target>
               <InputBase
-                label="Multiplexer Device"
+                label={t('multiplexer.device')}
                 component="button"
                 type="button"
                 pointer
@@ -548,7 +548,7 @@ function MultiplexerLabel({
           </Combobox>
         )) || (
           <InputBase
-            label="Multiplexer Device"
+            label={t('multiplexer.device')}
             component="button"
             type="button"
             pointer
@@ -570,7 +570,7 @@ function MultiplexerLabel({
               parseInt(id.toString())
             )
           }
-          label="Label"
+          label={t('labels.title')}
         />
         {(pinModeCombobox.dropdownOpened && (
           <Combobox
@@ -588,7 +588,7 @@ function MultiplexerLabel({
           >
             <Combobox.Target>
               <InputBase
-                label="Channel"
+                label={t('multiplexer.channel_label')}
                 component="button"
                 type="button"
                 pointer
@@ -602,36 +602,25 @@ function MultiplexerLabel({
 
             <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
               <Combobox.Options>
-                <Combobox.Option value="0">Channel 0</Combobox.Option>
-                <Combobox.Option value="1">Channel 1</Combobox.Option>
-                <Combobox.Option value="2">Channel 2</Combobox.Option>
-                <Combobox.Option value="3">Channel 3</Combobox.Option>
-                {device.device.multiplexer && (
-                  <>
-                    <Combobox.Option value="4">Channel 4</Combobox.Option>
-                    <Combobox.Option value="5">Channel 5</Combobox.Option>
-                    <Combobox.Option value="6">Channel 6</Combobox.Option>
-                    <Combobox.Option value="7">Channel 7</Combobox.Option>
-                    {device.device.multiplexer?.sixteenChannel && (
-                      <>
-                        <Combobox.Option value="8">Channel 8</Combobox.Option>
-                        <Combobox.Option value="9">Channel 9</Combobox.Option>
-                        <Combobox.Option value="10">Channel 10</Combobox.Option>
-                        <Combobox.Option value="11">Channel 11</Combobox.Option>
-                        <Combobox.Option value="12">Channel 12</Combobox.Option>
-                        <Combobox.Option value="13">Channel 13</Combobox.Option>
-                        <Combobox.Option value="14">Channel 14</Combobox.Option>
-                        <Combobox.Option value="15">Channel 15</Combobox.Option>
-                      </>
-                    )}
-                  </>
-                )}
+                {[
+                  ...Array(
+                    device?.device.multiplexer?.sixteenChannel
+                      ? 16
+                      : device?.device.multiplexer
+                        ? 8
+                        : 4
+                  ),
+                ].map((_, i) => (
+                  <Combobox.Option key={i} value={i.toString()}>
+                    {t('multiplexer.channel', { channel: i + 1 })}
+                  </Combobox.Option>
+                ))}
               </Combobox.Options>
             </Combobox.Dropdown>
           </Combobox>
         )) || (
           <InputBase
-            label="Channel"
+            label={t('multiplexer.channel_label')}
             component="button"
             type="button"
             pointer
@@ -654,6 +643,7 @@ export function LabelsPage() {
   const addMultiplexerLabel = useConfigStore((state) => state.addMultiplexerLabel);
   const addMatrixLabel = useConfigStore((state) => state.addMatrixLabel);
   const deleteLabel = useConfigStore((state) => state.deleteLabel);
+  const { t } = useTranslation();
   const labels = useConfigStore((state) => state.guiDevices);
   const mounted = useMounted();
   if (!mounted) {
@@ -716,19 +706,19 @@ export function LabelsPage() {
 
               <Menu.Dropdown>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addLabel}>
-                  Add Label
+                  label={t('labels.add')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addLedLabel}>
-                  Add LED Label
+                  label={t('labels.addLed')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMatrixLabel}>
-                  Add Matrix Label
+                  label={t('labels.addMatrix')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMultiplexerLabel}>
-                  Add Multiplexer Label
+                  label={t('labels.addMultiplexer')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconTrash size={14} />} onClick={deleteAllLabels}>
-                  Remove all labels
+                  label={t('labels.removeAll')}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
