@@ -1758,7 +1758,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             ...(state.config.profiles || []),
             {
               faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
-              deviceToEmulate: proto.SubType.Gamepad_,
+              deviceToEmulate: proto.SubType.Gamepad,
               name: 'Device',
               assignments: [],
               mappings: [],
