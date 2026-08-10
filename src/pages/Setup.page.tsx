@@ -23,7 +23,6 @@ export function SetupPage() {
           <Space h="md" />
           Notable missing features:
           <ul>
-            <li>USB Host - Not all devices aren't supported yet</li>
             <li>
               Bluetooth - You can emulate a gamepad, but connecting devices to a receiver is not
               supported yet.
@@ -31,6 +30,15 @@ export function SetupPage() {
             <li>Wii Extension Emulation (as in, plugging the Pico into a Wii Remote)</li>
             <li>
               PS2 Emulation (as in, plugging the Pico into the PS2 controller port on your console)
+            </li>
+            <li>
+              A bunch of device types aren't emulated yet
+            </li>
+            <li>
+              Buttons for creating default inputs aren't hooked up yet in some places
+            </li>
+            <li>
+              Mouse and keyboard isn't emulated yet
             </li>
           </ul>
         </Alert>

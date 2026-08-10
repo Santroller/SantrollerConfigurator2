@@ -1,13 +1,10 @@
 /// <reference types="w3c-web-hid" />
 import { immerable } from 'immer';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
 
-import { disconnect } from 'process';
-import { BufferReader } from 'protobufjs';
 import { decodeBlock, encodeBlock, familyMap, UF2BlockData } from 'uf2';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
