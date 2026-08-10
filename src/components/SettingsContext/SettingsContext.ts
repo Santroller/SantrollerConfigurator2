@@ -15,9 +15,9 @@ import { proto } from './config.js';
 export * from './config.js';
 export const ps4Subtypes = [
   proto.SubType.GuitarHeroDrums,
-  proto.SubType.RockBandDrums,
-  proto.SubType.GuitarHeroGuitar,
-  proto.SubType.RockBandGuitar,
+  proto.SubType.RockBandDrums_,
+  proto.SubType.GuitarHeroGuitar_,
+  proto.SubType.RockBandGuitar_,
 ];
 export class MappingStatus {
   [immerable] = true;
@@ -448,205 +448,205 @@ export const initialConfig = InitState(
 const WiiMappings = {
   [proto.SubType.GuitarHeroGuitar]: {
     [proto.WiiButtonType.WiiButtonGuitarMinus]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBack,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Back,
     [proto.WiiButtonType.WiiButtonGuitarPlus]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStart,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Start,
     [proto.WiiButtonType.WiiButtonGuitarStrumUp]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumUp,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
     [proto.WiiButtonType.WiiButtonGuitarStrumDown]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumDown,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumDown,
     [proto.WiiButtonType.WiiButtonGuitarGreen]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarGreen,
-    [proto.WiiButtonType.WiiButtonGuitarRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarRed,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+    [proto.WiiButtonType.WiiButtonGuitarRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
     [proto.WiiButtonType.WiiButtonGuitarYellow]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarYellow,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
     [proto.WiiButtonType.WiiButtonGuitarBlue]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBlue,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
     [proto.WiiButtonType.WiiButtonGuitarOrange]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarOrange,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
     [proto.WiiButtonType.WiiButtonGuitarTapGreen]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapGreen,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
     [proto.WiiButtonType.WiiButtonGuitarTapRed]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapRed,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
     [proto.WiiButtonType.WiiButtonGuitarTapYellow]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapYellow,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
     [proto.WiiButtonType.WiiButtonGuitarTapBlue]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapBlue,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
     [proto.WiiButtonType.WiiButtonGuitarTapOrange]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapOrange,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
   },
   [proto.SubType.RockBandGuitar]: {
-    [proto.WiiButtonType.WiiButtonGuitarMinus]: proto.RockBandGuitarButtonType.RockBandGuitarBack,
-    [proto.WiiButtonType.WiiButtonGuitarPlus]: proto.RockBandGuitarButtonType.RockBandGuitarStart,
+    [proto.WiiButtonType.WiiButtonGuitarMinus]: proto.RockBandGuitarButtonType.RockBandGuitar_Back,
+    [proto.WiiButtonType.WiiButtonGuitarPlus]: proto.RockBandGuitarButtonType.RockBandGuitar_Start,
     [proto.WiiButtonType.WiiButtonGuitarStrumUp]:
-      proto.RockBandGuitarButtonType.RockBandGuitarStrumUp,
+      proto.RockBandGuitarButtonType.RockBandGuitar_StrumUp,
     [proto.WiiButtonType.WiiButtonGuitarStrumDown]:
-      proto.RockBandGuitarButtonType.RockBandGuitarStrumDown,
-    [proto.WiiButtonType.WiiButtonGuitarGreen]: proto.RockBandGuitarButtonType.RockBandGuitarGreen,
-    [proto.WiiButtonType.WiiButtonGuitarRed]: proto.RockBandGuitarButtonType.RockBandGuitarRed,
+      proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
+    [proto.WiiButtonType.WiiButtonGuitarGreen]: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+    [proto.WiiButtonType.WiiButtonGuitarRed]: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
     [proto.WiiButtonType.WiiButtonGuitarYellow]:
-      proto.RockBandGuitarButtonType.RockBandGuitarYellow,
-    [proto.WiiButtonType.WiiButtonGuitarBlue]: proto.RockBandGuitarButtonType.RockBandGuitarBlue,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+    [proto.WiiButtonType.WiiButtonGuitarBlue]: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
     [proto.WiiButtonType.WiiButtonGuitarOrange]:
-      proto.RockBandGuitarButtonType.RockBandGuitarOrange,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
     [proto.WiiButtonType.WiiButtonGuitarTapGreen]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloGreen,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
     [proto.WiiButtonType.WiiButtonGuitarTapRed]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloRed,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
     [proto.WiiButtonType.WiiButtonGuitarTapYellow]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloYellow,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
     [proto.WiiButtonType.WiiButtonGuitarTapBlue]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloBlue,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
     [proto.WiiButtonType.WiiButtonGuitarTapOrange]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloOrange,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
   },
   [proto.SubType.Gamepad]: {
-    [proto.WiiButtonType.WiiButtonClassicA]: proto.GamepadButtonType.GamepadA,
-    [proto.WiiButtonType.WiiButtonClassicB]: proto.GamepadButtonType.GamepadB,
-    [proto.WiiButtonType.WiiButtonClassicX]: proto.GamepadButtonType.GamepadX,
-    [proto.WiiButtonType.WiiButtonClassicY]: proto.GamepadButtonType.GamepadY,
-    [proto.WiiButtonType.WiiButtonClassicDPadUp]: proto.GamepadButtonType.GamepadDpadUp,
-    [proto.WiiButtonType.WiiButtonClassicDPadDown]: proto.GamepadButtonType.GamepadDpadDown,
-    [proto.WiiButtonType.WiiButtonClassicDPadLeft]: proto.GamepadButtonType.GamepadDpadLeft,
-    [proto.WiiButtonType.WiiButtonClassicDPadRight]: proto.GamepadButtonType.GamepadDpadRight,
-    [proto.WiiButtonType.WiiButtonClassicZl]: proto.GamepadButtonType.GamepadLeftShoulder,
-    [proto.WiiButtonType.WiiButtonClassicZr]: proto.GamepadButtonType.GamepadRightShoulder,
-    [proto.WiiButtonType.WiiButtonClassicPlus]: proto.GamepadButtonType.GamepadStart,
-    [proto.WiiButtonType.WiiButtonClassicMinus]: proto.GamepadButtonType.GamepadBack,
-    [proto.WiiButtonType.WiiButtonClassicHome]: proto.GamepadButtonType.GamepadGuide,
+    [proto.WiiButtonType.WiiButtonClassicA]: proto.GamepadButtonType.Gamepad_A,
+    [proto.WiiButtonType.WiiButtonClassicB]: proto.GamepadButtonType.Gamepad_B,
+    [proto.WiiButtonType.WiiButtonClassicX]: proto.GamepadButtonType.Gamepad_X,
+    [proto.WiiButtonType.WiiButtonClassicY]: proto.GamepadButtonType.Gamepad_Y,
+    [proto.WiiButtonType.WiiButtonClassicDPadUp]: proto.GamepadButtonType.Gamepad_DpadUp,
+    [proto.WiiButtonType.WiiButtonClassicDPadDown]: proto.GamepadButtonType.Gamepad_DpadDown,
+    [proto.WiiButtonType.WiiButtonClassicDPadLeft]: proto.GamepadButtonType.Gamepad_DpadLeft,
+    [proto.WiiButtonType.WiiButtonClassicDPadRight]: proto.GamepadButtonType.Gamepad_DpadRight,
+    [proto.WiiButtonType.WiiButtonClassicZl]: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    [proto.WiiButtonType.WiiButtonClassicZr]: proto.GamepadButtonType.Gamepad_RightShoulder,
+    [proto.WiiButtonType.WiiButtonClassicPlus]: proto.GamepadButtonType.Gamepad_Start,
+    [proto.WiiButtonType.WiiButtonClassicMinus]: proto.GamepadButtonType.Gamepad_Back,
+    [proto.WiiButtonType.WiiButtonClassicHome]: proto.GamepadButtonType.Gamepad_Guide,
   },
 };
 
 const CrkdMappings = {
   [proto.SubType.GuitarHeroGuitar]: {
-    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumUp,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
     [proto.CrkdNeckButtonType.CrkdDpadDown]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarStrumDown,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumDown,
     [proto.CrkdNeckButtonType.CrkdDpadLeft]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarDpadLeft,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_DpadLeft,
     [proto.CrkdNeckButtonType.CrkdDpadRight]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarDpadRight,
-    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarGreen,
-    [proto.CrkdNeckButtonType.CrkdRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarRed,
-    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarYellow,
-    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarBlue,
-    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarOrange,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_DpadRight,
+    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+    [proto.CrkdNeckButtonType.CrkdRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
     [proto.CrkdNeckButtonType.CrkdSoloGreen]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapGreen,
-    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapRed,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
     [proto.CrkdNeckButtonType.CrkdSoloYellow]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapYellow,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
     [proto.CrkdNeckButtonType.CrkdSoloBlue]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapBlue,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
     [proto.CrkdNeckButtonType.CrkdSoloOrange]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitarTapOrange,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
   },
   [proto.SubType.RockBandGuitar]: {
-    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.RockBandGuitarButtonType.RockBandGuitarStrumUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.RockBandGuitarButtonType.RockBandGuitarStrumDown,
-    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.RockBandGuitarButtonType.RockBandGuitarDpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.RockBandGuitarButtonType.RockBandGuitar_StrumUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.RockBandGuitarButtonType.RockBandGuitar_DpadLeft,
     [proto.CrkdNeckButtonType.CrkdDpadRight]:
-      proto.RockBandGuitarButtonType.RockBandGuitarDpadRight,
-    [proto.CrkdNeckButtonType.CrkdGreen]: proto.RockBandGuitarButtonType.RockBandGuitarGreen,
-    [proto.CrkdNeckButtonType.CrkdRed]: proto.RockBandGuitarButtonType.RockBandGuitarRed,
-    [proto.CrkdNeckButtonType.CrkdYellow]: proto.RockBandGuitarButtonType.RockBandGuitarYellow,
-    [proto.CrkdNeckButtonType.CrkdBlue]: proto.RockBandGuitarButtonType.RockBandGuitarBlue,
-    [proto.CrkdNeckButtonType.CrkdOrange]: proto.RockBandGuitarButtonType.RockBandGuitarOrange,
+      proto.RockBandGuitarButtonType.RockBandGuitar_DpadRight,
+    [proto.CrkdNeckButtonType.CrkdGreen]: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+    [proto.CrkdNeckButtonType.CrkdRed]: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+    [proto.CrkdNeckButtonType.CrkdYellow]: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+    [proto.CrkdNeckButtonType.CrkdBlue]: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+    [proto.CrkdNeckButtonType.CrkdOrange]: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
     [proto.CrkdNeckButtonType.CrkdSoloGreen]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloGreen,
-    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.RockBandGuitarButtonType.RockBandGuitarSoloRed,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
     [proto.CrkdNeckButtonType.CrkdSoloYellow]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloYellow,
-    [proto.CrkdNeckButtonType.CrkdSoloBlue]: proto.RockBandGuitarButtonType.RockBandGuitarSoloBlue,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+    [proto.CrkdNeckButtonType.CrkdSoloBlue]: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
     [proto.CrkdNeckButtonType.CrkdSoloOrange]:
-      proto.RockBandGuitarButtonType.RockBandGuitarSoloOrange,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
   },
   [proto.SubType.Gamepad]: {
-    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GamepadButtonType.GamepadA,
-    [proto.CrkdNeckButtonType.CrkdRed]: proto.GamepadButtonType.GamepadB,
-    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GamepadButtonType.GamepadX,
-    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GamepadButtonType.GamepadY,
-    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GamepadButtonType.GamepadLeftShoulder,
-    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GamepadButtonType.GamepadDpadUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.GamepadButtonType.GamepadDpadDown,
-    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.GamepadButtonType.GamepadDpadLeft,
-    [proto.CrkdNeckButtonType.CrkdDpadRight]: proto.GamepadButtonType.GamepadDpadRight,
+    [proto.CrkdNeckButtonType.CrkdGreen]: proto.GamepadButtonType.Gamepad_A,
+    [proto.CrkdNeckButtonType.CrkdRed]: proto.GamepadButtonType.Gamepad_B,
+    [proto.CrkdNeckButtonType.CrkdYellow]: proto.GamepadButtonType.Gamepad_X,
+    [proto.CrkdNeckButtonType.CrkdBlue]: proto.GamepadButtonType.Gamepad_Y,
+    [proto.CrkdNeckButtonType.CrkdOrange]: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GamepadButtonType.Gamepad_DpadUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.GamepadButtonType.Gamepad_DpadDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.GamepadButtonType.Gamepad_DpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadRight]: proto.GamepadButtonType.Gamepad_DpadRight,
   },
 };
 
 const CrkdDrumAxisMappings = {
   [proto.SubType.GuitarHeroDrums]: {
-    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsGreenPad,
-    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsRedPad,
-    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsYellowPad,
-    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsBluePad,
-    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsGreenPad,
-    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsYellowPad,
-    [proto.CrkdDrumAxisType.CrkdYellowCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsBluePad,
-    [proto.CrkdDrumAxisType.CrkdKick1]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsKickPedal,
-    [proto.CrkdDrumAxisType.CrkdKick2]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrumsKickPedal,
+    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
+    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+    [proto.CrkdDrumAxisType.CrkdYellowCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+    [proto.CrkdDrumAxisType.CrkdKick1]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
+    [proto.CrkdDrumAxisType.CrkdKick2]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
   },
   [proto.SubType.RockBandDrums]: {
-    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.RockBandDrumsAxisType.RockBandDrumsRedPad,
-    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.RockBandDrumsAxisType.RockBandDrumsYellowPad,
-    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.RockBandDrumsAxisType.RockBandDrumsBluePad,
-    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.RockBandDrumsAxisType.RockBandDrumsGreenPad,
+    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.RockBandDrumsAxisType.RockBandDrums_RedPad,
+    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad,
+    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.RockBandDrumsAxisType.RockBandDrums_BluePad,
+    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
     [proto.CrkdDrumAxisType.CrkdYellowCymbal]:
-      proto.RockBandDrumsAxisType.RockBandDrumsYellowCymbal,
-    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.RockBandDrumsAxisType.RockBandDrumsBlueCymbal,
-    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.RockBandDrumsAxisType.RockBandDrumsGreenCymbal,
+      proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal,
+    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal,
+    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal,
   },
 };
 
 const CrkdDrumButtonMappings = {
   [proto.SubType.GuitarHeroDrums]: {},
   [proto.SubType.RockBandDrums]: {
-    [proto.CrkdDrumAxisType.CrkdKick1]: proto.RockBandDrumsButtonType.RockBandDrumsKick1Pedal,
-    [proto.CrkdDrumAxisType.CrkdKick2]: proto.RockBandDrumsButtonType.RockBandDrumsKick2Pedal,
+    [proto.CrkdDrumAxisType.CrkdKick1]: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal,
+    [proto.CrkdDrumAxisType.CrkdKick2]: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal,
   },
   [proto.SubType.Gamepad]: {
-    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.GamepadButtonType.GamepadB,
-    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.GamepadButtonType.GamepadX,
-    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.GamepadButtonType.GamepadY,
-    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.GamepadButtonType.GamepadA,
-    [proto.CrkdDrumAxisType.CrkdYellowCymbal]: proto.GamepadButtonType.GamepadX,
-    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.GamepadButtonType.GamepadY,
-    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.GamepadButtonType.GamepadA,
-    [proto.CrkdDrumAxisType.CrkdKick1]: proto.GamepadButtonType.GamepadLeftShoulder,
-    [proto.CrkdDrumAxisType.CrkdKick2]: proto.GamepadButtonType.GamepadRightShoulder,
+    [proto.CrkdDrumAxisType.CrkdRedPad]: proto.GamepadButtonType.Gamepad_B,
+    [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.GamepadButtonType.Gamepad_X,
+    [proto.CrkdDrumAxisType.CrkdBluePad]: proto.GamepadButtonType.Gamepad_Y,
+    [proto.CrkdDrumAxisType.CrkdGreenPad]: proto.GamepadButtonType.Gamepad_A,
+    [proto.CrkdDrumAxisType.CrkdYellowCymbal]: proto.GamepadButtonType.Gamepad_X,
+    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.GamepadButtonType.Gamepad_Y,
+    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.GamepadButtonType.Gamepad_A,
+    [proto.CrkdDrumAxisType.CrkdKick1]: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    [proto.CrkdDrumAxisType.CrkdKick2]: proto.GamepadButtonType.Gamepad_RightShoulder,
   },
 };
 
 const WiiMappingsStick = {
   [proto.SubType.GuitarHeroGuitar]: {
     [proto.WiiAxisType.WiiAxisGuitarJoystickX]:
-      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarLeftStickX,
+      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_LeftStickX,
     [proto.WiiAxisType.WiiAxisGuitarJoystickY]:
-      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarLeftStickY,
+      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_LeftStickY,
   },
   [proto.SubType.RockBandGuitar]: {
     [proto.WiiAxisType.WiiAxisGuitarJoystickX]:
-      proto.RockBandGuitarAxisType.RockBandGuitarLeftStickX,
+      proto.RockBandGuitarAxisType.RockBandGuitar_LeftStickX,
     [proto.WiiAxisType.WiiAxisGuitarJoystickY]:
-      proto.RockBandGuitarAxisType.RockBandGuitarLeftStickY,
+      proto.RockBandGuitarAxisType.RockBandGuitar_LeftStickY,
   },
   [proto.SubType.Gamepad]: {
-    [proto.WiiAxisType.WiiAxisClassicLeftStickX]: proto.GamepadAxisType.GamepadLeftStickX,
-    [proto.WiiAxisType.WiiAxisClassicLeftStickY]: proto.GamepadAxisType.GamepadLeftStickY,
-    [proto.WiiAxisType.WiiAxisClassicRightStickX]: proto.GamepadAxisType.GamepadRightStickX,
-    [proto.WiiAxisType.WiiAxisClassicRightStickY]: proto.GamepadAxisType.GamepadRightStickY,
+    [proto.WiiAxisType.WiiAxisClassicLeftStickX]: proto.GamepadAxisType.Gamepad_LeftStickX,
+    [proto.WiiAxisType.WiiAxisClassicLeftStickY]: proto.GamepadAxisType.Gamepad_LeftStickY,
+    [proto.WiiAxisType.WiiAxisClassicRightStickX]: proto.GamepadAxisType.Gamepad_RightStickX,
+    [proto.WiiAxisType.WiiAxisClassicRightStickY]: proto.GamepadAxisType.Gamepad_RightStickY,
   },
 };
 const WiiMappingsTrigger = {
   [proto.SubType.GuitarHeroGuitar]: {
-    [proto.WiiAxisType.WiiAxisGuitarWhammy]: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitarWhammy,
+    [proto.WiiAxisType.WiiAxisGuitarWhammy]: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy,
   },
   [proto.SubType.RockBandGuitar]: {
-    [proto.WiiAxisType.WiiAxisGuitarWhammy]: proto.RockBandGuitarAxisType.RockBandGuitarWhammy,
+    [proto.WiiAxisType.WiiAxisGuitarWhammy]: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy,
   },
   [proto.SubType.Gamepad]: {
-    [proto.WiiAxisType.WiiAxisClassicLeftTrigger]: proto.GamepadAxisType.GamepadLeftTrigger,
-    [proto.WiiAxisType.WiiAxisClassicRightTrigger]: proto.GamepadAxisType.GamepadRightTrigger,
+    [proto.WiiAxisType.WiiAxisClassicLeftTrigger]: proto.GamepadAxisType.Gamepad_LeftTrigger,
+    [proto.WiiAxisType.WiiAxisClassicRightTrigger]: proto.GamepadAxisType.Gamepad_RightTrigger,
   },
 };
 
@@ -1758,7 +1758,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             ...(state.config.profiles || []),
             {
               faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
-              deviceToEmulate: proto.SubType.Gamepad,
+              deviceToEmulate: proto.SubType.Gamepad_,
               name: 'Device',
               assignments: [],
               mappings: [],
