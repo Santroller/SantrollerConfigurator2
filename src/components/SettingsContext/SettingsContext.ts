@@ -15,9 +15,9 @@ import { proto } from './config.js';
 export * from './config.js';
 export const ps4Subtypes = [
   proto.SubType.GuitarHeroDrums,
-  proto.SubType.RockBandDrums_,
-  proto.SubType.GuitarHeroGuitar_,
-  proto.SubType.RockBandGuitar_,
+  proto.SubType.RockBandDrums,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
 ];
 export class MappingStatus {
   [immerable] = true;
