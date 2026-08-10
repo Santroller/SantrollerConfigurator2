@@ -14,7 +14,7 @@ export function getLabel(
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].label?.pin == pin)
+    .filter((x) => x[1].label?.pin === pin)
     .map((x) => x[1].label?.label)
     .concat(
       Object.entries(devices)
@@ -24,27 +24,23 @@ export function getLabel(
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
 export function getMultiplexerLabel(
-  t: TFunction<'translation', undefined>,
   guiDevices: proto.IGuiConfig[],
-  devices: DeviceStatus[],
   channel: number,
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].multiplexerLabel?.channel == channel)
+    .filter((x) => x[1].multiplexerLabel?.channel === channel)
     .map((x) => x[1].multiplexerLabel?.label);
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
 export function getMatrixLabel(
-  t: TFunction<'translation', undefined>,
   guiDevices: proto.IGuiConfig[],
-  devices: DeviceStatus[],
   inPin: number,
   outPin: number,
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].matrixLabel?.inputPin == inPin && x[1].matrixLabel?.outputPin == outPin)
+    .filter((x) => x[1].matrixLabel?.inputPin === inPin && x[1].matrixLabel?.outputPin === outPin)
     .map((x) => x[1].matrixLabel?.label);
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
@@ -134,7 +130,7 @@ export function PinBox({
         <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
           {combobox.dropdownOpened &&
             Object.entries(valid).map((item) => (
-              <Combobox.Option value={item[0]} key={item[0]} selected={pin == item[1].pin}>
+              <Combobox.Option value={item[0]} key={item[0]} selected={pin === item[1].pin}>
                 <Group gap="2">
                   <Text fz="sm" span>
                     {t(item[1].label, item[1])}
@@ -143,7 +139,7 @@ export function PinBox({
                     {getLabel(
                       t,
                       Object.values(guiDevices),
-                      pin == item[1].pin ? [] : Object.values(devices),
+                      pin === item[1].pin ? [] : Object.values(devices),
                       item[1].pin
                     )}
                   </Text>

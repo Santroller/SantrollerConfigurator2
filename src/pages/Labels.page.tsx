@@ -9,7 +9,6 @@ import {
   Group,
   Input,
   InputBase,
-  isNumberLike,
   Loader,
   Menu,
   Modal,
@@ -46,8 +45,8 @@ function Label({
   const copyLabel = useConfigStore((state) => state.copyLabel);
   return (
     <>
-      <Modal opened={opened} onClose={close} title={t('delete_label_dialog.title')} centered>
-        {t('delete_label_dialog.desc')}
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
@@ -58,9 +57,9 @@ function Label({
               }}
               color="red"
             >
-              {t('delete_label_dialog.confirm')}
+              {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_label_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -78,22 +77,22 @@ function Label({
           onChange={(e) =>
             updateLabel(
               {
-                deviceid: parseInt(id),
+                deviceid: parseInt(id, 10),
                 label: { ...label.label!, label: e.currentTarget.value },
               },
-              parseInt(id.toString())
+              parseInt(id.toString(), 10)
             )
           }
-          label={t('label.title')}
+          label={t('labels.title')}
         />
         <PinBox
-          label={'pin_label'}
-          pin={label.label?.pin!}
+          label="pin_label"
+          pin={label.label!.pin!}
           valid={AllPinsNamed}
           dispatch={(pin) =>
             updateLabel(
-              { deviceid: parseInt(id), label: { ...label.label!, pin: pin } },
-              parseInt(id.toString())
+              { deviceid: parseInt(id, 10), label: { ...label.label!, pin } },
+              parseInt(id.toString(), 10)
             )
           }
         />
@@ -115,7 +114,7 @@ function LedLabel({
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
   const copyLabel = useConfigStore((state) => state.copyLabel);
-  const device = useConfigStore((state) => state.deviceStatus[label.ledLabel?.deviceid!]);
+  const device = useConfigStore((state) => state.deviceStatus[label.ledLabel!.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -171,7 +170,7 @@ function LedLabel({
               updateLabel(
                 {
                   deviceid: label.deviceid,
-                  ledLabel: { ...label.ledLabel!, deviceid: parseInt(val) },
+                  ledLabel: { ...label.ledLabel!, deviceid: parseInt(val, 10) },
                 },
                 label.deviceid
               );
@@ -232,10 +231,10 @@ function LedLabel({
                 ...label,
                 ledLabel: { ...label.ledLabel!, label: e.currentTarget.value },
               },
-              parseInt(id.toString())
+              parseInt(id.toString(), 10)
             )
           }
-          label={t('label.title')}
+          label={t('labels.title')}
         />
         {(device?.device.ws2812 || device?.device.apa102) && (
           <MultiSelect
@@ -251,9 +250,9 @@ function LedLabel({
               updateLabel(
                 {
                   ...label,
-                  ledLabel: { ...label.ledLabel!, activeLed: val.map((x) => parseInt(x)) },
+                  ledLabel: { ...label.ledLabel!, activeLed: val.map((x) => parseInt(x, 10)) },
                 },
-                parseInt(id.toString())
+                parseInt(id.toString(), 10)
               )
             }
             searchable
@@ -277,7 +276,7 @@ function MatrixLabel({
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
   const copyLabel = useConfigStore((state) => state.copyLabel);
-  const device = useConfigStore((state) => state.deviceStatus[label.matrixLabel?.deviceid!]);
+  const device = useConfigStore((state) => state.deviceStatus[label.matrixLabel!.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -333,7 +332,7 @@ function MatrixLabel({
               updateLabel(
                 {
                   deviceid: label.deviceid,
-                  matrixLabel: { ...label.matrixLabel!, deviceid: parseInt(val) },
+                  matrixLabel: { ...label.matrixLabel!, deviceid: parseInt(val, 10) },
                 },
                 label.deviceid
               );
@@ -356,7 +355,7 @@ function MatrixLabel({
             <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
               <Combobox.Options>
                 {Object.values(deviceStatus)
-                  .filter((x) => x.type == 'matrix')
+                  .filter((x) => x.type === 'matrix')
                   .map((item) => (
                     <Combobox.Option value={item.id} key={item.id}>
                       <Group gap="2">
@@ -394,38 +393,38 @@ function MatrixLabel({
                 ...label,
                 matrixLabel: { ...label.matrixLabel!, label: e.currentTarget.value },
               },
-              parseInt(id.toString())
+              parseInt(id.toString(), 10)
             )
           }
           label={t('labels.title')}
         />
         <PinBox
-          label={'matrix.input_pin'}
-          pin={label.matrixLabel?.inputPin!}
+          label="matrix.input_pin"
+          pin={label.matrixLabel!.inputPin!}
           valid={Object.fromEntries(
             Object.entries(AllPinsNamed).filter(
-              (x) => device?.device.matrix?.inPins! & (1 << parseInt(x[0]))
+              (x) => device!.device.matrix!.inPins! & (1 << parseInt(x[0], 10))
             )
           )}
           dispatch={(pin) =>
             updateLabel(
-              { deviceid: parseInt(id), matrixLabel: { ...label.matrixLabel!, inputPin: pin } },
-              parseInt(id.toString())
+              { deviceid: parseInt(id, 10), matrixLabel: { ...label.matrixLabel!, inputPin: pin } },
+              parseInt(id.toString(), 10)
             )
           }
         />
         <PinBox
-          label={'matrix.output_pin'}
-          pin={label.matrixLabel?.outputPin!}
+          label="matrix.output_pin"
+          pin={label.matrixLabel!.outputPin!}
           valid={Object.fromEntries(
             Object.entries(AllPinsNamed).filter(
-              (x) => device?.device.matrix?.outPins! & (1 << parseInt(x[0]))
+              (x) => device!.device.matrix!.outPins! & (1 << parseInt(x[0], 10))
             )
           )}
           dispatch={(pin) =>
             updateLabel(
-              { deviceid: parseInt(id), matrixLabel: { ...label.matrixLabel!, outputPin: pin } },
-              parseInt(id.toString())
+              { deviceid: parseInt(id, 10), matrixLabel: { ...label.matrixLabel!, outputPin: pin } },
+              parseInt(id.toString(), 10)
             )
           }
         />
@@ -447,7 +446,7 @@ function MultiplexerLabel({
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
   const copyLabel = useConfigStore((state) => state.copyLabel);
-  const device = useConfigStore((state) => state.deviceStatus[label.multiplexerLabel?.deviceid!]);
+  const device = useConfigStore((state) => state.deviceStatus[label.multiplexerLabel!.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -506,7 +505,7 @@ function MultiplexerLabel({
               updateLabel(
                 {
                   deviceid: label.deviceid,
-                  multiplexerLabel: { ...label.multiplexerLabel!, deviceid: parseInt(val) },
+                  multiplexerLabel: { ...label.multiplexerLabel!, deviceid: parseInt(val, 10) },
                 },
                 label.deviceid
               );
@@ -529,7 +528,7 @@ function MultiplexerLabel({
             <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
               <Combobox.Options>
                 {Object.values(deviceStatus)
-                  .filter((x) => x.type == 'ads1115' || x.type == 'multiplexer')
+                  .filter((x) => x.type === 'ads1115' || x.type === 'multiplexer')
                   .map((item) => (
                     <Combobox.Option value={item.id} key={item.id}>
                       <Group gap="2">
@@ -567,7 +566,7 @@ function MultiplexerLabel({
                 ...label,
                 multiplexerLabel: { ...label.multiplexerLabel!, label: e.currentTarget.value },
               },
-              parseInt(id.toString())
+              parseInt(id.toString(), 10)
             )
           }
           label={t('labels.title')}
@@ -579,9 +578,9 @@ function MultiplexerLabel({
               updateLabel(
                 {
                   ...label,
-                  multiplexerLabel: { ...label.multiplexerLabel!, channel: parseInt(val) },
+                  multiplexerLabel: { ...label.multiplexerLabel!, channel: parseInt(val, 10) },
                 },
-                parseInt(id.toString())
+                parseInt(id.toString(), 10)
               );
               pinModeCombobox.closeDropdown();
             }}
@@ -647,7 +646,7 @@ export function LabelsPage() {
   const labels = useConfigStore((state) => state.guiDevices);
   const mounted = useMounted();
   if (!mounted) {
-    return <Loader></Loader>;
+    return <Loader />;
   }
 
   return (
@@ -662,7 +661,7 @@ export function LabelsPage() {
                   key={id}
                   id={id}
                   label={label}
-                  deleteLabel={() => deleteLabel(parseInt(id))}
+                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
                 />
               ))}
             {Object.entries(labels)
@@ -672,7 +671,7 @@ export function LabelsPage() {
                   key={id}
                   id={id}
                   label={ledLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id))}
+                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
                 />
               ))}
             {Object.entries(labels)
@@ -682,7 +681,7 @@ export function LabelsPage() {
                   key={id}
                   id={id}
                   label={matrixLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id))}
+                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
                 />
               ))}
             {Object.entries(labels)
@@ -692,7 +691,7 @@ export function LabelsPage() {
                   key={id}
                   id={id}
                   label={multiplexerLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id))}
+                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
                 />
               ))}
           </SimpleGrid>
@@ -706,19 +705,19 @@ export function LabelsPage() {
 
               <Menu.Dropdown>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addLabel}>
-                  label={t('labels.add')}
+                  {t('labels.add')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addLedLabel}>
-                  label={t('labels.addLed')}
+                  {t('labels.addLed')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMatrixLabel}>
-                  label={t('labels.addMatrix')}
+                  {t('labels.addMatrix')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMultiplexerLabel}>
-                  label={t('labels.addMultiplexer')}
+                  {t('labels.addMultiplexer')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconTrash size={14} />} onClick={deleteAllLabels}>
-                  label={t('labels.removeAll')}
+                  {t('labels.removeAll')}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

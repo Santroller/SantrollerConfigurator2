@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react';
-import { IconExclamationCircle } from '@tabler/icons-react';
-import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { Alert, Button, FileButton, FileInput, Progress, Space, Text } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { buildUf2FromJson, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function AuthPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, _] = useSearchParams();
   const [done, setDone] = useState(false);
   const code = searchParams.get('code');
   const state = searchParams.get('state');
-  const { t } = useTranslation();
   useEffect(() => {
     const t = async () => {
       const auth = localStorage.getItem('login');
       if (auth) {
         const login = JSON.parse(auth);
-        if (state == login.state) {
+        if (state === login.state) {
           const url = new URL('https://worker.tangentmc.net/github-auth-exchange-endpoint');
           url.searchParams.set('code_verifier', login.code_challenge);
           url.searchParams.set('code', code!);
@@ -30,7 +25,7 @@ export function AuthPage() {
         }
       }
     };
-    t().catch(console.log);
+    t().catch(console.error);
   });
   if (done) {
     return <Navigate to="/" />;

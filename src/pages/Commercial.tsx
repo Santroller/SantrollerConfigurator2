@@ -4,11 +4,8 @@ import {
   Alert,
   Button,
   FileButton,
-  FileInput,
   Image,
-  Progress,
   Space,
-  Text,
   TextInput,
 } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
@@ -130,7 +127,7 @@ export function CommercialToolPage() {
                     )
                   : ''
               }
-            ></Image>
+             />
           </>
         )}
       </Layout>

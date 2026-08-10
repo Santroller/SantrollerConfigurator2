@@ -55,7 +55,7 @@ export function DebugPage() {
   const { t } = useTranslation();
   const mounted = useMounted();
   if (!mounted) {
-    return <Loader></Loader>;
+    return <Loader />;
   }
   return (
     <>

@@ -26,7 +26,6 @@ import {
   Table,
   TagsInput,
   Title,
-  UnstyledButton,
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
@@ -70,14 +69,14 @@ function I2CDevice({
         error={error}
         pin={device.sda}
         valid={SdaPins}
-        dispatch={(pin) => dispatch({ ...device, sda: pin, block: parseInt(I2CGroups[pin]) })}
+        dispatch={(pin) => dispatch({ ...device, sda: pin, block: parseInt(I2CGroups[pin], 10) })}
       />
       <PinBox
         label="i2c.scl.label"
         error={error}
         pin={device.scl}
         valid={SclPins}
-        dispatch={(pin) => dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin]) })}
+        dispatch={(pin) => dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin], 10) })}
       />
     </>
   );
@@ -121,7 +120,9 @@ function SPIDevice({
           error={error}
           pin={device.mosi}
           valid={MosiPins}
-          dispatch={(pin) => dispatch({ ...device, block: parseInt(SPIGroups[pin]), mosi: pin })}
+          dispatch={(pin) =>
+            dispatch({ ...device, block: parseInt(SPIGroups[pin], 10), mosi: pin })
+          }
         />
       )}
       {!noMiso && (
@@ -130,7 +131,9 @@ function SPIDevice({
           error={error}
           pin={device.miso}
           valid={MisoPins}
-          dispatch={(pin) => dispatch({ ...device, block: parseInt(SPIGroups[pin]), miso: pin })}
+          dispatch={(pin) =>
+            dispatch({ ...device, block: parseInt(SPIGroups[pin], 10), miso: pin })
+          }
         />
       )}
       {!noSck && (
@@ -139,7 +142,7 @@ function SPIDevice({
           error={error}
           pin={device.sck}
           valid={SckPins}
-          dispatch={(pin) => dispatch({ ...device, block: parseInt(SPIGroups[pin]), sck: pin })}
+          dispatch={(pin) => dispatch({ ...device, block: parseInt(SPIGroups[pin], 10), sck: pin })}
         />
       )}
     </>
@@ -162,14 +165,14 @@ function UARTDevice({
         error={error}
         pin={device.tx}
         valid={TxPins}
-        dispatch={(pin) => dispatch({ ...device, tx: pin, block: parseInt(UARTGroups[pin]) })}
+        dispatch={(pin) => dispatch({ ...device, tx: pin, block: parseInt(UARTGroups[pin], 10) })}
       />
       <PinBox
         label="uart.rx.label"
         error={error}
         pin={device.rx}
         valid={RxPins}
-        dispatch={(pin) => dispatch({ ...device, rx: pin, block: parseInt(UARTGroups[pin]) })}
+        dispatch={(pin) => dispatch({ ...device, rx: pin, block: parseInt(UARTGroups[pin], 10) })}
       />
     </>
   );
@@ -242,10 +245,10 @@ function DeviceCard({
         </Card.Section>
         <Flex mt="md" mb="xs" justify="center" align="center" gap="xs">
           <Title order={2} fw={500}>
-            {id ? t(title, { id: id }) : t(title)}
+            {id ? t(title, { id }) : t(title)}
           </Title>{' '}
         </Flex>
-        <Center>{connected == null ? null : badge}</Center>
+        <Center>{connected === null ? null : badge}</Center>
         {children}
       </Card>
     </>
@@ -289,7 +292,7 @@ export function LabeledDropdown({
 }: {
   data: { label: string; value: string }[];
   label: string;
-  description: string;
+  description?: string;
   value: string;
   dispatch: (value: string) => void;
 }) {
@@ -303,6 +306,7 @@ export function LabeledDropdown({
       <InputBase
         disabled
         label={t(label)}
+        description={description && t(description)}
         component="button"
         type="button"
         rightSection={<Combobox.Chevron />}
@@ -316,6 +320,7 @@ export function LabeledDropdown({
   const mainElement = (
     <InputBase
       label={t(label)}
+      description={description && t(description)}
       component="button"
       type="button"
       pointer
@@ -344,7 +349,7 @@ export function LabeledDropdown({
               <Combobox.Option
                 value={item[0]}
                 key={item[0]}
-                selected={item[1].label.toLowerCase() == value.toLowerCase()}
+                selected={item[1].label.toLowerCase() === value.toLowerCase()}
               >
                 {t(item[1].label, item[1])}
               </Combobox.Option>
@@ -367,8 +372,8 @@ function WiiExtensionDevice({ id }: { id: string }) {
   return (
     <DeviceCard
       connected={
-        status.wiiExtType != proto.WiiExtType.WiiNoExtension &&
-        status.wiiExtType != proto.WiiExtType.WiiNotInitialised
+        status.wiiExtType !== proto.WiiExtType.WiiNoExtension &&
+        status.wiiExtType !== proto.WiiExtType.WiiNotInitialised
       }
       type_prefix="wii.extensions"
       title="devices.wii"
@@ -378,7 +383,9 @@ function WiiExtensionDevice({ id }: { id: string }) {
     >
       <I2CDevice
         device={wii.i2c}
-        dispatch={(val) => updateDevice({ deviceid: parseInt(id), wii: { ...wii, i2c: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id, 10), wii: { ...wii, i2c: val } }, id)
+        }
       />
     </DeviceCard>
   );
@@ -404,7 +411,7 @@ function BandHeroDrumDevice({ id }: { id: string }) {
         device={bhDrum.i2c}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), bhDrum: { ...bhDrum, i2c: { ...val, clock: 100000 } } },
+            { deviceid: parseInt(id, 10), bhDrum: { ...bhDrum, i2c: { ...val, clock: 100000 } } },
             id
           )
         }
@@ -432,7 +439,7 @@ function WorldTourDrumDevice({ id }: { id: string }) {
         device={worldTourDrum.spi}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, spi: val } },
+            { deviceid: parseInt(id, 10), worldTourDrum: { ...worldTourDrum, spi: val } },
             id
           )
         }
@@ -444,7 +451,7 @@ function WorldTourDrumDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), worldTourDrum: { ...worldTourDrum, csPin: pin } },
+            { deviceid: parseInt(id, 10), worldTourDrum: { ...worldTourDrum, csPin: pin } },
             id
           )
         }
@@ -472,7 +479,7 @@ function AccelerometerDevice({ id }: { id: string }) {
         device={accelerometer.i2c}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), accelerometer: { ...accelerometer, i2c: val } },
+            { deviceid: parseInt(id, 10), accelerometer: { ...accelerometer, i2c: val } },
             id
           )
         }
@@ -500,7 +507,7 @@ function MPR121Device({ id }: { id: string }) {
       <I2CDevice
         device={mpr121.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), mpr121: { ...mpr121, i2c: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), mpr121: { ...mpr121, i2c: val } }, id)
         }
       />
       <NumberInput
@@ -508,7 +515,7 @@ function MPR121Device({ id }: { id: string }) {
         value={mpr121.touchpadCount}
         onChange={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), mpr121: { ...mpr121, touchpadCount: Number(val) } },
+            { deviceid: parseInt(id, 10), mpr121: { ...mpr121, touchpadCount: Number(val) } },
             id
           )
         }
@@ -536,7 +543,7 @@ function CrazyGuitarNeckDevice({ id }: { id: string }) {
         device={crazyGuitarNeck.i2c}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), crazyGuitarNeck: { ...crazyGuitarNeck, i2c: val } },
+            { deviceid: parseInt(id, 10), crazyGuitarNeck: { ...crazyGuitarNeck, i2c: val } },
             id
           )
         }
@@ -563,7 +570,7 @@ function GH5NeckDevice({ id }: { id: string }) {
       <I2CDevice
         device={gh5Neck.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), gh5Neck: { ...gh5Neck, i2c: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), gh5Neck: { ...gh5Neck, i2c: val } }, id)
         }
       />
     </DeviceCard>
@@ -588,7 +595,10 @@ function DJHeroTurntableDevice({ id }: { id: string }) {
       <I2CDevice
         device={djhTurntable.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), djhTurntable: { ...djhTurntable, i2c: val } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), djhTurntable: { ...djhTurntable, i2c: val } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -619,7 +629,7 @@ function PeripheralDevice({ id }: { id: string }) {
       <I2CDevice
         device={peripheral.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), peripheral: { ...peripheral, i2c: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), peripheral: { ...peripheral, i2c: val } }, id)
         }
       />
       <LabeledSegmentedControl
@@ -628,7 +638,7 @@ function PeripheralDevice({ id }: { id: string }) {
         value={`0x${peripheral.address.toString(16)}`}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), peripheral: { ...peripheral, address: Number(val) } },
+            { deviceid: parseInt(id, 10), peripheral: { ...peripheral, address: Number(val) } },
             id
           )
         }
@@ -657,7 +667,7 @@ function ADS1115Device({ id }: { id: string }) {
       <I2CDevice
         device={ads1115.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), ads1115: { ...ads1115, i2c: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), ads1115: { ...ads1115, i2c: val } }, id)
         }
       />
       <PinBox
@@ -665,7 +675,7 @@ function ADS1115Device({ id }: { id: string }) {
         pin={ads1115.interrupt}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), ads1115: { ...ads1115, interrupt: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), ads1115: { ...ads1115, interrupt: pin } }, id)
         }
       />
       {/* <LabeledSegmentedControl
@@ -702,7 +712,7 @@ function MidiSerialDevice({ id }: { id: string }) {
         dispatch={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               midiSerial: { ...midiSerial, uart: { ...val, baudrate: 31250 } },
             },
             id
@@ -733,7 +743,7 @@ function CrkdNeckDevice({ id }: { id: string }) {
         dispatch={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               crkdNeck: { ...crkdNeck, uart: { ...val, baudrate: 460800 } },
             },
             id
@@ -758,9 +768,9 @@ function CrkdDrumCalibration({
     <>
       {keys.map((key) => (
         <NumberInput
-          label={t('crkdDrum.calibration.' + key)}
+          label={t(`crkdDrum.calibration.${key}`)}
           value={data[key]}
-          onChange={(val) => updateCrkdDrumCalibration(id, type, key, parseInt(val.toString()))}
+          onChange={(val) => updateCrkdDrumCalibration(id, type, key, parseInt(val.toString(), 10))}
         />
       ))}
     </>
@@ -787,7 +797,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
         dispatch={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               crkdDrum: { ...crkdDrum, uart: { ...val, baudrate: 460800 } },
             },
             id
@@ -803,7 +813,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
                 id={id}
                 type={proto.CrkdDrumCalibrationType.Debounce}
                 data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Debounce]}
-              ></CrkdDrumCalibration>
+              />
             </>
           </Accordion.Panel>
         </Accordion.Item>
@@ -815,7 +825,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
                 id={id}
                 type={proto.CrkdDrumCalibrationType.Min}
                 data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Min]}
-              ></CrkdDrumCalibration>
+              />
             </>
           </Accordion.Panel>
         </Accordion.Item>
@@ -827,7 +837,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
                 id={id}
                 type={proto.CrkdDrumCalibrationType.Max}
                 data={status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Max]}
-              ></CrkdDrumCalibration>
+              />
             </>
           </Accordion.Panel>
         </Accordion.Item>
@@ -852,10 +862,10 @@ function ProtarNeckDevice({ id }: { id: string }) {
       deleteDevice={() => deleteDevice(id)}
     >
       <SPIDevice
-        device={protarNeck?.spi!}
+        device={protarNeck.spi!}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), protarNeck: { ...protarNeck, spi: { ...val } } },
+            { deviceid: parseInt(id, 10), protarNeck: { ...protarNeck, spi: { ...val } } },
             id
           )
         }
@@ -865,7 +875,10 @@ function ProtarNeckDevice({ id }: { id: string }) {
         pin={protarNeck.attPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), protarNeck: { ...protarNeck, attPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), protarNeck: { ...protarNeck, attPin: pin } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -890,7 +903,7 @@ function DebugDevice({ id }: { id: string }) {
         device={debug.uart}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), debug: { ...debug, uart: { ...val, baudrate: 115200 } } },
+            { deviceid: parseInt(id, 10), debug: { ...debug, uart: { ...val, baudrate: 115200 } } },
             id
           )
         }
@@ -906,7 +919,6 @@ function WS2812Device({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const { t } = useTranslation();
   const device = status.device;
   if (!device.ws2812) {
     throw new Error('device null!');
@@ -923,24 +935,26 @@ function WS2812Device({ id }: { id: string }) {
         pin={ws2812.pin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), ws2812: { ...ws2812, pin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), ws2812: { ...ws2812, pin } }, id)
         }
       />
       <NumberInput
-        label={'ws2812.count'}
+        label="ws2812.count"
         value={ws2812.count}
         onChange={(val) =>
-          updateDevice({ deviceid: parseInt(id), ws2812: { ...ws2812, count: Number(val) } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), ws2812: { ...ws2812, count: Number(val) } },
+            id
+          )
         }
       />
       <LabeledDropdown
         data={ws2812TypeData}
         label="Type"
         value={`ws2812.${proto.WS2812Type[ws2812.type]}`}
-        description="ws2812.description"
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), ws2812: { ...ws2812, type: parseInt(val) + 1 } },
+            { deviceid: parseInt(id, 10), ws2812: { ...ws2812, type: parseInt(val, 10) + 1 } },
             id
           )
         }
@@ -956,13 +970,11 @@ function APA102Device({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const { t } = useTranslation();
   const device = status.device;
   if (!device.apa102) {
     throw new Error('device null!');
   }
   const apa102 = device.apa102;
-  console.log(apa102);
   return (
     <DeviceCard
       title="devices.apa102"
@@ -974,26 +986,28 @@ function APA102Device({ id }: { id: string }) {
         misoLabel="none"
         mosiLabel="apa102.mosi.pin"
         sckLabel="apa102.clock.pin"
-        noMiso={true}
+        noMiso
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), apa102: { ...apa102, spi: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), apa102: { ...apa102, spi: val } }, id)
         }
       />
       <NumberInput
-        label={'apa102.count'}
+        label="apa102.count"
         value={apa102.count}
         onChange={(val) =>
-          updateDevice({ deviceid: parseInt(id), apa102: { ...apa102, count: Number(val) } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), apa102: { ...apa102, count: Number(val) } },
+            id
+          )
         }
       />
       <LabeledDropdown
         data={apa102TypeData}
         label="Type"
         value={`apa102.${proto.APA102Type[apa102.type]}`}
-        description="apa102.description"
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), apa102: { ...apa102, type: parseInt(val) + 1 } },
+            { deviceid: parseInt(id, 10), apa102: { ...apa102, type: parseInt(val, 10) + 1 } },
             id
           )
         }
@@ -1005,7 +1019,6 @@ function STP16CPCDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const { t } = useTranslation();
   const device = status.device;
   if (!device.stp16cpc) {
     throw new Error('device null!');
@@ -1022,9 +1035,9 @@ function STP16CPCDevice({ id }: { id: string }) {
         misoLabel="none"
         mosiLabel="stp16cpc.mosi.pin"
         sckLabel="stp16cpc.clock.pin"
-        noMiso={true}
+        noMiso
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, spi: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), stp16cpc: { ...stp16cpc, spi: val } }, id)
         }
       />
       <PinBox
@@ -1032,7 +1045,7 @@ function STP16CPCDevice({ id }: { id: string }) {
         pin={stp16cpc.oe}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, oe: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), stp16cpc: { ...stp16cpc, oe: pin } }, id)
         }
       />
       <PinBox
@@ -1040,15 +1053,15 @@ function STP16CPCDevice({ id }: { id: string }) {
         pin={stp16cpc.le}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), stp16cpc: { ...stp16cpc, le: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), stp16cpc: { ...stp16cpc, le: pin } }, id)
         }
       />
       <NumberInput
-        label={'stp16cpc.count'}
+        label="stp16cpc.count"
         value={stp16cpc.count}
         onChange={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), stp16cpc: { ...stp16cpc, count: Number(val) } },
+            { deviceid: parseInt(id, 10), stp16cpc: { ...stp16cpc, count: Number(val) } },
             id
           )
         }
@@ -1075,7 +1088,7 @@ function Max1704XDevice({ id }: { id: string }) {
       <I2CDevice
         device={max1704x.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), max1704x: { ...max1704x, i2c: val } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), max1704x: { ...max1704x, i2c: val } }, id)
         }
       />
     </DeviceCard>
@@ -1086,7 +1099,6 @@ function PSXDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const { t } = useTranslation();
   const device = status.device;
   if (!device.psx) {
     throw new Error('device null!');
@@ -1094,7 +1106,7 @@ function PSXDevice({ id }: { id: string }) {
   const psx = device.psx;
   return (
     <DeviceCard
-      connected={status.ps2CntType != proto.PS2ControllerType.PS2ControllerTypeUnknown}
+      connected={status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown}
       type={proto.PS2ControllerType[status.ps2CntType]}
       type_prefix="psx.devices"
       title="devices.psx"
@@ -1106,14 +1118,16 @@ function PSXDevice({ id }: { id: string }) {
         mosiLabel="psx.command.pin"
         misoLabel="psx.data.pin"
         sckLabel="psx.clock.pin"
-        dispatch={(val) => updateDevice({ deviceid: parseInt(id), psx: { ...psx, spi: val } }, id)}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id, 10), psx: { ...psx, spi: val } }, id)
+        }
       />
       <PinBox
         label="psx.attention.pin"
         pin={psx.attPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), psx: { ...psx, attPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), psx: { ...psx, attPin: pin } }, id)
         }
       />
       <PinBox
@@ -1121,7 +1135,7 @@ function PSXDevice({ id }: { id: string }) {
         pin={psx.ackPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), psx: { ...psx, ackPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), psx: { ...psx, ackPin: pin } }, id)
         }
       />
     </DeviceCard>
@@ -1132,7 +1146,6 @@ function VTechExpanderDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
-  const { t } = useTranslation();
   const device = status.device;
   if (!device.vtechExpander) {
     throw new Error('device null!');
@@ -1152,7 +1165,7 @@ function VTechExpanderDevice({ id }: { id: string }) {
         sckLabel="spi.sck.label"
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), vtechExpander: { ...vtechExpander, spi: val } },
+            { deviceid: parseInt(id, 10), vtechExpander: { ...vtechExpander, spi: val } },
             id
           )
         }
@@ -1163,7 +1176,7 @@ function VTechExpanderDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), vtechExpander: { ...vtechExpander, attPin: pin } },
+            { deviceid: parseInt(id, 10), vtechExpander: { ...vtechExpander, attPin: pin } },
             id
           )
         }
@@ -1196,7 +1209,7 @@ function MultiplexerDevice({ id }: { id: string }) {
         dispatch={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               multiplexer: { ...multiplexer, sixteenChannel: val === 'true' },
             },
             id
@@ -1211,7 +1224,7 @@ function MultiplexerDevice({ id }: { id: string }) {
         valid={AnalogPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), multiplexer: { ...multiplexer, inputPin: pin } },
+            { deviceid: parseInt(id, 10), multiplexer: { ...multiplexer, inputPin: pin } },
             id
           )
         }
@@ -1221,7 +1234,10 @@ function MultiplexerDevice({ id }: { id: string }) {
         pin={multiplexer.s0Pin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s0Pin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), multiplexer: { ...multiplexer, s0Pin: pin } },
+            id
+          )
         }
       />
       <PinBox
@@ -1229,7 +1245,10 @@ function MultiplexerDevice({ id }: { id: string }) {
         pin={multiplexer.s1Pin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s1Pin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), multiplexer: { ...multiplexer, s1Pin: pin } },
+            id
+          )
         }
       />
       <PinBox
@@ -1237,7 +1256,10 @@ function MultiplexerDevice({ id }: { id: string }) {
         pin={multiplexer.s2Pin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), multiplexer: { ...multiplexer, s2Pin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), multiplexer: { ...multiplexer, s2Pin: pin } },
+            id
+          )
         }
       />
       {multiplexer.sixteenChannel && (
@@ -1247,7 +1269,7 @@ function MultiplexerDevice({ id }: { id: string }) {
           valid={AllPinsNamed}
           dispatch={(pin) =>
             updateDevice(
-              { deviceid: parseInt(id), multiplexer: { ...multiplexer, s3Pin: pin } },
+              { deviceid: parseInt(id, 10), multiplexer: { ...multiplexer, s3Pin: pin } },
               id
             )
           }
@@ -1286,12 +1308,12 @@ function CycleDevice({ id }: { id: string }) {
         dispatch={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               cycle: {
                 ...cycle,
-                type: parseInt(val) + 1,
+                type: parseInt(val, 10) + 1,
                 values:
-                  parseInt(val) + 1 == proto.CycleType.pickup
+                  parseInt(val, 10) + 1 === proto.CycleType.pickup
                     ? [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500]
                     : [0],
               },
@@ -1300,12 +1322,12 @@ function CycleDevice({ id }: { id: string }) {
           )
         }
       />
-      {cycle.type == proto.CycleType.custom && (
+      {cycle.type === proto.CycleType.custom && (
         <>
           <SegmentedControl
-            data={cycle.values?.map((x, i) => ({ label: x.toString(), value: i.toString() }))!}
+            data={cycle.values!.map((x, i) => ({ label: x.toString(), value: i.toString() }))!}
             value={status.cycleState.toString()}
-            onChange={(val) => updateCycle(parseInt(id), parseInt(val))}
+            onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
           />
           <TagsInput
             label="Enter a value"
@@ -1317,10 +1339,10 @@ function CycleDevice({ id }: { id: string }) {
             onChange={(changed) => {
               updateDevice(
                 {
-                  deviceid: parseInt(id),
+                  deviceid: parseInt(id, 10),
                   cycle: {
                     ...cycle,
-                    values: changed.filter((tag) => /^\d+$/.test(tag)).map((x) => parseInt(x)),
+                    values: changed.filter((tag) => /^\d+$/.test(tag)).map((x) => parseInt(x, 10)),
                   },
                 },
                 id
@@ -1329,14 +1351,14 @@ function CycleDevice({ id }: { id: string }) {
           />
         </>
       )}
-      {cycle.type == proto.CycleType.pickup && (
+      {cycle.type === proto.CycleType.pickup && (
         <>
           <SegmentedControl
             data={
-              cycle.values?.map((x, i) => ({ label: t(`pickup.notch.${i}`), value: i.toString() }))!
+              cycle.values!.map((_, i) => ({ label: t(`pickup.notch.${i}`), value: i.toString() }))!
             }
             value={status.cycleState.toString()}
-            onChange={(val) => updateCycle(parseInt(id), parseInt(val))}
+            onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
           />
         </>
       )}
@@ -1345,7 +1367,6 @@ function CycleDevice({ id }: { id: string }) {
 }
 function ToggleDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
-  const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const updateToggle = useConfigStore((state) => state.updateToggle);
   const { t } = useTranslation();
@@ -1353,7 +1374,6 @@ function ToggleDevice({ id }: { id: string }) {
   if (!device.toggle) {
     throw new Error('device null!');
   }
-  const toggle = device.toggle;
   return (
     <DeviceCard
       title="toggle.title"
@@ -1364,7 +1384,7 @@ function ToggleDevice({ id }: { id: string }) {
       <Switch
         label={t('toggle.state')}
         checked={status.toggleState}
-        onChange={(e) => updateToggle(parseInt(id), e.currentTarget.checked)}
+        onChange={(e) => updateToggle(parseInt(id, 10), e.currentTarget.checked)}
       />
     </DeviceCard>
   );
@@ -1391,7 +1411,7 @@ function SNESDevice({ id }: { id: string }) {
         pin={snes.clockPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), snes: { ...snes, clockPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), snes: { ...snes, clockPin: pin } }, id)
         }
       />
       <PinBox
@@ -1399,7 +1419,7 @@ function SNESDevice({ id }: { id: string }) {
         pin={snes.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), snes: { ...snes, dataPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), snes: { ...snes, dataPin: pin } }, id)
         }
       />
       <PinBox
@@ -1407,7 +1427,7 @@ function SNESDevice({ id }: { id: string }) {
         pin={snes.latchPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), snes: { ...snes, latchPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), snes: { ...snes, latchPin: pin } }, id)
         }
       />
     </DeviceCard>
@@ -1435,7 +1455,7 @@ function JoybusDevice({ id }: { id: string }) {
         pin={joybus.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), joybus: { ...joybus, dataPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), joybus: { ...joybus, dataPin: pin } }, id)
         }
       />
     </DeviceCard>
@@ -1462,7 +1482,7 @@ function DMXDevice({ id }: { id: string }) {
         label="dmx.pin"
         pin={dmx.pin}
         valid={AllPinsNamed}
-        dispatch={(pin) => updateDevice({ deviceid: parseInt(id), dmx: { ...dmx, pin } }, id)}
+        dispatch={(pin) => updateDevice({ deviceid: parseInt(id, 10), dmx: { ...dmx, pin } }, id)}
       />
       <NumberInput
         label={t('dmx.channelCount')}
@@ -1471,7 +1491,10 @@ function DMXDevice({ id }: { id: string }) {
         value={dmx.channelCount}
         onChange={(e) =>
           updateDevice(
-            { deviceid: parseInt(id), dmx: { ...dmx, channelCount: parseInt(e.toString()) } },
+            {
+              deviceid: parseInt(id, 10),
+              dmx: { ...dmx, channelCount: parseInt(e.toString(), 10) },
+            },
             id
           )
         }
@@ -1489,13 +1512,13 @@ const usbHostData = [
 function getName(x: string, t: TFunction) {
   const match = x.match(/X360 Wireless (.+)/);
   if (match) {
-    const subtype = parseInt(match[1]);
+    const subtype = parseInt(match[1], 10);
     if (isNaN(subtype)) {
-      return 'Xbox 360 Wireless ' + match[1];
+      return `Xbox 360 Wireless ${match[1]}`;
     }
-    return 'Xbox 360 Wireless ' + t(`subType.${proto.SubType[subtype]}`);
+    return `Xbox 360 Wireless ${t(`subType.${proto.SubType[subtype]}`)}`;
   }
-  return x
+  return x;
 }
 function USBHostDevice({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -1509,7 +1532,7 @@ function USBHostDevice({ id }: { id: string }) {
   const usbHost = device.usbHost;
   return (
     <DeviceCard
-      connected={Object.values(status.usbDevices).length != 0}
+      connected={Object.values(status.usbDevices).length !== 0}
       title="devices.usbHost"
       image="covers/devices/usbHost.png"
       deleteDevice={() => deleteDevice(id)}
@@ -1533,7 +1556,7 @@ function USBHostDevice({ id }: { id: string }) {
         pin={usbHost.firstPin}
         valid={usbHostValidPins}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), usbHost: { ...usbHost, firstPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), usbHost: { ...usbHost, firstPin: pin } }, id)
         }
       />
       <PinBox
@@ -1546,7 +1569,7 @@ function USBHostDevice({ id }: { id: string }) {
         value={usbHost.dmFirst.toString()}
         dispatch={(val) =>
           updateDevice(
-            { deviceid: parseInt(id), usbHost: { ...usbHost, dmFirst: val === 'true' } },
+            { deviceid: parseInt(id, 10), usbHost: { ...usbHost, dmFirst: val === 'true' } },
             id
           )
         }
@@ -1575,7 +1598,10 @@ function WiiEmulationDevice({ id }: { id: string }) {
       <I2CDevice
         device={wiiEmulation.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id), wiiEmulation: { ...wiiEmulation, i2c: val } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), wiiEmulation: { ...wiiEmulation, i2c: val } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -1603,7 +1629,7 @@ function JoybusEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), joybusEmulation: { ...joybusEmulation, dataPin: pin } },
+            { deviceid: parseInt(id, 10), joybusEmulation: { ...joybusEmulation, dataPin: pin } },
             id
           )
         }
@@ -1632,7 +1658,7 @@ function EncoderDevice({ id }: { id: string }) {
         pin={encoder.dataPin}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id), encoder: { ...encoder, dataPin: pin } }, id)
+          updateDevice({ deviceid: parseInt(id, 10), encoder: { ...encoder, dataPin: pin } }, id)
         }
       />
     </DeviceCard>
@@ -1668,10 +1694,10 @@ function MatrixDevice({ id }: { id: string }) {
         onChange={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               matrix: {
                 ...matrix,
-                outPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
+                outPins: val.reduce((acc, x) => acc | (1 << parseInt(x, 10)), 0),
               },
             },
             id
@@ -1693,10 +1719,10 @@ function MatrixDevice({ id }: { id: string }) {
         onChange={(val) =>
           updateDevice(
             {
-              deviceid: parseInt(id),
+              deviceid: parseInt(id, 10),
               matrix: {
                 ...matrix,
-                inPins: val.reduce((acc, x) => acc | (1 << parseInt(x)), 0),
+                inPins: val.reduce((acc, x) => acc | (1 << parseInt(x, 10)), 0),
               },
             },
             id
@@ -1730,7 +1756,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, dataPin: pin } },
+            { deviceid: parseInt(id, 10), psxEmulation: { ...psxEmulation, dataPin: pin } },
             id
           )
         }
@@ -1741,7 +1767,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, commandPin: pin } },
+            { deviceid: parseInt(id, 10), psxEmulation: { ...psxEmulation, commandPin: pin } },
             id
           )
         }
@@ -1752,7 +1778,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, clockPin: pin } },
+            { deviceid: parseInt(id, 10), psxEmulation: { ...psxEmulation, clockPin: pin } },
             id
           )
         }
@@ -1763,7 +1789,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, attentionPin: pin } },
+            { deviceid: parseInt(id, 10), psxEmulation: { ...psxEmulation, attentionPin: pin } },
             id
           )
         }
@@ -1774,7 +1800,7 @@ function PSXEmulationDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(pin) =>
           updateDevice(
-            { deviceid: parseInt(id), psxEmulation: { ...psxEmulation, acknowledgePin: pin } },
+            { deviceid: parseInt(id, 10), psxEmulation: { ...psxEmulation, acknowledgePin: pin } },
             id
           )
         }
@@ -1785,13 +1811,11 @@ function PSXEmulationDevice({ id }: { id: string }) {
 
 function BluetoothDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
-  const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const device = status.device;
   if (!device.bt) {
     throw new Error('device null!');
   }
-  const bluetooth = device.bt;
   return (
     <DeviceCard
       connected={status.connected}
@@ -1864,7 +1888,7 @@ export function DevicesPage() {
   const addDevice = useConfigStore((state) => state.addDevice);
   const mounted = useMounted();
   if (!mounted) {
-    return <Loader></Loader>;
+    return <Loader />;
   }
   const mainElement = (
     <InputBase

@@ -1,4 +1,4 @@
-import { Navigate, NavLink as RouterLink } from 'react-router-dom';
+import { Navigate} from 'react-router-dom';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
 
 export function RequireDevice({ children }: { children: React.ReactNode }) {

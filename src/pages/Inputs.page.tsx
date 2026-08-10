@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -8,40 +8,25 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  arrayMove,
-  rectSortingStrategy,
-  rectSwappingStrategy,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   IconCopy,
   IconExclamationCircle,
   IconGripVertical,
-  IconPencil,
   IconPlus,
-  IconRestore,
   IconTrash,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigation } from 'react-router-dom';
-import { useShallow } from 'zustand/react/shallow';
+import { Navigate } from 'react-router-dom';
 import {
   Accordion,
   ActionIcon,
-  Affix,
   Alert,
   Badge,
   Button,
   Card,
   Center,
-  Checkbox,
-  CheckIcon,
-  Chip,
-  ChipGroup,
   ColorInput,
   Combobox,
   Flex,
@@ -51,28 +36,24 @@ import {
   InputBase,
   isNumberLike,
   Loader,
-  Menu,
   Modal,
   MultiSelect,
   NumberInput,
   Overlay,
   Progress,
-  ProgressLabel,
   SegmentedControl,
-  SimpleGrid,
   Slider,
   Space,
   Stack,
   Switch,
   Table,
   Tabs,
-  TagsInput,
   Text,
   TextInput,
   Title,
   useCombobox,
 } from '@mantine/core';
-import { useDisclosure, useMounted, useTimeout } from '@mantine/hooks';
+import { useDisclosure, useTimeout } from '@mantine/hooks';
 import {
   getLabel,
   getMatrixLabel,
@@ -84,9 +65,12 @@ import {
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
-import { DeviceStatus, ps4Subtypes, useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
-
+import {
+  DeviceStatus,
+  ps4Subtypes,
+  useConfigStore,
+} from '@/components/SettingsContext/SettingsContext';
+import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
 
 function StateLabelLabel({
   profileIdx,
@@ -199,17 +183,18 @@ function StateSection({
           ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
           : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
+  let minCalc = min;
+  let maxCalc = max;
   if (min > max) {
-    const temp = min;
-    min = max;
-    max = temp;
+    minCalc = max;
+    maxCalc = min;
   }
   if (trigger) {
-    const minPerc = (min / 65535) * 100;
-    const maxPerc = (max / 65535) * 100;
+    const minPerc = (minCalc / 65535) * 100;
+    const maxPerc = (maxCalc / 65535) * 100;
     return (
       <>
-        <Progress.Section value={(stateRaw / 65535) * 100}></Progress.Section>
+        <Progress.Section value={(stateRaw / 65535) * 100} />
         <Overlay
           gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%,  rgba(255, 0, 0, 0) ${maxPerc}%, rgba(0, 0, 0, 0) 100%, rgba(255, 0, 0, 0.2) 100%)`}
           opacity={0.85}
@@ -218,13 +203,13 @@ function StateSection({
     );
   }
   if (raw) {
-    const minPerc = (min / 65535) * 100;
-    const maxPerc = (max / 65535) * 100;
+    const minPerc = (minCalc / 65535) * 100;
+    const maxPerc = (maxCalc / 65535) * 100;
     const deadZoneStartPerc = ((center - deadzone) / 65535) * 100;
     const deadZoneEndPerc = ((center + deadzone) / 65535) * 100;
     return (
       <>
-        <Progress.Section value={(stateRaw / 65535) * 100}></Progress.Section>
+        <Progress.Section value={(stateRaw / 65535) * 100} />
         <Overlay
           gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(0, 0, 0, 0) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneEndPerc}%,  rgba(255, 0, 0, 0) ${deadZoneEndPerc}%, rgba(0, 0, 0, 0) ${maxPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%)`}
           opacity={0.85}
@@ -232,7 +217,7 @@ function StateSection({
       </>
     );
   }
-  return <Progress.Section value={(state / 65535) * 100}></Progress.Section>;
+  return <Progress.Section value={(state / 65535) * 100} />;
 }
 function StateBox({
   profileIdx,
@@ -296,11 +281,6 @@ function StateSlider({
   ledBased?: boolean;
   zeroBased?: boolean;
 }) {
-  if (min > max) {
-    const temp = min;
-    min = max;
-    max = temp;
-  }
   if (raw) {
     return (
       <>
@@ -316,7 +296,7 @@ function StateSlider({
               ledBased={ledBased}
               zeroBased={zeroBased}
               raw
-            ></StateLabel>
+            />
           </Progress.Label>
           <StateSection
             mappingIdx={mappingIdx}
@@ -330,7 +310,7 @@ function StateSlider({
             trigger={trigger}
             zeroBased={zeroBased}
             raw
-          ></StateSection>
+          />
         </Progress.Root>
         <Space h="md" />
       </>
@@ -348,7 +328,7 @@ function StateSlider({
             profileIdx={profileIdx}
             activationBased={activationBased}
             zeroBased={zeroBased}
-          ></StateLabel>
+          />
         </Progress.Label>
         <StateSection
           mappingIdx={mappingIdx}
@@ -359,7 +339,7 @@ function StateSlider({
           deadzone={deadzone}
           activationBased={activationBased}
           zeroBased={zeroBased}
-        ></StateSection>
+        />
       </Progress.Root>
       <Space h="md" />
     </>
@@ -408,7 +388,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, gamepadButton: button, gamepadAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
     case proto.SubType.GuitarHeroGuitar:
       return (
@@ -433,7 +413,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, ghButton: button, ghAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
     case proto.SubType.RockBandGuitar:
       return (
@@ -458,7 +438,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
       break;
     case proto.SubType.GuitarHeroDrums:
@@ -484,7 +464,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, ghDrumButton: button, ghDrumAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
       break;
     case proto.SubType.RockBandDrums:
@@ -510,7 +490,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, rbDrumButton: button, rbDrumAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
       break;
     case proto.SubType.LiveGuitar:
@@ -536,7 +516,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, ghlButton: button, ghlAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
       break;
     case proto.SubType.DjHeroTurntable:
@@ -562,7 +542,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, djhButton: button, djhAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
       break;
     case proto.SubType.ProGuitarMustang:
@@ -589,7 +569,7 @@ function OutputBox({
           }
           dispatch2={(button) => dispatch({ ...mapping, proButton: button, proAxis: null })}
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       );
     case proto.SubType.ProKeys:
       break;
@@ -676,7 +656,7 @@ function DropdownBox<T extends StandardEnum<unknown>>({
             Object.keys(e)
               .filter((e) => isNaN(Number(e)))
               .map((item) => (
-                <Combobox.Option value={item} key={item} selected={e[val as keyof T] == item}>
+                <Combobox.Option value={item} key={item} selected={e[val as keyof T] === item}>
                   {t(`${label}.${item}`)}
                 </Combobox.Option>
               ))}
@@ -722,7 +702,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   });
   const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string;
   const base =
-    label == 'outputs' ? (
+    label === 'outputs' ? (
       <InputBase
         label={t(title)}
         component="button"
@@ -764,11 +744,11 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
           }
         }
         if (
-          val == 'midiNote' ||
-          val == 'midiControlChange' ||
-          val == 'midiPitchBend' ||
-          val == 'midiProGuitarButton' ||
-          val == 'midiProGuitarAxis'
+          val === 'midiNote' ||
+          val === 'midiControlChange' ||
+          val === 'midiPitchBend' ||
+          val === 'midiProGuitarButton' ||
+          val === 'midiProGuitarAxis'
         ) {
           dispatch3(val);
         }
@@ -781,26 +761,26 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         <Combobox.Options>
           {midi && (
             <>
-              <Combobox.Option value="midiNote" selected={v == 'midiNote'}>
+              <Combobox.Option value="midiNote" selected={v === 'midiNote'}>
                 {t('input.midiNote')}
               </Combobox.Option>
-              <Combobox.Option value="midiControlChange" selected={v == 'midiControlChange'}>
+              <Combobox.Option value="midiControlChange" selected={v === 'midiControlChange'}>
                 {t('input.midiControlChange')}
               </Combobox.Option>
-              <Combobox.Option value="midiPitchBend" selected={v == 'midiPitchBend'}>
+              <Combobox.Option value="midiPitchBend" selected={v === 'midiPitchBend'}>
                 {t('input.midiPitchBend')}
               </Combobox.Option>
-              <Combobox.Option value="midiProGuitarButton" selected={v == 'midiProGuitarButton'}>
+              <Combobox.Option value="midiProGuitarButton" selected={v === 'midiProGuitarButton'}>
                 {t('input.midiProGuitarButton')}
               </Combobox.Option>
-              <Combobox.Option value="midiProGuitarAxis" selected={v == 'midiProGuitarAxis'}>
+              <Combobox.Option value="midiProGuitarAxis" selected={v === 'midiProGuitarAxis'}>
                 {t('input.midiProGuitarAxis')}
               </Combobox.Option>
             </>
           )}
           {e &&
             Object.keys(e).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item == v}>
+              <Combobox.Option value={item} key={item} selected={item === v}>
                 {t(
                   `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
                 )}
@@ -808,7 +788,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
             ))}
           {e2 &&
             Object.keys(e2).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item == v}>
+              <Combobox.Option value={item} key={item} selected={item === v}>
                 {t(
                   `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
                 )}
@@ -821,36 +801,37 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 }
 
 function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
+  let calcLabel = label;
   if (
     proto.GamepadButtonType[
-      `Gamepad_${label?.split('_')[1]}` as keyof typeof proto.GamepadButtonType
+      `Gamepad_${calcLabel?.split('_')[1]}` as keyof typeof proto.GamepadButtonType
     ] !== undefined
   ) {
-    label = `Gamepad_${label.split('_')[1]}`;
+    calcLabel = `Gamepad_${calcLabel.split('_')[1]}`;
   }
   if (
     proto.GamepadAxisType[
-      `Gamepad_${label?.split('_')[1]}` as keyof typeof proto.GamepadAxisType
+      `Gamepad_${calcLabel?.split('_')[1]}` as keyof typeof proto.GamepadAxisType
     ] !== undefined
   ) {
-    label = `Gamepad_${label.split('_')[1]}`;
+    calcLabel = `Gamepad_${calcLabel.split('_')[1]}`;
   }
-  if (mode == proto.FaceButtonMappingMode.PositionBased) {
-    if (label == 'Gamepad_A') {
+  if (mode === proto.FaceButtonMappingMode.PositionBased) {
+    if (calcLabel === 'Gamepad_A') {
       return 'Generic/Gamepad_South';
     }
-    if (label == 'Gamepad_B') {
+    if (calcLabel === 'Gamepad_B') {
       return 'Generic/Gamepad_East';
     }
-    if (label == 'Gamepad_X') {
+    if (calcLabel === 'Gamepad_X') {
       return 'Generic/Gamepad_West';
     }
-    if (label == 'Gamepad_Y') {
+    if (calcLabel === 'Gamepad_Y') {
       return 'Generic/Gamepad_North';
     }
   }
-  if (label?.startsWith('Gamepad_')) {
-    switch (label) {
+  if (calcLabel?.startsWith('Gamepad_')) {
+    switch (calcLabel) {
       case 'Gamepad_A':
       case 'Gamepad_B':
       case 'Gamepad_X':
@@ -871,23 +852,23 @@ function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: L
       case 'Gamepad_DpadRight':
         switch (legendMode) {
           case LegendMode.Nintendo:
-            return `Nintendo/${label}`;
+            return `Nintendo/${calcLabel}`;
           case LegendMode.PlayStation:
-            return `PlayStation/${label}`;
+            return `PlayStation/${calcLabel}`;
           case LegendMode.Xbox360:
-            return `Xbox360/${label}`;
+            return `Xbox360/${calcLabel}`;
           case LegendMode.XboxOne:
-            return `XboxOne/${label}`;
+            return `XboxOne/${calcLabel}`;
         }
+        break;
       default:
-        return `Generic/${label}`;
+        return `Generic/${calcLabel}`;
     }
   }
-  return label;
+  return calcLabel;
 }
 function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
-  
-  return FixIcon(mode, label, legendMode)?.replace("/",".");
+  return FixIcon(mode, label, legendMode)?.replace('/', '.');
 }
 
 function SantrollerLabel({ input, label }: { input: proto.IInput; label: string }) {
@@ -895,10 +876,10 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
   for (const key of Object.keys(input)) {
     const key2 = key as keyof typeof input;
     if (
-      key2 != 'fixed' &&
-      key2 != 'gpio' &&
-      key2 != 'shortcut' &&
-      key2 != 'held' &&
+      key2 !== 'fixed' &&
+      key2 !== 'gpio' &&
+      key2 !== 'shortcut' &&
+      key2 !== 'held' &&
       input[key2]!.deviceid !== undefined
     ) {
       deviceId = input[key2]!.deviceid;
@@ -908,16 +889,12 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
   const { t } = useTranslation();
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
   const guiDevices = useConfigStore((state) => state.guiDevices);
-  const simpleMode = useConfigStore((state) => state.simpleMode);
 
-  let deviceValue = <></>;
   if (device) {
     switch (device.type) {
-      case 'ads1115':
+      case 'ads1115': {
         const labelsText = getMultiplexerLabel(
-          t,
           Object.values(guiDevices),
-          [],
           input.ads1115!.channel,
           false
         );
@@ -925,11 +902,10 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
           return <Text>{labelsText}</Text>;
         }
         return <Text>{t('multiplexer.channel', { channel: input.ads1115?.channel })}</Text>;
-      case 'multiplexer':
+      }
+      case 'multiplexer': {
         const labelsText2 = getMultiplexerLabel(
-          t,
           Object.values(guiDevices),
-          [],
           input.multiplexer!.channel,
           false
         );
@@ -937,13 +913,12 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
           return <Text>{labelsText2}</Text>;
         }
         return <Text>{input.multiplexer?.channel}</Text>;
+      }
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
-      case 'matrix':
+      case 'matrix': {
         const labelsText3 = getMatrixLabel(
-          t,
           Object.values(guiDevices),
-          [],
           input.matrix!.pin,
           input.matrix!.outputPin,
           false
@@ -956,6 +931,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
             {input.matrix?.pin}: {input.matrix?.outputPin}
           </Text>
         );
+      }
       case 'bhDrum':
         return <Text>{input.midiNote?.note}</Text>;
       case 'worldTourDrum':
@@ -1000,10 +976,10 @@ function SantrollerInput({
   for (const key of Object.keys(input)) {
     const key2 = key as keyof typeof input;
     if (
-      key2 != 'fixed' &&
-      key2 != 'gpio' &&
-      key2 != 'shortcut' &&
-      key2 != 'held' &&
+      key2 !== 'fixed' &&
+      key2 !== 'gpio' &&
+      key2 !== 'shortcut' &&
+      key2 !== 'held' &&
       input[key2]!.deviceid !== undefined
     ) {
       deviceId = input[key2]!.deviceid;
@@ -1020,9 +996,7 @@ function SantrollerInput({
   const detectedLed = useConfigStore.getState().detectedLed;
   const detecting = useConfigStore((state) => state.detecting);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
-  const updateCycle = useConfigStore((state) => state.updateCycle);
   const guiDevices = useConfigStore((state) => state.guiDevices);
-  const devices = useConfigStore((state) => state.deviceStatus);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -1070,11 +1044,9 @@ function SantrollerInput({
     );
     if (simpleMode) {
       switch (device.type) {
-        case 'ads1115':
+        case 'ads1115': {
           const labelsText = getMultiplexerLabel(
-            t,
             Object.values(guiDevices),
-            [],
             input.ads1115!.channel,
             false
           );
@@ -1082,11 +1054,10 @@ function SantrollerInput({
             return <Text>{labelsText}</Text>;
           }
           return <Text>{t('multiplexer.channel', { channel: input.ads1115?.channel })}</Text>;
-        case 'multiplexer':
+        }
+        case 'multiplexer': {
           const labelsText2 = getMultiplexerLabel(
-            t,
             Object.values(guiDevices),
-            [],
             input.multiplexer!.channel,
             false
           );
@@ -1094,13 +1065,12 @@ function SantrollerInput({
             return <Text>{labelsText2}</Text>;
           }
           return <Text>{input.multiplexer?.channel}</Text>;
+        }
         case 'vtechExpander':
           return <Text>{input.vtechExpander?.button}</Text>;
-        case 'matrix':
+        case 'matrix': {
           const labelsText3 = getMatrixLabel(
-            t,
             Object.values(guiDevices),
-            [],
             input.matrix!.pin,
             input.matrix!.outputPin,
             false
@@ -1113,6 +1083,7 @@ function SantrollerInput({
               {input.matrix?.pin}: {input.matrix?.outputPin}
             </Text>
           );
+        }
         case 'bhDrum':
           return <Text>{input.midiNote?.note}</Text>;
         case 'worldTourDrum':
@@ -1133,27 +1104,27 @@ function SantrollerInput({
   }
   if (
     detectedMapping !== undefined &&
-    detectedMapping == mappingIdx &&
-    (innerIdx == null || detectedInnerMapping == innerIdx) &&
-    detected != -1 &&
+    detectedMapping === mappingIdx &&
+    (innerIdx === null || detectedInnerMapping === innerIdx) &&
+    detected !== -1 &&
     input.gpio
   ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
   if (
     detectedActivation !== undefined &&
-    detectedActivation == activationIdx &&
-    (innerIdx == null || detectedInnerMapping == innerIdx) &&
-    detected != -1 &&
+    detectedActivation === activationIdx &&
+    (innerIdx === null || detectedInnerMapping === innerIdx) &&
+    detected !== -1 &&
     input.gpio
   ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
   }
   if (
     detectedLed !== undefined &&
-    detectedLed == ledIdx &&
-    detected != -1 &&
-    (innerIdx == null || detectedInnerMapping == innerIdx) &&
+    detectedLed === ledIdx &&
+    detected !== -1 &&
+    (innerIdx === null || detectedInnerMapping === innerIdx) &&
     input.gpio
   ) {
     dispatch({ gpio: { ...input.gpio!, pin: detected } });
@@ -1166,20 +1137,20 @@ function SantrollerInput({
           onOptionSubmit={(val) => {
             deviceCombobox.closeDropdown();
             if (isNumberLike(val)) {
-              switch (deviceStatus[parseInt(val)].type) {
+              switch (deviceStatus[parseInt(val, 10)].type) {
                 case 'wii':
                   if (axis) {
                     dispatch({
                       wiiAxis: {
                         axis: proto.WiiAxisType.WiiAxisClassicLeftStickX,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   } else if (button) {
                     dispatch({
                       wiiButton: {
                         button: proto.WiiButtonType.WiiButtonClassicA,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   }
@@ -1189,14 +1160,14 @@ function SantrollerInput({
                     dispatch({
                       ps2Axis: {
                         axis: proto.PS2AxisType.PS2AxisLeftStickX,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   } else if (button) {
                     dispatch({
                       ps2Button: {
                         button: proto.PS2ButtonType.PS2ButtonCross,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   }
@@ -1205,7 +1176,7 @@ function SantrollerInput({
                   dispatch({
                     ads1115: {
                       channel: 0,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1213,7 +1184,7 @@ function SantrollerInput({
                   dispatch({
                     multiplexer: {
                       channel: 0,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1221,7 +1192,7 @@ function SantrollerInput({
                   dispatch({
                     accelerometer: {
                       type: proto.AccelerometerInputType.AccelerometerX,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1229,7 +1200,7 @@ function SantrollerInput({
                   dispatch({
                     vtechExpander: {
                       button: 0,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1238,7 +1209,7 @@ function SantrollerInput({
                     matrix: {
                       outputPin: -1,
                       pin: -1,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1246,7 +1217,7 @@ function SantrollerInput({
                   dispatch({
                     crkd: {
                       button: proto.CrkdNeckButtonType.CrkdGreen,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1254,7 +1225,7 @@ function SantrollerInput({
                   dispatch({
                     midiNote: {
                       note: 1,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1262,7 +1233,7 @@ function SantrollerInput({
                   dispatch({
                     midiNote: {
                       note: 1,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1270,7 +1241,7 @@ function SantrollerInput({
                   dispatch({
                     crkdDrum: {
                       axis: proto.CrkdDrumAxisType.CrkdGreenPad,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1278,7 +1249,7 @@ function SantrollerInput({
                   dispatch({
                     gh5Neck: {
                       button: proto.Gh5NeckButtonType.Gh5Green,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1286,7 +1257,7 @@ function SantrollerInput({
                   dispatch({
                     usbButton: {
                       button: proto.UsbButtonType.UsbButtonA,
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1295,14 +1266,14 @@ function SantrollerInput({
                     dispatch({
                       protarNeckAxis: {
                         axis: proto.ProGuitarNeckAxisType.ProGuitarNeckAFret,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   } else {
                     dispatch({
                       protarNeckButton: {
                         button: proto.ProGuitarNeckButtonType.ProGuitarNeckGreen,
-                        deviceid: parseInt(val),
+                        deviceid: parseInt(val, 10),
                       },
                     });
                   }
@@ -1312,7 +1283,7 @@ function SantrollerInput({
                   dispatch({
                     cycle: {
                       input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1320,7 +1291,7 @@ function SantrollerInput({
                   dispatch({
                     toggle: {
                       input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                      deviceid: parseInt(val),
+                      deviceid: parseInt(val, 10),
                     },
                   });
                   break;
@@ -1432,7 +1403,7 @@ function SantrollerInput({
             dispatch({
               shortcut: {
                 inputs: [
-                  ...input.shortcut?.inputs!,
+                  ...input.shortcut!.inputs!,
                   { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
                 ],
               },
@@ -1453,7 +1424,7 @@ function SantrollerInput({
                     onClick={() =>
                       dispatch({
                         shortcut: {
-                          inputs: input.shortcut?.inputs?.filter((oldX, oldIdx) => idx != oldIdx),
+                          inputs: input.shortcut?.inputs?.filter((_, oldIdx) => idx !== oldIdx),
                         },
                       })
                     }
@@ -1464,7 +1435,7 @@ function SantrollerInput({
                     onClick={() =>
                       dispatch({
                         shortcut: {
-                          inputs: [...input.shortcut?.inputs!, { ...innerInput }],
+                          inputs: [...input.shortcut!.inputs!, { ...innerInput }],
                         },
                       })
                     }
@@ -1482,14 +1453,14 @@ function SantrollerInput({
                   dispatch({
                     shortcut: {
                       inputs: input.shortcut?.inputs?.map((oldX, oldIdx) =>
-                        idx == oldIdx ? changed : oldX
+                        idx === oldIdx ? changed : oldX
                       ),
                     },
                   })
                 }
                 mappingIdx={mappingIdx}
                 innerIdx={idx}
-              ></SantrollerInput>
+              />
             </Card>
           </div>
         ))}
@@ -1500,7 +1471,7 @@ function SantrollerInput({
             value={input.held.time}
             onChange={(val) => dispatch({ held: { ...input.held!, time: Number(val) } })}
             min={0}
-          ></NumberInput>
+          />
           <SantrollerInput
             axis={!!axis}
             button={!!button}
@@ -1515,13 +1486,13 @@ function SantrollerInput({
               })
             }
             mappingIdx={mappingIdx}
-          ></SantrollerInput>
+          />
         </>
       )}
       {input.cycle && (
         <>
           <SegmentedControl
-            data={device.device.cycle!.values?.map((x) => x.toString())!}
+            data={device.device.cycle!.values!.map((x) => x.toString())}
             value={device.device.cycle!.values![
               deviceStatus[input.cycle.deviceid].cycleState
             ].toString()}
@@ -1556,7 +1527,7 @@ function SantrollerInput({
               }
               innerIdx={0}
               mappingIdx={mappingIdx}
-            ></SantrollerInput>
+            />
           )}
           <Switch
             label={t('cycle.reverse_input')}
@@ -1588,7 +1559,7 @@ function SantrollerInput({
               }
               mappingIdx={mappingIdx}
               innerIdx={1}
-            ></SantrollerInput>
+            />
           )}
         </>
       )}
@@ -1625,11 +1596,11 @@ function SantrollerInput({
               }
               innerIdx={0}
               mappingIdx={mappingIdx}
-            ></SantrollerInput>
+            />
           )}
         </>
       )}
-      {(device?.type == 'worldTourDrum' || device?.type == 'bhDrum') && (
+      {(device?.type === 'worldTourDrum' || device?.type === 'bhDrum') && (
         <DropdownOutputBox
           title="input"
           val3={
@@ -1648,8 +1619,8 @@ function SantrollerInput({
           label={`${device?.type}.inputs`}
           midi
           legendMode={legendMode}
-          dispatch={(axis) => {}}
-          dispatch2={(button) => {}}
+          dispatch={(_) => {}}
+          dispatch2={(_) => {}}
           dispatch3={(type) => {
             switch (type) {
               case 'midiNote':
@@ -1691,9 +1662,9 @@ function SantrollerInput({
                 break;
             }
           }}
-        ></DropdownOutputBox>
+        />
       )}
-      {device?.type == 'wii' && (
+      {device?.type === 'wii' && (
         <DropdownOutputBox
           title="input"
           e={proto.WiiAxisType}
@@ -1763,7 +1734,7 @@ function SantrollerInput({
                 break;
             }
           }}
-        ></DropdownOutputBox>
+        />
       )}
       {(input.ps2Axis || input.ps2Button) && (
         <DropdownOutputBox
@@ -1781,9 +1752,9 @@ function SantrollerInput({
             dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
           }
           dispatch3={() => {}}
-        ></DropdownOutputBox>
+        />
       )}
-      {device?.type == 'usbHost' && (
+      {device?.type === 'usbHost' && (
         <DropdownOutputBox
           title="input"
           e={proto.UsbAxisType}
@@ -1832,6 +1803,7 @@ function SantrollerInput({
                 dispatch({
                   midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
                 });
+                break;
               case 'midiProGuitarButton':
                 dispatch({
                   midiProGuitarButton: {
@@ -1852,7 +1824,7 @@ function SantrollerInput({
                 break;
             }
           }}
-        ></DropdownOutputBox>
+        />
       )}
       {input.crkd && (
         <DropdownBox
@@ -1861,7 +1833,7 @@ function SantrollerInput({
           val={input.crkd?.button}
           label="inputs"
           dispatch={(button) => dispatch({ crkd: { ...input.crkd!, button } })}
-        ></DropdownBox>
+        />
       )}
       {input.crkdDrum && (
         <DropdownBox
@@ -1870,7 +1842,7 @@ function SantrollerInput({
           val={input.crkdDrum?.axis}
           label="inputs"
           dispatch={(axis) => dispatch({ crkdDrum: { ...input.crkdDrum!, axis } })}
-        ></DropdownBox>
+        />
       )}
       {input.gh5Neck && (
         <DropdownBox
@@ -1879,7 +1851,7 @@ function SantrollerInput({
           val={input.gh5Neck?.button}
           label="inputs"
           dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
-        ></DropdownBox>
+        />
       )}
       {input.vtechExpander && (
         <>
@@ -1891,7 +1863,7 @@ function SantrollerInput({
             }
             min={0}
             max={7}
-          ></NumberInput>
+          />
         </>
       )}
       {input.matrix && (
@@ -1901,21 +1873,21 @@ function SantrollerInput({
             pin={input.matrix.pin}
             valid={Object.fromEntries(
               Object.entries(AllPinsNamed).filter(
-                (x) => device.device.matrix?.inPins! & (1 << parseInt(x[0]))
+                (x) => device.device.matrix!.inPins! & (1 << parseInt(x[0], 10))
               )
             )}
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, pin } })}
-          ></PinBox>
+          />
           <PinBox
             label={t('matrix.output_pin')}
             pin={input.matrix.outputPin}
             valid={Object.fromEntries(
               Object.entries(AllPinsNamed).filter(
-                (x) => device.device.matrix?.outPins! & (1 << parseInt(x[0]))
+                (x) => device.device.matrix!.outPins! & (1 << parseInt(x[0], 10))
               )
             )}
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, outputPin: pin } })}
-          ></PinBox>
+          />
         </>
       )}
       {input.gpio && (
@@ -1933,7 +1905,7 @@ function SantrollerInput({
               val={input.gpio?.pinMode}
               label="gpio.mode"
               dispatch={(pinMode) => dispatch({ gpio: { ...input.gpio!, pinMode } })}
-            ></DropdownBox>
+            />
           </Group>
           <Button
             w="100%"
@@ -1964,7 +1936,7 @@ function SantrollerInput({
                   ...input,
                   ads1115: {
                     ...input.ads1115!,
-                    channel: parseInt(val),
+                    channel: parseInt(val, 10),
                   },
                 });
                 pinModeCombobox.closeDropdown();
@@ -2019,7 +1991,7 @@ function SantrollerInput({
                   ...input,
                   multiplexer: {
                     ...input.multiplexer!,
-                    channel: parseInt(val),
+                    channel: parseInt(val, 10),
                   },
                 });
                 pinModeCombobox.closeDropdown();
@@ -2071,14 +2043,14 @@ function SantrollerInput({
           title="input"
           label="accelerometer.inputs"
           dispatch={(type) => dispatch({ accelerometer: { ...input.accelerometer!, type } })}
-        ></DropdownBox>
+        />
       )}
       {input.midiNote && (
         <NumberInput
           label={t('input.midiNote')}
           value={input.midiNote.note}
           onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
-        ></NumberInput>
+        />
       )}
       {input.midiControlChange && (
         <NumberInput
@@ -2087,7 +2059,7 @@ function SantrollerInput({
           onChange={(val) =>
             dispatch({ midiControlChange: { ...input.midiControlChange!, cc: Number(val) } })
           }
-        ></NumberInput>
+        />
       )}
       {input.midiProGuitarButton && (
         <DropdownBox
@@ -2098,7 +2070,7 @@ function SantrollerInput({
           dispatch={(button) =>
             dispatch({ midiProGuitarButton: { ...input.midiProGuitarButton!, button } })
           }
-        ></DropdownBox>
+        />
       )}
       {input.midiProGuitarAxis && (
         <DropdownBox
@@ -2109,7 +2081,7 @@ function SantrollerInput({
           dispatch={(axis) =>
             dispatch({ midiProGuitarAxis: { ...input.midiProGuitarAxis!, axis } })
           }
-        ></DropdownBox>
+        />
       )}
       {input.protarNeckButton && (
         <DropdownBox
@@ -2120,7 +2092,7 @@ function SantrollerInput({
           dispatch={(button) =>
             dispatch({ protarNeckButton: { ...input.protarNeckButton!, button } })
           }
-        ></DropdownBox>
+        />
       )}
       {input.protarNeckAxis && (
         <DropdownBox
@@ -2129,7 +2101,7 @@ function SantrollerInput({
           val={input.protarNeckAxis?.axis}
           label="input.protarNeckAxis"
           dispatch={(axis) => dispatch({ protarNeckAxis: { ...input.protarNeckAxis!, axis } })}
-        ></DropdownBox>
+        />
       )}
     </>
   );
@@ -2201,8 +2173,8 @@ function SantrollerMapping({
     proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
     proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
 
-  let fixedLabel = FixLabel(mode, label, legendMode);
-  let img = `Icons/Input/${FixIcon(mode, label, legendMode)}.png`;
+  const fixedLabel = FixLabel(mode, label, legendMode);
+  const img = `Icons/Input/${FixIcon(mode, label, legendMode)}.png`;
   const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = Object.entries(mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
@@ -2252,10 +2224,10 @@ function SantrollerMapping({
         {simpleMode && (
           <>
             <Space h="md" />
-            <SantrollerLabel input={mapping.input} label={fixedLabel}></SantrollerLabel>
+            <SantrollerLabel input={mapping.input} label={fixedLabel} />
           </>
         )}
-        {button && <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx}></StateBox>}
+        {button && <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx} />}
         {axis && (
           <StateSlider
             mappingIdx={mappingIdx}
@@ -2265,7 +2237,7 @@ function SantrollerMapping({
             max={mapping.max!}
             deadzone={mapping.deadzone!}
             zeroBased={drum && !!analogInput}
-          ></StateSlider>
+          />
         )}
         {!simpleMode && (
           <>
@@ -2275,7 +2247,7 @@ function SantrollerMapping({
               mode={mode}
               mapping={mapping}
               legendMode={legendMode}
-            ></OutputBox>
+            />
             <Space h="md" />
             <SantrollerInput
               axis={!!axis}
@@ -2292,7 +2264,7 @@ function SantrollerMapping({
                 });
               }}
               mappingIdx={mappingIdx}
-            ></SantrollerInput>
+            />
             <Space h="md" />
             {(button || drum) && (
               <NumberInput
@@ -2300,7 +2272,7 @@ function SantrollerMapping({
                 description={t('debounce.desc')}
                 value={mapping.debounce ?? 0}
                 onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
-              ></NumberInput>
+              />
             )}
           </>
         )}
@@ -2320,10 +2292,10 @@ function SantrollerMapping({
                         val={mapping.trigger!}
                         label="trigger_type"
                         dispatch={(trigger) => dispatch({ ...mapping, trigger })}
-                      ></DropdownBox>
+                      />
                     )}
 
-                    {mapping.trigger == proto.AnalogToDigitalTriggerType.JoyHigh && (
+                    {mapping.trigger === proto.AnalogToDigitalTriggerType.JoyHigh && (
                       <StateSlider
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
@@ -2332,9 +2304,9 @@ function SantrollerMapping({
                         max={65535}
                         deadzone={mapping.deadzone!}
                         raw
-                      ></StateSlider>
+                      />
                     )}
-                    {mapping.trigger == proto.AnalogToDigitalTriggerType.JoyLow && (
+                    {mapping.trigger === proto.AnalogToDigitalTriggerType.JoyLow && (
                       <StateSlider
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
@@ -2343,9 +2315,9 @@ function SantrollerMapping({
                         max={mapping.triggerValue!}
                         deadzone={mapping.deadzone!}
                         raw
-                      ></StateSlider>
+                      />
                     )}
-                    {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
+                    {mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
                       <StateSlider
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
@@ -2354,9 +2326,9 @@ function SantrollerMapping({
                         max={mapping.maxTriggerValue!}
                         deadzone={mapping.deadzone!}
                         raw
-                      ></StateSlider>
+                      />
                     )}
-                    {(mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
+                    {(mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
                       <Text size="sm" fw={700}>
                         {t('trigger.min')}
                       </Text>
@@ -2378,7 +2350,7 @@ function SantrollerMapping({
                         min={0}
                         max={65535}
                         onChange={(e) =>
-                          dispatch({ ...mapping, triggerValue: parseInt(e.toString()) })
+                          dispatch({ ...mapping, triggerValue: parseInt(e.toString(), 10) })
                         }
                         w={100}
                       />
@@ -2397,7 +2369,7 @@ function SantrollerMapping({
                         {t('pin_use_current')}
                       </Button>
                     </Group>
-                    {mapping.trigger == proto.AnalogToDigitalTriggerType.Range && (
+                    {mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
                       <>
                         <Text size="sm" fw={700}>
                           {t('trigger.max')}
@@ -2416,7 +2388,7 @@ function SantrollerMapping({
                             min={0}
                             max={65535}
                             onChange={(e) =>
-                              dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString()) })
+                              dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString(), 10) })
                             }
                             w={100}
                           />
@@ -2474,7 +2446,7 @@ function SantrollerMapping({
                     value={mapping.released!}
                     min={0}
                     max={65535}
-                    onChange={(e) => dispatch({ ...mapping, released: parseInt(e.toString()) })}
+                    onChange={(e) => dispatch({ ...mapping, released: parseInt(e.toString(), 10) })}
                     w={100}
                   />
                 </Group>
@@ -2496,7 +2468,7 @@ function SantrollerMapping({
                 value={mapping.pressed!}
                 min={0}
                 max={65535}
-                onChange={(e) => dispatch({ ...mapping, pressed: parseInt(e.toString()) })}
+                onChange={(e) => dispatch({ ...mapping, pressed: parseInt(e.toString(), 10) })}
                 w={100}
               />
             </Group>
@@ -2519,7 +2491,7 @@ function SantrollerMapping({
                         max={mapping.max!}
                         deadzone={mapping.deadzone!}
                         raw
-                      ></StateSlider>
+                      />
                       {stick && (
                         <>
                           <Text size="sm" fw={700}>
@@ -2539,7 +2511,7 @@ function SantrollerMapping({
                               min={0}
                               max={65535}
                               onChange={(e) =>
-                                dispatch({ ...mapping, center: parseInt(e.toString()) })
+                                dispatch({ ...mapping, center: parseInt(e.toString(), 10) })
                               }
                               w={100}
                             />
@@ -2578,7 +2550,9 @@ function SantrollerMapping({
                           value={mapping.min!}
                           min={0}
                           max={65535}
-                          onChange={(e) => dispatch({ ...mapping, min: parseInt(e.toString()) })}
+                          onChange={(e) =>
+                            dispatch({ ...mapping, min: parseInt(e.toString(), 10) })
+                          }
                           w={100}
                         />
                       </Group>
@@ -2611,7 +2585,9 @@ function SantrollerMapping({
                           value={mapping.max!}
                           min={0}
                           max={65535}
-                          onChange={(e) => dispatch({ ...mapping, max: parseInt(e.toString()) })}
+                          onChange={(e) =>
+                            dispatch({ ...mapping, max: parseInt(e.toString(), 10) })
+                          }
                           w={100}
                         />
                       </Group>
@@ -2646,7 +2622,7 @@ function SantrollerMapping({
                           min={0}
                           max={65535}
                           onChange={(e) =>
-                            dispatch({ ...mapping, deadzone: parseInt(e.toString()) })
+                            dispatch({ ...mapping, deadzone: parseInt(e.toString(), 10) })
                           }
                           w={100}
                         />
@@ -2666,7 +2642,6 @@ function SantrollerMapping({
 
 function SantrollerLed({
   led,
-  type,
   profileIdx,
   ledIdx,
   mode,
@@ -2676,7 +2651,6 @@ function SantrollerLed({
   copyInput,
 }: {
   led: proto.ILed;
-  type: proto.SubType;
   profileIdx: number;
   ledIdx: number;
   mode: proto.FaceButtonMappingMode;
@@ -2715,7 +2689,7 @@ function SantrollerLed({
   const mapping = useConfigStore(
     (state) =>
       Object.values(state.mappingStatus[profileIdx]).find(
-        (x) => JSON.stringify(x.mapping.input) == JSON.stringify(led.mapping.inputMapping?.input)
+        (x) => JSON.stringify(x.mapping.input) === JSON.stringify(led.mapping.inputMapping?.input)
       )?.mapping
   );
   const [opened, { open, close }] = useDisclosure(false);
@@ -2740,17 +2714,17 @@ function SantrollerLed({
           proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
           proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
 
-        let fixedLabel = FixLabel(mode, label, legendMode);
+        const fixedLabel = FixLabel(mode, label, legendMode);
         return `Icons/Input/${fixedLabel}.png`;
       }
     }
     return `Icons/Generic.png`;
   }, [led, mode, mapping]);
   let labels: string[] = [];
-  let allLabels = Object.entries(guiDevices)
-    .filter((x) => x[1].ledLabel?.deviceid == deviceId)
+  const allLabels = Object.entries(guiDevices)
+    .filter((x) => x[1].ledLabel?.deviceid === deviceId)
     .flatMap((x) =>
-      x[1].ledLabel?.activeLed?.map((y) => ({ led: y, label: x[1].ledLabel?.label! }))
+      x[1].ledLabel?.activeLed?.map((y) => ({ led: y, label: x[1].ledLabel!.label! }))
     )
     .reduce(
       (prev, next) => ({ ...prev, [next!.led]: [...(prev[next!.led] ?? []), next!.label] }),
@@ -2758,7 +2732,7 @@ function SantrollerLed({
     );
   const getLedLabel = (led: number) => {
     if (allLabels[led]) {
-      return ' - ' + allLabels[led].join(' - ');
+      return ` - ${allLabels[led].join(' - ')}`;
     }
     return '';
   };
@@ -2790,11 +2764,11 @@ function SantrollerLed({
       labels = Object.entries(guiDevices)
         .filter(
           (x) =>
-            x[1].ledLabel?.deviceid == deviceId &&
+            x[1].ledLabel?.deviceid === deviceId &&
             new Set(x[1].ledLabel?.activeLed).intersection(new Set(led.device.rgb?.activeLed))
               .size > 0
         )
-        .map((x) => x[1].ledLabel?.label!);
+        .map((x) => x[1].ledLabel!.label!);
     }
   }
   let mappingValue = '';
@@ -2855,7 +2829,7 @@ function SantrollerLed({
                 onOptionSubmit={(val) => {
                   deviceCombobox.closeDropdown();
                   if (isNumberLike(val)) {
-                    switch (deviceStatus[parseInt(val)].type) {
+                    switch (deviceStatus[parseInt(val, 10)].type) {
                       case 'ws2812':
                       case 'apa102':
                         dispatch({
@@ -2863,7 +2837,7 @@ function SantrollerLed({
                           device: {
                             rgb: {
                               activeLed: [],
-                              deviceId: parseInt(val),
+                              deviceId: parseInt(val, 10),
                               startR: 0,
                               startG: 0,
                               startB: 0,
@@ -2883,7 +2857,7 @@ function SantrollerLed({
                           device: {
                             stp16: {
                               activeLed: [],
-                              deviceId: parseInt(val),
+                              deviceId: parseInt(val, 10),
                             },
                           },
                         });
@@ -2894,7 +2868,7 @@ function SantrollerLed({
                           device: {
                             dmx: {
                               channel: 0,
-                              deviceId: parseInt(val),
+                              deviceId: parseInt(val, 10),
                             },
                           },
                         });
@@ -2905,7 +2879,7 @@ function SantrollerLed({
                           device: {
                             vtechExpander: {
                               activeLed: 0,
-                              deviceId: parseInt(val),
+                              deviceId: parseInt(val, 10),
                             },
                           },
                         });
@@ -3099,11 +3073,11 @@ function SantrollerLed({
               <NumberInput
                 value={led.device.dmx.channel}
                 min={0}
-                max={device.device.dmx?.channelCount!}
+                max={device.device.dmx!.channelCount}
                 onChange={(e) =>
                   dispatch({
                     ...led,
-                    device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString()) } },
+                    device: { dmx: { ...led.device.dmx!, channel: parseInt(e.toString(), 10) } },
                   })
                 }
               />
@@ -3112,7 +3086,7 @@ function SantrollerLed({
               <MultiSelect
                 label={t('leds.label')}
                 value={Array.from(Array(8).keys())
-                  .filter((x) => led.device.vtechExpander?.activeLed! & (1 << x))
+                  .filter((x) => led.device.vtechExpander!.activeLed! & (1 << x))
                   .map((x) => x.toString())}
                 data={Array.from({ length: 8 }, (_, x) => x.toString())}
                 clearable
@@ -3124,7 +3098,7 @@ function SantrollerLed({
                       vtechExpander: {
                         ...led.device.vtechExpander!,
                         activeLed: val.reduce(
-                          (prev, current) => prev | (1 << parseInt(current)),
+                          (prev, current) => prev | (1 << parseInt(current, 10)),
                           0
                         ),
                       },
@@ -3149,7 +3123,7 @@ function SantrollerLed({
                       mapping: { inputMapping: { ...led.mapping.inputMapping!, pattern } },
                     })
                   }
-                ></DropdownBox>
+                />
                 <SantrollerInput
                   axis={!!analog}
                   button={!analog}
@@ -3162,7 +3136,7 @@ function SantrollerLed({
                     });
                   }}
                   ledIdx={ledIdx}
-                ></SantrollerInput>
+                />
               </>
             )}
             <Space h="md" />
@@ -3179,7 +3153,7 @@ function SantrollerLed({
                       mapping: { patternMapping: { ...led.mapping.patternMapping!, pattern } },
                     })
                   }
-                ></DropdownBox>
+                />
                 <Text size="sm">{t('leds.speed')}</Text>
                 <Slider
                   value={led.mapping.patternMapping?.speed}
@@ -3195,7 +3169,7 @@ function SantrollerLed({
                   }
                 />
                 <Text size="sm">{t('leds.brightness')}</Text>
-                {led.mapping.patternMapping.pattern == proto.RgbPatternType.PatternRainbow && (
+                {led.mapping.patternMapping.pattern === proto.RgbPatternType.PatternRainbow && (
                   <Slider
                     value={led.mapping.patternMapping?.brightness}
                     min={1}
@@ -3242,7 +3216,9 @@ function SantrollerLed({
                 onChange={(val) =>
                   dispatch({
                     ...led,
-                    device: { rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x)) } },
+                    device: {
+                      rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x, 10)) },
+                    },
                   })
                 }
                 searchable
@@ -3250,14 +3226,13 @@ function SantrollerLed({
             )}
             {!led.mapping.staticMapping &&
               !simpleMode &&
-              led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
+              led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow && (
                 <>
                   <Space h="md" />
                   <Switch
                     label={t('leds.set_off')}
                     checked={led.device.rgb.hasStart}
                     onChange={(event) => {
-                      console.log(event.currentTarget.checked);
                       dispatch({
                         ...led,
                         device: {
@@ -3271,7 +3246,7 @@ function SantrollerLed({
                   />
                 </>
               )}
-            {(led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow &&
+            {(led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow &&
               led.device.rgb.hasStart &&
               !led.mapping.staticMapping && (
                 <>
@@ -3281,9 +3256,11 @@ function SantrollerLed({
                       label={t('leds.released')}
                       placeholder="Input placeholder"
                       format="rgba"
-                      value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb?.startW! / 255).toFixed(2)})`}
+                      value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb!.startW! / 255).toFixed(2)})`}
                       onChange={(val) => {
-                        if (!val) return;
+                        if (!val) {
+                          return;
+                        }
                         const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
                         dispatch({
                           ...led,
@@ -3291,9 +3268,9 @@ function SantrollerLed({
                             ...led.device,
                             rgb: {
                               ...led.device.rgb!,
-                              startR: parseInt(r),
-                              startG: parseInt(g),
-                              startB: parseInt(b),
+                              startR: parseInt(r, 10),
+                              startG: parseInt(g, 10),
+                              startB: parseInt(b, 10),
                               startW: parseFloat(w) * 255,
                             },
                           },
@@ -3310,10 +3287,10 @@ function SantrollerLed({
                               ...led.device,
                               rgb: {
                                 ...led.device.rgb!,
-                                endR: led.device.rgb?.startR!,
-                                endG: led.device.rgb?.startG!,
-                                endB: led.device.rgb?.startB!,
-                                endW: led.device.rgb?.startW!,
+                                endR: led.device.rgb!.startR,
+                                endG: led.device.rgb!.startG,
+                                endB: led.device.rgb!.startB,
+                                endW: led.device.rgb!.startW,
                               },
                             },
                           })
@@ -3327,15 +3304,17 @@ function SantrollerLed({
               )) ||
               undefined}
             <Space h="md" />
-            {led.mapping.patternMapping?.pattern != proto.RgbPatternType.PatternRainbow && (
+            {led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow && (
               <Group grow>
                 <ColorInput
                   label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
                   placeholder="Input placeholder"
                   format="rgba"
-                  value={`rgba(${led.device.rgb?.endR}, ${led.device.rgb?.endG}, ${led.device.rgb?.endB}, ${(led.device.rgb?.endW! / 255).toFixed(2)})`}
+                  value={`rgba(${led.device.rgb?.endR}, ${led.device.rgb?.endG}, ${led.device.rgb?.endB}, ${(led.device.rgb!.endW! / 255).toFixed(2)})`}
                   onChange={(val) => {
-                    if (!val) return;
+                    if (!val) {
+                      return;
+                    }
                     const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
                     dispatch({
                       ...led,
@@ -3343,9 +3322,9 @@ function SantrollerLed({
                         ...led.device,
                         rgb: {
                           ...led.device.rgb!,
-                          endR: parseInt(r),
-                          endG: parseInt(g),
-                          endB: parseInt(b),
+                          endR: parseInt(r, 10),
+                          endG: parseInt(g, 10),
+                          endB: parseInt(b, 10),
                           endW: parseFloat(w) * 255,
                         },
                       },
@@ -3363,10 +3342,10 @@ function SantrollerLed({
                             ...led.device,
                             rgb: {
                               ...led.device.rgb!,
-                              startR: led.device.rgb?.endR!,
-                              startG: led.device.rgb?.endG!,
-                              startB: led.device.rgb?.endB!,
-                              startW: led.device.rgb?.endW!,
+                              startR: led.device.rgb!.endR,
+                              startG: led.device.rgb!.endG,
+                              startB: led.device.rgb!.endB,
+                              startW: led.device.rgb!.endW,
                             },
                           },
                         })
@@ -3387,12 +3366,12 @@ function SantrollerLed({
               mappingIdx={ledIdx}
               profileIdx={profileIdx}
               center={32767}
-              min={led.mapping.inputMapping?.min!}
-              max={led.mapping.inputMapping?.max!}
+              min={led.mapping.inputMapping!.min!}
+              max={led.mapping.inputMapping!.max!}
               deadzone={0}
               raw
               ledBased
-            ></StateSlider>
+            />
             <Text size="sm">{t('calibration.min')}</Text>
             <Slider
               value={led.mapping.inputMapping!.min!}
@@ -3462,7 +3441,7 @@ function SantrollerLed({
         {led.mapping.inputMapping && !analog && (
           <>
             <Space h="md" />
-            <StateBox mappingIdx={ledIdx} profileIdx={profileIdx} ledBased></StateBox>
+            <StateBox mappingIdx={ledIdx} profileIdx={profileIdx} ledBased />
           </>
         )}
       </Card>
@@ -3471,14 +3450,6 @@ function SantrollerLed({
 }
 
 type ProfileAssignmentTypes = keyof proto.IProfileAssignmentInfo;
-const SingleProfileAssignmentTypes: ProfileAssignmentTypes[] = [
-  'catchall',
-  'wiiExt',
-  'ps2Cnt',
-  'usbType',
-  'usbDevice',
-  'midiChannel',
-];
 const OtherAssignmentTypes: ProfileAssignmentTypes[] = ['catchall', 'input', 'inputAnyTime'];
 const HostProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'wiiExt',
@@ -3496,9 +3467,6 @@ const DeviceProfileAssignmentTypes: ProfileAssignmentTypes[] = [
 const AllProfileAssignmentTypes: ProfileAssignmentTypes[] = OtherAssignmentTypes.concat(
   HostProfileAssignmentTypes
 ).concat(DeviceProfileAssignmentTypes);
-const MultiProfileAssignmentTypes: ProfileAssignmentTypes[] = AllProfileAssignmentTypes.filter(
-  (x) => !SingleProfileAssignmentTypes.includes(x)
-);
 function ActivationTrigger({
   input,
   profileIdx,
@@ -3525,8 +3493,8 @@ function ActivationTrigger({
               val={input.trigger!}
               label="trigger_type"
               dispatch={(trigger) => dispatch({ ...input, trigger })}
-            ></DropdownBox>
-            {input.trigger == proto.AnalogToDigitalTriggerType.JoyHigh && (
+            />
+            {input.trigger === proto.AnalogToDigitalTriggerType.JoyHigh && (
               <StateSlider
                 mappingIdx={activationIdx}
                 profileIdx={profileIdx}
@@ -3536,9 +3504,9 @@ function ActivationTrigger({
                 deadzone={0}
                 raw
                 activationBased
-              ></StateSlider>
+              />
             )}
-            {input.trigger == proto.AnalogToDigitalTriggerType.JoyLow && (
+            {input.trigger === proto.AnalogToDigitalTriggerType.JoyLow && (
               <StateSlider
                 mappingIdx={activationIdx}
                 profileIdx={profileIdx}
@@ -3548,9 +3516,9 @@ function ActivationTrigger({
                 deadzone={0}
                 raw
                 activationBased
-              ></StateSlider>
+              />
             )}
-            {input.trigger == proto.AnalogToDigitalTriggerType.Range && (
+            {input.trigger === proto.AnalogToDigitalTriggerType.Range && (
               <StateSlider
                 mappingIdx={activationIdx}
                 profileIdx={profileIdx}
@@ -3560,9 +3528,9 @@ function ActivationTrigger({
                 deadzone={0}
                 raw
                 activationBased
-              ></StateSlider>
+              />
             )}
-            {(input.trigger == proto.AnalogToDigitalTriggerType.Range && (
+            {(input.trigger === proto.AnalogToDigitalTriggerType.Range && (
               <Text size="sm">{t('trigger.min')}</Text>
             )) || <Text size="sm">{t('trigger.trigger')}</Text>}
 
@@ -3577,7 +3545,7 @@ function ActivationTrigger({
               value={input.triggerValue!}
               min={0}
               max={65535}
-              onChange={(e) => dispatch({ ...input, triggerValue: parseInt(e.toString()) })}
+              onChange={(e) => dispatch({ ...input, triggerValue: parseInt(e.toString(), 10) })}
             />
             <Button
               onClick={() => {
@@ -3591,7 +3559,7 @@ function ActivationTrigger({
             >
               {t('pin_use_current')}
             </Button>
-            {input.trigger == proto.AnalogToDigitalTriggerType.Range && (
+            {input.trigger === proto.AnalogToDigitalTriggerType.Range && (
               <>
                 <Text size="sm">{t('trigger.max')}</Text>
                 <Slider
@@ -3604,7 +3572,9 @@ function ActivationTrigger({
                   value={input.maxTriggerValue!}
                   min={0}
                   max={65535}
-                  onChange={(e) => dispatch({ ...input, maxTriggerValue: parseInt(e.toString()) })}
+                  onChange={(e) =>
+                    dispatch({ ...input, maxTriggerValue: parseInt(e.toString(), 10) })
+                  }
                 />
 
                 <Button
@@ -3648,7 +3618,6 @@ function SantrollerAssignment({
   activationIdx,
   mode,
   legendMode,
-  filterSingle,
   dispatch,
   deleteAssignment,
   copyAssignment,
@@ -3659,7 +3628,6 @@ function SantrollerAssignment({
   activationIdx: number;
   mode: proto.FaceButtonMappingMode;
   legendMode: LegendMode;
-  filterSingle: boolean;
   dispatch: (mapping: proto.IProfileAssignmentInfo) => void;
   deleteAssignment: () => void;
   copyAssignment: () => void;
@@ -3671,8 +3639,9 @@ function SantrollerAssignment({
       assignmentTypeCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   const label = t(
-    'assignmentType.' +
-      AllProfileAssignmentTypes.filter((x) => mapping[x] != null && mapping[x] != undefined)
+    `assignmentType.${AllProfileAssignmentTypes.filter(
+      (x) => mapping[x] != null && mapping[x] !== undefined
+    )}`
   );
   const base = useMemo(
     () => (
@@ -3733,7 +3702,7 @@ function SantrollerAssignment({
           profileIdx={profileIdx}
           listIdx={listIdx}
           activationBased
-        ></StateBox>
+        />
         <Combobox
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
@@ -3825,7 +3794,7 @@ function SantrollerAssignment({
             val={mapping.usbType}
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
-          ></DropdownBox>
+          />
         )}
         {mapping.midiChannel && (
           <NumberInput
@@ -3833,7 +3802,7 @@ function SantrollerAssignment({
             value={mapping.midiChannel}
             min={1}
             max={17}
-            onChange={(val) => dispatch({ midiChannel: parseInt(val.toString()) ?? 1 })}
+            onChange={(val) => dispatch({ midiChannel: parseInt(val.toString(), 10) ?? 1 })}
           />
         )}
         {mapping.consoleType && (
@@ -3861,7 +3830,7 @@ function SantrollerAssignment({
                 val={mapping.consoleType!.consoleType!}
                 label="consoleType"
                 dispatch={(consoleType) => dispatch({ consoleType: { consoleType } })}
-              ></DropdownBox>
+              />
             )}
             <Space h="md" />
             <Switch
@@ -3887,7 +3856,7 @@ function SantrollerAssignment({
                 val={mapping.consoleType!.forcedType!}
                 label="consoleMode"
                 dispatch={(forcedType) => dispatch({ consoleType: { forcedType } })}
-              ></DropdownBox>
+              />
             )}
           </>
         )}
@@ -3899,7 +3868,7 @@ function SantrollerAssignment({
             val={mapping.bluetooth}
             label="bluetooth"
             dispatch={(bluetooth) => dispatch({ bluetooth })}
-          ></DropdownBox>
+          />
         )}
         {mapping.wiiExt && (
           <DropdownBox
@@ -3908,7 +3877,7 @@ function SantrollerAssignment({
             val={mapping.wiiExt}
             label="wiiExt"
             dispatch={(wiiExt) => dispatch({ wiiExt })}
-          ></DropdownBox>
+          />
         )}
         {mapping.ps2Cnt && (
           <DropdownBox
@@ -3917,7 +3886,7 @@ function SantrollerAssignment({
             val={mapping.ps2Cnt}
             label="ps2Cnt"
             dispatch={(ps2Cnt) => dispatch({ ps2Cnt })}
-          ></DropdownBox>
+          />
         )}
         {mapping.usbDevice && (
           <>
@@ -3955,12 +3924,12 @@ function SantrollerAssignment({
           <>
             <SantrollerInput
               axis={false}
-              button={true}
+              button
               input={mapping.inputAnyTime.input}
               legendMode={legendMode}
               activationIdx={activationIdx}
               dispatch={(input) => dispatch({ ...mapping, inputAnyTime: { input } })}
-            ></SantrollerInput>
+            />
             {(analogInput && (
               <ActivationTrigger
                 input={mapping.inputAnyTime}
@@ -3968,7 +3937,7 @@ function SantrollerAssignment({
                 listIdx={listIdx}
                 activationIdx={activationIdx}
                 dispatch={(inputAnyTime) => dispatch({ ...mapping, inputAnyTime })}
-              ></ActivationTrigger>
+              />
             )) || (
               <Switch
                 label={t('calibration.inverted')}
@@ -3987,12 +3956,12 @@ function SantrollerAssignment({
           <>
             <SantrollerInput
               axis={false}
-              button={true}
+              button
               activationIdx={activationIdx}
               legendMode={legendMode}
               input={mapping.input.input}
               dispatch={(input) => dispatch({ ...mapping, input: { input } })}
-            ></SantrollerInput>
+            />
             {(analogInput && (
               <ActivationTrigger
                 input={mapping.input}
@@ -4000,7 +3969,7 @@ function SantrollerAssignment({
                 listIdx={listIdx}
                 activationIdx={activationIdx}
                 dispatch={(input) => dispatch({ ...mapping, input })}
-              ></ActivationTrigger>
+              />
             )) || (
               <Switch
                 label={t('calibration.inverted')}
@@ -4105,11 +4074,6 @@ function SantrollerAssignmentList({
             listIdx={listIdx}
             mapping={assignment}
             legendMode={legendMode}
-            filterSingle={
-              mapping.assignments?.some(
-                (x) => x != assignment && SingleProfileAssignmentTypes.some((y) => x[y])
-              ) ?? false
-            }
             profileIdx={profileIdx}
             mode={mode}
             dispatch={(val) =>
@@ -4117,7 +4081,7 @@ function SantrollerAssignmentList({
                 ...mapping,
                 assignments: [
                   ...mapping.assignments!.map((cAssignment, cAssignmentIdx) =>
-                    cAssignmentIdx == assignmentIdx ? val : cAssignment
+                    cAssignmentIdx === assignmentIdx ? val : cAssignment
                   ),
                 ],
               })
@@ -4127,7 +4091,7 @@ function SantrollerAssignmentList({
                 ...mapping,
                 assignments: [
                   ...mapping.assignments!.filter(
-                    (_, cAssignmentIdx) => cAssignmentIdx != assignmentIdx
+                    (_, cAssignmentIdx) => cAssignmentIdx !== assignmentIdx
                   ),
                 ],
               })
@@ -4364,7 +4328,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             dispatch={(deviceToEmulate) =>
               updateProfile({ ...profile, deviceToEmulate }, profileIdx)
             }
-          ></DropdownBox>
+          />
           <Space h="md" />
           <DropdownBox
             title="main.legendMode.label"
@@ -4373,11 +4337,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             val={legendMode}
             label="legendMode"
             dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
-          ></DropdownBox>
+          />
         </>
       )}
 
-      {profile.deviceToEmulate == proto.SubType.Gamepad && (
+      {profile.deviceToEmulate === proto.SubType.Gamepad && (
         <>
           <Space h="md" />
           <FaceButtonMappingMode
@@ -4415,7 +4379,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       />
       {!simpleMode && (
         <>
-          {profile.deviceToEmulate == proto.SubType.RockBandDrums && (
+          {profile.deviceToEmulate === proto.SubType.RockBandDrums && (
             <>
               <Space h="md" />
               <Switch
@@ -4465,7 +4429,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Td>
-                  {profile.assignments?.length == 0 && (
+                  {profile.assignments?.length === 0 && (
                     <>
                       <Alert variant="light" color="red" title="Error" icon={errorIcon}>
                         {t('assignments.missing')}
@@ -4509,7 +4473,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                       onDragEnd={handleDragEnd}
                     >
                       <SortableContext
-                        items={profile.assignments?.map((mapping, mappingIdx) => mappingIdx)!}
+                        items={profile.assignments!.map((_, mappingIdx) => mappingIdx)!}
                         strategy={rectSortingStrategy}
                       >
                         {profile.assignments?.map((mapping, mappingIdx) => (
@@ -4526,7 +4490,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile,
                                   assignments: [
                                     ...profile.assignments!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx == mappingIdx ? val : cMapping
+                                      cMappingIdx === mappingIdx ? val : cMapping
                                     ),
                                   ],
                                 },
@@ -4539,7 +4503,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile,
                                   assignments: [
                                     ...profile.assignments!.filter(
-                                      (_, cMappingIdx) => cMappingIdx != mappingIdx
+                                      (_, cMappingIdx) => cMappingIdx !== mappingIdx
                                     ),
                                   ],
                                 },
@@ -4653,10 +4617,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               ...profilea,
                               mappings: [
                                 ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                  cMappingIdx == mappingIdx
+                                  cMappingIdx === mappingIdx
                                     ? val
-                                    : JSON.stringify(cMapping.input) == JSON.stringify(val.input) &&
-                                        cMapping.trigger == val.trigger
+                                    : JSON.stringify(cMapping.input) ===
+                                          JSON.stringify(val.input) &&
+                                        cMapping.trigger === val.trigger
                                       ? {
                                           ...cMapping,
                                           center: val.center,
@@ -4668,13 +4633,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                 ),
                               ],
                               assignments: [
-                                ...profilea.assignments!.map((cMapping, cMappingIdx) => ({
+                                ...profilea.assignments!.map((cMapping, _) => ({
                                   ...cMapping,
                                   assignments: [
-                                    ...cMapping.assignments!.map((cAssignment, cAssignmentIdx) =>
-                                      JSON.stringify(cAssignment.input?.input) ==
+                                    ...cMapping.assignments!.map((cAssignment, _) =>
+                                      JSON.stringify(cAssignment.input?.input) ===
                                         JSON.stringify(val.input) &&
-                                      cAssignment.input?.trigger == val.trigger
+                                      cAssignment.input?.trigger === val.trigger
                                         ? {
                                             ...cAssignment,
                                             input: {
@@ -4691,8 +4656,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                 })),
                               ],
                               leds: [
-                                ...profilea.leds!.map((cMapping, cMappingIdx) =>
-                                  JSON.stringify(cMapping.mapping.inputMapping?.input) ==
+                                ...profilea.leds!.map((cMapping, _) =>
+                                  JSON.stringify(cMapping.mapping.inputMapping?.input) ===
                                   JSON.stringify(val.input)
                                     ? {
                                         ...cMapping,
@@ -4718,7 +4683,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               ...profile,
                               mappings: [
                                 ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                                  cMappingIdx == mappingIdx ? val : cMapping
+                                  cMappingIdx === mappingIdx ? val : cMapping
                                 ),
                               ],
                             },
@@ -4732,7 +4697,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             ...profile,
                             mappings: [
                               ...profile.mappings!.filter(
-                                (_, cMappingIdx) => cMappingIdx != mappingIdx
+                                (_, cMappingIdx) => cMappingIdx !== mappingIdx
                               ),
                             ],
                           },
@@ -4757,7 +4722,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext
-                      items={profile.mappings?.map((mapping, mappingIdx) => mappingIdx)!}
+                      items={profile.mappings!.map((_, mappingIdx) => mappingIdx)!}
                       strategy={rectSortingStrategy}
                     >
                       {profile.mappings?.map((mapping, mappingIdx) => (
@@ -4776,11 +4741,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profilea,
                                   mappings: [
                                     ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx == mappingIdx && profileIdxa == profileIdx
+                                      cMappingIdx === mappingIdx && profileIdxa === profileIdx
                                         ? val
-                                        : JSON.stringify(cMapping.input) ==
+                                        : JSON.stringify(cMapping.input) ===
                                               JSON.stringify(val.input) &&
-                                            cMapping.trigger == val.trigger
+                                            cMapping.trigger === val.trigger
                                           ? {
                                               ...cMapping,
                                               center: val.center,
@@ -4792,32 +4757,31 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                     ),
                                   ],
                                   assignments: [
-                                    ...profilea.assignments!.map((cMapping, cMappingIdx) => ({
+                                    ...profilea.assignments!.map((cMapping, _) => ({
                                       ...cMapping,
                                       assignments: [
-                                        ...cMapping.assignments!.map(
-                                          (cAssignment, cAssignmentIdx) =>
-                                            JSON.stringify(cAssignment.input?.input) ==
-                                              JSON.stringify(val.input) &&
-                                            cAssignment.input?.trigger == val.trigger
-                                              ? {
-                                                  ...cAssignment,
-                                                  input: {
-                                                    ...cAssignment!.input!,
-                                                    center: val.center,
-                                                    deadzone: val.deadzone,
-                                                    min: val.min,
-                                                    max: val.max,
-                                                  },
-                                                }
-                                              : cAssignment
+                                        ...cMapping.assignments!.map((cAssignment, _) =>
+                                          JSON.stringify(cAssignment.input?.input) ===
+                                            JSON.stringify(val.input) &&
+                                          cAssignment.input?.trigger === val.trigger
+                                            ? {
+                                                ...cAssignment,
+                                                input: {
+                                                  ...cAssignment!.input!,
+                                                  center: val.center,
+                                                  deadzone: val.deadzone,
+                                                  min: val.min,
+                                                  max: val.max,
+                                                },
+                                              }
+                                            : cAssignment
                                         ),
                                       ],
                                     })),
                                   ],
                                   leds: [
-                                    ...profilea.leds!.map((cMapping, cMappingIdx) =>
-                                      JSON.stringify(cMapping.mapping.inputMapping?.input) ==
+                                    ...profilea.leds!.map((cMapping, _) =>
+                                      JSON.stringify(cMapping.mapping.inputMapping?.input) ===
                                       JSON.stringify(val.input)
                                         ? {
                                             ...cMapping,
@@ -4843,7 +4807,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile,
                                   mappings: [
                                     ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx == mappingIdx ? val : cMapping
+                                      cMappingIdx === mappingIdx ? val : cMapping
                                     ),
                                   ],
                                 },
@@ -4857,7 +4821,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                 ...profile,
                                 mappings: [
                                   ...profile.mappings!.filter(
-                                    (_, cMappingIdx) => cMappingIdx != mappingIdx
+                                    (_, cMappingIdx) => cMappingIdx !== mappingIdx
                                   ),
                                 ],
                               },
@@ -4942,14 +4906,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   onDragEnd={handleDragEndLed}
                 >
                   <SortableContext
-                    items={profile.leds?.map((led, ledIdx) => ledIdx)!}
+                    items={profile.leds!.map((_, ledIdx) => ledIdx)!}
                     strategy={rectSortingStrategy}
                   >
                     {profile.leds?.map((led, ledIdx) => (
                       <SantrollerLed
                         key={ledIdx}
                         led={led}
-                        type={profile.deviceToEmulate}
                         profileIdx={profileIdx}
                         ledIdx={ledIdx}
                         mode={profile.faceButtonMappingMode}
@@ -4960,7 +4923,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               ...profile,
                               leds: [
                                 ...profile.leds!.map((cLed, cLedIdx) =>
-                                  cLedIdx == ledIdx ? val : cLed
+                                  cLedIdx === ledIdx ? val : cLed
                                 ),
                               ],
                             },
@@ -4971,7 +4934,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           updateProfile(
                             {
                               ...profile,
-                              leds: [...profile.leds!.filter((_, cLedIdx) => cLedIdx != ledIdx)],
+                              leds: [...profile.leds!.filter((_, cLedIdx) => cLedIdx !== ledIdx)],
                             },
                             profileIdx
                           )
@@ -5028,7 +4991,7 @@ export function InputsPage() {
   return (
     <Layout>
       <RequireDevice>
-        <Profile profileIdx={activeProfile}></Profile>
+        <Profile profileIdx={activeProfile} />
       </RequireDevice>
     </Layout>
   );

@@ -1,8 +1,8 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, FileButton, FileInput, Progress, Space, Text } from '@mantine/core';
+import { Alert, Button, FileButton, Progress, Space } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { useConfigStore, buildUf2FromJson } from '@/components/SettingsContext/SettingsContext';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
@@ -69,7 +69,7 @@ export function ConnectPage() {
             {t('connect.outdated')}
             <Space h="md" />
             <Button disabled={updating} onClick={firmwareUpdate}>{t('connect.startUpdate')}</Button>
-            <Progress size="xl" value={updatePercentage}></Progress>
+            <Progress size="xl" value={updatePercentage} />
           </Alert>
         )}
       </Layout>

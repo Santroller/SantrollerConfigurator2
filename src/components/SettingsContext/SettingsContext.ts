@@ -5,7 +5,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
 
-import { decodeBlock, encodeBlock, familyMap, UF2BlockData } from 'uf2';
+import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
@@ -125,13 +125,13 @@ export class DeviceStatus {
       .join(', ');
     switch (status.type) {
       case 'wii':
-        label = `${status.wiiExtType != proto.WiiExtType.WiiNoExtension ? 'Connected' : 'Disconnected'}, ${label}`;
+        label = `${status.wiiExtType !== proto.WiiExtType.WiiNoExtension ? 'Connected' : 'Disconnected'}, ${label}`;
         break;
       case 'psx':
-        label = `${status.ps2CntType != proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${label}`;
+        label = `${status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${label}`;
         break;
       case 'usbHost':
-        label = `${Object.values(status.usbDevices).length != 0 ? 'Connected' : 'Disconnected'}, ${label}`;
+        label = `${Object.values(status.usbDevices).length !== 0 ? 'Connected' : 'Disconnected'}, ${label}`;
         break;
       case 'ws2812':
       case 'apa102':
@@ -366,9 +366,9 @@ export interface Actions {
 
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
   const deviceStatus = Object.fromEntries(
-    config.devices!.map((x, i) => [
+    config.devices!.map((x, _) => [
       x.deviceid,
-      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x != 'deviceid')!, x),
+      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x !== 'deviceid')!, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
@@ -389,15 +389,15 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     config.guiConfig
       .filter(
         (x) =>
-          x.config == 'label' ||
-          x.config == 'ledLabel' ||
-          x.config == 'matrixLabel' ||
-          x.config == 'multiplexerLabel'
+          x.config === 'label' ||
+          x.config === 'ledLabel' ||
+          x.config === 'matrixLabel' ||
+          x.config === 'multiplexerLabel'
       )
       .map((x) => [x.deviceid, x])
   );
   aux.states.forEach((x) => (deviceStatus[x.id].cycleState = x.state));
-  const toolInfo = config.guiConfig.find((x) => x.config == 'seller')?.seller || undefined;
+  const toolInfo = config.guiConfig.find((x) => x.config === 'seller')?.seller || undefined;
   document.title = toolInfo?.name || 'Santroller';
   return {
     deviceStatus,
@@ -516,7 +516,8 @@ const WiiMappings = {
 
 const CrkdMappings = {
   [proto.SubType.GuitarHeroGuitar]: {
-    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
     [proto.CrkdNeckButtonType.CrkdDpadDown]:
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumDown,
     [proto.CrkdNeckButtonType.CrkdDpadLeft]:
@@ -530,7 +531,8 @@ const CrkdMappings = {
     [proto.CrkdNeckButtonType.CrkdOrange]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
     [proto.CrkdNeckButtonType.CrkdSoloGreen]:
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
-    [proto.CrkdNeckButtonType.CrkdSoloRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+    [proto.CrkdNeckButtonType.CrkdSoloRed]:
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
     [proto.CrkdNeckButtonType.CrkdSoloYellow]:
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
     [proto.CrkdNeckButtonType.CrkdSoloBlue]:
@@ -540,7 +542,8 @@ const CrkdMappings = {
   },
   [proto.SubType.RockBandGuitar]: {
     [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.RockBandGuitarButtonType.RockBandGuitar_StrumUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]:
+      proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
     [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.RockBandGuitarButtonType.RockBandGuitar_DpadLeft,
     [proto.CrkdNeckButtonType.CrkdDpadRight]:
       proto.RockBandGuitarButtonType.RockBandGuitar_DpadRight,
@@ -577,9 +580,12 @@ const CrkdDrumAxisMappings = {
     [proto.CrkdDrumAxisType.CrkdRedPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
     [proto.CrkdDrumAxisType.CrkdYellowPad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
     [proto.CrkdDrumAxisType.CrkdBluePad]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
-    [proto.CrkdDrumAxisType.CrkdGreenCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
-    [proto.CrkdDrumAxisType.CrkdBlueCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
-    [proto.CrkdDrumAxisType.CrkdYellowCymbal]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+    [proto.CrkdDrumAxisType.CrkdGreenCymbal]:
+      proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+    [proto.CrkdDrumAxisType.CrkdBlueCymbal]:
+      proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+    [proto.CrkdDrumAxisType.CrkdYellowCymbal]:
+      proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
     [proto.CrkdDrumAxisType.CrkdKick1]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
     [proto.CrkdDrumAxisType.CrkdKick2]: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
   },
@@ -737,11 +743,10 @@ function createDefault(type: string, id: string) {
       device = { pin: -1, channelCount: 1 };
       break;
   }
-  return new DeviceStatus(id, type, { deviceid: parseInt(id), [type]: { ...device, mappingMode } });
-}
-function buf2hex(buffer: Uint8Array) {
-  // buffer is an ArrayBuffer
-  return [...new Uint8Array(buffer)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return new DeviceStatus(id, type, {
+    deviceid: parseInt(id, 10),
+    [type]: { ...device, mappingMode },
+  });
 }
 const magic = 0xd2f1e365;
 function fixInput(mapping: proto.IMapping) {
@@ -850,7 +855,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     deleteLabel: (id: number) => {
       set((state) => {
         state.guiDevices = Object.fromEntries(
-          Object.entries(state.guiDevices).filter((x) => x[0] != id.toString())
+          Object.entries(state.guiDevices).filter((x) => x[0] !== id.toString())
         );
       });
       get().saveConfig();
@@ -934,7 +939,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           crkdDrum: proto.CrkdCalibrationUpdateCommand.create({
-            id: parseInt(id),
+            id: parseInt(id, 10),
             type,
             axisType:
               proto.CrkdDrumAxisType[
@@ -946,7 +951,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       )
         .ldelim()
         .finish();
-      let outBuffer2 = new ArrayBuffer(63);
+      const outBuffer2 = new ArrayBuffer(63);
       new Uint8Array(outBuffer2).set(infoBuffer2);
       await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
     },
@@ -979,38 +984,37 @@ export const useConfigStore = create<ConfigState & Actions>()(
       get().saveConfig();
     },
     setActiveProfile: async (id: string | null) => {
-      console.log('set active', id);
-      if (id == 'add') {
+      if (id === 'add') {
         return;
       }
       set((state) => {
         state.lastProfile = state.currentProfile;
-        state.currentProfile = parseInt(id ?? '0');
+        state.currentProfile = parseInt(id ?? '0', 10);
       });
       const state = get();
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           setProfile: proto.SetProfileCommand.create({
-            profileId: state.config.profiles![parseInt(id ?? '0')].uid,
+            profileId: state.config.profiles![parseInt(id ?? '0', 10)].uid,
           }),
         })
       )
         .ldelim()
         .finish();
-      let outBuffer2 = new ArrayBuffer(63);
+      const outBuffer2 = new ArrayBuffer(63);
       new Uint8Array(outBuffer2).set(infoBuffer2);
       await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
     },
     updateProfile: (profile: proto.IProfile, id: number) => {
       set((state) => {
-        if (state.config.profiles![id].faceButtonMappingMode != profile.faceButtonMappingMode) {
+        if (state.config.profiles![id].faceButtonMappingMode !== profile.faceButtonMappingMode) {
           profile.mappings = profile.mappings?.map(fixInput);
         }
         state.config = {
           ...state.config,
           profiles: [
             ...state.config.profiles!.map((prevProfile, prevIndex) =>
-              prevIndex == id ? profile : prevProfile
+              prevIndex === id ? profile : prevProfile
             ),
           ],
         };
@@ -1033,14 +1037,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
     updateProfiles: (profiles: proto.IProfile[]) => {
       set((state) => {
         profiles.forEach((profile, id) => {
-          if (state.config.profiles![id].faceButtonMappingMode != profile.faceButtonMappingMode) {
+          if (state.config.profiles![id].faceButtonMappingMode !== profile.faceButtonMappingMode) {
             profile.mappings = profile.mappings?.map(fixInput);
           }
           state.config = {
             ...state.config,
             profiles: [
               ...state.config.profiles!.map((prevProfile, prevIndex) =>
-                prevIndex == id ? profile : prevProfile
+                prevIndex === id ? profile : prevProfile
               ),
             ],
           };
@@ -1063,12 +1067,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     deleteProfile: (id: number) => {
       set((state) => {
-        if (state.currentProfile == id) {
+        if (state.currentProfile === id) {
           state.currentProfile = Math.max(id - 1, 0);
         }
         state.config = {
           ...state.config,
-          profiles: state.config.profiles?.filter((x, i) => i != id),
+          profiles: state.config.profiles?.filter((_, i) => i !== id),
         };
         state.mappingStatus = state.config.profiles!.map((profile) =>
           Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
@@ -1091,7 +1095,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
     sendKeepAlive: async () => {
       const state = get();
       const dev = state.hidDevice;
-      if (!dev || state.sendingKeepAlive || state.writing) return;
+      if (!dev || state.sendingKeepAlive || state.writing) {
+        return;
+      }
       // only ever have a single keep alive in flight at once, and ignore additional requests while one is in flight
       set((state) => {
         state.sendingKeepAlive = true;
@@ -1113,7 +1119,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       type: proto.PinDetectType
     ) => {
       const dev = get().hidDevice;
-      if (!dev) return;
+      if (!dev) {
+        return;
+      }
       set((state) => {
         state.detected = -1;
         state.detecting = true;
@@ -1131,10 +1139,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       )
         .ldelim()
         .finish();
-      let outBuffer2 = new ArrayBuffer(63);
+      const outBuffer2 = new ArrayBuffer(63);
       new Uint8Array(outBuffer2).set(infoBuffer2);
       await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
-      console.log('done');
     },
 
     updateConfig: (config: proto.IConfig) => {
@@ -1302,8 +1309,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       ghAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1316,8 +1323,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       ghAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1329,8 +1336,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     ghButton: base,
                     input: {
                       wiiButton: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1343,8 +1350,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       rbAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1357,8 +1364,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       rbAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1370,8 +1377,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     rbButton: base,
                     input: {
                       wiiButton: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1384,8 +1391,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       gamepadAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1398,8 +1405,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       gamepadAxis: base,
                       input: {
                         wiiAxis: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1411,8 +1418,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     gamepadButton: base,
                     input: {
                       wiiButton: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1429,8 +1436,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       ghDrumAxis: base,
                       input: {
                         crkdDrum: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1447,8 +1454,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       rbDrumButton: base,
                       input: {
                         crkdDrum: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                     })
@@ -1458,8 +1465,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       rbDrumAxis: base,
                       input: {
                         crkdDrum: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                       min: 0,
@@ -1476,8 +1483,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       gamepadButton: base,
                       input: {
                         crkdDrum: {
-                          axis: parseInt(wii),
-                          deviceid: parseInt(device?.id!),
+                          axis: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
                         },
                       },
                     })
@@ -1494,8 +1501,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     ghButton: base,
                     input: {
                       crkd: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1507,8 +1514,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     rbButton: base,
                     input: {
                       crkd: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1520,8 +1527,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     gamepadButton: base,
                     input: {
                       crkd: {
-                        button: parseInt(wii),
-                        deviceid: parseInt(device?.id!),
+                        button: parseInt(wii, 10),
+                        deviceid: parseInt(device!.id!, 10),
                       },
                     },
                   }))
@@ -1530,12 +1537,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
             break;
         }
-        profile.mappings = profile.mappings;
         state.config = {
           ...state.config,
           profiles: [
             ...state.config.profiles!.map((prevProfile, prevIndex) =>
-              prevIndex == state.currentProfile ? profile : prevProfile
+              prevIndex === state.currentProfile ? profile : prevProfile
             ),
           ],
         };
@@ -1556,28 +1562,30 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     deleteDevice: (id: string) => {
       set((state) => {
-        const idNum = parseInt(id);
+        const idNum = parseInt(id, 10);
         const type = state.deviceStatus[id].type as keyof proto.IInput;
-        if (type == 'gpio' || type == 'fixed' || type == 'shortcut' || type == 'held') return;
+        if (type === 'gpio' || type === 'fixed' || type === 'shortcut' || type === 'held') {
+          return;
+        }
         delete state.deviceStatus[id];
         state.mappingStatus = state.mappingStatus.map((x) =>
           Object.fromEntries(
-            Object.entries(x).filter(([i, x]) => x.mapping.input[type]?.deviceid != idNum)
+            Object.entries(x).filter(([_, x]) => x.mapping.input[type]?.deviceid !== idNum)
           )
         );
         state.config.profiles = state.config.profiles!.map((p) => ({
           ...p,
-          mappings: p.mappings?.filter((x) => x.input[type]?.deviceid != idNum),
+          mappings: p.mappings?.filter((x) => x.input[type]?.deviceid !== idNum),
           assignments: p.assignments?.map((x) => ({
             ...x,
             assignments: x.assignments?.filter(
               (y) =>
-                (!y.input || y.input.input[type]?.deviceid != idNum) &&
-                (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid != idNum)
+                (!y.input || y.input.input[type]?.deviceid !== idNum) &&
+                (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid !== idNum)
             ),
           })),
           leds: p.leds?.filter(
-            (x) => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid != idNum
+            (x) => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid !== idNum
           ),
         }));
       });
@@ -1596,14 +1604,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
       get().saveConfig();
     },
     onReport: (evt: HIDInputReportEvent) => {
-      if (evt.reportId != proto.ReportId.ReportIdConfig) {
+      if (evt.reportId !== proto.ReportId.ReportIdConfig) {
         return;
       }
       const eventList = proto.EventList.decodeDelimited(new Uint8Array(evt.data.buffer));
       for (const deviceEvent of eventList.event) {
-        if (deviceEvent.debug) {
-          console.log(buf2hex(deviceEvent.debug.data!));
-        }
         if (deviceEvent.midiDebug) {
           set((state) => {
             if (deviceEvent.midiDebug) {
@@ -1638,7 +1643,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         if (deviceEvent.reload) {
           set((state) => {
-            console.log('RELOAD');
             state.waitingForReload = true;
           });
         }
@@ -1652,7 +1656,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (deviceEvent.usb) {
           set((state) => {
             if (deviceEvent.usb!.id in state.deviceStatus) {
-              const id = deviceEvent.usb?.port! * 127 + deviceEvent.usb?.interface!;
+              const id = deviceEvent.usb!.port! * 127 + deviceEvent.usb!.interface!;
               if (deviceEvent.usb!.connected) {
                 state.deviceStatus[deviceEvent.usb!.id].usbDevices[id] = deviceEvent.usb!;
               } else {
@@ -1703,8 +1707,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
               const mappings = state.mappingStatus[state.currentProfile ?? 0];
               if (deviceEvent.axis!.id in mappings) {
                 const mapping = mappings[deviceEvent.axis!.id];
-                mapping.state = deviceEvent.axis?.state!;
-                mapping.stateRaw = deviceEvent.axis?.stateRaw!;
+                mapping.state = deviceEvent.axis!.state!;
+                mapping.stateRaw = deviceEvent.axis!.stateRaw!;
                 if (mapping.state) {
                   mapping.stateNonZero = mapping.state;
                 }
@@ -1724,8 +1728,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
               const mappings = state.activationStatus[state.currentProfile ?? 0];
               if (deviceEvent.trigger!.id in mappings) {
                 const mapping = mappings[deviceEvent.trigger!.listId][deviceEvent.trigger!.id];
-                mapping.state = deviceEvent.trigger?.state!;
-                mapping.stateRaw = deviceEvent.trigger?.stateRaw!;
+                mapping.state = deviceEvent.trigger!.state!;
+                mapping.stateRaw = deviceEvent.trigger!.stateRaw!;
               }
             }
           });
@@ -1736,8 +1740,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
               const mappings = state.ledStatus[state.currentProfile ?? 0];
               if (deviceEvent.led!.id in mappings) {
                 const mapping = mappings[deviceEvent.led!.id];
-                mapping.state = deviceEvent.led?.state!;
-                mapping.stateRaw = deviceEvent.led?.stateRaw!;
+                mapping.state = deviceEvent.led!.state!;
+                mapping.stateRaw = deviceEvent.led!.stateRaw!;
                 if (mapping.state) {
                   mapping.stateNonZero = mapping.state;
                 }
@@ -1781,7 +1785,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
     disconnect: async () => {
       const state = get();
       const dev = state.hidDevice;
+      dev?.removeEventListener('inputreport', state.onReport);
       if (dev?.opened) {
+        if (state.keepaliveTimeout) {
+          clearInterval(state.keepaliveTimeout);
+        }
         try {
           const infoBuffer2 = proto.Command.encode(
             proto.Command.create({
@@ -1790,17 +1798,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
           )
             .ldelim()
             .finish();
-          let outBuffer2 = new ArrayBuffer(63);
+          const outBuffer2 = new ArrayBuffer(63);
           new Uint8Array(outBuffer2).set(infoBuffer2);
           await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
         } catch (e) {
-          console.error('Failed to send disconnect', e);
+          // if the device was already disconnected this can error and that is fine
         }
-      }
-      dev?.removeEventListener('inputreport', state.onReport);
-      dev?.close();
-      if (state.keepaliveTimeout) {
-        clearInterval(state.keepaliveTimeout);
+        dev?.close();
       }
       set((state) => {
         state.keepaliveTimeout = undefined;
@@ -1833,7 +1837,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         new Uint8Array(profileData.buffer).slice(1)
       );
       const state = get();
-      if (state.config.profiles![state.currentProfile] != null) {
+      if (state.config.profiles![state.currentProfile] !== null) {
         const infoBuffer2 = proto.Command.encode(
           proto.Command.create({
             setProfile: proto.SetProfileCommand.create({
@@ -1843,7 +1847,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         )
           .ldelim()
           .finish();
-        let outBuffer2 = new ArrayBuffer(63);
+        const outBuffer2 = new ArrayBuffer(63);
         new Uint8Array(outBuffer2).set(infoBuffer2);
         await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       }
@@ -1859,7 +1863,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     bootloader: async () => {
       const dev = get().hidDevice;
-      if (!dev) return;
+      if (!dev) {
+        return;
+      }
       await dev.sendFeatureReport(proto.ReportId.ReportIdBootloader, new Uint8Array([0]));
     },
     pollInputs: (poll) =>
@@ -1868,7 +1874,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }),
     exportConfig: () => {
       const state = get();
-      if (state.hidDevice == null || !state.connected) {
+      if (state.hidDevice === null || !state.connected) {
         return;
       }
       const { config, aux } = get().buildConfig();
@@ -1886,8 +1892,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
     loadConfig: async (file: File | null) => {
       try {
         const data = JSON.parse((await file?.text()) ?? '');
-        const config = proto.Config.fromObject(data['config']);
-        const aux = proto.AuxConfigBlock.fromObject(data['aux']);
+        const config = proto.Config.fromObject(data.config);
+        const aux = proto.AuxConfigBlock.fromObject(data.aux);
         const timeout = setInterval(() => get().sendKeepAlive(), 10);
         set(
           (old) => ({
@@ -1909,7 +1915,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     saveConfig: async () => {
       const state = get();
-      if (state.hidDevice == null || !state.connected) {
+      if (state.hidDevice === null || !state.connected) {
         return;
       }
       // debounce writes so we don't trash the flash on the pico
@@ -1929,7 +1935,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const { buffer, mainLen, auxLen } = get().buildConfigBuffer();
       const crc = new CRC32().calculate(buffer);
       // Don't write if nothing has changed
-      if (crc == state.crc) {
+      if (crc === state.crc) {
         return;
       }
       set((state) => {
@@ -1938,7 +1944,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.detecting = false;
         state.polling = false;
       });
-      let infoBuffer = proto.ConfigInfo.encode(
+      const infoBuffer = proto.ConfigInfo.encode(
         proto.ConfigInfo.create({
           dataSize: buffer.length,
           dataCrc: crc,
@@ -1949,13 +1955,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
       )
         .ldelim()
         .finish();
-      console.log('save');
-      let outBuffer = new ArrayBuffer(63);
+      const outBuffer = new ArrayBuffer(63);
       new Uint8Array(outBuffer).set(infoBuffer);
-      console.log('sending info');
-      await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfigInfo, outBuffer);
-      console.log('sent info');
-      if (buffer.length == 0) {
+      await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdConfigInfo, outBuffer);
+      if (buffer.length === 0) {
         set((state) => {
           state.writing = false;
         });
@@ -1964,11 +1967,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
       let start = 0;
       const len = 63;
       while (start < buffer.length) {
-        let slice = new ArrayBuffer(63);
+        const slice = new ArrayBuffer(63);
         new Uint8Array(slice).set(buffer.slice(start, start + len));
         start += len;
-        console.log('saving!', start);
-        await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
+        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdConfig, slice);
       }
       set((state) => {
         state.writing = false;
@@ -1995,8 +1997,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.profiles = state.mappingStatus.map((x, i) => ({
         ...config.profiles![i],
         supportsSlider:
-          Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) != undefined,
-        ps4OrPs5Mode: !ps4Subtypes.includes(config.profiles![i].deviceToEmulate) || config.profiles![i].ps4OrPs5Mode,
+          Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) !== undefined,
+        ps4OrPs5Mode:
+          !ps4Subtypes.includes(config.profiles![i].deviceToEmulate) ||
+          config.profiles![i].ps4OrPs5Mode,
         mappings: Object.values(x).map((x) => x.mapping),
       }));
       config.guiConfig = Object.values(state.guiDevices);
@@ -2007,11 +2011,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
         });
       }
       const states = Object.values(state.deviceStatus)
-        .filter((x) => x.type == 'cycle')
-        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id), state: x.cycleState }));
+        .filter((x) => x.type === 'cycle')
+        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id, 10), state: x.cycleState }));
       const toggleStates = Object.values(state.deviceStatus)
-        .filter((x) => x.type == 'toggle')
-        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id), state: x.toggleState }));
+        .filter((x) => x.type === 'toggle')
+        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id, 10), state: x.toggleState }));
       const aux = { states, toggleStates };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
@@ -2023,26 +2027,24 @@ export const useConfigStore = create<ConfigState & Actions>()(
     firmwareUpdate: async () => {
       const state = get();
       set((old) => ({ ...old, updatePercentage: 1, updating: true }));
-      console.log('loading file');
       const updateFile = await (await fetch(`santroller_ota_${state.type}.bin`)).bytes();
-      let firmwareInfo = proto.FirmwareUpdate.create({
+      const firmwareInfo = proto.FirmwareUpdate.create({
         chunkOffset: 0,
         chunkSize: 32,
         firmwareSize: updateFile.length,
         offset: 0,
       });
-      console.log('loaded');
-      let buffer = new ArrayBuffer(63);
+      const buffer = new ArrayBuffer(63);
       for (let i = 0; i < updateFile.length; i += 256) {
         firmwareInfo.chunkOffset = 0;
         firmwareInfo.offset = i;
-        let firmwareInfoBuffer = proto.FirmwareUpdate.encodeDelimited(firmwareInfo)
+        const firmwareInfoBuffer = proto.FirmwareUpdate.encodeDelimited(firmwareInfo)
           .ldelim()
           .finish();
         new Uint8Array(buffer).set(firmwareInfoBuffer);
         await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUpdateFirmware, buffer);
         for (let j = 0; j < 256 && i + j < updateFile.length; j += 32) {
-          let buffer2 = new ArrayBuffer(33);
+          const buffer2 = new ArrayBuffer(33);
           new Uint8Array(buffer2).set([proto.ReportId.ReportIdUploadFirmware]);
           new Uint8Array(buffer2).set(updateFile.slice(i + j, i + j + 32), 1);
           await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, buffer2);
@@ -2073,7 +2075,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             .trim()
             .substring(0, 8);
           const latestVersion = (await (await fetch('commit.hash')).text()).trim().substring(0, 8);
-          latest = deviceVersion == latestVersion;
+          latest = deviceVersion === latestVersion;
         } catch (e) {
           console.log(e);
         }
@@ -2081,10 +2083,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           new Uint8Array(infoData.buffer).slice(1),
           infoData.byteLength - 1
         );
-        if (info.magic >>> 0 != magic) {
+        if (info.magic >>> 0 !== magic) {
           console.log('magic didnt match!');
         }
-        let data = new Uint8Array(info.dataSize);
+        const data = new Uint8Array(info.dataSize);
         let start = 0;
         while (start < info.dataSize) {
           const slice = await device.receiveFeatureReport(proto.ReportId.ReportIdConfig);
@@ -2097,7 +2099,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
           new Uint8Array(profileData.buffer).slice(1)
         );
-        if (new CRC32().calculate(data) != info.dataCrc) {
+        if (new CRC32().calculate(data) !== info.dataCrc) {
           console.log('CRC didnt match!');
         }
         let deviceType = 'pico_w';
@@ -2110,12 +2112,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
         } catch (e) {
           console.log(e);
         }
-        console.log('type: ', deviceType);
         try {
-          console.log(info);
           const config = proto.Config.decode(data, info.mainSize);
           const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
-          console.log(config, aux);
           const timeout = setInterval(() => get().sendKeepAlive(), 10);
           set(
             (old) => ({
@@ -2151,14 +2150,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
 );
 if (navigator.hid) {
   navigator.hid.addEventListener('disconnect', (e) => {
-    if (useConfigStore.getState().hidDevice == e.device) {
+    if (useConfigStore.getState().hidDevice === e.device) {
       useConfigStore.getState().disconnect();
     }
   });
   navigator.hid.addEventListener('connect', (e) => {
-    if (!useConfigStore.getState().waitingForReload) return;
-    if (e.device.collections[0].usagePage != 0xff00) return;
-    if (useConfigStore.getState().hidDevice == null) {
+    if (!useConfigStore.getState().waitingForReload) {
+      return;
+    }
+    if (e.device.collections[0].usagePage !== 0xff00) {
+      return;
+    }
+    if (useConfigStore.getState().hidDevice === null) {
       useConfigStore.getState().reconnect(e.device);
     }
   });
@@ -2172,13 +2175,15 @@ if (import.meta.hot) {
 }
 useConfigStore.getState().checkLogin();
 function* range(start: number, stop: number, step: number = 1) {
-  if (stop == null) {
+  let calcStop = stop;
+  let calcStart = start;
+  if (calcStop === null) {
     // one param defined
-    stop = start;
-    start = 0;
+    calcStop = start;
+    calcStart = 0;
   }
 
-  for (let i = start; step > 0 ? i < stop : i > stop; i += step) {
+  for (let i = calcStart; step > 0 ? i < calcStop : i > calcStop; i += step) {
     yield i;
   }
 }
@@ -2187,12 +2192,12 @@ export async function buildUf2FromConfig(
   pico2: boolean,
   { buffer, mainLen, auxLen }: { buffer: Uint8Array; mainLen: number; auxLen: number }
 ) {
-  let uf2File = new Uint8Array(
+  const uf2File = new Uint8Array(
     await (await fetch(pico2 ? '/santroller_pico2.uf2' : '/santroller_pico1.uf2')).arrayBuffer()
   );
   const crc = new CRC32().calculate(buffer);
 
-  let infoBuffer = new Uint8Array(24);
+  const infoBuffer = new Uint8Array(24);
   const dataView = new DataView(infoBuffer.buffer);
   dataView.setUint32(0, buffer.length, true);
   dataView.setUint32(4, crc, true);
@@ -2205,14 +2210,14 @@ export async function buildUf2FromConfig(
   const uf2BlockSize = 512;
   const flashSize = 2 * 1024 * 1024;
   const rawSize = buffer.length + infoBuffer.length;
-  let outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
+  const outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
   const padding = outBuffer.length - rawSize;
   outBuffer.set(buffer, padding);
   outBuffer.set(infoBuffer, padding + buffer.length);
-  let baseAddr = 0x10000000;
-  let eepromAddr = baseAddr + flashSize - outBuffer.length;
-  let blockCount = Math.ceil(outBuffer.length / blockSize);
-  let firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
+  const baseAddr = 0x10000000;
+  const eepromAddr = baseAddr + flashSize - outBuffer.length;
+  const blockCount = Math.ceil(outBuffer.length / blockSize);
+  const firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
   let blocks: UF2BlockData[] = [];
   for (let i = 0; i < firstBlock.totalBlocks; i++) {
     blocks.push(decodeBlock(uf2File.slice(i * 512, (i + 1) * 512)));
@@ -2227,9 +2232,9 @@ export async function buildUf2FromConfig(
       boardFamily: firstBlock.boardFamily,
     });
   }
-  let blockMap = new Set<number>(blocks.map((x) => x.flashAddress));
-  let sectorMap = new Set([...blockMap].map((b) => Math.floor(b / sectorSize) * sectorSize));
-  let blocksToFill = new Set<number>(
+  const blockMap = new Set<number>(blocks.map((x) => x.flashAddress));
+  const sectorMap = new Set([...blockMap].map((b) => Math.floor(b / sectorSize) * sectorSize));
+  const blocksToFill = new Set<number>(
     Array.from([...sectorMap].flatMap((x) => Array.from(range(x, x + sectorSize, blockSize))))
   ).difference(blockMap);
   blocks.push(
@@ -2246,13 +2251,13 @@ export async function buildUf2FromConfig(
   blocks = blocks.map((x, i) => ({ ...x, blockNumber: i, totalBlocks: blocks.length }));
   const outUf2 = new Uint8Array(blocks.length * uf2BlockSize);
   let i = 0;
-  for (let block of blocks) {
+  for (const block of blocks) {
     encodeBlock(block, outUf2, i * 512);
     i++;
   }
-  var blob = new Blob([outUf2.buffer], { type: 'application/octet-stream' });
-  var blobUrl = URL.createObjectURL(blob);
-  var link = document.createElement('a');
+  const blob = new Blob([outUf2.buffer], { type: 'application/octet-stream' });
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
   link.download = 'santroller.uf2';
   link.href = blobUrl;
   link.click();
@@ -2260,8 +2265,8 @@ export async function buildUf2FromConfig(
 export async function buildUf2FromJson(file: File | null, pico2: boolean) {
   try {
     const data = JSON.parse((await file?.text()) ?? '');
-    const config = proto.Config.fromObject(data['config']);
-    const aux = proto.AuxConfigBlock.fromObject(data['aux']);
+    const config = proto.Config.fromObject(data.config);
+    const aux = proto.AuxConfigBlock.fromObject(data.aux);
     const bufferMain = proto.Config.encode(config).finish();
     const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
     const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);

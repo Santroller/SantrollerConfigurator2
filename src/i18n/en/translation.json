@@ -782,7 +782,13 @@
     "addLed": "Add LED Label",
     "addMatrix": "Add Matrix Label",
     "addMultiplexer": "Add Multiplexer Label",
-    "removeAll": "Remove all labels"
+    "removeAll": "Remove all labels",
+    "remove": {
+      "title": "Deleting label",
+      "desc": "Are you sure you wish to delete this label?",
+      "confirm": "Delete label",
+      "cancel": "Cancel"
+    }
   },
   "commercial": {
     "incorrectAccount": "The account you are logged in with does not have access to this tool. Please check you have subscribed to the correct tier on GitHub to access the tool.",

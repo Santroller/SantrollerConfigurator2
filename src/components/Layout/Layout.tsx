@@ -1,19 +1,13 @@
-import { useReducer, useState } from 'react';
 import {
-  IconActivity,
   IconBuildingStore,
   IconChevronRight,
-  IconCircleOff,
   IconDeviceGamepad3,
-  IconGauge,
-  IconHome2,
   IconMoon,
   IconPiano,
   IconPlus,
   IconSettings,
   IconSun,
   IconTag,
-  IconUser,
 } from '@tabler/icons-react';
 import {
   Link as RouterLink,
@@ -28,16 +22,12 @@ import {
   Burger,
   Flex,
   Grid,
-  Group,
   Image,
   NavLink,
-  Skeleton,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
-import classes from './Layout.module.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
@@ -84,9 +74,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
                 <ActionIcon variant="filled" aria-label="Theme" onClick={toggleColorScheme}>
-                  {colorScheme == 'dark' && <IconSun />}
-                  {colorScheme == 'light' && <IconMoon />}
-                  {colorScheme == 'auto' && <IconMoon />}
+                  {colorScheme === 'dark' && <IconSun />}
+                  {colorScheme === 'light' && <IconMoon />}
+                  {colorScheme === 'auto' && <IconMoon />}
                 </ActionIcon>
               </Flex>
             </Grid.Col>
@@ -169,7 +159,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     component={RouterLink}
                     to="/profiles"
                     onClick={() => setActiveProfile(i.toString())}
-                    active={profilePage != null && activeProfile == i}
+                    active={profilePage != null && activeProfile === i}
                     label={x.name}
                     leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                     rightSection={activeProfiles?.includes(x.uid) && <Badge>Active</Badge>}
@@ -182,7 +172,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     label="Add profile"
                     onClick={addProfile}
                     leftSection={<IconPlus size={16} stroke={1.5} />}
-                  ></NavLink>
+                   />
                 )}
               </NavLink>
             </>
