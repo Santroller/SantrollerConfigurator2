@@ -13,6 +13,12 @@ import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
 export * from './config.js';
+export const ps4Subtypes = [
+  proto.SubType.GuitarHeroDrums,
+  proto.SubType.RockBandDrums,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+];
 export class MappingStatus {
   [immerable] = true;
   constructor(id: number, mapping: proto.IMapping) {
@@ -1988,10 +1994,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.syncCalibrations = state.syncInputs;
       config.devices = Object.values(state.deviceStatus).map((x) => x.device);
       // If we are using any of the tap frets then we need slider mappings, otherwise we don't
+      // If a subtype supports PS3 mappings, then allow setting the option, otherwise force ps4 mode
       config.profiles = state.mappingStatus.map((x, i) => ({
         ...config.profiles![i],
         supportsSlider:
           Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) != undefined,
+        ps4OrPs5Mode: !ps4Subtypes.includes(config.profiles![i].deviceToEmulate) || config.profiles![i].ps4OrPs5Mode,
         mappings: Object.values(x).map((x) => x.mapping),
       }));
       config.guiConfig = Object.values(state.guiDevices);

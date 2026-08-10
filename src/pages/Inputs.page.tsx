@@ -84,15 +84,9 @@ import {
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
-import { DeviceStatus, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { DeviceStatus, ps4Subtypes, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { AllPinsNamed, AnalogPins, AnalogPinsNamed } from '@/devices/pico/pins';
 
-const ps4Subtypes = [
-  proto.SubType.GuitarHeroDrums,
-  proto.SubType.RockBandDrums,
-  proto.SubType.GuitarHeroGuitar,
-  proto.SubType.RockBandGuitar,
-];
 
 function StateLabelLabel({
   profileIdx,
