@@ -823,14 +823,14 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
 function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
   if (
     proto.GamepadButtonType[
-      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadButtonType
+      `Gamepad_${label?.split('_')[1]}` as keyof typeof proto.GamepadButtonType
     ] !== undefined
   ) {
     label = `Gamepad_${label.split('_')[1]}`;
   }
   if (
     proto.GamepadAxisType[
-      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadAxisType
+      `Gamepad_${label?.split('_')[1]}` as keyof typeof proto.GamepadAxisType
     ] !== undefined
   ) {
     label = `Gamepad_${label.split('_')[1]}`;
@@ -849,50 +849,7 @@ function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: L
       return 'Generic/Gamepad_North';
     }
   }
-  if (label.startsWith('Gamepad_')) {
-    switch (legendMode) {
-      case LegendMode.Nintendo:
-        return `Nintendo/${label}`;
-      case LegendMode.PlayStation:
-        return `PlayStation/${label}`;
-      case LegendMode.Xbox360:
-        return `Xbox360/${label}`;
-      case LegendMode.XboxOne:
-        return `XboxOne/${label}`;
-    }
-  }
-  return label;
-}
-function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
-  if (
-    proto.GamepadButtonType[
-      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadButtonType
-    ] !== undefined
-  ) {
-    label = `Gamepad_${label.split('_')[1]}`;
-  }
-  if (
-    proto.GamepadAxisType[
-      `Gamepad_${label.split('_')[1]}` as keyof typeof proto.GamepadAxisType
-    ] !== undefined
-  ) {
-    label = `Gamepad_${label.split('_')[1]}`;
-  }
-  if (mode == proto.FaceButtonMappingMode.PositionBased) {
-    if (label == 'Gamepad_A') {
-      return 'Gamepad_South';
-    }
-    if (label == 'Gamepad_B') {
-      return 'Gamepad_East';
-    }
-    if (label == 'Gamepad_X') {
-      return 'Gamepad_West';
-    }
-    if (label == 'Gamepad_Y') {
-      return 'Gamepad_North';
-    }
-  }
-  if (label.startsWith('Gamepad_')) {
+  if (label?.startsWith('Gamepad_')) {
     switch (label) {
       case 'Gamepad_A':
       case 'Gamepad_B':
@@ -906,21 +863,31 @@ function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: 
       case 'Gamepad_RightShoulder':
       case 'Gamepad_LeftTrigger':
       case 'Gamepad_RightTrigger':
+      case 'Gamepad_LeftThumbClick':
+      case 'Gamepad_RightThumbClick':
+      case 'Gamepad_DpadUp':
+      case 'Gamepad_DpadDown':
+      case 'Gamepad_DpadLeft':
+      case 'Gamepad_DpadRight':
         switch (legendMode) {
           case LegendMode.Nintendo:
-            return `Nintendo.${label}`;
+            return `Nintendo/${label}`;
           case LegendMode.PlayStation:
-            return `PlayStation.${label}`;
+            return `PlayStation/${label}`;
           case LegendMode.Xbox360:
-            return `Xbox360.${label}`;
+            return `Xbox360/${label}`;
           case LegendMode.XboxOne:
-            return `XboxOne.${label}`;
+            return `XboxOne/${label}`;
         }
       default:
-        return `Generic.${label}`;
+        return `Generic/${label}`;
     }
   }
   return label;
+}
+function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
+  
+  return FixIcon(mode, label, legendMode)?.replace("/",".");
 }
 
 function SantrollerLabel({ input, label }: { input: proto.IInput; label: string }) {
