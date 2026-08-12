@@ -2161,7 +2161,7 @@ if (navigator.hid) {
     if (e.device.collections[0].usagePage !== 0xff00) {
       return;
     }
-    if (useConfigStore.getState().hidDevice === null) {
+    if (!useConfigStore.getState().hidDevice) {
       useConfigStore.getState().reconnect(e.device);
     }
   });
