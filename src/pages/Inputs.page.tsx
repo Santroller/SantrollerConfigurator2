@@ -1225,6 +1225,7 @@ function SantrollerInput({
                   dispatch({
                     midiNote: {
                       note: 1,
+                      channel: 10,
                       deviceid: parseInt(val, 10),
                     },
                   });
@@ -1233,6 +1234,7 @@ function SantrollerInput({
                   dispatch({
                     midiNote: {
                       note: 1,
+                      channel: 10,
                       deviceid: parseInt(val, 10),
                     },
                   });
@@ -2046,20 +2048,47 @@ function SantrollerInput({
         />
       )}
       {input.midiNote && (
-        <NumberInput
-          label={t('input.midiNote')}
-          value={input.midiNote.note}
-          onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
-        />
+        <>
+          <NumberInput
+            label={t('input.midiNote')}
+            value={input.midiNote.note}
+            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
+          />
+          <NumberInput
+            label={t('input.midiChannel')}
+            value={input.midiNote.channel}
+            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, channel: Number(val) } })}
+          />
+        </>
       )}
       {input.midiControlChange && (
-        <NumberInput
-          label={t('input.midiControlChange')}
-          value={input.midiControlChange.cc}
-          onChange={(val) =>
-            dispatch({ midiControlChange: { ...input.midiControlChange!, cc: Number(val) } })
-          }
-        />
+        <>
+          <NumberInput
+            label={t('input.midiControlChange')}
+            value={input.midiControlChange.cc}
+            onChange={(val) =>
+              dispatch({ midiControlChange: { ...input.midiControlChange!, cc: Number(val) } })
+            }
+          />
+          <NumberInput
+            label={t('input.midiChannel')}
+            value={input.midiControlChange.channel}
+            onChange={(val) =>
+              dispatch({ midiControlChange: { ...input.midiControlChange!, channel: Number(val) } })
+            }
+          />
+        </>
+      )}
+      {input.midiPitchBend && (
+        <>
+          <NumberInput
+            label={t('input.midiPitchBend')}
+            value={input.midiPitchBend.channel}
+            onChange={(val) =>
+              dispatch({ midiPitchBend: { ...input.midiPitchBend!, channel: Number(val) } })
+            }
+          />
+        </>
       )}
       {input.midiProGuitarButton && (
         <DropdownBox
@@ -3450,7 +3479,7 @@ function SantrollerLed({
 }
 
 type ProfileAssignmentTypes = keyof proto.IProfileAssignmentInfo;
-const OtherAssignmentTypes: ProfileAssignmentTypes[] = ['catchall', 'input', 'inputAnyTime'];
+const OtherAssignmentTypes: ProfileAssignmentTypes[] = ['input', 'inputAnyTime'];
 const HostProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'wiiExt',
   'ps2Cnt',
@@ -3685,16 +3714,14 @@ function SantrollerAssignment({
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Card.Section>
-          {!mapping.catchall && (
-            <div style={{ position: 'absolute', top: 0, right: 0 }}>
-              <ActionIcon color="red">
-                <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
-              </ActionIcon>
-              <ActionIcon>
-                <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyAssignment} />
-              </ActionIcon>
-            </div>
-          )}
+          <div style={{ position: 'absolute', top: 0, right: 0 }}>
+            <ActionIcon color="red">
+              <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+            </ActionIcon>
+            <ActionIcon>
+              <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyAssignment} />
+            </ActionIcon>
+          </div>
         </Card.Section>
         <Space h="md" />
         <StateBox
@@ -3715,9 +3742,6 @@ function SantrollerAssignment({
                 break;
               case 'wiiEmulation':
                 dispatch({ wiiEmulation: {} });
-                break;
-              case 'catchall':
-                dispatch({ catchall: {} });
                 break;
               case 'consoleType':
                 dispatch({
@@ -4047,7 +4071,7 @@ function SantrollerAssignmentList({
           <Space h="xl" />
         </Card.Section>
         {!mapping.assignments?.some(
-          (x) => x.catchall || DeviceProfileAssignmentTypes.some((y) => x[y])
+          (x) => DeviceProfileAssignmentTypes.some((y) => x[y])
         ) && (
           <>
             <Alert variant="light" color="red" title="Error" icon={errorIcon}>

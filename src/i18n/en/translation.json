@@ -485,15 +485,15 @@
   "assignments": {
     "type": "Assignment Type",
     "title": "Assignments",
-    "description": "Assignments are key feature of Santroller 2. Here you assign a profile to a set of actions. For example, if you have a Wii adapter, you could have a profile for a Classic Controller, and a profile for a Guitar. On your Classic Controller profile, you would then assign it to a Classic Controller Wii Extension Host, and the guitar would be assigned to a Guitar Hero Guitar Wii Extension Host. Then you also need to tell it what emulation mode this should apply to, for example you would use `USB Device Emulation` for assigning this profile when plugged into a PC or console. If you were doing something like PS2 emulation or bluetooth, you would then have to assign a profile to those as well. You can have multiple assignments on a single profile if you wish to reuse a profile for multiple things. Where Santroller 1 had things like Console Mode bindings, you would instead do that via Assignments in Santroller 2. You have input based assignments which let you do things like activating a profile when holding a button on plug in.",
+    "description": "One of the key improvements with Santroller 2 is that you can have multiple profiles, but this means you need to tell Santroller 2 when you want your profiles used. Assignments are how this is done. Assignments come in two parts - one is the assignment itself, such as say assigning to plugging a Wii Guitar into a Wii Adapter, and the emulation type, such as USB or Bluetooth. This lets you do things like using different profiles for bluetooth vs for USB, but does mean you have to wrap your head around assignments.",
     "match": "Add match",
     "add": "Add Assignment",
     "specificConsole": "Require specific device",
     "specificConsoleDesc": "Enable to apply this profile when plugged into a specific device, for example setting this to PS3 would only apply this profile when plugged into a PS3.",
     "forcedType": "Force device type",
     "forcedTypeDesc": "Enable to ignore console detection and always use a specific mode for this profile.",
-    "missingDevice": "This profile is missing an emulation assignment. Without one, santroller doesn't know when it should use this profile, so it won't be used. Add a catch all assignment if you want this profile used for every mode.",
-    "missing": "This profile is missing an assignment! Without one, it won't ever be assigned. Add a catch all assignment if you want this profile used for every mode.",
+    "missingDevice": "This profile is missing an emulation assignment. Without one, santroller doesn't know when it should use this profile, so it won't be used.",
+    "missing": "This profile is missing an assignment! Without one, it won't ever be assigned",
     "generic": "Generic",
     "host": "Host (Connecting something to this device)",
     "emulation": "Emulation (Connecting this device to something)",
@@ -508,7 +508,6 @@
   },
 
   "assignmentType": {
-    "catchall": "Catch All",
     "wiiExt": "Wii Extension Host",
     "ps2Cnt": "PS1/2 Controller Host",
     "usbType": "USB Host By Type",
@@ -522,7 +521,6 @@
     "wiiEmulation": "Wii Extension Emulation"
   },
   "assignmentTypeDesc": {
-    "catchall": "Apply this profile if no other profiles have matched",
     "wiiExt": "Match when a Wii Extension is plugged into this device",
     "ps2Cnt": "Match when a PS1/2 Controller is plugged into this device",
     "usbType": "Match when a usb device type is plugged into this device via USB host",

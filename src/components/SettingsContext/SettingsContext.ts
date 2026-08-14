@@ -927,7 +927,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    deleteAllLabels: () => {},
+    deleteAllLabels: () => {
+      set((state) => {
+        state.guiDevices = {};
+      });
+      get().saveConfig();
+    },
     updateCrkdDrumCalibration: async (id, type, key, val) => {
       set((state) => {
         state.deviceStatus[id].crkdDrumCalibration = {
