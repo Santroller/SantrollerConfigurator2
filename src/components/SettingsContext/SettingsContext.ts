@@ -2157,12 +2157,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
   }))
 );
-const disconnect = (e) => {
+const disconnect = (e: any) => {
   if (useConfigStore.getState().hidDevice === e.device) {
     useConfigStore.getState().disconnect();
   }
 };
-const connect = (e) => {
+const connect = (e: any) => {
   if (!useConfigStore.getState().waitingForReload) {
     return;
   }
