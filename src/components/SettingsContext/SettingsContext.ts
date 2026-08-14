@@ -2017,10 +2017,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }
       const states = Object.values(state.deviceStatus)
         .filter((x) => x.type === 'cycle')
-        .map((x) => proto.CyclingInputState.create({ id: parseInt(x.id, 10), state: x.cycleState }));
+        .map((x) =>
+          proto.CyclingInputState.create({ id: parseInt(x.id, 10), state: x.cycleState })
+        );
       const toggleStates = Object.values(state.deviceStatus)
         .filter((x) => x.type === 'toggle')
-        .map((x) => proto.ToggleInputState.create({ id: parseInt(x.id, 10), state: x.toggleState }));
+        .map((x) =>
+          proto.ToggleInputState.create({ id: parseInt(x.id, 10), state: x.toggleState })
+        );
       const aux = { states, toggleStates };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
@@ -2153,29 +2157,33 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
   }))
 );
+const disconnect = (e) => {
+  if (useConfigStore.getState().hidDevice === e.device) {
+    useConfigStore.getState().disconnect();
+  }
+};
+const connect = (e) => {
+  if (!useConfigStore.getState().waitingForReload) {
+    return;
+  }
+  if (e.device.collections[0].usagePage !== 0xff00) {
+    return;
+  }
+  if (!useConfigStore.getState().hidDevice) {
+    useConfigStore.getState().reconnect(e.device);
+  }
+};
 if (navigator.hid) {
-  navigator.hid.addEventListener('disconnect', (e) => {
-    if (useConfigStore.getState().hidDevice === e.device) {
-      useConfigStore.getState().disconnect();
-    }
-  });
-  navigator.hid.addEventListener('connect', (e) => {
-    if (!useConfigStore.getState().waitingForReload) {
-      return;
-    }
-    if (e.device.collections[0].usagePage !== 0xff00) {
-      return;
-    }
-    if (!useConfigStore.getState().hidDevice) {
-      useConfigStore.getState().reconnect(e.device);
-    }
-  });
+  navigator.hid.addEventListener('disconnect', disconnect);
+  navigator.hid.addEventListener('connect', connect);
 }
 
 // make sure we disconnect from the device when using HMR in development
 if (import.meta.hot) {
   import.meta.hot.on('vite:beforeUpdate', () => {
     useConfigStore.getState().disconnect();
+    navigator.hid.removeEventListener('disconnect', disconnect);
+    navigator.hid.removeEventListener('connect', connect);
   });
 }
 useConfigStore.getState().checkLogin();
