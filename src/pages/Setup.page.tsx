@@ -27,7 +27,6 @@ export function SetupPage() {
               Bluetooth - You can emulate a gamepad, but connecting devices to a receiver is not
               supported yet.
             </li>
-            <li>Wii Extension Emulation (as in, plugging the Pico into a Wii Remote)</li>
             <li>
               A bunch of device types aren't emulated yet
             </li>
