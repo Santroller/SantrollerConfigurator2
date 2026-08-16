@@ -29,9 +29,6 @@ export function SetupPage() {
             </li>
             <li>Wii Extension Emulation (as in, plugging the Pico into a Wii Remote)</li>
             <li>
-              PS2 Emulation (as in, plugging the Pico into the PS2 controller port on your console)
-            </li>
-            <li>
               A bunch of device types aren't emulated yet
             </li>
             <li>
