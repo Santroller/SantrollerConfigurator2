@@ -61,15 +61,15 @@ export function DebugPage() {
     <>
       <Layout>
         <RequireDevice>
-          <Text>{t('debug.title')}</Text> <Button onClick={clearConsole}>{t('debug.clear')}</Button>
+          <Text>{t('debug.logs.title')}</Text> <Button onClick={clearConsole}>{t('debug.logs.clear')}</Button>
           <Code block>{consoleData}</Code>
-          <Text>{t('midi.title')}</Text> <Button onClick={clearMidi}>{t('midi.clear')}</Button>
+          <Text>{t('debug.midi.title')}</Text> <Button onClick={clearMidi}>{t('debug.midi.clear')}</Button>
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t('midi.type')}</Table.Th>
-                <Table.Th>{t('midi.channel')}</Table.Th>
-                <Table.Th>{t('midi.data')}</Table.Th>
+                <Table.Th>{t('debug.midi.type')}</Table.Th>
+                <Table.Th>{t('debug.midi.channel')}</Table.Th>
+                <Table.Th>{t('debug.midi.data')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

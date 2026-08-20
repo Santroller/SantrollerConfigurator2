@@ -1811,6 +1811,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         dev?.close();
       }
+      console.log(state.waitingForReload)
       set((state) => {
         state.keepaliveTimeout = undefined;
         state.connected = state.waitingForReload;
@@ -2181,6 +2182,7 @@ if (navigator.hid) {
 // make sure we disconnect from the device when using HMR in development
 if (import.meta.hot) {
   import.meta.hot.on('vite:beforeUpdate', () => {
+    useConfigStore.setState((old) => ({ ...old, waitingForReload: false }));
     useConfigStore.getState().disconnect();
     navigator.hid.removeEventListener('disconnect', disconnect);
     navigator.hid.removeEventListener('connect', connect);

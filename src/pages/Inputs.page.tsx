@@ -71,7 +71,49 @@ import {
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
-
+const ASCII_TO_HID: Record<string, { modifier: number; code: number }> = {
+  "\b": { modifier: 0x00, code: 0x2a }, // Backspace
+  "\t": { modifier: 0x00, code: 0x2b }, // Tab
+  "\n": { modifier: 0x00, code: 0x28 }, // Enter
+  " ":  { modifier: 0x00, code: 0x2c }, // Space
+  "a": { modifier: 0x00, code: 0x04 }, "A": { modifier: 0x02, code: 0x04 },
+  "b": { modifier: 0x00, code: 0x05 }, "B": { modifier: 0x02, code: 0x05 },
+  "c": { modifier: 0x00, code: 0x06 }, "C": { modifier: 0x02, code: 0x06 },
+  "d": { modifier: 0x00, code: 0x07 }, "D": { modifier: 0x02, code: 0x07 },
+  "e": { modifier: 0x00, code: 0x08 }, "E": { modifier: 0x02, code: 0x08 },
+  "f": { modifier: 0x00, code: 0x09 }, "F": { modifier: 0x02, code: 0x09 },
+  "g": { modifier: 0x00, code: 0x0a }, "G": { modifier: 0x02, code: 0x0a },
+  "h": { modifier: 0x00, code: 0x0b }, "H": { modifier: 0x02, code: 0x0b },
+  "i": { modifier: 0x00, code: 0x0c }, "I": { modifier: 0x02, code: 0x0c },
+  "j": { modifier: 0x00, code: 0x0d }, "J": { modifier: 0x02, code: 0x0d },
+  "k": { modifier: 0x00, code: 0x0e }, "K": { modifier: 0x02, code: 0x0e },
+  "l": { modifier: 0x00, code: 0x0f }, "L": { modifier: 0x02, code: 0x0f },
+  "m": { modifier: 0x00, code: 0x10 }, "M": { modifier: 0x02, code: 0x10 },
+  "n": { modifier: 0x00, code: 0x11 }, "N": { modifier: 0x02, code: 0x11 },
+  "o": { modifier: 0x00, code: 0x12 }, "O": { modifier: 0x02, code: 0x12 },
+  "p": { modifier: 0x00, code: 0x13 }, "P": { modifier: 0x02, code: 0x13 },
+  "q": { modifier: 0x00, code: 0x14 }, "Q": { modifier: 0x02, code: 0x14 },
+  "r": { modifier: 0x00, code: 0x15 }, "R": { modifier: 0x02, code: 0x15 },
+  "s": { modifier: 0x00, code: 0x16 }, "S": { modifier: 0x02, code: 0x16 },
+  "t": { modifier: 0x00, code: 0x17 }, "T": { modifier: 0x02, code: 0x17 },
+  "u": { modifier: 0x00, code: 0x18 }, "U": { modifier: 0x02, code: 0x18 },
+  "v": { modifier: 0x00, code: 0x19 }, "V": { modifier: 0x02, code: 0x19 },
+  "w": { modifier: 0x00, code: 0x1a }, "W": { modifier: 0x02, code: 0x1a },
+  "x": { modifier: 0x00, code: 0x1b }, "X": { modifier: 0x02, code: 0x1b },
+  "y": { modifier: 0x00, code: 0x1c }, "Y": { modifier: 0x02, code: 0x1c },
+  "z": { modifier: 0x00, code: 0x1d }, "Z": { modifier: 0x02, code: 0x1d },
+  "1": { modifier: 0x00, code: 0x1e }, "!": { modifier: 0x02, code: 0x1e },
+  "2": { modifier: 0x00, code: 0x1f }, "@": { modifier: 0x02, code: 0x1f },
+  "3": { modifier: 0x00, code: 0x20 }, "#": { modifier: 0x02, code: 0x20 },
+  "4": { modifier: 0x00, code: 0x21 }, "$": { modifier: 0x02, code: 0x21 },
+  "5": { modifier: 0x00, code: 0x22 }, "%": { modifier: 0x02, code: 0x22 },
+  "6": { modifier: 0x00, code: 0x23 }, "^": { modifier: 0x02, code: 0x23 },
+  "7": { modifier: 0x00, code: 0x24 }, "&": { modifier: 0x02, code: 0x24 },
+  "8": { modifier: 0x00, code: 0x25 }, "*": { modifier: 0x02, code: 0x25 },
+  "9": { modifier: 0x00, code: 0x26 }, "(": { modifier: 0x02, code: 0x26 },
+  "0": { modifier: 0x00, code: 0x27 }, ")": { modifier: 0x02, code: 0x27 }
+};
+const hidReverse = Object.fromEntries(Object.entries(ASCII_TO_HID).map(([k, v]) => [v.code, k]));
 function StateLabelLabel({
   profileIdx,
   mappingIdx,
@@ -358,6 +400,7 @@ function OutputBox({
   legendMode: LegendMode;
   dispatch: (mapping: proto.IMapping) => void;
 }) {
+  const { t } = useTranslation();
   const outputCombobox = useCombobox({
     onDropdownClose: () => outputCombobox.resetSelectedOption(),
   });
@@ -576,7 +619,19 @@ function OutputBox({
     case proto.SubType.Taiko:
       break;
     case proto.SubType.KeyboardMouse:
-      break;
+      return (
+        <TextInput
+          label={t('keyboard.keycode')}
+          value={hidReverse[mapping.keycode!]}
+          onKeyDown={(event) => {
+            dispatch({
+              ...mapping,
+               keycode: ASCII_TO_HID[event.key].code
+            })
+          }
+          }
+        />
+      );
     case proto.SubType.Wheel:
       break;
     case proto.SubType.DisneyInfinity:
@@ -1231,6 +1286,15 @@ function SantrollerInput({
                   });
                   break;
                 case 'worldTourDrum':
+                  dispatch({
+                    midiNote: {
+                      note: 1,
+                      channel: 10,
+                      deviceid: parseInt(val, 10),
+                    },
+                  });
+                  break;
+                case 'midiSerial':
                   dispatch({
                     midiNote: {
                       note: 1,
@@ -4070,9 +4134,7 @@ function SantrollerAssignmentList({
           </div>
           <Space h="xl" />
         </Card.Section>
-        {!mapping.assignments?.some(
-          (x) => DeviceProfileAssignmentTypes.some((y) => x[y])
-        ) && (
+        {!mapping.assignments?.some((x) => DeviceProfileAssignmentTypes.some((y) => x[y])) && (
           <>
             <Alert variant="light" color="red" title="Error" icon={errorIcon}>
               {t('assignments.missingDevice')}

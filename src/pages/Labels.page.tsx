@@ -470,8 +470,8 @@ function MultiplexerLabel({
   }
   return (
     <>
-      <Modal opened={opened} onClose={close} title={t('delete_label_dialog.title')} centered>
-        {t('delete_label_dialog.desc')}
+      <Modal opened={opened} onClose={close} title={t('label.remove.title')} centered>
+        {t('label.remove.desc')}
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
@@ -482,9 +482,9 @@ function MultiplexerLabel({
               }}
               color="red"
             >
-              {t('delete_label_dialog.confirm')}
+              {t('label.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_label_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('label.remove.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
