@@ -70,49 +70,9 @@ import {
   ps4Subtypes,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
+import { ASCII_TO_HID } from '@/devices/keyboard';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
-const ASCII_TO_HID: Record<string, { modifier: number; code: number }> = {
-  "\b": { modifier: 0x00, code: 0x2a }, // Backspace
-  "\t": { modifier: 0x00, code: 0x2b }, // Tab
-  "\n": { modifier: 0x00, code: 0x28 }, // Enter
-  " ":  { modifier: 0x00, code: 0x2c }, // Space
-  "a": { modifier: 0x00, code: 0x04 }, "A": { modifier: 0x02, code: 0x04 },
-  "b": { modifier: 0x00, code: 0x05 }, "B": { modifier: 0x02, code: 0x05 },
-  "c": { modifier: 0x00, code: 0x06 }, "C": { modifier: 0x02, code: 0x06 },
-  "d": { modifier: 0x00, code: 0x07 }, "D": { modifier: 0x02, code: 0x07 },
-  "e": { modifier: 0x00, code: 0x08 }, "E": { modifier: 0x02, code: 0x08 },
-  "f": { modifier: 0x00, code: 0x09 }, "F": { modifier: 0x02, code: 0x09 },
-  "g": { modifier: 0x00, code: 0x0a }, "G": { modifier: 0x02, code: 0x0a },
-  "h": { modifier: 0x00, code: 0x0b }, "H": { modifier: 0x02, code: 0x0b },
-  "i": { modifier: 0x00, code: 0x0c }, "I": { modifier: 0x02, code: 0x0c },
-  "j": { modifier: 0x00, code: 0x0d }, "J": { modifier: 0x02, code: 0x0d },
-  "k": { modifier: 0x00, code: 0x0e }, "K": { modifier: 0x02, code: 0x0e },
-  "l": { modifier: 0x00, code: 0x0f }, "L": { modifier: 0x02, code: 0x0f },
-  "m": { modifier: 0x00, code: 0x10 }, "M": { modifier: 0x02, code: 0x10 },
-  "n": { modifier: 0x00, code: 0x11 }, "N": { modifier: 0x02, code: 0x11 },
-  "o": { modifier: 0x00, code: 0x12 }, "O": { modifier: 0x02, code: 0x12 },
-  "p": { modifier: 0x00, code: 0x13 }, "P": { modifier: 0x02, code: 0x13 },
-  "q": { modifier: 0x00, code: 0x14 }, "Q": { modifier: 0x02, code: 0x14 },
-  "r": { modifier: 0x00, code: 0x15 }, "R": { modifier: 0x02, code: 0x15 },
-  "s": { modifier: 0x00, code: 0x16 }, "S": { modifier: 0x02, code: 0x16 },
-  "t": { modifier: 0x00, code: 0x17 }, "T": { modifier: 0x02, code: 0x17 },
-  "u": { modifier: 0x00, code: 0x18 }, "U": { modifier: 0x02, code: 0x18 },
-  "v": { modifier: 0x00, code: 0x19 }, "V": { modifier: 0x02, code: 0x19 },
-  "w": { modifier: 0x00, code: 0x1a }, "W": { modifier: 0x02, code: 0x1a },
-  "x": { modifier: 0x00, code: 0x1b }, "X": { modifier: 0x02, code: 0x1b },
-  "y": { modifier: 0x00, code: 0x1c }, "Y": { modifier: 0x02, code: 0x1c },
-  "z": { modifier: 0x00, code: 0x1d }, "Z": { modifier: 0x02, code: 0x1d },
-  "1": { modifier: 0x00, code: 0x1e }, "!": { modifier: 0x02, code: 0x1e },
-  "2": { modifier: 0x00, code: 0x1f }, "@": { modifier: 0x02, code: 0x1f },
-  "3": { modifier: 0x00, code: 0x20 }, "#": { modifier: 0x02, code: 0x20 },
-  "4": { modifier: 0x00, code: 0x21 }, "$": { modifier: 0x02, code: 0x21 },
-  "5": { modifier: 0x00, code: 0x22 }, "%": { modifier: 0x02, code: 0x22 },
-  "6": { modifier: 0x00, code: 0x23 }, "^": { modifier: 0x02, code: 0x23 },
-  "7": { modifier: 0x00, code: 0x24 }, "&": { modifier: 0x02, code: 0x24 },
-  "8": { modifier: 0x00, code: 0x25 }, "*": { modifier: 0x02, code: 0x25 },
-  "9": { modifier: 0x00, code: 0x26 }, "(": { modifier: 0x02, code: 0x26 },
-  "0": { modifier: 0x00, code: 0x27 }, ")": { modifier: 0x02, code: 0x27 }
-};
+
 const hidReverse = Object.fromEntries(Object.entries(ASCII_TO_HID).map(([k, v]) => [v.code, k]));
 function StateLabelLabel({
   profileIdx,
@@ -414,10 +374,11 @@ function OutputBox({
           title="output"
           mode={mode}
           legendMode={legendMode}
+          type={type}
           e={proto.GamepadAxisType}
           e2={proto.GamepadButtonType}
-          val={mapping.gamepadAxis!}
-          val2={mapping.gamepadButton!}
+          val={mapping.mapping.gamepadAxis!}
+          val2={mapping.mapping.gamepadButton!}
           dispatch={(axis) =>
             dispatch({
               center: proto.GamepadAxisType[axis].includes('Trigger') ? 0 : 32767,
@@ -425,12 +386,12 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              gamepadAxis: axis,
-              gamepadButton: null,
+              mapping: {
+                gamepadAxis: axis,
+              },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, gamepadButton: button, gamepadAxis: null })}
-          dispatch3={() => {}}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { gamepadButton: button } })}
         />
       );
     case proto.SubType.GuitarHeroGuitar:
@@ -440,9 +401,14 @@ function OutputBox({
           title="output"
           e={proto.GuitarHeroGuitarAxisType}
           e2={proto.GuitarHeroGuitarButtonType}
-          val={mapping.ghAxis!}
-          val2={mapping.ghButton!}
+          val={mapping.mapping.ghAxis!}
+          val2={mapping.mapping.ghButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           legendMode={legendMode}
+          type={type}
           dispatch={(axis) =>
             dispatch({
               min: 0,
@@ -450,12 +416,23 @@ function OutputBox({
               ...mapping,
               center: proto.GuitarHeroGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              ghAxis: axis,
-              ghButton: null,
+              mapping: { ghAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, ghButton: button, ghAxis: null })}
-          dispatch3={() => {}}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { ghButton: button } })}
+          dispatch3={(axis) =>
+            dispatch({
+              center: proto.GamepadAxisType[axis].includes('Trigger') ? 0 : 32767,
+              min: 0,
+              max: 65535,
+              ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
+              mapping: {
+                gamepadAxis: axis,
+              },
+            })
+          }
+          dispatch4={(button) => dispatch({ ...mapping, mapping: { gamepadButton: button } })}
         />
       );
     case proto.SubType.RockBandGuitar:
@@ -465,9 +442,10 @@ function OutputBox({
           title="output"
           e={proto.RockBandGuitarAxisType}
           e2={proto.RockBandGuitarButtonType}
-          val={mapping.rbAxis!}
-          val2={mapping.rbButton!}
+          val={mapping.mapping.rbAxis!}
+          val2={mapping.mapping.rbButton!}
           legendMode={legendMode}
+          type={type}
           dispatch={(axis) =>
             dispatch({
               center: proto.RockBandGuitarAxisType[axis].includes('Whammy') ? 0 : 32767,
@@ -475,11 +453,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              rbAxis: axis,
-              rbButton: null,
+              mapping: { rbAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, rbButton: button, rbAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { rbButton: button } })}
           dispatch3={() => {}}
         />
       );
@@ -490,10 +467,9 @@ function OutputBox({
           label="outputs"
           title="output"
           e={proto.GuitarHeroDrumsAxisType}
-          e2={proto.GuitarHeroDrumsButtonType}
           legendMode={legendMode}
-          val={mapping.ghDrumAxis!}
-          val2={mapping.ghDrumButton!}
+          type={type}
+          val={mapping.mapping.ghDrumAxis!}
           dispatch={(axis) =>
             dispatch({
               center: proto.GuitarHeroDrumsAxisType[axis].includes('Stick') ? 32767 : 0,
@@ -501,11 +477,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              ghDrumAxis: axis,
-              ghDrumButton: null,
+              mapping: { ghDrumAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, ghDrumButton: button, ghDrumAxis: null })}
+          dispatch2={() => {}}
           dispatch3={() => {}}
         />
       );
@@ -517,9 +492,10 @@ function OutputBox({
           title="output"
           e={proto.RockBandDrumsAxisType}
           e2={proto.RockBandDrumsButtonType}
-          val={mapping.rbDrumAxis!}
-          val2={mapping.rbDrumButton!}
+          val={mapping.mapping.rbDrumAxis!}
+          val2={mapping.mapping.rbDrumButton!}
           legendMode={legendMode}
+          type={type}
           dispatch={(axis) =>
             dispatch({
               center: proto.RockBandDrumsAxisType[axis].includes('Stick') ? 32767 : 0,
@@ -527,11 +503,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              rbDrumAxis: axis,
-              rbDrumButton: null,
+              mapping: { rbDrumAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, rbDrumButton: button, rbDrumAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { rbDrumButton: button } })}
           dispatch3={() => {}}
         />
       );
@@ -543,8 +518,9 @@ function OutputBox({
           title="output"
           e={proto.GuitarHeroLiveGuitarAxisType}
           e2={proto.GuitarHeroLiveGuitarButtonType}
-          val={mapping.ghlAxis!}
-          val2={mapping.ghlButton!}
+          val={mapping.mapping.ghlAxis!}
+          val2={mapping.mapping.ghlButton!}
+          type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
@@ -553,11 +529,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              ghlAxis: axis,
-              ghlButton: null,
+              mapping: { ghlAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, ghlButton: button, ghlAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { ghlButton: button } })}
           dispatch3={() => {}}
         />
       );
@@ -569,8 +544,9 @@ function OutputBox({
           title="output"
           e={proto.DJHTurntableAxisType}
           e2={proto.DJHTurntableButtonType}
-          val={mapping.djhAxis!}
-          val2={mapping.djhButton!}
+          val={mapping.mapping.djhAxis!}
+          val2={mapping.mapping.djhButton!}
+          type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
@@ -579,11 +555,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              djhAxis: axis,
-              djhButton: null,
+              mapping: { djhAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, djhButton: button, djhAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { djhButton: button } })}
           dispatch3={() => {}}
         />
       );
@@ -596,8 +571,9 @@ function OutputBox({
           title="output"
           e={proto.ProGuitarAxisType}
           e2={proto.ProGuitarButtonType}
-          val={mapping.proAxis!}
-          val2={mapping.proButton!}
+          val={mapping.mapping.proAxis!}
+          val2={mapping.mapping.proButton!}
+          type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({
@@ -606,11 +582,10 @@ function OutputBox({
               max: 65535,
               ...mapping,
               pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              proAxis: axis,
-              proButton: null,
+              mapping: { proAxis: axis },
             })
           }
-          dispatch2={(button) => dispatch({ ...mapping, proButton: button, proAxis: null })}
+          dispatch2={(button) => dispatch({ ...mapping, mapping: { proButton: button } })}
           dispatch3={() => {}}
         />
       );
@@ -622,14 +597,13 @@ function OutputBox({
       return (
         <TextInput
           label={t('keyboard.keycode')}
-          value={hidReverse[mapping.keycode!]}
+          value={hidReverse[mapping.mapping.keycode!]}
           onKeyDown={(event) => {
             dispatch({
               ...mapping,
-               keycode: ASCII_TO_HID[event.key].code
-            })
-          }
-          }
+              mapping: { keycode: ASCII_TO_HID[event.key].code },
+            });
+          }}
         />
       );
     case proto.SubType.Wheel:
@@ -721,41 +695,64 @@ function DropdownBox<T extends StandardEnum<unknown>>({
   );
 }
 
-function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardEnum<unknown>>({
+function DropdownOutputBox<
+  T extends StandardEnum<unknown>,
+  T2 extends StandardEnum<unknown>,
+  T3 extends StandardEnum<unknown>,
+  T4 extends StandardEnum<unknown>,
+>({
   e,
   e2,
+  e3,
+  e4,
   val,
   val2,
   val3,
+  val4,
+  valMidi,
   title,
   label,
   mode,
+  type,
   legendMode,
   midi,
   dispatch,
   dispatch2,
   dispatch3,
+  dispatch4,
+  dispatchMidi,
 }: {
   e?: T;
   e2?: T2;
+  e3?: T3;
+  e4?: T4;
   val?: T[keyof T];
   val2?: T2[keyof T2];
-  val3?: string;
+  val3?: T3[keyof T3];
+  val4?: T4[keyof T4];
+  valMidi?: proto.IMidiInput;
   title: string;
   label: string;
   mode?: proto.FaceButtonMappingMode;
+  type: proto.SubType;
   legendMode: LegendMode;
   midi?: boolean;
-  dispatch: (input: T[keyof T]) => void;
-  dispatch2: (input: T2[keyof T2]) => void;
-  dispatch3: (input: string) => void;
+  dispatch?: (input: T[keyof T]) => void;
+  dispatch2?: (input: T2[keyof T2]) => void;
+  dispatch3?: (input: T3[keyof T3]) => void;
+  dispatch4?: (input: T4[keyof T4]) => void;
+  dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
     onDropdownOpen: () =>
       inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
-  const v = ((e && e[val as keyof T]) || (e2 && e2[val2 as keyof T2]) || val3) as string;
+  const v = ((e && e[val as keyof T]) ||
+    (e2 && e2[val2 as keyof T2]) ||
+    (e3 && e3[val3 as keyof T3]) ||
+    (e4 && e4[val4 as keyof T4]) ||
+    (valMidi && Object.entries(valMidi).find((x) => x[0] !== 'deviceid' && x[1])?.[0])) as string;
   const base =
     label === 'outputs' ? (
       <InputBase
@@ -767,7 +764,9 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {t(`${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, v, legendMode)}`)}
+        {t(
+          `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
+        )}
       </InputBase>
     ) : (
       <InputBase
@@ -786,26 +785,51 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
     <Combobox
       store={inputCombobox}
       onOptionSubmit={(val) => {
-        if (e) {
+        if (e && dispatch) {
           const button = e[val as keyof T];
           if (button !== undefined) {
             dispatch(button);
           }
         }
-        if (e2) {
+        if (e2 && dispatch2) {
           const axis = e2[val as keyof T2];
           if (axis !== undefined) {
             dispatch2(axis);
           }
         }
+        if (e3 && dispatch3) {
+          const button = e3[val as keyof T3];
+          if (button !== undefined) {
+            dispatch3(button);
+          }
+        }
+        if (e4 && dispatch4) {
+          const axis = e4[val as keyof T4];
+          if (axis !== undefined) {
+            dispatch4(axis);
+          }
+        }
         if (
-          val === 'midiNote' ||
-          val === 'midiControlChange' ||
-          val === 'midiPitchBend' ||
-          val === 'midiProGuitarButton' ||
-          val === 'midiProGuitarAxis'
+          (val === 'midiNote' ||
+            val === 'midiControlChange' ||
+            val === 'midiPitchBend' ||
+            val === 'midiProGuitarButton' ||
+            val === 'midiProGuitarAxis') &&
+          dispatchMidi
         ) {
-          dispatch3(val);
+          dispatchMidi({
+            midiNote: val === 'midiNote' ? { note: 0, channel: 0 } : undefined,
+            midiControlChange: val === 'midiControlChange' ? { cc: 0, channel: 0 } : undefined,
+            midiPitchBend: val === 'midiPitchBend' ? { channel: 0 } : undefined,
+            midiProGuitarButton:
+              val === 'midiProGuitarButton'
+                ? { button: proto.ProGuitarMidiButtonType.ProGuitarMidi_A }
+                : undefined,
+            midiProGuitarAxis:
+              val === 'midiProGuitarAxis'
+                ? { axis: proto.ProGuitarAxisType.ProGuitar_AFret }
+                : undefined,
+          });
         }
         inputCombobox.closeDropdown();
       }}
@@ -837,7 +861,7 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
             Object.keys(e).map((item) => (
               <Combobox.Option value={item} key={item} selected={item === v}>
                 {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
                 )}
               </Combobox.Option>
             ))}
@@ -845,7 +869,23 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
             Object.keys(e2).map((item) => (
               <Combobox.Option value={item} key={item} selected={item === v}>
                 {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, item, legendMode)}`
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                )}
+              </Combobox.Option>
+            ))}
+          {e3 &&
+            Object.keys(e3).map((item) => (
+              <Combobox.Option value={item} key={item} selected={item === v}>
+                {t(
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                )}
+              </Combobox.Option>
+            ))}
+          {e4 &&
+            Object.keys(e4).map((item) => (
+              <Combobox.Option value={item} key={item} selected={item === v}>
+                {t(
+                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
                 )}
               </Combobox.Option>
             ))}
@@ -855,21 +895,28 @@ function DropdownOutputBox<T extends StandardEnum<unknown>, T2 extends StandardE
   );
 }
 
-function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
+function FixIcon(
+  mode: proto.FaceButtonMappingMode,
+  subtype: proto.SubType,
+  label: string,
+  legendMode: LegendMode,
+  icon: boolean = true
+) {
   let calcLabel = label;
-  if (
-    proto.GamepadButtonType[
-      `Gamepad_${calcLabel?.split('_')[1]}` as keyof typeof proto.GamepadButtonType
-    ] !== undefined
-  ) {
-    calcLabel = `Gamepad_${calcLabel.split('_')[1]}`;
-  }
   if (
     proto.GamepadAxisType[
       `Gamepad_${calcLabel?.split('_')[1]}` as keyof typeof proto.GamepadAxisType
     ] !== undefined
   ) {
     calcLabel = `Gamepad_${calcLabel.split('_')[1]}`;
+  }
+  if ([proto.SubType.GuitarHeroGuitar, proto.SubType.RockBandGuitar].includes(subtype)) {
+    if (calcLabel === 'Gamepad_DpadUp') {
+      calcLabel = "GuitarHeroGuitar_StrumUp";
+    }
+    if (calcLabel === 'Gamepad_StrumDown') {
+      calcLabel = "GuitarHeroGuitar_DpadDown";
+    }
   }
   if (mode === proto.FaceButtonMappingMode.PositionBased) {
     if (calcLabel === 'Gamepad_A') {
@@ -901,10 +948,24 @@ function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: L
       case 'Gamepad_RightTrigger':
       case 'Gamepad_LeftThumbClick':
       case 'Gamepad_RightThumbClick':
+        switch (legendMode) {
+          case LegendMode.Nintendo:
+            return `Nintendo/${calcLabel}`;
+          case LegendMode.PlayStation:
+            return `PlayStation/${calcLabel}`;
+          case LegendMode.Xbox360:
+            return `Xbox360/${calcLabel}`;
+          case LegendMode.XboxOne:
+            return `XboxOne/${calcLabel}`;
+        }
+        break;
       case 'Gamepad_DpadUp':
       case 'Gamepad_DpadDown':
       case 'Gamepad_DpadLeft':
       case 'Gamepad_DpadRight':
+        if (!icon) {
+          return `Generic/${calcLabel}`;
+        }
         switch (legendMode) {
           case LegendMode.Nintendo:
             return `Nintendo/${calcLabel}`;
@@ -922,8 +983,13 @@ function FixIcon(mode: proto.FaceButtonMappingMode, label: string, legendMode: L
   }
   return calcLabel;
 }
-function FixLabel(mode: proto.FaceButtonMappingMode, label: string, legendMode: LegendMode) {
-  return FixIcon(mode, label, legendMode)?.replace('/', '.');
+function FixLabel(
+  mode: proto.FaceButtonMappingMode,
+  subtype: proto.SubType,
+  label: string,
+  legendMode: LegendMode
+) {
+  return FixIcon(mode, subtype, label, legendMode, false)?.replace('/', '.');
 }
 
 function SantrollerLabel({ input, label }: { input: proto.IInput; label: string }) {
@@ -988,9 +1054,9 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
         );
       }
       case 'bhDrum':
-        return <Text>{input.midiNote?.note}</Text>;
+        return <Text>{input.midi?.midiNote?.note}</Text>;
       case 'worldTourDrum':
-        return <Text>{input.midiNote?.note}</Text>;
+        return <Text>{input.midi?.midiNote?.note}</Text>;
       case 'cycle':
         return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
       case 'toggle':
@@ -1011,6 +1077,7 @@ function SantrollerInput({
   axis,
   button,
   legendMode,
+  type,
   mappingIdx,
   activationIdx,
   ledIdx,
@@ -1021,6 +1088,7 @@ function SantrollerInput({
   axis: boolean;
   button: boolean;
   legendMode: LegendMode;
+  type: proto.SubType;
   mappingIdx?: number;
   activationIdx?: number;
   ledIdx?: number;
@@ -1140,9 +1208,9 @@ function SantrollerInput({
           );
         }
         case 'bhDrum':
-          return <Text>{input.midiNote?.note}</Text>;
+          return <Text>{input.midi?.midiNote?.note}</Text>;
         case 'worldTourDrum':
-          return <Text>{input.midiNote?.note}</Text>;
+          return <Text>{input.midi?.midiNote?.note}</Text>;
         case 'cycle':
           return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
         case 'toggle':
@@ -1278,27 +1346,33 @@ function SantrollerInput({
                   break;
                 case 'bhDrum':
                   dispatch({
-                    midiNote: {
-                      note: 1,
-                      channel: 10,
+                    midi: {
+                      midiNote: {
+                        note: 1,
+                        channel: 10,
+                      },
                       deviceid: parseInt(val, 10),
                     },
                   });
                   break;
                 case 'worldTourDrum':
                   dispatch({
-                    midiNote: {
-                      note: 1,
-                      channel: 10,
+                    midi: {
+                      midiNote: {
+                        note: 1,
+                        channel: 10,
+                      },
                       deviceid: parseInt(val, 10),
                     },
                   });
                   break;
                 case 'midiSerial':
                   dispatch({
-                    midiNote: {
-                      note: 1,
-                      channel: 10,
+                    midi: {
+                      midiNote: {
+                        note: 1,
+                        channel: 10,
+                      },
                       deviceid: parseInt(val, 10),
                     },
                   });
@@ -1322,7 +1396,7 @@ function SantrollerInput({
                 case 'usbHost':
                   dispatch({
                     usbButton: {
-                      button: proto.UsbButtonType.UsbButtonA,
+                      button: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
                       deviceid: parseInt(val, 10),
                     },
                   });
@@ -1515,6 +1589,7 @@ function SantrollerInput({
                 button={!!button}
                 legendMode={legendMode}
                 input={innerInput}
+                type={type}
                 dispatch={(changed) =>
                   dispatch({
                     shortcut: {
@@ -1542,6 +1617,7 @@ function SantrollerInput({
             axis={!!axis}
             button={!!button}
             legendMode={legendMode}
+            type={type}
             input={input.held.input}
             dispatch={(changed) =>
               dispatch({
@@ -1582,6 +1658,7 @@ function SantrollerInput({
               axis={!!axis}
               button={!!button}
               legendMode={legendMode}
+              type={type}
               input={input.cycle.input}
               dispatch={(changed) =>
                 dispatch({
@@ -1614,6 +1691,7 @@ function SantrollerInput({
               axis={!!axis}
               button={!!button}
               legendMode={legendMode}
+              type={type}
               input={input.cycle.inputReverse}
               dispatch={(changed) =>
                 dispatch({
@@ -1651,6 +1729,7 @@ function SantrollerInput({
               axis={!!axis}
               button={!!button}
               legendMode={legendMode}
+              type={type}
               input={input.toggle.input}
               dispatch={(changed) =>
                 dispatch({
@@ -1669,65 +1748,18 @@ function SantrollerInput({
       {(device?.type === 'worldTourDrum' || device?.type === 'bhDrum') && (
         <DropdownOutputBox
           title="input"
-          val3={
-            input.midiNote
-              ? 'midiNote'
-              : input.midiControlChange
-                ? 'midiControlChange'
-                : input.midiPitchBend
-                  ? 'midiPitchBend'
-                  : input.midiProGuitarButton
-                    ? 'midiProGuitarButton'
-                    : input.midiProGuitarAxis
-                      ? 'midiProGuitarAxis'
-                      : undefined
-          }
+          valMidi={input.midi ?? undefined}
           label={`${device?.type}.inputs`}
           midi
           legendMode={legendMode}
+          type={type}
           dispatch={(_) => {}}
           dispatch2={(_) => {}}
-          dispatch3={(type) => {
-            switch (type) {
-              case 'midiNote':
-                dispatch({
-                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
-                });
-                break;
-              case 'midiControlChange':
-                dispatch({
-                  midiControlChange: {
-                    ...input.midiControlChange!,
-                    cc: 1,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiPitchBend':
-                dispatch({
-                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
-                });
-                break;
-              case 'midiProGuitarButton':
-                dispatch({
-                  midiProGuitarButton: {
-                    ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitar_A,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiProGuitarAxis':
-                dispatch({
-                  midiProGuitarAxis: {
-                    ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-            }
-          }}
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
         />
       )}
       {device?.type === 'wii' && (
@@ -1736,21 +1768,10 @@ function SantrollerInput({
           e={proto.WiiAxisType}
           e2={proto.WiiButtonType}
           legendMode={legendMode}
+          type={type}
           val={input.wiiAxis?.axis}
           val2={input.wiiButton?.button}
-          val3={
-            input.midiNote
-              ? 'midiNote'
-              : input.midiControlChange
-                ? 'midiControlChange'
-                : input.midiPitchBend
-                  ? 'midiPitchBend'
-                  : input.midiProGuitarButton
-                    ? 'midiProGuitarButton'
-                    : input.midiProGuitarAxis
-                      ? 'midiProGuitarAxis'
-                      : undefined
-          }
+          valMidi={input.midi ?? undefined}
           label="wii.inputs"
           midi
           dispatch={(axis) =>
@@ -1759,47 +1780,11 @@ function SantrollerInput({
           dispatch2={(button) =>
             dispatch({ wiiButton: { ...input.wiiButton!, button, deviceid: deviceId } })
           }
-          dispatch3={(type) => {
-            switch (type) {
-              case 'midiNote':
-                dispatch({
-                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
-                });
-                break;
-              case 'midiControlChange':
-                dispatch({
-                  midiControlChange: {
-                    ...input.midiControlChange!,
-                    cc: 1,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiPitchBend':
-                dispatch({
-                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
-                });
-                break;
-              case 'midiProGuitarButton':
-                dispatch({
-                  midiProGuitarButton: {
-                    ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitar_A,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiProGuitarAxis':
-                dispatch({
-                  midiProGuitarAxis: {
-                    ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-            }
-          }}
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
         />
       )}
       {(input.ps2Axis || input.ps2Button) && (
@@ -1811,6 +1796,7 @@ function SantrollerInput({
           val2={input.ps2Button?.button}
           label="ps2.inputs"
           legendMode={legendMode}
+          type={type}
           dispatch={(axis) =>
             dispatch({ ps2Axis: { ...input.ps2Axis!, axis, deviceid: deviceId } })
           }
@@ -1823,73 +1809,34 @@ function SantrollerInput({
       {device?.type === 'usbHost' && (
         <DropdownOutputBox
           title="input"
-          e={proto.UsbAxisType}
-          e2={proto.UsbButtonType}
+          e={proto.GamepadAxisType}
+          e2={proto.GamepadButtonType}
           legendMode={legendMode}
-          val={input.usbAxis?.axis}
-          val2={input.usbButton?.button}
-          val3={
-            input.midiNote
-              ? 'midiNote'
-              : input.midiControlChange
-                ? 'midiControlChange'
-                : input.midiPitchBend
-                  ? 'midiPitchBend'
-                  : input.midiProGuitarButton
-                    ? 'midiProGuitarButton'
-                    : input.midiProGuitarAxis
-                      ? 'midiProGuitarAxis'
-                      : undefined
-          }
+          val={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val2={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
           label="usb.inputs"
           midi
           dispatch={(axis) =>
-            dispatch({ usbAxis: { ...input.usbAxis!, axis, deviceid: deviceId } })
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
           }
           dispatch2={(button) =>
-            dispatch({ usbButton: { ...input.usbButton!, button, deviceid: deviceId } })
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
           }
-          dispatch3={(type) => {
-            switch (type) {
-              case 'midiNote':
-                dispatch({
-                  midiNote: { ...input.midiNote!, note: 1, deviceid: deviceId },
-                });
-                break;
-              case 'midiControlChange':
-                dispatch({
-                  midiControlChange: {
-                    ...input.midiControlChange!,
-                    cc: 1,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiPitchBend':
-                dispatch({
-                  midiPitchBend: { ...input.midiPitchBend!, deviceid: deviceId },
-                });
-                break;
-              case 'midiProGuitarButton':
-                dispatch({
-                  midiProGuitarButton: {
-                    ...input.midiProGuitarButton!,
-                    button: proto.ProGuitarButtonType.ProGuitar_A,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-              case 'midiProGuitarAxis':
-                dispatch({
-                  midiProGuitarAxis: {
-                    ...input.midiProGuitarAxis!,
-                    axis: proto.ProGuitarAxisType.ProGuitar_AFret,
-                    deviceid: deviceId,
-                  },
-                });
-                break;
-            }
-          }}
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
         />
       )}
       {input.crkd && (
@@ -2111,68 +2058,104 @@ function SantrollerInput({
           dispatch={(type) => dispatch({ accelerometer: { ...input.accelerometer!, type } })}
         />
       )}
-      {input.midiNote && (
+      {input.midi?.midiNote && (
         <>
           <NumberInput
             label={t('input.midiNote')}
-            value={input.midiNote.note}
-            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, note: Number(val) } })}
+            value={input.midi.midiNote.note}
+            onChange={(val) =>
+              dispatch({
+                midi: { ...input.midi!, midiNote: { ...input.midi!.midiNote!, note: Number(val) } },
+              })
+            }
           />
           <NumberInput
             label={t('input.midiChannel')}
-            value={input.midiNote.channel}
-            onChange={(val) => dispatch({ midiNote: { ...input.midiNote!, channel: Number(val) } })}
+            value={input.midi.midiNote.channel}
+            onChange={(val) =>
+              dispatch({
+                midi: {
+                  ...input.midi!,
+                  midiNote: { ...input.midi!.midiNote!, channel: Number(val) },
+                },
+              })
+            }
           />
         </>
       )}
-      {input.midiControlChange && (
+      {input.midi?.midiControlChange && (
         <>
           <NumberInput
             label={t('input.midiControlChange')}
-            value={input.midiControlChange.cc}
+            value={input.midi.midiControlChange.cc}
             onChange={(val) =>
-              dispatch({ midiControlChange: { ...input.midiControlChange!, cc: Number(val) } })
+              dispatch({
+                midi: {
+                  ...input.midi!,
+                  midiControlChange: { ...input.midi!.midiControlChange!, cc: Number(val) },
+                },
+              })
             }
           />
           <NumberInput
             label={t('input.midiChannel')}
-            value={input.midiControlChange.channel}
+            value={input.midi.midiControlChange.channel}
             onChange={(val) =>
-              dispatch({ midiControlChange: { ...input.midiControlChange!, channel: Number(val) } })
+              dispatch({
+                midi: {
+                  ...input.midi!,
+                  midiControlChange: { ...input.midi!.midiControlChange!, channel: Number(val) },
+                },
+              })
             }
           />
         </>
       )}
-      {input.midiPitchBend && (
+      {input.midi?.midiPitchBend && (
         <>
           <NumberInput
             label={t('input.midiPitchBend')}
-            value={input.midiPitchBend.channel}
+            value={input.midi.midiPitchBend.channel}
             onChange={(val) =>
-              dispatch({ midiPitchBend: { ...input.midiPitchBend!, channel: Number(val) } })
+              dispatch({
+                midi: {
+                  ...input.midi!,
+                  midiPitchBend: { ...input.midi!.midiPitchBend!, channel: Number(val) },
+                },
+              })
             }
           />
         </>
       )}
-      {input.midiProGuitarButton && (
+      {input.midi?.midiProGuitarButton && (
         <DropdownBox
           title="input.midiProGuitarButton"
-          e={proto.ProGuitarButtonType}
-          val={input.midiProGuitarButton?.button}
+          e={proto.ProGuitarMidiButtonType}
+          val={input.midi!.midiProGuitarButton?.button}
           label="input.midiProGuitarButton"
           dispatch={(button) =>
-            dispatch({ midiProGuitarButton: { ...input.midiProGuitarButton!, button } })
+            dispatch({
+              midi: {
+                ...input.midi!,
+                midiProGuitarButton: { ...input.midi!.midiProGuitarButton!, button },
+              },
+            })
           }
         />
       )}
-      {input.midiProGuitarAxis && (
+      {input.midi?.midiProGuitarAxis && (
         <DropdownBox
           title="input.midiProGuitarAxis"
           e={proto.ProGuitarAxisType}
-          val={input.midiProGuitarAxis?.axis}
+          val={input.midi!.midiProGuitarAxis?.axis}
           label="input.midiProGuitarAxis"
           dispatch={(axis) =>
-            dispatch({ midiProGuitarAxis: { ...input.midiProGuitarAxis!, axis } })
+            dispatch({
+              midi: {
+                ...input.midi!,
+                midiProGuitarAxis: { ...input.midi!.midiProGuitarAxis!, axis },
+              },
+            })
           }
         />
       )}
@@ -2209,10 +2192,10 @@ function isAnalog(input: proto.IInput) {
     input.multiplexer ||
     input.usbAxis ||
     input.ps2Axis ||
-    input.midiNote ||
-    input.midiControlChange ||
-    input.midiPitchBend ||
-    input.midiProGuitarAxis ||
+    input.midi?.midiNote ||
+    input.midi?.midiControlChange ||
+    input.midi?.midiPitchBend ||
+    input.midi?.midiProGuitarAxis ||
     input.protarNeckAxis ||
     input.cycle
   );
@@ -2251,25 +2234,23 @@ function SantrollerMapping({
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const label =
-    proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
-    proto.GamepadAxisType[mapping.gamepadAxis ?? -1] ||
-    proto.GuitarHeroGuitarButtonType[mapping.ghButton ?? -1] ||
-    proto.GuitarHeroGuitarAxisType[mapping.ghAxis ?? -1] ||
-    proto.GuitarHeroDrumsButtonType[mapping.ghDrumButton ?? -1] ||
-    proto.GuitarHeroDrumsAxisType[mapping.ghDrumAxis ?? -1] ||
-    proto.RockBandGuitarButtonType[mapping.rbButton ?? -1] ||
-    proto.RockBandGuitarAxisType[mapping.rbAxis ?? -1] ||
-    proto.RockBandDrumsButtonType[mapping.rbDrumButton ?? -1] ||
-    proto.RockBandDrumsAxisType[mapping.rbDrumAxis ?? -1] ||
-    proto.ProGuitarButtonType[mapping.proButton ?? -1] ||
-    proto.ProGuitarAxisType[mapping.proAxis ?? -1] ||
-    proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
-    proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
-
-  const fixedLabel = FixLabel(mode, label, legendMode);
-  const img = `Icons/Input/${FixIcon(mode, label, legendMode)}.png`;
-  const button = Object.entries(mapping).find(([k, v]) => k.endsWith('Button') && v);
-  const axis = Object.entries(mapping).find(([k, v]) => k.endsWith('Axis') && v);
+    proto.GamepadButtonType[mapping.mapping.gamepadButton ?? -1] ||
+    proto.GamepadAxisType[mapping.mapping.gamepadAxis ?? -1] ||
+    proto.GuitarHeroGuitarButtonType[mapping.mapping.ghButton ?? -1] ||
+    proto.GuitarHeroGuitarAxisType[mapping.mapping.ghAxis ?? -1] ||
+    proto.GuitarHeroDrumsAxisType[mapping.mapping.ghDrumAxis ?? -1] ||
+    proto.RockBandGuitarButtonType[mapping.mapping.rbButton ?? -1] ||
+    proto.RockBandGuitarAxisType[mapping.mapping.rbAxis ?? -1] ||
+    proto.RockBandDrumsButtonType[mapping.mapping.rbDrumButton ?? -1] ||
+    proto.RockBandDrumsAxisType[mapping.mapping.rbDrumAxis ?? -1] ||
+    proto.ProGuitarButtonType[mapping.mapping.proButton ?? -1] ||
+    proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
+    proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
+    proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1];
+  const fixedLabel = FixLabel(mode, type, label, legendMode);
+  const img = `Icons/Input/${FixIcon(mode, type, label, legendMode)}.png`;
+  const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
+  const axis = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
   const drum = label?.includes('Pad') || label?.includes('Cymbal');
   const analogInput = isAnalog(mapping.input);
@@ -2347,6 +2328,7 @@ function SantrollerMapping({
               button={!!button}
               input={mapping.input}
               legendMode={legendMode}
+              type={type}
               dispatch={(input) => {
                 dispatch({
                   ...mapping,
@@ -2738,6 +2720,7 @@ function SantrollerLed({
   profileIdx,
   ledIdx,
   mode,
+  type,
   legendMode,
   dispatch,
   deleteLed,
@@ -2747,6 +2730,7 @@ function SantrollerLed({
   profileIdx: number;
   ledIdx: number;
   mode: proto.FaceButtonMappingMode;
+  type: proto.SubType;
   legendMode: LegendMode;
   dispatch: (led: proto.ILed) => void;
   deleteLed: () => void;
@@ -2792,22 +2776,21 @@ function SantrollerLed({
     if (led.mapping.inputMapping) {
       if (mapping) {
         const label =
-          proto.GamepadButtonType[mapping.gamepadButton ?? -1] ||
-          proto.GamepadAxisType[mapping.gamepadAxis ?? -1] ||
-          proto.GuitarHeroGuitarButtonType[mapping.ghButton ?? -1] ||
-          proto.GuitarHeroGuitarAxisType[mapping.ghAxis ?? -1] ||
-          proto.GuitarHeroDrumsButtonType[mapping.ghDrumButton ?? -1] ||
-          proto.GuitarHeroDrumsAxisType[mapping.ghDrumAxis ?? -1] ||
-          proto.RockBandGuitarButtonType[mapping.rbButton ?? -1] ||
-          proto.RockBandGuitarAxisType[mapping.rbAxis ?? -1] ||
-          proto.RockBandDrumsButtonType[mapping.rbDrumButton ?? -1] ||
-          proto.RockBandDrumsAxisType[mapping.rbDrumAxis ?? -1] ||
-          proto.ProGuitarButtonType[mapping.proButton ?? -1] ||
-          proto.ProGuitarAxisType[mapping.proAxis ?? -1] ||
-          proto.DJHTurntableButtonType[mapping.djhButton ?? -1] ||
-          proto.DJHTurntableAxisType[mapping.djhAxis ?? -1];
+          proto.GamepadButtonType[mapping.mapping.gamepadButton ?? -1] ||
+          proto.GamepadAxisType[mapping.mapping.gamepadAxis ?? -1] ||
+          proto.GuitarHeroGuitarButtonType[mapping.mapping.ghButton ?? -1] ||
+          proto.GuitarHeroGuitarAxisType[mapping.mapping.ghAxis ?? -1] ||
+          proto.GuitarHeroDrumsAxisType[mapping.mapping.ghDrumAxis ?? -1] ||
+          proto.RockBandGuitarButtonType[mapping.mapping.rbButton ?? -1] ||
+          proto.RockBandGuitarAxisType[mapping.mapping.rbAxis ?? -1] ||
+          proto.RockBandDrumsButtonType[mapping.mapping.rbDrumButton ?? -1] ||
+          proto.RockBandDrumsAxisType[mapping.mapping.rbDrumAxis ?? -1] ||
+          proto.ProGuitarButtonType[mapping.mapping.proButton ?? -1] ||
+          proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
+          proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
+          proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1];
 
-        const fixedLabel = FixLabel(mode, label, legendMode);
+        const fixedLabel = FixLabel(mode, type, label, legendMode);
         return `Icons/Input/${fixedLabel}.png`;
       }
     }
@@ -3221,6 +3204,7 @@ function SantrollerLed({
                   axis={!!analog}
                   button={!analog}
                   legendMode={legendMode}
+                  type={type}
                   input={led.mapping.inputMapping?.input}
                   dispatch={(input) => {
                     dispatch({
@@ -3710,6 +3694,7 @@ function SantrollerAssignment({
   listIdx,
   activationIdx,
   mode,
+  type,
   legendMode,
   dispatch,
   deleteAssignment,
@@ -3720,6 +3705,7 @@ function SantrollerAssignment({
   listIdx: number;
   activationIdx: number;
   mode: proto.FaceButtonMappingMode;
+  type: proto.SubType;
   legendMode: LegendMode;
   dispatch: (mapping: proto.IProfileAssignmentInfo) => void;
   deleteAssignment: () => void;
@@ -3854,21 +3840,21 @@ function SantrollerAssignment({
               <Combobox.Group label={t('assignments.generic')}>
                 {OtherAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
+                    <AssignmentOption value={FixLabel(mode, type, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
               <Combobox.Group label={t('assignments.host')}>
                 {HostProfileAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
+                    <AssignmentOption value={FixLabel(mode, type, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
               <Combobox.Group label={t('assignments.emulation')}>
                 {DeviceProfileAssignmentTypes.map((item) => (
                   <Combobox.Option value={item} key={item} selected={!!mapping[item]}>
-                    <AssignmentOption value={FixLabel(mode, item, legendMode)} />
+                    <AssignmentOption value={FixLabel(mode, type, item, legendMode)} />
                   </Combobox.Option>
                 ))}
               </Combobox.Group>
@@ -4013,6 +3999,7 @@ function SantrollerAssignment({
             <SantrollerInput
               axis={false}
               button
+              type={type}
               input={mapping.inputAnyTime.input}
               legendMode={legendMode}
               activationIdx={activationIdx}
@@ -4045,6 +4032,7 @@ function SantrollerAssignment({
             <SantrollerInput
               axis={false}
               button
+              type={type}
               activationIdx={activationIdx}
               legendMode={legendMode}
               input={mapping.input.input}
@@ -4082,6 +4070,7 @@ function SantrollerAssignmentList({
   profileIdx,
   listIdx,
   mode,
+  type,
   legendMode,
   dispatch,
   deleteAssignment,
@@ -4091,6 +4080,7 @@ function SantrollerAssignmentList({
   profileIdx: number;
   listIdx: number;
   mode: proto.FaceButtonMappingMode;
+  type: proto.SubType;
   legendMode: LegendMode;
   dispatch: (mapping: proto.IProfileAssignment) => void;
   deleteAssignment: () => void;
@@ -4161,6 +4151,7 @@ function SantrollerAssignmentList({
             mapping={assignment}
             legendMode={legendMode}
             profileIdx={profileIdx}
+            type={type}
             mode={mode}
             dispatch={(val) =>
               dispatch({
@@ -4400,8 +4391,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </Group>
           <Space h="md" />
           <TextInput
-            value={profile.name}
-            onChange={(e) => updateProfile({ ...profile, name: e.currentTarget.value }, profileIdx)}
+            value={profile.opts.name}
+            onChange={(e) =>
+              updateProfile(
+                { ...profile, opts: { ...profile.opts, name: e.currentTarget.value } },
+                profileIdx
+              )
+            }
             label={t('main.profile_name.label')}
           />
           <Space h="md" />
@@ -4409,10 +4405,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             title="main.device_to_emulate.label"
             description="main.device_to_emulate.description"
             e={proto.SubType}
-            val={profile.deviceToEmulate!}
+            val={profile.opts.deviceToEmulate!}
             label="subType"
             dispatch={(deviceToEmulate) =>
-              updateProfile({ ...profile, deviceToEmulate }, profileIdx)
+              updateProfile({ ...profile, opts: { ...profile.opts, deviceToEmulate } }, profileIdx)
             }
           />
           <Space h="md" />
@@ -4427,22 +4423,31 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </>
       )}
 
-      {profile.deviceToEmulate === proto.SubType.Gamepad && (
+      {profile.opts.deviceToEmulate === proto.SubType.Gamepad && (
         <>
           <Space h="md" />
           <FaceButtonMappingMode
-            mode={profile.faceButtonMappingMode}
+            mode={profile.opts.faceButtonMappingMode}
             dispatch={(val) =>
-              updateProfile({ ...profile, faceButtonMappingMode: val }, profileIdx)
+              updateProfile(
+                { ...profile, opts: { ...profile.opts, faceButtonMappingMode: val } },
+                profileIdx
+              )
             }
           />
           <Space h="md" />
           <Switch
             label={t('main.invert_y_hid.label')}
             description={t('main.invert_y_hid.description')}
-            checked={!!profile.invertYAxisHid}
+            checked={!!profile.opts.invertYAxisHid}
             onChange={(event) =>
-              updateProfile({ ...profile, invertYAxisHid: event.currentTarget.checked }, profileIdx)
+              updateProfile(
+                {
+                  ...profile,
+                  opts: { ...profile.opts, invertYAxisHid: event.currentTarget.checked },
+                },
+                profileIdx
+              )
             }
           />
         </>
@@ -4451,9 +4456,12 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Switch
         label={t('main.xinput_on_windows.label')}
         description={t('main.xinput_on_windows.description')}
-        checked={!!profile.xinputOnWindows}
+        checked={!!profile.opts.xinputOnWindows}
         onChange={(event) =>
-          updateProfile({ ...profile, xinputOnWindows: event.currentTarget.checked }, profileIdx)
+          updateProfile(
+            { ...profile, opts: { ...profile.opts, xinputOnWindows: event.currentTarget.checked } },
+            profileIdx
+          )
         }
       />
       <Space h="md" />
@@ -4465,23 +4473,26 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       />
       {!simpleMode && (
         <>
-          {profile.deviceToEmulate === proto.SubType.RockBandDrums && (
+          {profile.opts.deviceToEmulate === proto.SubType.RockBandDrums && (
             <>
               <Space h="md" />
               <Switch
                 label={t('main.cymbalGlitchFix.label')}
                 description={t('main.cymbalGlitchFix.description')}
-                checked={!!profile.cymbalGlitchFix}
+                checked={!!profile.opts.cymbalGlitchFix}
                 onChange={(event) =>
                   updateProfile(
-                    { ...profile, cymbalGlitchFix: event.currentTarget.checked },
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, cymbalGlitchFix: event.currentTarget.checked },
+                    },
                     profileIdx
                   )
                 }
               />
             </>
           )}
-          {ps4Subtypes.includes(profile.deviceToEmulate!) && (
+          {ps4Subtypes.includes(profile.opts.deviceToEmulate!) && (
             <>
               <Space h="md" />
               <Input.Wrapper
@@ -4493,9 +4504,12 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                     { label: t('main.ps4EmulationMode.PS3'), value: false },
                     { label: t('main.ps4EmulationMode.PS4'), value: true },
                   ]}
-                  value={!!profile.ps4OrPs5Mode}
+                  value={!!profile.opts.ps4OrPs5Mode}
                   onChange={(event) =>
-                    updateProfile({ ...profile, ps4OrPs5Mode: event }, profileIdx)
+                    updateProfile(
+                      { ...profile, opts: { ...profile.opts, ps4OrPs5Mode: event } },
+                      profileIdx
+                    )
                   }
                 />
               </Input.Wrapper>
@@ -4568,7 +4582,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             mapping={mapping}
                             profileIdx={profileIdx}
                             listIdx={mappingIdx}
-                            mode={profile.faceButtonMappingMode}
+                            mode={profile.opts.faceButtonMappingMode}
+                            type={profile.opts.deviceToEmulate}
                             legendMode={legendMode}
                             dispatch={(val) =>
                               updateProfile(
@@ -4635,6 +4650,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           mappings: [
                             ...profile.mappings!,
                             {
+                              mapping: {},
                               input: {
                                 gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp },
                               },
@@ -4654,7 +4670,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                       open();
                     }}
                   >
-                    Load {t(`subType.${proto.SubType[profile.deviceToEmulate]}`)} defaults
+                    Load {t(`subType.${proto.SubType[profile.opts.deviceToEmulate]}`)} defaults
                   </Button>
                   {Object.values(deviceStatus)
                     .filter(hasDefaults)
@@ -4691,11 +4707,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                     <SantrollerMapping
                       key={mappingIdx}
                       mapping={mapping}
-                      type={profile.deviceToEmulate}
+                      type={profile.opts.deviceToEmulate}
                       profileIdx={profileIdx}
                       mappingIdx={mappingIdx}
                       legendMode={legendMode}
-                      mode={profile.faceButtonMappingMode}
+                      mode={profile.opts.faceButtonMappingMode}
                       dispatch={(val) => {
                         if (syncCalibrations) {
                           updateProfiles([
@@ -4815,10 +4831,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         <SantrollerMapping
                           key={mappingIdx}
                           mapping={mapping}
-                          type={profile.deviceToEmulate}
+                          type={profile.opts.deviceToEmulate}
                           profileIdx={profileIdx}
                           mappingIdx={mappingIdx}
-                          mode={profile.faceButtonMappingMode}
+                          mode={profile.opts.faceButtonMappingMode}
                           legendMode={legendMode}
                           dispatch={(val) => {
                             if (syncCalibrations) {
@@ -5001,7 +5017,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         led={led}
                         profileIdx={profileIdx}
                         ledIdx={ledIdx}
-                        mode={profile.faceButtonMappingMode}
+                        mode={profile.opts.faceButtonMappingMode}
+                        type={profile.opts.deviceToEmulate}
                         legendMode={legendMode}
                         dispatch={(val) =>
                           updateProfile(

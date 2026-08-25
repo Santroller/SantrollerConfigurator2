@@ -155,14 +155,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {profiles.map((x, i) => (
                   <NavLink
                     disabled={updating}
-                    key={x.uid}
+                    key={x.opts.uid}
                     component={RouterLink}
                     to="/profiles"
                     onClick={() => setActiveProfile(i.toString())}
                     active={profilePage != null && activeProfile === i}
-                    label={x.name}
+                    label={x.opts.name}
                     leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
-                    rightSection={activeProfiles?.includes(x.uid) && <Badge>Active</Badge>}
+                    rightSection={activeProfiles?.includes(x.opts.uid) && <Badge>Active</Badge>}
                   />
                 ))}
                 {!simpleMode && (

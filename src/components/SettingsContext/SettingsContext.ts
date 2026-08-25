@@ -444,14 +444,6 @@ export const initialConfig = InitState(
 
 const WiiMappings = {
   [proto.SubType.GuitarHeroGuitar]: {
-    [proto.WiiButtonType.WiiButtonGuitarMinus]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Back,
-    [proto.WiiButtonType.WiiButtonGuitarPlus]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Start,
-    [proto.WiiButtonType.WiiButtonGuitarStrumUp]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
-    [proto.WiiButtonType.WiiButtonGuitarStrumDown]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumDown,
     [proto.WiiButtonType.WiiButtonGuitarGreen]:
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
     [proto.WiiButtonType.WiiButtonGuitarRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
@@ -473,12 +465,6 @@ const WiiMappings = {
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
   },
   [proto.SubType.RockBandGuitar]: {
-    [proto.WiiButtonType.WiiButtonGuitarMinus]: proto.RockBandGuitarButtonType.RockBandGuitar_Back,
-    [proto.WiiButtonType.WiiButtonGuitarPlus]: proto.RockBandGuitarButtonType.RockBandGuitar_Start,
-    [proto.WiiButtonType.WiiButtonGuitarStrumUp]:
-      proto.RockBandGuitarButtonType.RockBandGuitar_StrumUp,
-    [proto.WiiButtonType.WiiButtonGuitarStrumDown]:
-      proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
     [proto.WiiButtonType.WiiButtonGuitarGreen]: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
     [proto.WiiButtonType.WiiButtonGuitarRed]: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
     [proto.WiiButtonType.WiiButtonGuitarYellow]:
@@ -516,14 +502,6 @@ const WiiMappings = {
 
 const CrkdMappings = {
   [proto.SubType.GuitarHeroGuitar]: {
-    [proto.CrkdNeckButtonType.CrkdDpadUp]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_StrumDown,
-    [proto.CrkdNeckButtonType.CrkdDpadLeft]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_DpadLeft,
-    [proto.CrkdNeckButtonType.CrkdDpadRight]:
-      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_DpadRight,
     [proto.CrkdNeckButtonType.CrkdGreen]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
     [proto.CrkdNeckButtonType.CrkdRed]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
     [proto.CrkdNeckButtonType.CrkdYellow]: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
@@ -541,12 +519,6 @@ const CrkdMappings = {
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
   },
   [proto.SubType.RockBandGuitar]: {
-    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.RockBandGuitarButtonType.RockBandGuitar_StrumUp,
-    [proto.CrkdNeckButtonType.CrkdDpadDown]:
-      proto.RockBandGuitarButtonType.RockBandGuitar_StrumDown,
-    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.RockBandGuitarButtonType.RockBandGuitar_DpadLeft,
-    [proto.CrkdNeckButtonType.CrkdDpadRight]:
-      proto.RockBandGuitarButtonType.RockBandGuitar_DpadRight,
     [proto.CrkdNeckButtonType.CrkdGreen]: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
     [proto.CrkdNeckButtonType.CrkdRed]: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
     [proto.CrkdNeckButtonType.CrkdYellow]: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
@@ -621,18 +593,6 @@ const CrkdDrumButtonMappings = {
 };
 
 const WiiMappingsStick = {
-  [proto.SubType.GuitarHeroGuitar]: {
-    [proto.WiiAxisType.WiiAxisGuitarJoystickX]:
-      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_LeftStickX,
-    [proto.WiiAxisType.WiiAxisGuitarJoystickY]:
-      proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_LeftStickY,
-  },
-  [proto.SubType.RockBandGuitar]: {
-    [proto.WiiAxisType.WiiAxisGuitarJoystickX]:
-      proto.RockBandGuitarAxisType.RockBandGuitar_LeftStickX,
-    [proto.WiiAxisType.WiiAxisGuitarJoystickY]:
-      proto.RockBandGuitarAxisType.RockBandGuitar_LeftStickY,
-  },
   [proto.SubType.Gamepad]: {
     [proto.WiiAxisType.WiiAxisClassicLeftStickX]: proto.GamepadAxisType.Gamepad_LeftStickX,
     [proto.WiiAxisType.WiiAxisClassicLeftStickY]: proto.GamepadAxisType.Gamepad_LeftStickY,
@@ -1000,7 +960,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           setProfile: proto.SetProfileCommand.create({
-            profileId: state.config.profiles![parseInt(id ?? '0', 10)].uid,
+            profileId: state.config.profiles![parseInt(id ?? '0', 10)].opts.uid,
           }),
         })
       )
@@ -1012,7 +972,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     updateProfile: (profile: proto.IProfile, id: number) => {
       set((state) => {
-        if (state.config.profiles![id].faceButtonMappingMode !== profile.faceButtonMappingMode) {
+        if (
+          state.config.profiles![id].opts.faceButtonMappingMode !==
+          profile.opts.faceButtonMappingMode
+        ) {
           profile.mappings = profile.mappings?.map(fixInput);
         }
         state.config = {
@@ -1042,7 +1005,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
     updateProfiles: (profiles: proto.IProfile[]) => {
       set((state) => {
         profiles.forEach((profile, id) => {
-          if (state.config.profiles![id].faceButtonMappingMode !== profile.faceButtonMappingMode) {
+          if (
+            state.config.profiles![id].opts.faceButtonMappingMode !==
+            profile.opts.faceButtonMappingMode
+          ) {
             profile.mappings = profile.mappings?.map(fixInput);
           }
           state.config = {
@@ -1161,11 +1127,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
         const profile = state.config.profiles![state.currentProfile];
         switch (type) {
           case 'gpio':
-            switch (profile.deviceToEmulate) {
+            switch (profile.opts.deviceToEmulate) {
               case proto.SubType.GuitarHeroGuitar:
                 profile.mappings!.push(
                   ...Object.entries(proto.GuitarHeroGuitarAxisType).map(([type, base]) => ({
-                    ghAxis: base as proto.GuitarHeroGuitarAxisType,
+                    mapping: {
+                      ghAxis: base as proto.GuitarHeroGuitarAxisType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1178,7 +1146,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     center: type.toString().includes('Stick') ? 32767 : 0,
                   })),
                   ...Object.values(proto.GuitarHeroGuitarButtonType).map((base) => ({
-                    ghButton: base as proto.GuitarHeroGuitarButtonType,
+                    mapping: {
+                      ghButton: base as proto.GuitarHeroGuitarButtonType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1192,7 +1162,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
               case proto.SubType.GuitarHeroDrums:
                 profile.mappings!.push(
                   ...Object.entries(proto.GuitarHeroDrumsAxisType).map(([type, base]) => ({
-                    ghDrumAxis: base as proto.GuitarHeroDrumsAxisType,
+                    mapping: {
+                      ghDrumAxis: base as proto.GuitarHeroDrumsAxisType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1204,23 +1176,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     min: 0,
                     max: 65535,
                     center: type.toString().includes('Stick') ? 32767 : 0,
-                  })),
-                  ...Object.values(proto.GuitarHeroDrumsButtonType).map((base) => ({
-                    ghDrumButton: base as proto.GuitarHeroDrumsButtonType,
-                    input: {
-                      gpio: {
-                        pin: -1,
-                        pinMode: proto.PinMode.PullUp,
-                        analog: false,
-                      },
-                    },
                   }))
                 );
                 break;
               case proto.SubType.RockBandGuitar:
                 profile.mappings!.push(
                   ...Object.entries(proto.RockBandGuitarAxisType).map(([type, base]) => ({
-                    rbAxis: base as proto.RockBandGuitarAxisType,
+                    mapping: {
+                      rbAxis: base as proto.RockBandGuitarAxisType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1233,7 +1197,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     center: type.toString().includes('Stick') ? 32767 : 0,
                   })),
                   ...Object.values(proto.RockBandGuitarButtonType).map((base) => ({
-                    rbButton: base as proto.RockBandGuitarButtonType,
+                    mapping: {
+                      rbButton: base as proto.RockBandGuitarButtonType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1247,7 +1213,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
               case proto.SubType.RockBandDrums:
                 profile.mappings!.push(
                   ...Object.entries(proto.RockBandDrumsAxisType).map(([type, base]) => ({
-                    rbDrumAxis: base as proto.RockBandDrumsAxisType,
+                    mapping: {
+                      rbDrumAxis: base as proto.RockBandDrumsAxisType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1264,7 +1232,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     center: type.toString().includes('Stick') ? 32767 : 0,
                   })),
                   ...Object.values(proto.RockBandDrumsButtonType).map((base) => ({
-                    rbDrumButton: base as proto.RockBandDrumsButtonType,
+                    mapping: {
+                      rbDrumButton: base as proto.RockBandDrumsButtonType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1279,7 +1249,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
               case proto.SubType.Gamepad:
                 profile.mappings!.push(
                   ...Object.entries(proto.GamepadAxisType).map(([type, base]) => ({
-                    gamepadAxis: base as proto.GamepadAxisType,
+                    mapping: {
+                      gamepadAxis: base as proto.GamepadAxisType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1292,7 +1264,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                     center: type.toString().includes('Stick') ? 32767 : 0,
                   })),
                   ...Object.values(proto.GamepadButtonType).map((base) => ({
-                    gamepadButton: base as proto.GamepadButtonType,
+                    mapping: {
+                      gamepadButton: base as proto.GamepadButtonType,
+                    },
                     input: {
                       gpio: {
                         pin: -1,
@@ -1306,12 +1280,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
             break;
           case 'wii':
-            switch (profile.deviceToEmulate) {
+            switch (profile.opts.deviceToEmulate) {
               case proto.SubType.GuitarHeroGuitar:
                 profile.mappings!.push(
-                  ...Object.entries(WiiMappingsTrigger[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappingsTrigger[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      ghAxis: base,
+                      mapping: {
+                        ghAxis: base,
+                      },
                       input: {
                         wiiAxis: {
                           axis: parseInt(wii, 10),
@@ -1323,36 +1299,28 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       center: 0,
                     })
                   ),
-                  ...Object.entries(WiiMappingsStick[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      ghAxis: base,
+                      mapping: {
+                        ghButton: base,
+                      },
                       input: {
-                        wiiAxis: {
-                          axis: parseInt(wii, 10),
+                        wiiButton: {
+                          button: parseInt(wii, 10),
                           deviceid: parseInt(device!.id!, 10),
                         },
                       },
-                      min: 0,
-                      max: 65535,
-                      center: 32767,
                     })
-                  ),
-                  ...Object.entries(WiiMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    ghButton: base,
-                    input: {
-                      wiiButton: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
-                      },
-                    },
-                  }))
+                  )
                 );
                 break;
               case proto.SubType.RockBandGuitar:
                 profile.mappings!.push(
-                  ...Object.entries(WiiMappingsTrigger[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappingsTrigger[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      rbAxis: base,
+                      mapping: {
+                        rbAxis: base,
+                      },
                       input: {
                         wiiAxis: {
                           axis: parseInt(wii, 10),
@@ -1364,36 +1332,28 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       center: 0,
                     })
                   ),
-                  ...Object.entries(WiiMappingsStick[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      rbAxis: base,
+                      mapping: {
+                        rbButton: base,
+                      },
                       input: {
-                        wiiAxis: {
-                          axis: parseInt(wii, 10),
+                        wiiButton: {
+                          button: parseInt(wii, 10),
                           deviceid: parseInt(device!.id!, 10),
                         },
                       },
-                      min: 0,
-                      max: 65535,
-                      center: 32767,
                     })
-                  ),
-                  ...Object.entries(WiiMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    rbButton: base,
-                    input: {
-                      wiiButton: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
-                      },
-                    },
-                  }))
+                  )
                 );
                 break;
               case proto.SubType.Gamepad:
                 profile.mappings!.push(
-                  ...Object.entries(WiiMappingsTrigger[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappingsTrigger[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      gamepadAxis: base,
+                      mapping: {
+                        gamepadAxis: base,
+                      },
                       input: {
                         wiiAxis: {
                           axis: parseInt(wii, 10),
@@ -1405,9 +1365,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       center: 0,
                     })
                   ),
-                  ...Object.entries(WiiMappingsStick[profile.deviceToEmulate]).map(
+                  ...Object.entries(WiiMappingsStick[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      gamepadAxis: base,
+                      mapping: {
+                        gamepadAxis: base,
+                      },
                       input: {
                         wiiAxis: {
                           axis: parseInt(wii, 10),
@@ -1419,26 +1381,32 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       center: 32767,
                     })
                   ),
-                  ...Object.entries(WiiMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    gamepadButton: base,
-                    input: {
-                      wiiButton: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
+                  ...Object.entries(WiiMappings[profile.opts.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      mapping: {
+                        gamepadButton: base,
                       },
-                    },
-                  }))
+                      input: {
+                        wiiButton: {
+                          button: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
+                        },
+                      },
+                    })
+                  )
                 );
                 break;
             }
             break;
           case 'crkdDrum':
-            switch (profile.deviceToEmulate) {
+            switch (profile.opts.deviceToEmulate) {
               case proto.SubType.GuitarHeroDrums:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdDrumAxisMappings[profile.deviceToEmulate]).map(
+                  ...Object.entries(CrkdDrumAxisMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      ghDrumAxis: base,
+                      mapping: {
+                        ghDrumAxis: base,
+                      },
                       input: {
                         crkdDrum: {
                           axis: parseInt(wii, 10),
@@ -1454,9 +1422,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 break;
               case proto.SubType.RockBandDrums:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdDrumButtonMappings[profile.deviceToEmulate]).map(
+                  ...Object.entries(CrkdDrumButtonMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      rbDrumButton: base,
+                      mapping: {
+                        rbDrumButton: base,
+                      },
                       input: {
                         crkdDrum: {
                           axis: parseInt(wii, 10),
@@ -1465,9 +1435,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
                       },
                     })
                   ),
-                  ...Object.entries(CrkdDrumAxisMappings[profile.deviceToEmulate]).map(
+                  ...Object.entries(CrkdDrumAxisMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      rbDrumAxis: base,
+                      mapping: {
+                        rbDrumAxis: base,
+                      },
                       input: {
                         crkdDrum: {
                           axis: parseInt(wii, 10),
@@ -1483,9 +1455,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 break;
               case proto.SubType.Gamepad:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdDrumButtonMappings[profile.deviceToEmulate]).map(
+                  ...Object.entries(CrkdDrumButtonMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      gamepadButton: base,
+                      mapping: {
+                        gamepadButton: base,
+                      },
                       input: {
                         crkdDrum: {
                           axis: parseInt(wii, 10),
@@ -1499,44 +1473,56 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
             break;
           case 'crkdNeck':
-            switch (profile.deviceToEmulate) {
+            switch (profile.opts.deviceToEmulate) {
               case proto.SubType.GuitarHeroGuitar:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    ghButton: base,
-                    input: {
-                      crkd: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
+                  ...Object.entries(CrkdMappings[profile.opts.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      mapping: {
+                        ghButton: base,
                       },
-                    },
-                  }))
+                      input: {
+                        crkd: {
+                          button: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
+                        },
+                      },
+                    })
+                  )
                 );
                 break;
               case proto.SubType.RockBandGuitar:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    rbButton: base,
-                    input: {
-                      crkd: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
+                  ...Object.entries(CrkdMappings[profile.opts.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      mapping: {
+                        rbButton: base,
                       },
-                    },
-                  }))
+                      input: {
+                        crkd: {
+                          button: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
+                        },
+                      },
+                    })
+                  )
                 );
                 break;
               case proto.SubType.Gamepad:
                 profile.mappings!.push(
-                  ...Object.entries(CrkdMappings[profile.deviceToEmulate]).map(([wii, base]) => ({
-                    gamepadButton: base,
-                    input: {
-                      crkd: {
-                        button: parseInt(wii, 10),
-                        deviceid: parseInt(device!.id!, 10),
+                  ...Object.entries(CrkdMappings[profile.opts.deviceToEmulate]).map(
+                    ([wii, base]) => ({
+                      mapping: {
+                        gamepadButton: base,
                       },
-                    },
-                  }))
+                      input: {
+                        crkd: {
+                          button: parseInt(wii, 10),
+                          deviceid: parseInt(device!.id!, 10),
+                        },
+                      },
+                    })
+                  )
                 );
                 break;
             }
@@ -1763,13 +1749,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
           profiles: [
             ...(state.config.profiles || []),
             {
-              faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
-              deviceToEmulate: proto.SubType.Gamepad,
-              name: 'Device',
+              opts: {
+                faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
+                deviceToEmulate: proto.SubType.Gamepad,
+                name: 'Device',
+                uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
+              },
               assignments: [],
               mappings: [],
               leds: [],
-              uid: Math.max(0, ...(state.config.profiles?.map((x) => x.uid) || [])) + 1,
             },
           ],
         };
@@ -1811,7 +1799,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }
         dev?.close();
       }
-      console.log(state.waitingForReload)
       set((state) => {
         state.keepaliveTimeout = undefined;
         state.connected = state.waitingForReload;
@@ -1843,11 +1830,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
         new Uint8Array(profileData.buffer).slice(1)
       );
       const state = get();
-      if (state.config.profiles![state.currentProfile] !== null) {
+      if (state.config.profiles![state.currentProfile]) {
         const infoBuffer2 = proto.Command.encode(
           proto.Command.create({
             setProfile: proto.SetProfileCommand.create({
-              profileId: state.config.profiles![state.currentProfile].uid,
+              profileId: state.config.profiles![state.currentProfile].opts.uid,
             }),
           })
         )
@@ -2003,10 +1990,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.profiles = state.mappingStatus.map((x, i) => ({
         ...config.profiles![i],
         supportsSlider:
-          Object.values(x).find((x) => x.mapping.ghAxis?.toString().includes('Tap')) !== undefined,
+          Object.values(x).find((x) => x.mapping.mapping.ghAxis?.toString().includes('Tap')) !==
+          undefined,
         ps4OrPs5Mode:
-          !ps4Subtypes.includes(config.profiles![i].deviceToEmulate) ||
-          config.profiles![i].ps4OrPs5Mode,
+          !ps4Subtypes.includes(config.profiles![i].opts.deviceToEmulate) ||
+          config.profiles![i].opts.ps4OrPs5Mode,
         mappings: Object.values(x).map((x) => x.mapping),
       }));
       config.guiConfig = Object.values(state.guiDevices);
