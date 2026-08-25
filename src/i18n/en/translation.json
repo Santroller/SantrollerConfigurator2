@@ -1,6 +1,13 @@
 {
   "devices": {
     "wii": "Wii Extension",
+    "bt": "Bluetooth",
+    "encoder": "Incremental Encoder (DJH Turntable Platter)",
+    "matrix": "Matrix Input",
+    "toggle": "Toggle Input",
+    "dmx": "DMX",
+    "stp16cpc": "STP16CPC LED Driver",
+    "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
     "adxl": "ADXL345 Accelerometer",
     "mpu6050": "MPU6050 Accelerometer",
@@ -18,6 +25,7 @@
     "gh5Neck": "Guitar Hero 5 Guitar Neck",
     "crkdNeck": "CRKD Guitar Neck",
     "crkdDrum": "CRKD Drum Body",
+    "protarNeck": "Rock Band Mustang Pro Guitar Neck",
     "crazyGuitarNeck": "Crazy Guitar Neck",
     "djhTurntable": "DJ Hero Turntable Platter",
     "wiiEmulation": "Wii Extension Emulation",
@@ -27,7 +35,7 @@
     "gpio_analog": "(Analog)",
     "gpio_digital": "(Digital)",
     "shortcut": "Shortcut",
-    "held": "Held",
+    "held": "Held Input",
     "midi": "MIDI",
     "debug": "Debug",
     "ads1115": "ADS1115 Multiplexer",
@@ -303,6 +311,39 @@
       "pin": "GP{{pin}} - SCL, I2C Channel {{channel}}"
     },
     "incorrect_group": "I2C Pins are not from the same group"
+  },
+  "ws2812": {
+    "pin": "Pin",
+    "led_count": "LED Count",
+    "type": "LED Order",
+    "types": {
+      "ws2812rgb": "RGB Order",
+      "ws2812rbg": "RBG Order",
+      "ws2812grb": "GRB Order",
+      "ws2812gbr": "GBR Order",
+      "ws2812brg": "BRG Order",
+      "ws2812bgr": "BGR Order",
+      "ws2812rgbw": "RGBW Order",
+      "ws2812rbgw": "RBGW Order",
+      "ws2812grbw": "GRBW Order",
+      "ws2812gbrw": "GBRW Order",
+      "ws2812brgw": "BRGW Order",
+      "ws2812bgrw": "BGRW Order"
+    }
+  },
+  "apa102": {
+    "mosi": "Data Pin",
+    "sck": "Clock Pin",
+    "led_count": "LED Count",
+    "type": "LED Order",
+    "types": {
+      "apa102rgb": "RGB Order",
+      "apa102rbg": "RBG Order",
+      "apa102grb": "GRB Order",
+      "apa102gbr": "GBR Order",
+      "apa102brg": "BRG Order",
+      "apa102bgr": "BGR Order"
+    }
   },
   "mpr121": {
     "touchpad_count": "Touchpad Count"

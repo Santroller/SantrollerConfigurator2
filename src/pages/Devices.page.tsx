@@ -912,7 +912,7 @@ function DebugDevice({ id }: { id: string }) {
   );
 }
 const ws2812TypeData = Object.keys(proto.WS2812Type).map((t) => ({
-  label: `ws2812.${t.toLowerCase()}`,
+  label: `ws2812.types.${t.toLowerCase()}`,
   value: t,
 }));
 function WS2812Device({ id }: { id: string }) {
@@ -939,7 +939,7 @@ function WS2812Device({ id }: { id: string }) {
         }
       />
       <NumberInput
-        label="ws2812.count"
+        label={t("ws2812.led_count")}
         value={ws2812.count}
         onChange={(val) =>
           updateDevice(
@@ -950,8 +950,8 @@ function WS2812Device({ id }: { id: string }) {
       />
       <LabeledDropdown
         data={ws2812TypeData}
-        label="Type"
-        value={`ws2812.${proto.WS2812Type[ws2812.type]}`}
+        label="ws2812.type"
+        value={`ws2812.types.${proto.WS2812Type[ws2812.type]}`}
         dispatch={(val) =>
           updateDevice(
             { deviceid: parseInt(id, 10), ws2812: { ...ws2812, type: parseInt(val, 10) + 1 } },
@@ -963,7 +963,7 @@ function WS2812Device({ id }: { id: string }) {
   );
 }
 const apa102TypeData = Object.keys(proto.APA102Type).map((t) => ({
-  label: `apa102.${t.toLowerCase()}`,
+  label: `apa102.types.${t.toLowerCase()}`,
   value: t,
 }));
 function APA102Device({ id }: { id: string }) {
@@ -984,15 +984,15 @@ function APA102Device({ id }: { id: string }) {
       <SPIDevice
         device={apa102.spi}
         misoLabel="none"
-        mosiLabel="apa102.mosi.pin"
-        sckLabel="apa102.clock.pin"
+        mosiLabel="apa102.mosi"
+        sckLabel="apa102.sck"
         noMiso
         dispatch={(val) =>
           updateDevice({ deviceid: parseInt(id, 10), apa102: { ...apa102, spi: val } }, id)
         }
       />
       <NumberInput
-        label="apa102.count"
+        label={t("apa102.led_count")}
         value={apa102.count}
         onChange={(val) =>
           updateDevice(
@@ -1004,7 +1004,7 @@ function APA102Device({ id }: { id: string }) {
       <LabeledDropdown
         data={apa102TypeData}
         label="Type"
-        value={`apa102.${proto.APA102Type[apa102.type]}`}
+        value={`apa102.types.${proto.APA102Type[apa102.type]}`}
         dispatch={(val) =>
           updateDevice(
             { deviceid: parseInt(id, 10), apa102: { ...apa102, type: parseInt(val, 10) + 1 } },
