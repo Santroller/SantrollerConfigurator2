@@ -787,6 +787,7 @@
     "addMatrix": "Add Matrix Label",
     "addMultiplexer": "Add Multiplexer Label",
     "removeAll": "Remove all labels",
+    "showToCustomer": "Show label in customer tooling",
     "remove": {
       "title": "Deleting label",
       "desc": "Are you sure you wish to delete this label?",
@@ -801,7 +802,7 @@
     "notLoggedIn": "This page is for commercial users who are building custom tools for devices they are selling. If you are just a user, please use the normal tool.",
     "requiredDevice": {
       "title": "Device required",
-      "message": "Configuring this tool requires a connected device."
+      "description": "Configuring this tool requires a connected device."
     },
     "showFull": "Show full version of tool",
     "showCustomer": "Show customer version of tool",

@@ -11,10 +11,11 @@ export function getLabel(
   guiDevices: proto.IGuiConfig[],
   devices: DeviceStatus[],
   pin: number,
+  customer: boolean,
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].label?.pin === pin)
+    .filter((x) => x[1].label?.pin === pin && (!customer || x[1].label?.showToCustomer))
     .map((x) => x[1].label?.label)
     .concat(
       Object.entries(devices)
@@ -26,10 +27,11 @@ export function getLabel(
 export function getMultiplexerLabel(
   guiDevices: proto.IGuiConfig[],
   channel: number,
+  customer: boolean,
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].multiplexerLabel?.channel === channel)
+    .filter((x) => x[1].multiplexerLabel?.channel === channel && (!customer || x[1].multiplexerLabel?.showToCustomer))
     .map((x) => x[1].multiplexerLabel?.label);
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
@@ -37,14 +39,19 @@ export function getMatrixLabel(
   guiDevices: proto.IGuiConfig[],
   inPin: number,
   outPin: number,
+  customer: boolean,
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].matrixLabel?.inputPin === inPin && x[1].matrixLabel?.outputPin === outPin)
+    .filter(
+      (x) =>
+        x[1].matrixLabel?.inputPin === inPin &&
+        x[1].matrixLabel?.outputPin === outPin &&
+        (!customer || x[1].matrixLabel?.showToCustomer)
+    )
     .map((x) => x[1].matrixLabel?.label);
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
-
 
 export function PinBox({
   pin,
@@ -62,7 +69,7 @@ export function PinBox({
   const { t } = useTranslation();
   const guiDevices = useConfigStore((state) => state.guiDevices);
   const devices = useConfigStore((state) => state.deviceStatus);
-  const labelsText = getLabel(t, Object.values(guiDevices), [], pin);
+  const labelsText = getLabel(t, Object.values(guiDevices), [], pin, false);
   const combobox = useCombobox({
     onDropdownOpen: () => combobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
@@ -140,7 +147,8 @@ export function PinBox({
                       t,
                       Object.values(guiDevices),
                       pin === item[1].pin ? [] : Object.values(devices),
-                      item[1].pin
+                      item[1].pin,
+                      false
                     )}
                   </Text>
                 </Group>

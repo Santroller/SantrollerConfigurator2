@@ -88,21 +88,21 @@ export function CommercialToolPage() {
           <>
             <Space h="md" />
             {simpleMode ? (
-              <Button onClick={() => setSimpleMode(false)}>{t('commecrial.showFull')}</Button>
+              <Button onClick={() => setSimpleMode(false)}>{t('commercial.showFull')}</Button>
             ) : (
-              <Button onClick={() => setSimpleMode(true)}>{t('commecrial.showCustomer')}</Button>
+              <Button onClick={() => setSimpleMode(true)}>{t('commercial.showCustomer')}</Button>
             )}
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(false)}>
-             {t('commecrial.buildUf2Pico')}
+             {t('commercial.buildUf2Pico')}
             </Button>
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(true)}>
-             {t('commecrial.buildUf2Pico2')}
+             {t('commercial.buildUf2Pico2')}
             </Button>
             <Space h="md" />
             <TextInput
-              label={t('commecrial.toolName')}
+              label={t('commercial.toolName')}
               value={toolInfo?.name ?? ''}
               onChange={(event) => setSellerToolName(event.currentTarget.value)}
             />
@@ -114,7 +114,7 @@ export function CommercialToolPage() {
             >
               {(props) => (
                 <Button disabled={updating} {...props}>
-                  {t('commecrial.toolLogo')}
+                  {t('commercial.toolLogo')}
                 </Button>
               )}
             </FileButton>

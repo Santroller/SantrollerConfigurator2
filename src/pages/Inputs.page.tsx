@@ -936,10 +936,10 @@ function FixIcon(
   }
   if ([proto.SubType.GuitarHeroGuitar, proto.SubType.RockBandGuitar].includes(subtype)) {
     if (calcLabel === 'Gamepad_DpadUp') {
-      calcLabel = "GuitarHeroGuitar_StrumUp";
+      calcLabel = 'GuitarHeroGuitar_StrumUp';
     }
     if (calcLabel === 'Gamepad_DpadDown') {
-      calcLabel = "GuitarHeroGuitar_StrumDown";
+      calcLabel = 'GuitarHeroGuitar_StrumDown';
     }
   }
   if (mode === proto.FaceButtonMappingMode.PositionBased) {
@@ -1041,6 +1041,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
         const labelsText = getMultiplexerLabel(
           Object.values(guiDevices),
           input.ads1115!.channel,
+          true,
           false
         );
         if (labelsText) {
@@ -1052,6 +1053,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
         const labelsText2 = getMultiplexerLabel(
           Object.values(guiDevices),
           input.multiplexer!.channel,
+          true,
           false
         );
         if (labelsText2) {
@@ -1066,6 +1068,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
           Object.values(guiDevices),
           input.matrix!.pin,
           input.matrix!.outputPin,
+          true,
           false
         );
         if (labelsText3) {
@@ -1088,7 +1091,7 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
     }
   }
   if (input.gpio) {
-    const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, false);
+    const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
     if (labelsText) {
       return <Text>{labelsText}</Text>;
     }
@@ -1195,6 +1198,7 @@ function SantrollerInput({
           const labelsText = getMultiplexerLabel(
             Object.values(guiDevices),
             input.ads1115!.channel,
+            true,
             false
           );
           if (labelsText) {
@@ -1206,6 +1210,7 @@ function SantrollerInput({
           const labelsText2 = getMultiplexerLabel(
             Object.values(guiDevices),
             input.multiplexer!.channel,
+            true,
             false
           );
           if (labelsText2) {
@@ -1220,6 +1225,7 @@ function SantrollerInput({
             Object.values(guiDevices),
             input.matrix!.pin,
             input.matrix!.outputPin,
+            true,
             false
           );
           if (labelsText3) {
@@ -1244,7 +1250,7 @@ function SantrollerInput({
   }
   if (simpleMode) {
     if (input.gpio) {
-      const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, false);
+      const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
       return <Text>{labelsText}</Text>;
     }
     return <></>;
@@ -4435,17 +4441,18 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               updateProfile({ ...profile, opts: { ...profile.opts, deviceToEmulate } }, profileIdx)
             }
           />
-          <Space h="md" />
-          <DropdownBox
-            title="main.legendMode.label"
-            description="main.legendMode.description"
-            e={LegendMode}
-            val={legendMode}
-            label="legendMode"
-            dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
-          />
         </>
       )}
+
+      <Space h="md" />
+      <DropdownBox
+        title="main.legendMode.label"
+        description="main.legendMode.description"
+        e={LegendMode}
+        val={legendMode}
+        label="legendMode"
+        dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
+      />
 
       {profile.opts.deviceToEmulate === proto.SubType.Gamepad && (
         <>

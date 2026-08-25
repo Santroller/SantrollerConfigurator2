@@ -15,6 +15,7 @@ import {
   MultiSelect,
   SimpleGrid,
   Space,
+  Switch,
   Text,
   TextInput,
   useCombobox,
@@ -43,6 +44,7 @@ function Label({
   const { t } = useTranslation();
   const updateLabel = useConfigStore((state) => state.updateLabel);
   const copyLabel = useConfigStore((state) => state.copyLabel);
+  const seller = useConfigStore((state) => state.seller);
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
@@ -96,6 +98,24 @@ function Label({
             )
           }
         />
+        {seller && (
+          <>
+            <Space h="md" />{' '}
+            <Switch
+              checked={label.label!.showToCustomer ?? false}
+              onChange={(e) =>
+                updateLabel(
+                  {
+                    deviceid: parseInt(id, 10),
+                    label: { ...label.label!, showToCustomer: e.currentTarget.checked },
+                  },
+                  parseInt(id.toString(), 10)
+                )
+              }
+              label={t('labels.showToCustomer')}
+            />
+          </>
+        )}
       </Card>
     </>
   );
@@ -278,6 +298,7 @@ function MatrixLabel({
   const copyLabel = useConfigStore((state) => state.copyLabel);
   const device = useConfigStore((state) => state.deviceStatus[label.matrixLabel!.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const seller = useConfigStore((state) => state.seller);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -423,11 +444,32 @@ function MatrixLabel({
           )}
           dispatch={(pin) =>
             updateLabel(
-              { deviceid: parseInt(id, 10), matrixLabel: { ...label.matrixLabel!, outputPin: pin } },
+              {
+                deviceid: parseInt(id, 10),
+                matrixLabel: { ...label.matrixLabel!, outputPin: pin },
+              },
               parseInt(id.toString(), 10)
             )
           }
         />
+        {seller && (
+          <>
+            <Space h="md" />{' '}
+            <Switch
+              checked={label.label!.showToCustomer ?? false}
+              onChange={(e) =>
+                updateLabel(
+                  {
+                    deviceid: parseInt(id, 10),
+                    label: { ...label.label!, showToCustomer: e.currentTarget.checked },
+                  },
+                  parseInt(id.toString(), 10)
+                )
+              }
+              label={t('labels.showToCustomer')}
+            />
+          </>
+        )}
       </Card>
     </>
   );
@@ -448,6 +490,7 @@ function MultiplexerLabel({
   const copyLabel = useConfigStore((state) => state.copyLabel);
   const device = useConfigStore((state) => state.deviceStatus[label.multiplexerLabel!.deviceid!]);
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const seller = useConfigStore((state) => state.seller);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -629,6 +672,24 @@ function MultiplexerLabel({
           >
             {label.multiplexerLabel?.channel}
           </InputBase>
+        )}
+        {seller && (
+          <>
+            <Space h="md" />{' '}
+            <Switch
+              checked={label.label!.showToCustomer ?? false}
+              onChange={(e) =>
+                updateLabel(
+                  {
+                    deviceid: parseInt(id, 10),
+                    label: { ...label.label!, showToCustomer: e.currentTarget.checked },
+                  },
+                  parseInt(id.toString(), 10)
+                )
+              }
+              label={t('labels.showToCustomer')}
+            />
+          </>
         )}
       </Card>
     </>
