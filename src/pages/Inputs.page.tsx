@@ -444,6 +444,10 @@ function OutputBox({
           e2={proto.RockBandGuitarButtonType}
           val={mapping.mapping.rbAxis!}
           val2={mapping.mapping.rbButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           legendMode={legendMode}
           type={type}
           dispatch={(axis) =>
@@ -470,6 +474,10 @@ function OutputBox({
           legendMode={legendMode}
           type={type}
           val={mapping.mapping.ghDrumAxis!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           dispatch={(axis) =>
             dispatch({
               center: proto.GuitarHeroDrumsAxisType[axis].includes('Stick') ? 32767 : 0,
@@ -494,6 +502,10 @@ function OutputBox({
           e2={proto.RockBandDrumsButtonType}
           val={mapping.mapping.rbDrumAxis!}
           val2={mapping.mapping.rbDrumButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           legendMode={legendMode}
           type={type}
           dispatch={(axis) =>
@@ -520,6 +532,10 @@ function OutputBox({
           e2={proto.GuitarHeroLiveGuitarButtonType}
           val={mapping.mapping.ghlAxis!}
           val2={mapping.mapping.ghlButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
@@ -546,6 +562,10 @@ function OutputBox({
           e2={proto.DJHTurntableButtonType}
           val={mapping.mapping.djhAxis!}
           val2={mapping.mapping.djhButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
@@ -573,6 +593,10 @@ function OutputBox({
           e2={proto.ProGuitarButtonType}
           val={mapping.mapping.proAxis!}
           val2={mapping.mapping.proButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.mapping.gamepadAxis!}
+          val4={mapping.mapping.gamepadButton!}
           type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
