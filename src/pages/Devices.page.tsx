@@ -248,7 +248,7 @@ function DeviceCard({
             {id ? t(title, { id }) : t(title)}
           </Title>{' '}
         </Flex>
-        <Center>{connected === null ? null : badge}</Center>
+        <Center>{(connected === null || connected === undefined) ? null : badge}</Center>
         {children}
       </Card>
     </>
