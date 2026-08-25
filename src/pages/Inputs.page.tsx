@@ -938,8 +938,8 @@ function FixIcon(
     if (calcLabel === 'Gamepad_DpadUp') {
       calcLabel = "GuitarHeroGuitar_StrumUp";
     }
-    if (calcLabel === 'Gamepad_StrumDown') {
-      calcLabel = "GuitarHeroGuitar_DpadDown";
+    if (calcLabel === 'Gamepad_DpadDown') {
+      calcLabel = "GuitarHeroGuitar_StrumDown";
     }
   }
   if (mode === proto.FaceButtonMappingMode.PositionBased) {

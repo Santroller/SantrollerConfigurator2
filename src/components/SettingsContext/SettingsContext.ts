@@ -517,6 +517,10 @@ const CrkdMappings = {
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
     [proto.CrkdNeckButtonType.CrkdSoloOrange]:
       proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GamepadButtonType.Gamepad_DpadUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.GamepadButtonType.Gamepad_DpadDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.GamepadButtonType.Gamepad_DpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadRight]: proto.GamepadButtonType.Gamepad_DpadRight,
   },
   [proto.SubType.RockBandGuitar]: {
     [proto.CrkdNeckButtonType.CrkdGreen]: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
@@ -532,6 +536,10 @@ const CrkdMappings = {
     [proto.CrkdNeckButtonType.CrkdSoloBlue]: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
     [proto.CrkdNeckButtonType.CrkdSoloOrange]:
       proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+    [proto.CrkdNeckButtonType.CrkdDpadUp]: proto.GamepadButtonType.Gamepad_DpadUp,
+    [proto.CrkdNeckButtonType.CrkdDpadDown]: proto.GamepadButtonType.Gamepad_DpadDown,
+    [proto.CrkdNeckButtonType.CrkdDpadLeft]: proto.GamepadButtonType.Gamepad_DpadLeft,
+    [proto.CrkdNeckButtonType.CrkdDpadRight]: proto.GamepadButtonType.Gamepad_DpadRight,
   },
   [proto.SubType.Gamepad]: {
     [proto.CrkdNeckButtonType.CrkdGreen]: proto.GamepadButtonType.Gamepad_A,
@@ -1478,9 +1486,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 profile.mappings!.push(
                   ...Object.entries(CrkdMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      mapping: {
-                        ghButton: base,
-                      },
+                      mapping: proto.GuitarHeroGuitarButtonType[base]
+                        ? { ghButton: base as proto.GuitarHeroGuitarButtonType }
+                        : { gamepadButton: base as proto.GamepadButtonType },
                       input: {
                         crkd: {
                           button: parseInt(wii, 10),
@@ -1495,9 +1503,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 profile.mappings!.push(
                   ...Object.entries(CrkdMappings[profile.opts.deviceToEmulate]).map(
                     ([wii, base]) => ({
-                      mapping: {
-                        rbButton: base,
-                      },
+                      mapping: proto.RockBandGuitarButtonType[base]
+                        ? { rbButton: base as proto.RockBandGuitarButtonType }
+                        : { gamepadButton: base as proto.GamepadButtonType },
                       input: {
                         crkd: {
                           button: parseInt(wii, 10),
