@@ -71,6 +71,30 @@ export class DeviceStatus {
     this.cycleState = 0;
     this.toggleState = false;
     this.crkdDrumCalibration = {
+      [proto.CrkdDrumCalibrationType.RawValue]: {
+        redPad: 0,
+        yellowPad: 0,
+        bluePad: 0,
+        greenPad: 0,
+        orangePad: 0,
+        yellowCymbal: 0,
+        blueCymbal: 0,
+        greenCymbal: 0,
+        kick1: 0,
+        kick2: 0,
+      },
+      [proto.CrkdDrumCalibrationType.HoldTick]: {
+        redPad: 0,
+        yellowPad: 0,
+        bluePad: 0,
+        greenPad: 0,
+        orangePad: 0,
+        yellowCymbal: 0,
+        blueCymbal: 0,
+        greenCymbal: 0,
+        kick1: 0,
+        kick2: 0,
+      },
       [proto.CrkdDrumCalibrationType.Debounce]: {
         redPad: 0,
         yellowPad: 0,

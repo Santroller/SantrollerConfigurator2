@@ -1187,7 +1187,246 @@ function SantrollerInput({
   const pinModeCombobox = useCombobox({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
   });
-
+  let usbHost = undefined;
+  switch (type) {
+    case proto.SubType.GuitarHeroDrums:
+      usbHost = (
+        <DropdownOutputBox
+          title="input"
+          e={proto.GuitarHeroDrumsAxisType}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          legendMode={legendMode}
+          val={input.usbAxis?.axis.ghDrumAxis ?? undefined}
+          val3={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val4={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
+          label="usb.inputs"
+          midi
+          dispatch={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { ghDrumAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch3={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch4={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+        />
+      );
+      break;
+    case proto.SubType.RockBandDrums:
+      usbHost = (
+        <DropdownOutputBox
+          title="input"
+          e={proto.RockBandDrumsAxisType}
+          e2={proto.RockBandDrumsButtonType}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          legendMode={legendMode}
+          val={input.usbAxis?.axis.rbDrumAxis ?? undefined}
+          val2={input.usbButton?.button.rbDrumButton ?? undefined}
+          val3={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val4={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
+          label="usb.inputs"
+          midi
+          dispatch={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { rbDrumAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch2={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { rbDrumButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatch3={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch4={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+        />
+      );
+      break;
+    case proto.SubType.RockBandGuitar:
+      usbHost = (
+        <DropdownOutputBox
+          title="input"
+          e={proto.RockBandGuitarAxisType}
+          e2={proto.RockBandGuitarButtonType}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          legendMode={legendMode}
+          val={input.usbAxis?.axis.rbAxis ?? undefined}
+          val2={input.usbButton?.button.rbButton ?? undefined}
+          val3={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val4={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
+          label="usb.inputs"
+          midi
+          dispatch={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { rbAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch2={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { rbButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatch3={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch4={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+        />
+      );
+      break;
+    case proto.SubType.GuitarHeroGuitar:
+      usbHost = (
+        <DropdownOutputBox
+          title="input"
+          e={proto.GuitarHeroGuitarAxisType}
+          e2={proto.GuitarHeroGuitarButtonType}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          legendMode={legendMode}
+          val={input.usbAxis?.axis.ghAxis ?? undefined}
+          val2={input.usbButton?.button.ghButton ?? undefined}
+          val3={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val4={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
+          label="usb.inputs"
+          midi
+          dispatch={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { ghAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch2={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { ghButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatch3={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch4={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+        />
+      );
+      break;
+    case proto.SubType.Gamepad:
+    default:
+      usbHost = (
+        <DropdownOutputBox
+          title="input"
+          e={proto.GamepadAxisType}
+          e2={proto.GamepadButtonType}
+          legendMode={legendMode}
+          val={input.usbAxis?.axis.gamepadAxis ?? undefined}
+          val2={input.usbButton?.button.gamepadButton ?? undefined}
+          valMidi={input.midi ?? undefined}
+          type={type}
+          label="usb.inputs"
+          midi
+          dispatch={(axis) =>
+            dispatch({
+              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
+            })
+          }
+          dispatch2={(button) =>
+            dispatch({
+              usbButton: {
+                ...input.usbButton!,
+                button: { gamepadButton: button },
+                deviceid: deviceId,
+              },
+            })
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+        />
+      );
+      break;
+  }
   let deviceValue = <></>;
   if (input.gpio) {
     deviceValue = (
@@ -1866,39 +2105,7 @@ function SantrollerInput({
           dispatch3={() => {}}
         />
       )}
-      {device?.type === 'usbHost' && (
-        <DropdownOutputBox
-          title="input"
-          e={proto.GamepadAxisType}
-          e2={proto.GamepadButtonType}
-          legendMode={legendMode}
-          val={input.usbAxis?.axis.gamepadAxis ?? undefined}
-          val2={input.usbButton?.button.gamepadButton ?? undefined}
-          valMidi={input.midi ?? undefined}
-          type={type}
-          label="usb.inputs"
-          midi
-          dispatch={(axis) =>
-            dispatch({
-              usbAxis: { ...input.usbAxis!, axis: { gamepadAxis: axis }, deviceid: deviceId },
-            })
-          }
-          dispatch2={(button) =>
-            dispatch({
-              usbButton: {
-                ...input.usbButton!,
-                button: { gamepadButton: button },
-                deviceid: deviceId,
-              },
-            })
-          }
-          dispatchMidi={(midi) =>
-            dispatch({
-              midi: { ...midi!, deviceid: deviceId },
-            })
-          }
-        />
-      )}
+      {device?.type === 'usbHost' && usbHost}
       {input.crkd && (
         <DropdownBox
           title="input"
