@@ -1302,7 +1302,7 @@ function CycleDevice({ id }: { id: string }) {
     >
       <LabeledDropdown
         data={cycleData}
-        label="Type"
+        label="cycle.type"
         value={`cycle.label.${proto.CycleType[cycle.type]}`}
         description="cycle.description"
         dispatch={(val) =>

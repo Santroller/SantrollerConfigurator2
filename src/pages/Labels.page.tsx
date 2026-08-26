@@ -155,8 +155,8 @@ function LedLabel({
   }
   return (
     <>
-      <Modal opened={opened} onClose={close} title={t('delete_label_dialog.title')} centered>
-        {t('delete_label_dialog.desc')}
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
@@ -167,9 +167,9 @@ function LedLabel({
               }}
               color="red"
             >
-              {t('delete_label_dialog.confirm')}
+              {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_label_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -318,8 +318,8 @@ function MatrixLabel({
   }
   return (
     <>
-      <Modal opened={opened} onClose={close} title={t('delete_label_dialog.title')} centered>
-        {t('delete_label_dialog.desc')}
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
@@ -330,9 +330,9 @@ function MatrixLabel({
               }}
               color="red"
             >
-              {t('delete_label_dialog.confirm')}
+              {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_label_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -513,8 +513,8 @@ function MultiplexerLabel({
   }
   return (
     <>
-      <Modal opened={opened} onClose={close} title={t('label.remove.title')} centered>
-        {t('label.remove.desc')}
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
@@ -525,9 +525,9 @@ function MultiplexerLabel({
               }}
               color="red"
             >
-              {t('label.remove.confirm')}
+              {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('label.remove.cancel')}</Button>
+            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>

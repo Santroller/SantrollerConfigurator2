@@ -1679,6 +1679,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           });
         }
         if (deviceEvent.crkdDrum) {
+          console.log(deviceEvent.crkdDrum);
           set((state) => {
             if (deviceEvent.crkdDrum!.id in state.deviceStatus) {
               state.deviceStatus[deviceEvent.crkdDrum!.id].crkdDrumCalibration[

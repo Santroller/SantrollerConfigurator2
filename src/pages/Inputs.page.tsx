@@ -82,6 +82,8 @@ function StateLabelLabel({
   activationBased,
   ledBased,
   zeroBased,
+  crkdId,
+  crkd,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -90,13 +92,19 @@ function StateLabelLabel({
   activationBased?: boolean;
   ledBased?: boolean;
   zeroBased?: boolean;
+  crkdId?: number;
+  crkd?: keyof proto.ICrkdCalibrationData;
 }) {
   const stateRaw = useConfigStore((state) =>
-    ledBased
-      ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
-      : activationBased
-        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
-        : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
+    crkd
+      ? state.deviceStatus[crkdId!].crkdDrumCalibration[proto.CrkdDrumCalibrationType.RawValue][
+          crkd
+        ]
+      : ledBased
+        ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
+        : activationBased
+          ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
+          : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const state = useConfigStore((state) =>
     ledBased
@@ -117,6 +125,8 @@ function StateLabel({
   activationBased,
   ledBased,
   zeroBased,
+  crkdId,
+  crkd,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -125,6 +135,8 @@ function StateLabel({
   activationBased?: boolean;
   ledBased?: boolean;
   zeroBased?: boolean;
+  crkdId?: number;
+  crkd?: keyof proto.ICrkdCalibrationData;
 }) {
   return (
     <Center h="100%">
@@ -136,6 +148,8 @@ function StateLabel({
         activationBased={activationBased}
         ledBased={ledBased}
         zeroBased={zeroBased}
+        crkdId={crkdId}
+        crkd={crkd}
       />
     </Center>
   );
@@ -153,6 +167,8 @@ function StateSection({
   activationBased,
   ledBased,
   zeroBased,
+  crkdId,
+  crkd,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -166,13 +182,19 @@ function StateSection({
   activationBased?: boolean;
   ledBased?: boolean;
   zeroBased?: boolean;
+  crkdId?: number;
+  crkd?: keyof proto.ICrkdCalibrationData;
 }) {
   const stateRaw = useConfigStore((state) =>
-    ledBased
-      ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
-      : activationBased
-        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
-        : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
+    crkd
+      ? state.deviceStatus[crkdId!].crkdDrumCalibration[proto.CrkdDrumCalibrationType.RawValue][
+          crkd
+        ]
+      : ledBased
+        ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
+        : activationBased
+          ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
+          : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const state = useConfigStore((state) =>
     ledBased
@@ -270,6 +292,8 @@ function StateSlider({
   activationBased,
   ledBased,
   zeroBased,
+  crkdId,
+  crkd,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -282,6 +306,8 @@ function StateSlider({
   activationBased?: boolean;
   ledBased?: boolean;
   zeroBased?: boolean;
+  crkdId?: number;
+  crkd?: keyof proto.ICrkdCalibrationData;
 }) {
   if (raw) {
     return (
@@ -297,6 +323,8 @@ function StateSlider({
               activationBased={activationBased}
               ledBased={ledBased}
               zeroBased={zeroBased}
+              crkdId={crkdId}
+              crkd={crkd}
               raw
             />
           </Progress.Label>
@@ -312,6 +340,8 @@ function StateSlider({
             trigger={trigger}
             zeroBased={zeroBased}
             raw
+            crkdId={crkdId}
+            crkd={crkd}
           />
         </Progress.Root>
         <Space h="md" />
@@ -2230,6 +2260,17 @@ function isAnalog(input: proto.IInput) {
     input.cycle
   );
 }
+const crkdDrumMappings: Record<proto.CrkdDrumAxisType, keyof proto.ICrkdCalibrationData> = {
+  [proto.CrkdDrumAxisType.CrkdGreenPad]: 'greenPad',
+  [proto.CrkdDrumAxisType.CrkdYellowPad]: 'yellowPad',
+  [proto.CrkdDrumAxisType.CrkdBluePad]: 'bluePad',
+  [proto.CrkdDrumAxisType.CrkdRedPad]: 'redPad',
+  [proto.CrkdDrumAxisType.CrkdGreenCymbal]: 'greenCymbal',
+  [proto.CrkdDrumAxisType.CrkdYellowCymbal]: 'yellowCymbal',
+  [proto.CrkdDrumAxisType.CrkdBlueCymbal]: 'blueCymbal',
+  [proto.CrkdDrumAxisType.CrkdKick1]: 'kick1',
+  [proto.CrkdDrumAxisType.CrkdKick2]: 'kick2',
+};
 function SantrollerMapping({
   mapping,
   type,
@@ -2284,6 +2325,50 @@ function SantrollerMapping({
   const stick = label?.includes('Stick');
   const drum = label?.includes('Pad') || label?.includes('Cymbal');
   const analogInput = isAnalog(mapping.input);
+  const crkdDrum = mapping.input.crkdDrum;
+  const status = useConfigStore((state) => state.deviceStatus[crkdDrum?.deviceid ?? '']);
+  const updateCrkdDrumCalibration = useConfigStore((state) => state.updateCrkdDrumCalibration);
+  const crkdAxis = crkdDrumMappings[crkdDrum?.axis ?? proto.CrkdDrumAxisType.CrkdGreenPad];
+  const crkdMin =
+    (status?.crkdDrumCalibration &&
+      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Min][crkdAxis]) ||
+    0;
+  const crkdMax =
+    (status?.crkdDrumCalibration &&
+      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Max][crkdAxis]) ||
+    0;
+  const crkdDebounce =
+    (status?.crkdDrumCalibration &&
+      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.Debounce][crkdAxis]) ||
+    0;
+  const crkdHoldTick =
+    (status?.crkdDrumCalibration &&
+      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.HoldTick][crkdAxis]) ||
+    0;
+  const crkdRaw =
+    (status?.crkdDrumCalibration &&
+      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.RawValue][crkdAxis]) ||
+    0;
+  if (drum && crkdDrum) {
+    if (mapping.debounce) {
+      dispatch({
+        ...mapping,
+        debounce: 0,
+      });
+    }
+    if (mapping.min !== 0) {
+      dispatch({
+        ...mapping,
+        min: 0,
+      });
+    }
+    if (mapping.max !== 65535) {
+      dispatch({
+        ...mapping,
+        max: 65535,
+      });
+    }
+  }
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <Modal opened={opened} onClose={close} title={t('delete_device_dialog.title')} centered>
@@ -2370,19 +2455,49 @@ function SantrollerMapping({
               }}
               mappingIdx={mappingIdx}
             />
-            <Space h="md" />
-            {(button || drum) && (
-              <NumberInput
-                label={t('debounce.label')}
-                description={t('debounce.desc')}
-                value={mapping.debounce ?? 0}
-                onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
-              />
-            )}
           </>
         )}
         <Space h="md" />
-        {button && analogInput && (
+        {(button || (drum && !crkdDrum)) && (
+          <NumberInput
+            label={t('debounce.label')}
+            description={t('debounce.desc')}
+            value={mapping.debounce ?? 0}
+            onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
+          />
+        )}
+        {drum && crkdDrum && (
+          <>
+            <NumberInput
+              label={t('crkd.debounce.label')}
+              description={t('crkd.debounce.desc')}
+              value={crkdDebounce ?? 0}
+              onChange={(val) =>
+                updateCrkdDrumCalibration(
+                  mapping.input.crkdDrum!.deviceid.toString(),
+                  proto.CrkdDrumCalibrationType.Debounce,
+                  crkdAxis,
+                  parseInt(val.toString(), 10)
+                )
+              }
+            />
+            <NumberInput
+              label={t('crkd.holdTick.label')}
+              description={t('crkd.holdTick.desc')}
+              value={crkdHoldTick ?? 0}
+              onChange={(val) =>
+                updateCrkdDrumCalibration(
+                  mapping.input.crkdDrum!.deviceid.toString(),
+                  proto.CrkdDrumCalibrationType.HoldTick,
+                  crkdAxis,
+                  parseInt(val.toString(), 10)
+                )
+              }
+            />
+          </>
+        )}
+        <Space h="md" />
+        {button && analogInput && !crkdDrum && (
           <>
             <Space h="md" />
             <Accordion defaultValue={simpleMode ? 'main' : undefined}>
@@ -2586,7 +2701,7 @@ function SantrollerMapping({
               <Accordion.Item value="main">
                 <Accordion.Control>{t('axis.calibration')}</Accordion.Control>
                 <Accordion.Panel>
-                  {axis && (
+                  {axis && !crkdDrum && (
                     <>
                       <StateSlider
                         mappingIdx={mappingIdx}
@@ -2733,6 +2848,115 @@ function SantrollerMapping({
                         />
                       </Group>
                       <Space h="md" />
+                    </>
+                  )}
+                  {axis && crkdDrum && (
+                    <>
+                      <StateSlider
+                        mappingIdx={mappingIdx}
+                        profileIdx={profileIdx}
+                        center={mapping.center!}
+                        min={crkdMin}
+                        max={crkdMax}
+                        deadzone={mapping.deadzone!}
+                        crkd={crkdAxis}
+                        crkdId={mapping.input.crkdDrum!.deviceid}
+                        raw
+                      />
+                      <Text size="sm" fw={700}>
+                        Min
+                      </Text>
+                      <Group>
+                        <Slider
+                          flex={1}
+                          value={crkdMin}
+                          min={0}
+                          max={255}
+                          onChange={(val) =>
+                            updateCrkdDrumCalibration(
+                              mapping.input.crkdDrum!.deviceid.toString(),
+                              proto.CrkdDrumCalibrationType.Min,
+                              crkdAxis,
+                              parseInt(val.toString(), 10)
+                            )
+                          }
+                        />
+
+                        <NumberInput
+                          value={crkdMin}
+                          min={0}
+                          max={255}
+                          onChange={(val) =>
+                            updateCrkdDrumCalibration(
+                              mapping.input.crkdDrum!.deviceid.toString(),
+                              proto.CrkdDrumCalibrationType.Min,
+                              crkdAxis,
+                              parseInt(val.toString(), 10)
+                            )
+                          }
+                          w={100}
+                        />
+                      </Group>
+                      <Group>
+                        <Button
+                          onClick={() => {
+                            dispatch({
+                              ...mapping,
+                              min: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                .stateRaw,
+                            });
+                          }}
+                        >
+                          {t('pin_use_current')}
+                        </Button>
+                      </Group>
+                      <Space h="md" />
+                      <Text size="sm" fw={700}>
+                        Max
+                      </Text>
+                      <Group>
+                        <Slider
+                          flex={1}
+                          value={crkdMax}
+                          min={0}
+                          max={255}
+                          onChange={(val) =>
+                            updateCrkdDrumCalibration(
+                              mapping.input.crkdDrum!.deviceid.toString(),
+                              proto.CrkdDrumCalibrationType.Max,
+                              crkdAxis,
+                              parseInt(val.toString(), 10)
+                            )
+                          }
+                        />
+                        <NumberInput
+                          value={crkdMax}
+                          min={0}
+                          max={255}
+                          onChange={(val) =>
+                            updateCrkdDrumCalibration(
+                              mapping.input.crkdDrum!.deviceid.toString(),
+                              proto.CrkdDrumCalibrationType.Max,
+                              crkdAxis,
+                              parseInt(val.toString(), 10)
+                            )
+                          }
+                          w={100}
+                        />
+                      </Group>
+                      <Group>
+                        <Button
+                          onClick={() => {
+                            dispatch({
+                              ...mapping,
+                              max: useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
+                                .stateRaw,
+                            });
+                          }}
+                        >
+                          {t('pin_use_current')}
+                        </Button>
+                      </Group>
                     </>
                   )}
                 </Accordion.Panel>
