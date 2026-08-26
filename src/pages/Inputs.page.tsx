@@ -938,6 +938,14 @@ function FixIcon(
   }
   if (calcLabel?.startsWith('Gamepad_')) {
     switch (calcLabel) {
+      case 'Gamepad_DpadUp':
+      case 'Gamepad_DpadDown':
+      case 'Gamepad_DpadLeft':
+      case 'Gamepad_DpadRight':
+        if (!icon) {
+          return `Generic/${calcLabel}`;
+        }
+      // eslint-disable-next-line no-fallthrough
       case 'Gamepad_A':
       case 'Gamepad_B':
       case 'Gamepad_X':
@@ -952,24 +960,6 @@ function FixIcon(
       case 'Gamepad_RightTrigger':
       case 'Gamepad_LeftThumbClick':
       case 'Gamepad_RightThumbClick':
-        switch (legendMode) {
-          case LegendMode.Nintendo:
-            return `Nintendo/${calcLabel}`;
-          case LegendMode.PlayStation:
-            return `PlayStation/${calcLabel}`;
-          case LegendMode.Xbox360:
-            return `Xbox360/${calcLabel}`;
-          case LegendMode.XboxOne:
-            return `XboxOne/${calcLabel}`;
-        }
-        break;
-      case 'Gamepad_DpadUp':
-      case 'Gamepad_DpadDown':
-      case 'Gamepad_DpadLeft':
-      case 'Gamepad_DpadRight':
-        if (!icon) {
-          return `Generic/${calcLabel}`;
-        }
         switch (legendMode) {
           case LegendMode.Nintendo:
             return `Nintendo/${calcLabel}`;
@@ -1819,7 +1809,6 @@ function SantrollerInput({
           dispatch2={(button) =>
             dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
           }
-          dispatch3={() => {}}
         />
       )}
       {device?.type === 'usbHost' && (
