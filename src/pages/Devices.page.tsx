@@ -1,4 +1,4 @@
-import { createElement, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   Accordion,
@@ -39,6 +39,7 @@ import { t, TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { PinBox } from '@/components/Devices/Pins';
+import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   AllPinsNamed,
   AnalogPinsNamed,
@@ -1828,11 +1829,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const types: {
-  [type in keyof proto.IDevice as Exclude<type, 'deviceid'>]-?: React.FunctionComponent<{
-    id: string;
-  }>;
-} = {
+const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>> = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -1869,19 +1866,19 @@ const types: {
   dmx: DMXDevice,
 };
 export function DevicesPage() {
-  const [deviceType, setDeviceType] = useState(Object.keys(types)[0]);
+  const [deviceType, setDeviceType] = useState<DeviceKind>(deviceKinds[0]);
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const config: { [id in keyof Omit<proto.IDevice, 'deviceid'>]: string } = useConfigStore(
+  const config = useConfigStore(
     useShallow((state) =>
       Object.fromEntries(
         Object.values(state.deviceStatus)
           .filter((x) => x.type)
           .map((x) => [x.id, x.type])
-      )
+      ) as Record<string, DeviceKind>
     )
   );
   const deleteAllDevices = useConfigStore((state) => state.deleteAllDevices);
@@ -1910,7 +1907,9 @@ export function DevicesPage() {
             <Combobox
               store={combobox}
               onOptionSubmit={(val) => {
-                setDeviceType(val);
+                if (isDeviceKind(val)) {
+                  setDeviceType(val);
+                }
                 combobox.closeDropdown();
               }}
             >
@@ -1918,7 +1917,7 @@ export function DevicesPage() {
 
               <Combobox.Dropdown>
                 <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
-                  {Object.keys(types).map((item) => (
+                  {deviceKinds.map((item) => (
                     <Combobox.Option value={item} key={item}>
                       {t(`devices.${item}`)}
                     </Combobox.Option>
@@ -1942,9 +1941,10 @@ export function DevicesPage() {
             </Flex>
           </Modal>
           <SimpleGrid cols={3}>
-            {Object.entries(config).map(([id, type]) =>
-              createElement(types[type as keyof typeof types], { id, key: id })
-            )}
+            {Object.entries(config).map(([id, type]) => {
+              const DeviceEditor = deviceEditors[type];
+              return <DeviceEditor id={id} key={id} />;
+            })}
           </SimpleGrid>
           <Affix position={{ bottom: 40, right: 40 }}>
             <Menu trigger="click-hover" shadow="md" width={150}>

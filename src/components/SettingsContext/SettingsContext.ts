@@ -7,6 +7,9 @@ import type {} from '@redux-devtools/extension';
 
 import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
 import { CRC32 } from '@/CRC32.js';
+import { createDeviceConfig, getDevicePins, getDeviceStatusLabel, isDeviceKind } from '@/components/Devices/deviceRegistry';
+import { inputUsesDevice } from '@/components/Inputs/inputRegistry';
+import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
 import { proto } from './config.js';
 
 export * from './config.js';
@@ -144,151 +147,10 @@ export class DeviceStatus {
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
   crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType]: proto.ICrkdCalibrationData };
   static label(status: DeviceStatus) {
-    let label = DeviceStatus.pins(status)
-      ?.map((x) => `GP${x}`)
-      .join(', ');
-    switch (status.type) {
-      case 'wii':
-        label = `${status.wiiExtType !== proto.WiiExtType.WiiNoExtension ? 'Connected' : 'Disconnected'}, ${label}`;
-        break;
-      case 'psx':
-        label = `${status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${label}`;
-        break;
-      case 'usbHost':
-        label = `${Object.values(status.usbDevices).length !== 0 ? 'Connected' : 'Disconnected'}, ${label}`;
-        break;
-      case 'ws2812':
-      case 'apa102':
-      case 'stp16cpc':
-      case 'multiplexer':
-      case 'matrix':
-        break;
-
-      case 'cycle':
-        label = `${status.id}`;
-        break;
-      default:
-        label = `${status.connected ? 'Connected' : 'Disconnected'}, ${label}`;
-        break;
-    }
-    switch (status.type) {
-      case 'peripheral':
-        return `${label}, 0x${status.device.peripheral?.address.toString(16)}`;
-    }
-    return label;
+    return getDeviceStatusLabel(status);
   }
   static pins(status: DeviceStatus): number[] {
-    switch (status.type) {
-      case 'ws2812':
-        return [status.device.ws2812!.pin];
-      case 'apa102':
-        return [status.device.apa102!.spi.mosi, status.device.apa102!.spi.sck];
-      case 'stp16cpc':
-        return [
-          status.device.stp16cpc!.spi.mosi,
-          status.device.stp16cpc!.spi.miso,
-          status.device.stp16cpc!.spi.sck,
-          status.device.stp16cpc!.le,
-          status.device.stp16cpc!.oe,
-        ];
-      case 'wii':
-        return [status.device.wii!.i2c.sda, status.device.wii!.i2c.scl];
-      case 'ads1115':
-        return [status.device.ads1115!.i2c.sda, status.device.ads1115!.i2c.scl];
-      case 'accelerometer':
-        return [status.device.accelerometer!.i2c.sda, status.device.accelerometer!.i2c.scl];
-      case 'bhDrum':
-        return [status.device.bhDrum!.i2c.sda, status.device.bhDrum!.i2c.scl];
-      case 'mpu6050':
-        return [status.device.accelerometer!.i2c.sda, status.device.accelerometer!.i2c.scl];
-      case 'worldTourDrum':
-        return [
-          status.device.worldTourDrum!.spi.mosi,
-          status.device.worldTourDrum!.spi.miso,
-          status.device.worldTourDrum!.spi.sck,
-        ];
-      case 'usbHost':
-        return [status.device.usbHost!.firstPin, status.device.usbHost!.firstPin + 1];
-      case 'mpr121':
-        return [status.device.mpr121!.i2c.sda, status.device.mpr121!.i2c.scl];
-      case 'crazyGuitarNeck':
-        return [status.device.crazyGuitarNeck!.i2c.sda, status.device.crazyGuitarNeck!.i2c.scl];
-      case 'gh5Neck':
-        return [status.device.gh5Neck!.i2c.sda, status.device.gh5Neck!.i2c.scl];
-      case 'djhTurntable':
-        return [status.device.djhTurntable!.i2c.sda, status.device.djhTurntable!.i2c.scl];
-      case 'midiSerial':
-        return [status.device.midiSerial!.uart.tx, status.device.midiSerial!.uart.rx];
-      case 'crkdNeck':
-        return [status.device.crkdNeck!.uart.tx, status.device.crkdNeck!.uart.rx];
-      case 'crkdDrum':
-        return [status.device.crkdDrum!.uart.tx, status.device.crkdDrum!.uart.rx];
-      case 'multiplexer':
-        return status.device.multiplexer!.sixteenChannel
-          ? [
-              status.device.multiplexer!.s0Pin,
-              status.device.multiplexer!.s1Pin,
-              status.device.multiplexer!.s2Pin,
-              status.device.multiplexer!.s3Pin,
-              status.device.multiplexer!.inputPin,
-            ]
-          : [
-              status.device.multiplexer!.s0Pin,
-              status.device.multiplexer!.s1Pin,
-              status.device.multiplexer!.s2Pin,
-              status.device.multiplexer!.inputPin,
-            ];
-      case 'psx':
-        return [
-          status.device.psx!.spi.mosi,
-          status.device.psx!.spi.miso,
-          status.device.psx!.spi.sck,
-          status.device.psx!.ackPin,
-          status.device.psx!.attPin,
-        ];
-      case 'protarNeck':
-        return [
-          status.device.protarNeck!.spi.mosi,
-          status.device.protarNeck!.spi.miso,
-          status.device.protarNeck!.spi.sck,
-          status.device.protarNeck!.attPin,
-        ];
-      case 'snes':
-        return [
-          status.device.snes!.clockPin,
-          status.device.snes!.latchPin,
-          status.device.snes!.dataPin,
-        ];
-      case 'joybus':
-        return [status.device.joybus!.dataPin];
-      case 'wiiEmulation':
-        return [status.device.wiiEmulation!.i2c.sda, status.device.wiiEmulation!.i2c.scl];
-      case 'psxEmulation':
-        return [
-          status.device.psxEmulation!.commandPin,
-          status.device.psxEmulation!.attentionPin,
-          status.device.psxEmulation!.acknowledgePin,
-          status.device.psxEmulation!.dataPin,
-          status.device.psxEmulation!.clockPin,
-        ];
-      case 'vtechExpander':
-        return [
-          status.device.vtechExpander!.spi.mosi,
-          status.device.vtechExpander!.spi.miso,
-          status.device.vtechExpander!.spi.sck,
-          status.device.vtechExpander!.attPin,
-        ];
-      case 'matrix':
-        return Array.from(Array(32).keys()).filter(
-          (x) => (status.device.matrix!.outPins! | status.device.matrix!.inPins!) & (1 << x)
-        );
-      case 'joybusEmulation':
-        return [status.device.joybusEmulation!.dataPin];
-      case 'peripheral':
-        return [status.device.peripheral!.i2c.sda, status.device.peripheral!.i2c.scl];
-      default:
-        return [];
-    }
+    return getDevicePins(status.device);
   }
 }
 export interface ConfigState {
@@ -646,99 +508,10 @@ const WiiMappingsTrigger = {
 };
 
 function createDefault(type: string, id: string) {
-  let device = {};
-  const i2c = { sda: -1, scl: -1, block: 0, clock: 100000 };
-  const i2c15 = { sda: -1, scl: -1, block: 0, clock: 150000 };
-  const i2c4 = { sda: -1, scl: -1, block: 0, clock: 400000 };
-  const spi = { mosi: -1, miso: -1, sck: -1, block: 0, clock: 500000 };
-  const uart = { tx: -1, rx: -1, block: 0 };
-  const mappingMode = proto.MappingMode.PerInput;
-  switch (type) {
-    case 'gh5Neck':
-    case 'djhTurntable':
-      device = { i2c: i2c15 };
-      break;
-    case 'accelerometer':
-    case 'wii':
-    case 'wiiEmulation':
-    case 'mpr121':
-      device = { i2c: i2c4 };
-      break;
-    case 'protarNeck':
-      device = { spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 100000 }, attPin: -1 };
-      break;
-    case 'vtechExpander':
-      device = { spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 10000 }, attPin: -1 };
-      break;
-    case 'bhDrum':
-    case 'crazyGuitarNeck':
-      device = { i2c };
-      break;
-    case 'peripheral':
-      device = { i2c: i2c4, address: 0x45 };
-      break;
-    case 'ads1115':
-      device = { i2c: i2c4, interrupt: -1 };
-      break;
-    case 'worldTourDrum':
-      device = { spi, csPin: -1 };
-      break;
-    case 'apa102':
-      device = { spi: { ...spi, clock: 12000000 }, count: 0, type: proto.APA102Type.Apa102Rgb };
-      break;
-    case 'stp16cpc':
-      device = { spi, oe: -1, le: -1, count: 0 };
-      break;
-    case 'ws2812':
-      device = { pin: -1, count: 0, type: proto.WS2812Type.Ws2812Rgb };
-      break;
-    case 'usbHost':
-      device = { firstPin: -1, dmFirst: false };
-      break;
-    case 'midiSerial':
-      device = { uart: { ...uart, clock: 31250 } };
-      break;
-    case 'crkdDrum':
-    case 'crkdNeck':
-    case 'debug':
-      device = { uart };
-      break;
-    case 'multiplexer':
-      device = { s0Pin: -1, s1Pin: -1, s2Pin: -1, s3Pin: -1, inputPin: -1, sixteenChannel: false };
-      break;
-    case 'psx':
-      device = { spi, ackPin: -1, attPin: -1 };
-      break;
-    case 'snes':
-      device = { clockPin: -1, latchPin: -1, dataPin: -1 };
-      break;
-    case 'encoder':
-      device = { dataPin: -1 };
-      break;
-    case 'joybus':
-    case 'joybusEmulation':
-      device = { dataPin: -1 };
-      break;
-    case 'psxEmulation':
-      device = { commandPin: -1, attentionPin: -1, acknowledgePin: -1, dataPin: -1, clockPin: -1 };
-      break;
-    case 'matrix':
-      device = { inPins: 0, outPins: 0 };
-      break;
-    case 'cycle':
-      device = { values: [0] };
-      break;
-    case 'toggle':
-      device = {};
-      break;
-    case 'dmx':
-      device = { pin: -1, channelCount: 1 };
-      break;
+  if (!isDeviceKind(type)) {
+    throw new Error(`Unknown device type: ${type}`);
   }
-  return new DeviceStatus(id, type, {
-    deviceid: parseInt(id, 10),
-    [type]: { ...device, mappingMode },
-  });
+  return new DeviceStatus(id, type, createDeviceConfig(type, parseInt(id, 10)));
 }
 const magic = 0xd2f1e365;
 function fixInput(mapping: proto.IMapping) {
@@ -869,53 +642,29 @@ export const useConfigStore = create<ConfigState & Actions>()(
 
     addLabel: () => {
       set((state) => {
-        let id = 0;
-        if (Object.keys(state.guiDevices).length) {
-          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
-        }
-        state.guiDevices[id] = {
-          deviceid: id,
-          label: { label: 'Label', pin: -1 },
-        };
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('label', id);
       });
       get().saveConfig();
     },
     addLedLabel: () => {
       set((state) => {
-        let id = 0;
-        if (Object.keys(state.guiDevices).length) {
-          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
-        }
-        state.guiDevices[id] = {
-          deviceid: id,
-          ledLabel: { label: 'Label', deviceid: -1, activeLed: [] },
-        };
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('ledLabel', id);
       });
       get().saveConfig();
     },
     addMultiplexerLabel: () => {
       set((state) => {
-        let id = 0;
-        if (Object.keys(state.guiDevices).length) {
-          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
-        }
-        state.guiDevices[id] = {
-          deviceid: id,
-          multiplexerLabel: { label: 'Label', deviceid: -1, channel: 0 },
-        };
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('multiplexerLabel', id);
       });
       get().saveConfig();
     },
     addMatrixLabel: () => {
       set((state) => {
-        let id = 0;
-        if (Object.keys(state.guiDevices).length) {
-          id = Math.max(...Object.values(state.guiDevices).map((x) => x.deviceid)) + 1;
-        }
-        state.guiDevices[id] = {
-          deviceid: id,
-          matrixLabel: { label: 'Label', deviceid: -1, inputPin: -1, outputPin: -1 },
-        };
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('matrixLabel', id);
       });
       get().saveConfig();
     },
@@ -1586,29 +1335,29 @@ export const useConfigStore = create<ConfigState & Actions>()(
     deleteDevice: (id: string) => {
       set((state) => {
         const idNum = parseInt(id, 10);
-        const type = state.deviceStatus[id].type as keyof proto.IInput;
-        if (type === 'gpio' || type === 'fixed' || type === 'shortcut' || type === 'held') {
+        if (!state.deviceStatus[id]) {
           return;
         }
         delete state.deviceStatus[id];
         state.mappingStatus = state.mappingStatus.map((x) =>
           Object.fromEntries(
-            Object.entries(x).filter(([_, x]) => x.mapping.input[type]?.deviceid !== idNum)
+            Object.entries(x).filter(([_, x]) => !inputUsesDevice(x.mapping.input, idNum))
           )
         );
         state.config.profiles = state.config.profiles!.map((p) => ({
           ...p,
-          mappings: p.mappings?.filter((x) => x.input[type]?.deviceid !== idNum),
+          mappings: p.mappings?.filter((x) => !inputUsesDevice(x.input, idNum)),
           assignments: p.assignments?.map((x) => ({
             ...x,
             assignments: x.assignments?.filter(
               (y) =>
-                (!y.input || y.input.input[type]?.deviceid !== idNum) &&
-                (!y.inputAnyTime || y.inputAnyTime.input[type]?.deviceid !== idNum)
+                (!y.input || !inputUsesDevice(y.input.input, idNum)) &&
+                (!y.inputAnyTime || !inputUsesDevice(y.inputAnyTime.input, idNum))
             ),
           })),
           leds: p.leds?.filter(
-            (x) => !x.mapping.inputMapping || x.mapping.inputMapping.input[type]?.deviceid !== idNum
+            (x) =>
+              !x.mapping.inputMapping || !inputUsesDevice(x.mapping.inputMapping.input, idNum)
           ),
         }));
       });

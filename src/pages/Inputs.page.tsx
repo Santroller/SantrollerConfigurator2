@@ -8,6 +8,10 @@ import { Navigate } from 'react-router-dom';
 import { Accordion, ActionIcon, Alert, Badge, Button, Card, Center, ColorInput, Combobox, Flex, Group, Image, Input, InputBase, isNumberLike, Loader, Modal, MultiSelect, NumberInput, Overlay, Progress, SegmentedControl, Slider, Space, Stack, Switch, Table, Tabs, Text, TextInput, Title, useCombobox } from '@mantine/core';
 import { useDisclosure, useTimeout } from '@mantine/hooks';
 import { getLabel, getMatrixLabel, getMultiplexerLabel, hasDefaults, isLed, PinBox } from '@/components/Devices/Pins';
+import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
+import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
+import { createDeviceInput, createStandaloneInput, getInputDeviceId, isAnalogInput } from '@/components/Inputs/inputRegistry';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
@@ -618,87 +622,6 @@ function MappingBox({
     />
   );
 }
-function isInput(deviceStatus: DeviceStatus) {
-  switch (deviceStatus.type) {
-    case 'debug':
-    case 'ws2812':
-    case 'apa102':
-    case 'stp16cpc':
-    case 'bt':
-    case 'dmx':
-      return false;
-    default:
-      return true;
-  }
-}
-type StandardEnum<T> = {
-  [id: string]: T | string;
-  [nu: number]: string;
-};
-function DropdownBox<T extends StandardEnum<unknown>>({
-  e,
-  val,
-  title,
-  label,
-  description,
-  dispatch,
-}: {
-  e: T;
-  val: T[keyof T];
-  title: string;
-  label: string;
-  description?: string;
-  dispatch: (input: T[keyof T]) => void;
-}) {
-  const { t } = useTranslation();
-  const inputCombobox = useCombobox({
-    onDropdownOpen: () =>
-      inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
-  });
-  return (
-    <Combobox
-      store={inputCombobox}
-      onOptionSubmit={(val) => {
-        const button = e[val as keyof T];
-        if (button !== undefined) {
-          dispatch(button);
-        }
-        inputCombobox.closeDropdown();
-      }}
-    >
-      <Combobox.Target>
-        <InputBase
-          label={t(title)}
-          description={description && t(description)}
-          component="button"
-          type="button"
-          pointer
-          rightSection={<Combobox.Chevron />}
-          rightSectionPointerEvents="none"
-          onClick={() => {
-            inputCombobox.toggleDropdown();
-          }}
-        >
-          {t(`${label}.${e[val as keyof T]}`)}
-        </InputBase>
-      </Combobox.Target>
-
-      <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
-        <Combobox.Options>
-          {inputCombobox.dropdownOpened &&
-            Object.keys(e)
-              .filter((e) => isNaN(Number(e)))
-              .map((item) => (
-                <Combobox.Option value={item} key={item} selected={e[val as keyof T] === item}>
-                  {t(`${label}.${item}`)}
-                </Combobox.Option>
-              ))}
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
-  );
-}
-
 function DropdownOutputBox<
   T extends StandardEnum<unknown>,
   T2 extends StandardEnum<unknown>,
@@ -986,21 +909,16 @@ function FixLabel(
   return FixIcon(mode, subtype, label, legendMode, false)?.replace('/', '.');
 }
 
-function SantrollerLabel({ input, label }: { input: proto.IInput; label: string }) {
-  let deviceId = -1;
-  for (const key of Object.keys(input)) {
-    const key2 = key as keyof typeof input;
-    if (
-      key2 !== 'fixed' &&
-      key2 !== 'gpio' &&
-      key2 !== 'shortcut' &&
-      key2 !== 'held' &&
-      input[key2]!.deviceid !== undefined
-    ) {
-      deviceId = input[key2]!.deviceid;
-      break;
-    }
-  }
+function SantrollerLabel({
+  input,
+  label,
+  fallback = true,
+}: {
+  input: proto.IInput;
+  label: string;
+  fallback?: boolean;
+}) {
+  const deviceId = getInputDeviceId(input) ?? -1;
   const { t } = useTranslation();
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
   const guiDevices = useConfigStore((state) => state.guiDevices);
@@ -1062,11 +980,11 @@ function SantrollerLabel({ input, label }: { input: proto.IInput; label: string 
   }
   if (input.gpio) {
     const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
-    if (labelsText) {
+    if (labelsText || !fallback) {
       return <Text>{labelsText}</Text>;
     }
   }
-  return <Text>{t(`outputs.${label}`)}</Text>;
+  return fallback ? <Text>{t(`outputs.${label}`)}</Text> : null;
 }
 
 function SantrollerInput({
@@ -1094,20 +1012,7 @@ function SantrollerInput({
   innerIdx?: number;
   dispatch: (input: proto.IInput) => void;
 }) {
-  let deviceId = -1;
-  for (const key of Object.keys(input)) {
-    const key2 = key as keyof typeof input;
-    if (
-      key2 !== 'fixed' &&
-      key2 !== 'gpio' &&
-      key2 !== 'shortcut' &&
-      key2 !== 'held' &&
-      input[key2]!.deviceid !== undefined
-    ) {
-      deviceId = input[key2]!.deviceid;
-      break;
-    }
-  }
+  const deviceId = getInputDeviceId(input) ?? -1;
   const { t } = useTranslation();
   const deviceStatus = useConfigStore.getState().deviceStatus;
   const detectPins = useConfigStore.getState().detectPins;
@@ -1118,7 +1023,6 @@ function SantrollerInput({
   const detectedLed = useConfigStore.getState().detectedLed;
   const detecting = useConfigStore((state) => state.detecting);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
-  const guiDevices = useConfigStore((state) => state.guiDevices);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -1129,6 +1033,9 @@ function SantrollerInput({
   const pinModeCombobox = useCombobox({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
   });
+  if (simpleMode) {
+    return <SantrollerLabel input={input} label="" fallback={false} />;
+  }
   let deviceValue = <></>;
   if (input.gpio) {
     deviceValue = (
@@ -1163,68 +1070,6 @@ function SantrollerInput({
         </Text>
       </Group>
     );
-    if (simpleMode) {
-      switch (device.type) {
-        case 'ads1115': {
-          const labelsText = getMultiplexerLabel(
-            Object.values(guiDevices),
-            input.ads1115!.channel,
-            true,
-            false
-          );
-          if (labelsText) {
-            return <Text>{labelsText}</Text>;
-          }
-          return <Text>{t('multiplexer.channel', { channel: input.ads1115?.channel })}</Text>;
-        }
-        case 'multiplexer': {
-          const labelsText2 = getMultiplexerLabel(
-            Object.values(guiDevices),
-            input.multiplexer!.channel,
-            true,
-            false
-          );
-          if (labelsText2) {
-            return <Text>{labelsText2}</Text>;
-          }
-          return <Text>{input.multiplexer?.channel}</Text>;
-        }
-        case 'vtechExpander':
-          return <Text>{input.vtechExpander?.button}</Text>;
-        case 'matrix': {
-          const labelsText3 = getMatrixLabel(
-            Object.values(guiDevices),
-            input.matrix!.pin,
-            input.matrix!.outputPin,
-            true,
-            false
-          );
-          if (labelsText3) {
-            return <Text>{labelsText3}</Text>;
-          }
-          return (
-            <Text>
-              {input.matrix?.pin}: {input.matrix?.outputPin}
-            </Text>
-          );
-        }
-        case 'bhDrum':
-          return <Text>{input.midi?.midiNote?.note}</Text>;
-        case 'worldTourDrum':
-          return <Text>{input.midi?.midiNote?.note}</Text>;
-        case 'cycle':
-          return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
-        case 'toggle':
-          return <Text>{input.toggle?.input?.gpio?.pin}</Text>;
-      }
-    }
-  }
-  if (simpleMode) {
-    if (input.gpio) {
-      const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
-      return <Text>{labelsText}</Text>;
-    }
-    return <></>;
   }
   if (
     detectedMapping !== undefined &&
@@ -1261,210 +1106,19 @@ function SantrollerInput({
           onOptionSubmit={(val) => {
             deviceCombobox.closeDropdown();
             if (isNumberLike(val)) {
-              switch (deviceStatus[parseInt(val, 10)].type) {
-                case 'wii':
-                  if (axis) {
-                    dispatch({
-                      wiiAxis: {
-                        axis: proto.WiiAxisType.WiiAxisClassicLeftStickX,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  } else if (button) {
-                    dispatch({
-                      wiiButton: {
-                        button: proto.WiiButtonType.WiiButtonClassicA,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  }
-                  break;
-                case 'psx':
-                  if (axis) {
-                    dispatch({
-                      ps2Axis: {
-                        axis: proto.PS2AxisType.PS2AxisLeftStickX,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  } else if (button) {
-                    dispatch({
-                      ps2Button: {
-                        button: proto.PS2ButtonType.PS2ButtonCross,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  }
-                  break;
-                case 'ads1115':
-                  dispatch({
-                    ads1115: {
-                      channel: 0,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'multiplexer':
-                  dispatch({
-                    multiplexer: {
-                      channel: 0,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'accelerometer':
-                  dispatch({
-                    accelerometer: {
-                      type: proto.AccelerometerInputType.AccelerometerX,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'vtechExpander':
-                  dispatch({
-                    vtechExpander: {
-                      button: 0,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'matrix':
-                  dispatch({
-                    matrix: {
-                      outputPin: -1,
-                      pin: -1,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'crkdNeck':
-                  dispatch({
-                    crkd: {
-                      button: proto.CrkdNeckButtonType.CrkdGreen,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'bhDrum':
-                  dispatch({
-                    midi: {
-                      midiNote: {
-                        note: 1,
-                        channel: 10,
-                      },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'worldTourDrum':
-                  dispatch({
-                    midi: {
-                      midiNote: {
-                        note: 1,
-                        channel: 10,
-                      },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'midiSerial':
-                  dispatch({
-                    midi: {
-                      midiNote: {
-                        note: 1,
-                        channel: 10,
-                      },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'crkdDrum':
-                  dispatch({
-                    crkdDrum: {
-                      axis: proto.CrkdDrumAxisType.CrkdGreenPad,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'gh5Neck':
-                  dispatch({
-                    gh5Neck: {
-                      button: proto.Gh5NeckButtonType.Gh5Green,
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'usbHost':
-                  dispatch({
-                    usbButton: {
-                      button: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'protarNeck':
-                  if (axis) {
-                    dispatch({
-                      protarNeckAxis: {
-                        axis: proto.ProGuitarNeckAxisType.ProGuitarNeckAFret,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  } else {
-                    dispatch({
-                      protarNeckButton: {
-                        button: proto.ProGuitarNeckButtonType.ProGuitarNeckGreen,
-                        deviceid: parseInt(val, 10),
-                      },
-                    });
-                  }
-                  break;
-
-                case 'cycle':
-                  dispatch({
-                    cycle: {
-                      input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
-                case 'toggle':
-                  dispatch({
-                    toggle: {
-                      input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                      deviceid: parseInt(val, 10),
-                    },
-                  });
-                  break;
+              const deviceid = parseInt(val, 10);
+              const nextInput = createDeviceInput(deviceStatus[deviceid].type, deviceid, {
+                axis,
+                button,
+              });
+              if (nextInput) {
+                dispatch(nextInput);
               }
               return;
             }
-            switch (val) {
-              case 'gpio_analog':
-                dispatch({
-                  gpio: { pin: -1, analog: true, pinMode: proto.PinMode.Floating },
-                });
-                break;
-              case 'gpio_digital':
-                dispatch({
-                  gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp },
-                });
-                break;
-              case 'shortcut':
-                dispatch({
-                  shortcut: {
-                    inputs: [{ gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }],
-                  },
-                });
-                break;
-              case 'held':
-                dispatch({
-                  held: {
-                    input: { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } },
-                    time: 1000,
-                  },
-                });
-                break;
+            const nextInput = createStandaloneInput(val);
+            if (nextInput) {
+              dispatch(nextInput);
             }
           }}
         >
@@ -1485,7 +1139,7 @@ function SantrollerInput({
           <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
             <Combobox.Options>
               {Object.values(deviceStatus)
-                .filter(isInput)
+                .filter((status) => isInputDeviceKind(status.type))
                 .map((item) => (
                   <Combobox.Option value={item.id} key={item.id}>
                     <Group gap="2">
@@ -1828,33 +1482,7 @@ function SantrollerInput({
           legendMode={legendMode}
         />
       )}
-      {input.crkd && (
-        <DropdownBox
-          title="input"
-          e={proto.CrkdNeckButtonType}
-          val={input.crkd?.button}
-          label="inputs"
-          dispatch={(button) => dispatch({ crkd: { ...input.crkd!, button } })}
-        />
-      )}
-      {input.crkdDrum && (
-        <DropdownBox
-          title="input"
-          e={proto.CrkdDrumAxisType}
-          val={input.crkdDrum?.axis}
-          label="inputs"
-          dispatch={(axis) => dispatch({ crkdDrum: { ...input.crkdDrum!, axis } })}
-        />
-      )}
-      {input.gh5Neck && (
-        <DropdownBox
-          title="input"
-          e={proto.Gh5NeckButtonType}
-          val={input.gh5Neck?.button}
-          label="inputs"
-          dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
-        />
-      )}
+      <RegisteredInputEditor input={input} dispatch={dispatch} />
       {input.vtechExpander && (
         <>
           <NumberInput
@@ -2038,15 +1666,6 @@ function SantrollerInput({
           )}
         </>
       )}
-      {input.accelerometer && (
-        <DropdownBox
-          e={proto.AccelerometerInputType}
-          val={input.accelerometer?.type}
-          title="input"
-          label="accelerometer.inputs"
-          dispatch={(type) => dispatch({ accelerometer: { ...input.accelerometer!, type } })}
-        />
-      )}
       {input.midi?.midiNote && (
         <>
           <NumberInput
@@ -2148,46 +1767,11 @@ function SantrollerInput({
           }
         />
       )}
-      {input.protarNeckButton && (
-        <DropdownBox
-          title="input.protarNeckButton"
-          e={proto.ProGuitarNeckButtonType}
-          val={input.protarNeckButton?.button}
-          label="input.protarNeckButton"
-          dispatch={(button) =>
-            dispatch({ protarNeckButton: { ...input.protarNeckButton!, button } })
-          }
-        />
-      )}
-      {input.protarNeckAxis && (
-        <DropdownBox
-          title="input.protarNeckAxis"
-          e={proto.ProGuitarNeckAxisType}
-          val={input.protarNeckAxis?.axis}
-          label="input.protarNeckAxis"
-          dispatch={(axis) => dispatch({ protarNeckAxis: { ...input.protarNeckAxis!, axis } })}
-        />
-      )}
     </>
   );
 }
 function isAnalog(input: proto.IInput) {
-  return (
-    input.gpio?.analog ||
-    input.ads1115 ||
-    input.wiiAxis ||
-    input.crkdDrum ||
-    input.accelerometer ||
-    input.multiplexer ||
-    input.usbAxis ||
-    input.ps2Axis ||
-    input.midi?.midiNote ||
-    input.midi?.midiControlChange ||
-    input.midi?.midiPitchBend ||
-    input.midi?.midiProGuitarAxis ||
-    input.protarNeckAxis ||
-    input.cycle
-  );
+  return isAnalogInput(input);
 }
 const crkdDrumMappings: Record<proto.CrkdDrumAxisType, keyof proto.ICrkdCalibrationData> = {
   [proto.CrkdDrumAxisType.CrkdGreenPad]: 'greenPad',

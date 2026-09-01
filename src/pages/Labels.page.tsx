@@ -29,6 +29,7 @@ import '@/i18n/config';
 
 import { useTranslation } from 'react-i18next';
 import { isLed, PinBox } from '@/components/Devices/Pins';
+import { getLabelKind, LabelKind } from '@/components/Labels/labelRegistry';
 import { AllPinsNamed } from '@/devices/pico/pins';
 
 function Label({
@@ -456,12 +457,12 @@ function MatrixLabel({
           <>
             <Space h="md" />{' '}
             <Switch
-              checked={label.label!.showToCustomer ?? false}
+              checked={label.matrixLabel!.showToCustomer ?? false}
               onChange={(e) =>
                 updateLabel(
                   {
                     deviceid: parseInt(id, 10),
-                    label: { ...label.label!, showToCustomer: e.currentTarget.checked },
+                    matrixLabel: { ...label.matrixLabel!, showToCustomer: e.currentTarget.checked },
                   },
                   parseInt(id.toString(), 10)
                 )
@@ -677,12 +678,12 @@ function MultiplexerLabel({
           <>
             <Space h="md" />{' '}
             <Switch
-              checked={label.label!.showToCustomer ?? false}
+              checked={label.multiplexerLabel!.showToCustomer ?? false}
               onChange={(e) =>
                 updateLabel(
                   {
                     deviceid: parseInt(id, 10),
-                    label: { ...label.label!, showToCustomer: e.currentTarget.checked },
+                    multiplexerLabel: { ...label.multiplexerLabel!, showToCustomer: e.currentTarget.checked },
                   },
                   parseInt(id.toString(), 10)
                 )
@@ -694,6 +695,29 @@ function MultiplexerLabel({
       </Card>
     </>
   );
+}
+
+type LabelEditorProps = {
+  id: string;
+  label: proto.IGuiConfig;
+  deleteLabel: () => void;
+};
+
+const labelEditors: Record<LabelKind, React.FunctionComponent<LabelEditorProps>> = {
+  label: Label,
+  ledLabel: LedLabel,
+  matrixLabel: MatrixLabel,
+  multiplexerLabel: MultiplexerLabel,
+};
+
+function RegisteredLabelEditor(props: LabelEditorProps) {
+  const kind = getLabelKind(props.label);
+  if (!kind) {
+    return null;
+  }
+
+  const LabelEditor = labelEditors[kind];
+  return <LabelEditor {...props} />;
 }
 
 export function LabelsPage() {
@@ -715,46 +739,14 @@ export function LabelsPage() {
       <Layout>
         <RequireDevice>
           <SimpleGrid cols={3}>
-            {Object.entries(labels)
-              .filter((x) => x[1].label)
-              .map(([id, label]) => (
-                <Label
-                  key={id}
-                  id={id}
-                  label={label}
-                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
-                />
-              ))}
-            {Object.entries(labels)
-              .filter((x) => x[1].ledLabel)
-              .map(([id, ledLabel]) => (
-                <LedLabel
-                  key={id}
-                  id={id}
-                  label={ledLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
-                />
-              ))}
-            {Object.entries(labels)
-              .filter((x) => x[1].matrixLabel)
-              .map(([id, matrixLabel]) => (
-                <MatrixLabel
-                  key={id}
-                  id={id}
-                  label={matrixLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
-                />
-              ))}
-            {Object.entries(labels)
-              .filter((x) => x[1].multiplexerLabel)
-              .map(([id, multiplexerLabel]) => (
-                <MultiplexerLabel
-                  key={id}
-                  id={id}
-                  label={multiplexerLabel}
-                  deleteLabel={() => deleteLabel(parseInt(id, 10))}
-                />
-              ))}
+            {Object.entries(labels).map(([id, label]) => (
+              <RegisteredLabelEditor
+                key={id}
+                id={id}
+                label={label}
+                deleteLabel={() => deleteLabel(parseInt(id, 10))}
+              />
+            ))}
           </SimpleGrid>
           <Affix position={{ bottom: 40, right: 40 }}>
             <Menu trigger="click-hover" shadow="md" width={150}>

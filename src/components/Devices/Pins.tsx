@@ -4,6 +4,7 @@ import '@/i18n/config';
 
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { hasDefaultMappings, isLedDeviceKind } from './deviceRegistry';
 import { DeviceStatus, proto, useConfigStore } from '../SettingsContext/SettingsContext';
 
 export function getLabel(
@@ -161,25 +162,8 @@ export function PinBox({
 }
 
 export function isLed(deviceStatus: DeviceStatus) {
-  switch (deviceStatus.type) {
-    case 'ws2812':
-    case 'apa102':
-    case 'vtechExpander':
-    case 'stp16cpc':
-      return true;
-    default:
-      return false;
-  }
+  return isLedDeviceKind(deviceStatus.type);
 }
 export function hasDefaults(deviceStatus: DeviceStatus) {
-  switch (deviceStatus.type) {
-    case 'crkdDrum':
-      return true;
-    case 'crkdNeck':
-      return true;
-    case 'wii':
-      return true;
-    default:
-      return false;
-  }
+  return hasDefaultMappings(deviceStatus.type);
 }
