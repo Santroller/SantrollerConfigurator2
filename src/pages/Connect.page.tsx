@@ -12,6 +12,7 @@ export function ConnectPage() {
   const loadConfig = useConfigStore((state) => state.loadConfig);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
   const connected = useConfigStore((state) => state.connected);
+  const hung = useConfigStore((state) => state.hung);
   const updating = useConfigStore((state) => state.updating);
   const updatePercentage = useConfigStore((state) => state.updatePercentage);
   const latest = useConfigStore((state) => state.latest);
@@ -34,23 +35,39 @@ export function ConnectPage() {
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={disconnect}>
-            {t('connect.disconnect')}
+              {t('connect.disconnect')}
             </Button>
           </>
         )}
         {navigator.hid && connected && !simpleMode && (
           <>
             <Space h="md" />
-            <Button disabled={updating} onClick={bootloader}>
-            {t('connect.bootloader')}
+            <Button disabled={updating || hung} onClick={bootloader}>
+              {t('connect.bootloader')}
             </Button>
             <Space h="md" />
-            <Button disabled={updating} onClick={exportConfig}>{t('connect.export')}</Button>
+            <Button disabled={updating || hung} onClick={exportConfig}>
+              {t('connect.export')}
+            </Button>
             <Space h="md" />
-            <FileButton disabled={updating} onChange={loadConfig} accept="application/json">
-              {(props) => <Button disabled={updating}  {...props}>{t('connect.load')}</Button>}
+            <FileButton disabled={updating || hung} onChange={loadConfig} accept="application/json">
+              {(props) => (
+                <Button disabled={updating || hung} {...props}>
+                  {t('connect.load')}
+                </Button>
+              )}
             </FileButton>
           </>
+        )}
+        {hung && (
+          <Alert
+            variant="light"
+            color="red"
+            title={t('connect.hungTitle')}
+            icon={<IconExclamationCircle />}
+          >
+            {t('connect.hung')}
+          </Alert>
         )}
         <Space h="md" />
         {navigator.hid && !connected && (
@@ -59,7 +76,7 @@ export function ConnectPage() {
           </Button>
         )}
 
-        {!latest && connected && (
+        {!latest && connected && !hung && (
           <Alert
             variant="light"
             color="red"
@@ -68,7 +85,9 @@ export function ConnectPage() {
           >
             {t('connect.outdated')}
             <Space h="md" />
-            <Button disabled={updating} onClick={firmwareUpdate}>{t('connect.startUpdate')}</Button>
+            <Button disabled={updating} onClick={firmwareUpdate}>
+              {t('connect.startUpdate')}
+            </Button>
             <Progress size="xl" value={updatePercentage} />
           </Alert>
         )}

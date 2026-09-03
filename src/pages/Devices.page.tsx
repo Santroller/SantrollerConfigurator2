@@ -38,8 +38,8 @@ import '@/i18n/config';
 import { t, TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
-import { PinBox } from '@/components/Devices/Pins';
 import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
+import { PinBox } from '@/components/Devices/Pins';
 import {
   AllPinsNamed,
   AnalogPinsNamed,
@@ -249,7 +249,7 @@ function DeviceCard({
             {id ? t(title, { id }) : t(title)}
           </Title>{' '}
         </Flex>
-        <Center>{(connected === null || connected === undefined) ? null : badge}</Center>
+        <Center>{connected === null || connected === undefined ? null : badge}</Center>
         {children}
       </Card>
     </>
@@ -940,7 +940,7 @@ function WS2812Device({ id }: { id: string }) {
         }
       />
       <NumberInput
-        label={t("ws2812.led_count")}
+        label={t('ws2812.led_count')}
         value={ws2812.count}
         onChange={(val) =>
           updateDevice(
@@ -993,7 +993,7 @@ function APA102Device({ id }: { id: string }) {
         }
       />
       <NumberInput
-        label={t("apa102.led_count")}
+        label={t('apa102.led_count')}
         value={apa102.count}
         onChange={(val) =>
           updateDevice(
@@ -1873,12 +1873,13 @@ export function DevicesPage() {
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
   const config = useConfigStore(
-    useShallow((state) =>
-      Object.fromEntries(
-        Object.values(state.deviceStatus)
-          .filter((x) => x.type)
-          .map((x) => [x.id, x.type])
-      ) as Record<string, DeviceKind>
+    useShallow(
+      (state) =>
+        Object.fromEntries(
+          Object.values(state.deviceStatus)
+            .filter((x) => x.type)
+            .map((x) => [x.id, x.type])
+        ) as Record<string, DeviceKind>
     )
   );
   const deleteAllDevices = useConfigStore((state) => state.deleteAllDevices);

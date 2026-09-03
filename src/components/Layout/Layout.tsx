@@ -33,6 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [opened, { toggle }] = useDisclosure();
   const connected = useConfigStore((state) => state.connected);
+  const hung = useConfigStore((state) => state.hung);
   const updating = useConfigStore((state) => state.updating);
   const pollInputs = useConfigStore((state) => state.pollInputs);
   const activeProfile = useConfigStore((state) => state.currentProfile);
@@ -132,7 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   leftSection={<IconTag size={16} stroke={1.5} />}
                 />
               )}
-              {!simpleMode && (
+              {(!simpleMode || hung) && (
                 <NavLink
                   disabled={updating}
                   component={RouterNavLink}
@@ -172,7 +173,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     label="Add profile"
                     onClick={addProfile}
                     leftSection={<IconPlus size={16} stroke={1.5} />}
-                   />
+                  />
                 )}
               </NavLink>
             </>

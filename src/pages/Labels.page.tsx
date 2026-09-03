@@ -683,7 +683,10 @@ function MultiplexerLabel({
                 updateLabel(
                   {
                     deviceid: parseInt(id, 10),
-                    multiplexerLabel: { ...label.multiplexerLabel!, showToCustomer: e.currentTarget.checked },
+                    multiplexerLabel: {
+                      ...label.multiplexerLabel!,
+                      showToCustomer: e.currentTarget.checked,
+                    },
                   },
                   parseInt(id.toString(), 10)
                 )

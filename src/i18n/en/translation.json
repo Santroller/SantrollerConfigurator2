@@ -826,6 +826,8 @@
     "bootloader": "Jump to bootloader",
     "export": "Export Current Config",
     "load": "Load Config from File",
+    "hungTitle": "Controller not responding",
+    "hung": "The Pico stopped responding to keepalive requests. It remains connected so you can open Debug and retrieve its logs. Disconnect it manually when you are done.",
     "outdated": "Firmware outdated! Click the button below to update!",
     "startUpdate": "Start Update",
     "downloadPico1": "Download UF2 (Pico 1 / RP2040)",

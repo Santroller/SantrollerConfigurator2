@@ -5,7 +5,7 @@ import { Router } from './Router';
 
 export default function App() {
   return (
-    <MantineProvider defaultColorScheme='auto' deduplicateInlineStyles>
+    <MantineProvider defaultColorScheme="auto" deduplicateInlineStyles>
       <Router />
     </MantineProvider>
   );

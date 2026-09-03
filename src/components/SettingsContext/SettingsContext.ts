@@ -6,13 +6,42 @@ import { immer } from 'zustand/middleware/immer';
 import type {} from '@redux-devtools/extension';
 
 import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
-import { CRC32 } from '@/CRC32.js';
-import { createDeviceConfig, getDevicePins, getDeviceStatusLabel, isDeviceKind } from '@/components/Devices/deviceRegistry';
+import {
+  createDeviceConfig,
+  getDevicePins,
+  getDeviceStatusLabel,
+  isDeviceKind,
+} from '@/components/Devices/deviceRegistry';
 import { inputUsesDevice } from '@/components/Inputs/inputRegistry';
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
+import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
 export * from './config.js';
+const HID_RESPONSE_TIMEOUT_MS = 3_000;
+
+class HidResponseTimeoutError extends Error {}
+
+function withHidTimeout<T>(operation: Promise<T>, description: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(
+      () => reject(new HidResponseTimeoutError(`Timed out waiting for controller ${description}`)),
+      HID_RESPONSE_TIMEOUT_MS
+    );
+  });
+
+  return Promise.race([operation, timeoutPromise]).finally(() => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  });
+}
+
+function receiveFeatureReport(device: HIDDevice, reportId: number) {
+  return withHidTimeout(device.receiveFeatureReport(reportId), 'response');
+}
+
 export const ps4Subtypes = [
   proto.SubType.GuitarHeroDrums,
   proto.SubType.RockBandDrums,
@@ -161,6 +190,7 @@ export interface ConfigState {
   guiDevices: { [id: number]: proto.IGuiConfig };
   config: proto.IConfig;
   connected: boolean;
+  hung: boolean;
   latest: boolean;
   hidDevice?: HIDDevice;
   crc: number;
@@ -295,6 +325,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     waitingForReload: false,
     updating: false,
     connected: false,
+    hung: false,
     detecting: false,
     seller: false,
     sellerCheck: false,
@@ -855,9 +886,21 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.sendingKeepAlive = true;
       });
       try {
-        await dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+        await withHidTimeout(
+          dev.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0])),
+          'keepalive acknowledgement'
+        );
       } catch (e) {
         console.error('Failed to send keep alive', e);
+        if (e instanceof HidResponseTimeoutError) {
+          set((state) => {
+            state.hung = true;
+            if (state.keepaliveTimeout) {
+              clearInterval(state.keepaliveTimeout);
+              state.keepaliveTimeout = undefined;
+            }
+          });
+        }
       }
       set((state) => {
         state.sendingKeepAlive = false;
@@ -1356,8 +1399,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             ),
           })),
           leds: p.leds?.filter(
-            (x) =>
-              !x.mapping.inputMapping || !inputUsesDevice(x.mapping.inputMapping.input, idNum)
+            (x) => !x.mapping.inputMapping || !inputUsesDevice(x.mapping.inputMapping.input, idNum)
           ),
         }));
       });
@@ -1584,6 +1626,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.keepaliveTimeout = undefined;
         state.connected = state.waitingForReload;
+        state.hung = false;
         state.updating = false;
         state.hidDevice = undefined;
       });
@@ -1597,6 +1640,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           ...state,
           hidDevice: device,
           connected: true,
+          hung: false,
           polling: true,
           waitingForReload: false,
         }),
@@ -1605,7 +1649,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
       device.addEventListener('inputreport', get().onReport);
       const timeout = setInterval(() => get().sendKeepAlive(), 10);
       await device.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
-      const profileData = await device.receiveFeatureReport(
+      const profileData = await receiveFeatureReport(
+        device,
         proto.ReportId.ReportIdGetActiveProfiles
       );
       const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
@@ -1846,83 +1891,113 @@ export const useConfigStore = create<ConfigState & Actions>()(
           await device.open();
         }
         device.addEventListener('inputreport', get().onReport);
-        let latest = false;
-        const infoData = await device.receiveFeatureReport(proto.ReportId.ReportIdConfigInfo);
         try {
-          const commitHash = await device.receiveFeatureReport(proto.ReportId.ReportIdGetVersion);
-          const deviceVersion = String.fromCharCode
-            .apply(null, Array.from(new Uint8Array(commitHash.buffer.slice(1))))
-            .trim()
-            .substring(0, 8);
-          const latestVersion = (await (await fetch('commit.hash')).text()).trim().substring(0, 8);
-          latest = deviceVersion === latestVersion;
-        } catch (e) {
-          console.log(e);
-        }
-        const info = proto.ConfigInfo.decode(
-          new Uint8Array(infoData.buffer).slice(1),
-          infoData.byteLength - 1
-        );
-        if (info.magic >>> 0 !== magic) {
-          console.log('magic didnt match!');
-        }
-        const data = new Uint8Array(info.dataSize);
-        let start = 0;
-        while (start < info.dataSize) {
-          const slice = await device.receiveFeatureReport(proto.ReportId.ReportIdConfig);
-          data.set(new Uint8Array(slice.buffer).slice(1), start);
-          start += slice.byteLength - 1;
-        }
-        const profileData = await device.receiveFeatureReport(
-          proto.ReportId.ReportIdGetActiveProfiles
-        );
-        const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
-          new Uint8Array(profileData.buffer).slice(1)
-        );
-        if (new CRC32().calculate(data) !== info.dataCrc) {
-          console.log('CRC didnt match!');
-        }
-        let deviceType = 'pico_w';
-        try {
-          const deviceTypeData = await device.receiveFeatureReport(proto.ReportId.ReportIdGetType);
-          deviceType = String.fromCharCode
-            .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
-            .trim()
-            .replaceAll('\0', '');
-        } catch (e) {
-          console.log(e);
-        }
-        try {
-          const config = proto.Config.decode(data, info.mainSize);
-          const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
-          const timeout = setInterval(() => get().sendKeepAlive(), 10);
-          set(
-            (old) => ({
-              ...old,
-              ...InitState(config, aux),
-              seller: old.seller,
-              connected: true,
-              updating: false,
-              hidDevice: device,
-              crc: info.dataCrc,
-              type: deviceType,
-              latest,
-              keepaliveTimeout: timeout,
-              activeProfiles: activeProfiles.profiles,
-            }),
-            true
+          let latest = false;
+          const infoData = await receiveFeatureReport(device, proto.ReportId.ReportIdConfigInfo);
+          try {
+            const commitHash = await receiveFeatureReport(
+              device,
+              proto.ReportId.ReportIdGetVersion
+            );
+            const deviceVersion = String.fromCharCode
+              .apply(null, Array.from(new Uint8Array(commitHash.buffer.slice(1))))
+              .trim()
+              .substring(0, 8);
+            const latestVersion = (await (await fetch('commit.hash')).text())
+              .trim()
+              .substring(0, 8);
+            latest = deviceVersion === latestVersion;
+          } catch (e) {
+            console.log(e);
+          }
+          const info = proto.ConfigInfo.decode(
+            new Uint8Array(infoData.buffer).slice(1),
+            infoData.byteLength - 1
           );
-          await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
-        } catch (e) {
-          set(
-            (old) => ({
-              ...old,
-              connected: true,
-              hidDevice: device,
-              crc: 0,
-            }),
-            true
+          if (info.magic >>> 0 !== magic) {
+            console.log('magic didnt match!');
+          }
+          const data = new Uint8Array(info.dataSize);
+          let start = 0;
+          while (start < info.dataSize) {
+            const slice = await receiveFeatureReport(device, proto.ReportId.ReportIdConfig);
+            data.set(new Uint8Array(slice.buffer).slice(1), start);
+            start += slice.byteLength - 1;
+          }
+          const profileData = await receiveFeatureReport(
+            device,
+            proto.ReportId.ReportIdGetActiveProfiles
           );
+          const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
+            new Uint8Array(profileData.buffer).slice(1)
+          );
+          if (new CRC32().calculate(data) !== info.dataCrc) {
+            console.log('CRC didnt match!');
+          }
+          let deviceType = 'pico_w';
+          try {
+            const deviceTypeData = await receiveFeatureReport(
+              device,
+              proto.ReportId.ReportIdGetType
+            );
+            deviceType = String.fromCharCode
+              .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
+              .trim()
+              .replaceAll('\0', '');
+          } catch (e) {
+            console.log(e);
+          }
+          try {
+            const config = proto.Config.decode(data, info.mainSize);
+            const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
+            const timeout = setInterval(() => get().sendKeepAlive(), 10);
+            set(
+              (old) => ({
+                ...old,
+                ...InitState(config, aux),
+                seller: old.seller,
+                connected: true,
+                hung: false,
+                updating: false,
+                hidDevice: device,
+                crc: info.dataCrc,
+                type: deviceType,
+                latest,
+                keepaliveTimeout: timeout,
+                activeProfiles: activeProfiles.profiles,
+              }),
+              true
+            );
+            await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
+          } catch (e) {
+            set(
+              (old) => ({
+                ...old,
+                connected: true,
+                hidDevice: device,
+                crc: 0,
+              }),
+              true
+            );
+          }
+        } catch (e) {
+          if (e instanceof HidResponseTimeoutError) {
+            set(
+              (old) => ({
+                ...old,
+                connected: true,
+                hung: true,
+                hidDevice: device,
+                crc: 0,
+              }),
+              true
+            );
+          } else {
+            device.removeEventListener('inputreport', get().onReport);
+            if (device.opened) {
+              await device.close();
+            }
+          }
         }
       }
     },

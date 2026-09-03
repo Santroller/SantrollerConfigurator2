@@ -27,15 +27,9 @@ export function SetupPage() {
               Bluetooth - You can emulate a gamepad, but connecting devices to a receiver is not
               supported yet.
             </li>
-            <li>
-              A bunch of device types aren't emulated yet
-            </li>
-            <li>
-              Buttons for creating default inputs aren't hooked up yet in some places
-            </li>
-            <li>
-              Mouse and keyboard isn't emulated yet
-            </li>
+            <li>A bunch of device types aren't emulated yet</li>
+            <li>Buttons for creating default inputs aren't hooked up yet in some places</li>
+            <li>Mouse and keyboard isn't emulated yet</li>
           </ul>
         </Alert>
 

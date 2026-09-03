@@ -1,4 +1,3 @@
-
 export const ASCII_TO_HID: Record<string, { modifier: number; code: number }> = {
   '\b': { modifier: 0x00, code: 0x2a }, // Backspace
   '\t': { modifier: 0x00, code: 0x2b }, // Tab

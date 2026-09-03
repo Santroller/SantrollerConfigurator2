@@ -1,24 +1,86 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconCopy, IconExclamationCircle, IconGripVertical, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconCopy,
+  IconExclamationCircle,
+  IconGripVertical,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
-import { Accordion, ActionIcon, Alert, Badge, Button, Card, Center, ColorInput, Combobox, Flex, Group, Image, Input, InputBase, isNumberLike, Loader, Modal, MultiSelect, NumberInput, Overlay, Progress, SegmentedControl, Slider, Space, Stack, Switch, Table, Tabs, Text, TextInput, Title, useCombobox } from '@mantine/core';
+import {
+  Accordion,
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Center,
+  ColorInput,
+  Combobox,
+  Flex,
+  Group,
+  Image,
+  Input,
+  InputBase,
+  isNumberLike,
+  Loader,
+  Modal,
+  MultiSelect,
+  NumberInput,
+  Overlay,
+  Progress,
+  SegmentedControl,
+  Slider,
+  Space,
+  Stack,
+  Switch,
+  Table,
+  Tabs,
+  Text,
+  TextInput,
+  Title,
+  useCombobox,
+} from '@mantine/core';
 import { useDisclosure, useTimeout } from '@mantine/hooks';
-import { getLabel, getMatrixLabel, getMultiplexerLabel, hasDefaults, isLed, PinBox } from '@/components/Devices/Pins';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import {
+  getLabel,
+  getMatrixLabel,
+  getMultiplexerLabel,
+  hasDefaults,
+  isLed,
+  PinBox,
+} from '@/components/Devices/Pins';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
-import { createDeviceInput, createStandaloneInput, getInputDeviceId, isAnalogInput } from '@/components/Inputs/inputRegistry';
+import {
+  createDeviceInput,
+  createStandaloneInput,
+  getInputDeviceId,
+  isAnalogInput,
+} from '@/components/Inputs/inputRegistry';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
-import { DeviceStatus, ps4Subtypes, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import {
+  DeviceStatus,
+  ps4Subtypes,
+  useConfigStore,
+} from '@/components/SettingsContext/SettingsContext';
 import { ASCII_TO_HID } from '@/devices/keyboard';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
-
 
 const hidReverse = Object.fromEntries(Object.entries(ASCII_TO_HID).map(([k, v]) => [v.code, k]));
 function StateLabelLabel({

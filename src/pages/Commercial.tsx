@@ -1,13 +1,6 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Button,
-  FileButton,
-  Image,
-  Space,
-  TextInput,
-} from '@mantine/core';
+import { Alert, Button, FileButton, Image, Space, TextInput } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
@@ -51,7 +44,7 @@ export function CommercialToolPage() {
           <Alert
             variant="light"
             color="red"
-              title={t('commercial.invalid')}
+            title={t('commercial.invalid')}
             icon={<IconExclamationCircle />}
           >
             {t('commercial.notLoggedIn')}
@@ -94,11 +87,11 @@ export function CommercialToolPage() {
             )}
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(false)}>
-             {t('commercial.buildUf2Pico')}
+              {t('commercial.buildUf2Pico')}
             </Button>
             <Space h="md" />
             <Button disabled={updating} onClick={() => buildUf2(true)}>
-             {t('commercial.buildUf2Pico2')}
+              {t('commercial.buildUf2Pico2')}
             </Button>
             <Space h="md" />
             <TextInput
@@ -127,7 +120,7 @@ export function CommercialToolPage() {
                     )
                   : ''
               }
-             />
+            />
           </>
         )}
       </Layout>

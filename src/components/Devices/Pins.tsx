@@ -4,8 +4,8 @@ import '@/i18n/config';
 
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { hasDefaultMappings, isLedDeviceKind } from './deviceRegistry';
 import { DeviceStatus, proto, useConfigStore } from '../SettingsContext/SettingsContext';
+import { hasDefaultMappings, isLedDeviceKind } from './deviceRegistry';
 
 export function getLabel(
   t: TFunction<'translation', undefined>,
@@ -32,7 +32,11 @@ export function getMultiplexerLabel(
   bracketed: boolean = true
 ) {
   const labels = Object.entries(guiDevices)
-    .filter((x) => x[1].multiplexerLabel?.channel === channel && (!customer || x[1].multiplexerLabel?.showToCustomer))
+    .filter(
+      (x) =>
+        x[1].multiplexerLabel?.channel === channel &&
+        (!customer || x[1].multiplexerLabel?.showToCustomer)
+    )
     .map((x) => x[1].multiplexerLabel?.label);
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }

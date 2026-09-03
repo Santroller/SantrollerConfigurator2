@@ -18,7 +18,7 @@ export function AuthPage() {
           url.searchParams.set('code', code!);
           const data = await fetch(url.href);
           const json = await data.json();
-          json.expires_at = Date.now() + json.expires_in * 1000
+          json.expires_at = Date.now() + json.expires_in * 1000;
           localStorage.removeItem('login');
           localStorage.setItem('auth', JSON.stringify(json));
           setDone(true);

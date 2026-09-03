@@ -1,24 +1,18 @@
-import {
-  Button,
-  Code,
-  Loader,
-  Table,
-  Text,
-} from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import { Button, Code, Loader, Table, Text } from '@mantine/core';
 import { useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { useTranslation } from 'react-i18next';
 
 const MIDI_NOTE_OFF = 0x80;
 const MIDI_NOTE_ON = 0x90;
-const MIDI_POLY_KEYPRESS = 0xA0;
-const MIDI_CONTROL_CHANGE = 0xB0;
-const MIDI_PROGRAM_CHANGE = 0xC0;
-const MIDI_CHANNEL_PRESSURE = 0xD0;
-const MIDI_PITCH_BEND_CHANGE = 0xE0;
-const MIDI_SYSEX = 0xF0;
+const MIDI_POLY_KEYPRESS = 0xa0;
+const MIDI_CONTROL_CHANGE = 0xb0;
+const MIDI_PROGRAM_CHANGE = 0xc0;
+const MIDI_CHANNEL_PRESSURE = 0xd0;
+const MIDI_PITCH_BEND_CHANGE = 0xe0;
+const MIDI_SYSEX = 0xf0;
 const types: { [key: number]: string } = {
   [MIDI_NOTE_OFF]: 'noteOff',
   [MIDI_NOTE_ON]: 'noteOn',
@@ -61,9 +55,11 @@ export function DebugPage() {
     <>
       <Layout>
         <RequireDevice>
-          <Text>{t('debug.logs.title')}</Text> <Button onClick={clearConsole}>{t('debug.logs.clear')}</Button>
+          <Text>{t('debug.logs.title')}</Text>{' '}
+          <Button onClick={clearConsole}>{t('debug.logs.clear')}</Button>
           <Code block>{consoleData}</Code>
-          <Text>{t('debug.midi.title')}</Text> <Button onClick={clearMidi}>{t('debug.midi.clear')}</Button>
+          <Text>{t('debug.midi.title')}</Text>{' '}
+          <Button onClick={clearMidi}>{t('debug.midi.clear')}</Button>
           <Table>
             <Table.Thead>
               <Table.Tr>
