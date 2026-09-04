@@ -212,6 +212,8 @@ export interface ConfigState {
   currentProfile: number;
   lastProfile: number;
   activeProfiles: number[];
+  currentProfileSource: number | null;
+  activeProfileDevices: proto.IActiveProfileDevice[];
   midiData: number[][];
   console: string;
   sendingKeepAlive: boolean;
@@ -250,7 +252,7 @@ export interface Actions {
   deleteAllDevices: () => void;
   addDevice: (type: string) => void;
   onReport: (evt: HIDInputReportEvent) => void;
-  setActiveProfile: (id: string | null) => void;
+  setActiveProfile: (id: string | null, sourceId?: number | null) => void;
   sendKeepAlive: () => void;
   saveConfig: () => void;
   buildConfigBuffer: () => { buffer: Uint8Array; mainLen: number; auxLen: number };
@@ -338,6 +340,8 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     currentProfile: 0,
     lastProfile: 0,
     activeProfiles: [],
+    currentProfileSource: null,
+    activeProfileDevices: [],
     midiData: [],
     guiDevices,
     console: '',
@@ -760,19 +764,21 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    setActiveProfile: async (id: string | null) => {
+    setActiveProfile: async (id: string | null, sourceId: number | null = null) => {
       if (id === 'add') {
         return;
       }
       set((state) => {
         state.lastProfile = state.currentProfile;
         state.currentProfile = parseInt(id ?? '0', 10);
+        state.currentProfileSource = sourceId;
       });
       const state = get();
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           setProfile: proto.SetProfileCommand.create({
             profileId: state.config.profiles![parseInt(id ?? '0', 10)].opts.uid,
+            sourceId: sourceId ?? undefined,
           }),
         })
       )
@@ -1676,6 +1682,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           ...state,
           keepaliveTimeout: timeout,
           activeProfiles: activeProfiles.profiles,
+          activeProfileDevices: activeProfiles.profileDevices,
           waitingForReload: false,
         }),
         true
@@ -1965,6 +1972,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 latest,
                 keepaliveTimeout: timeout,
                 activeProfiles: activeProfiles.profiles,
+                activeProfileDevices: activeProfiles.profileDevices,
               }),
               true
             );

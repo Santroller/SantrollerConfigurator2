@@ -22,12 +22,13 @@ import {
   Burger,
   Flex,
   Grid,
+  Group,
   Image,
   NavLink,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useConfigStore } from '../SettingsContext/SettingsContext';
+import { DeviceStatus, useConfigStore } from '../SettingsContext/SettingsContext';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
@@ -38,6 +39,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const pollInputs = useConfigStore((state) => state.pollInputs);
   const activeProfile = useConfigStore((state) => state.currentProfile);
   const activeProfiles = useConfigStore((state) => state.activeProfiles);
+  const currentProfileSource = useConfigStore((state) => state.currentProfileSource);
+  const activeProfileDevices = useConfigStore((state) => state.activeProfileDevices);
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const profiles = useConfigStore((state) => state.config.profiles!);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
@@ -153,19 +157,79 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                 defaultOpened
               >
-                {profiles.map((x, i) => (
-                  <NavLink
-                    disabled={updating}
-                    key={x.opts.uid}
-                    component={RouterLink}
-                    to="/profiles"
-                    onClick={() => setActiveProfile(i.toString())}
-                    active={profilePage != null && activeProfile === i}
-                    label={x.opts.name}
-                    leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
-                    rightSection={activeProfiles?.includes(x.opts.uid) && <Badge>Active</Badge>}
-                  />
-                ))}
+                {profiles.map((x, i) => {
+                  const activeDevices = activeProfileDevices.filter(
+                    (activeDevice) => activeDevice.profile === x.opts.uid
+                  );
+                  const label = (
+                    <Group gap="xs" justify="space-between" wrap="nowrap">
+                      <span>{x.opts.name}</span>
+                      {activeProfiles?.includes(x.opts.uid) && <Badge>Active</Badge>}
+                    </Group>
+                  );
+                  if (!activeDevices.length) {
+                    return (
+                      <NavLink
+                        disabled={updating}
+                        key={x.opts.uid}
+                        component={RouterLink}
+                        to="/profiles"
+                        onClick={() => setActiveProfile(i.toString(), null)}
+                        active={
+                          profilePage != null && activeProfile === i && currentProfileSource == null
+                        }
+                        label={label}
+                        leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
+                      />
+                    );
+                  }
+                  return (
+                    <NavLink
+                      disabled={updating}
+                      key={x.opts.uid}
+                      component={RouterLink}
+                      to="/profiles"
+                      onClick={() => setActiveProfile(i.toString(), null)}
+                      active={profilePage != null && activeProfile === i && currentProfileSource == null}
+                      label={label}
+                      leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
+                      defaultOpened={activeDevices.length > 0}
+                    >
+                      {activeDevices.map((activeDevice, activeDeviceIdx) => {
+                        const device = deviceStatus[activeDevice.device.toString()];
+                        const sourceId = activeDevice.sourceId ?? activeDevice.device;
+                        const usbDevice = Object.values(device?.usbDevices ?? {}).find(
+                          (usbDevice) => usbDevice.sourceId === sourceId
+                        );
+                        const deviceName = usbDevice?.name?.trim();
+                        const label = deviceName
+                          ? `${deviceName} (Device ${activeDevice.device})`
+                          : `Device ${activeDevice.device}`;
+                        return (
+                          <NavLink
+                            disabled={updating}
+                            key={`${sourceId}-${activeDeviceIdx}`}
+                            component={RouterLink}
+                            to="/profiles"
+                            onClick={() => setActiveProfile(i.toString(), sourceId)}
+                            active={
+                              profilePage != null &&
+                              activeProfile === i &&
+                              currentProfileSource === sourceId
+                            }
+                            label={
+                              device
+                                ? `${label} - ${DeviceStatus.label(device)}`
+                                : label
+                            }
+                            leftSection={<IconChevronRight size={16} stroke={1.5} />}
+                            rightSection={<Badge>Active</Badge>}
+                          />
+                        );
+                      })}
+                    </NavLink>
+                  );
+                })}
                 {!simpleMode && (
                   <NavLink
                     disabled={updating}
