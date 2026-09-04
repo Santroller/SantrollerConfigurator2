@@ -28,7 +28,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { DeviceStatus, useConfigStore } from '../SettingsContext/SettingsContext';
+import { useConfigStore } from '../SettingsContext/SettingsContext';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
@@ -217,11 +217,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                               activeProfile === i &&
                               currentProfileSource === sourceId
                             }
-                            label={
-                              device
-                                ? `${label} - ${DeviceStatus.label(device)}`
-                                : label
-                            }
+                            label={label}
                             leftSection={<IconChevronRight size={16} stroke={1.5} />}
                             rightSection={<Badge>Active</Badge>}
                           />
