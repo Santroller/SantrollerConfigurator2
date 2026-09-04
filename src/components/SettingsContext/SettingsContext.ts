@@ -91,6 +91,15 @@ export class ActivationStatus {
   state: boolean;
   stateRaw: number;
 }
+export class ActivationListStatus {
+  [immerable] = true;
+  constructor(id: number) {
+    this.id = id;
+    this.state = false;
+  }
+  id: number;
+  state: boolean;
+}
 export class DeviceStatus {
   [immerable] = true;
   constructor(id: string, type: string, device: proto.IDevice) {
@@ -187,6 +196,7 @@ export interface ConfigState {
   mappingStatus: { [id: number]: MappingStatus }[];
   ledStatus: { [id: number]: LedStatus }[];
   activationStatus: { [id: number]: ActivationStatus[] }[];
+  activationListStatus: { [id: number]: ActivationListStatus }[];
   guiDevices: { [id: number]: proto.IGuiConfig };
   config: proto.IConfig;
   connected: boolean;
@@ -214,6 +224,7 @@ export interface ConfigState {
   activeProfiles: number[];
   currentProfileSource: number | null;
   activeProfileDevices: proto.IActiveProfileDevice[];
+  activeProfileAssignments: proto.IActiveProfileAssignment[];
   midiData: number[][];
   console: string;
   sendingKeepAlive: boolean;
@@ -300,6 +311,11 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
       ])
     )
   );
+  const activationListStatus = config.profiles!.map((profile) =>
+    Object.fromEntries(
+      profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
+    )
+  );
   const ledStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.leds.map((x, i) => [i, new LedStatus(i, x)]))
   );
@@ -321,6 +337,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     deviceStatus,
     mappingStatus,
     activationStatus,
+    activationListStatus,
     ledStatus,
     config,
     updatePercentage: 0,
@@ -342,6 +359,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     activeProfiles: [],
     currentProfileSource: null,
     activeProfileDevices: [],
+    activeProfileAssignments: [],
     midiData: [],
     guiDevices,
     console: '',
@@ -814,6 +832,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
             x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
           ])
         );
+        state.activationListStatus[id] = Object.fromEntries(
+          profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
+        );
         state.ledStatus[id] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
         );
@@ -847,6 +868,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
               x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
             ])
           );
+          state.activationListStatus[id] = Object.fromEntries(
+            profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
+          );
           state.ledStatus[id] = Object.fromEntries(
             profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
           );
@@ -873,6 +897,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
               listIdx,
               x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
             ])
+          )
+        );
+        state.activationListStatus = state.config.profiles!.map((profile) =>
+          Object.fromEntries(
+            profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
           )
         );
         state.ledStatus = state.config.profiles!.map((profile) =>
@@ -1375,6 +1404,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
             x.assignments!.map((x, i) => new ActivationStatus(i, x!)),
           ])
         );
+        state.activationListStatus[state.currentProfile] = Object.fromEntries(
+          profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
+        );
         state.ledStatus[state.currentProfile] = Object.fromEntries(
           profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
         );
@@ -1547,10 +1579,44 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (state.activationStatus.length) {
               const mappings = state.activationStatus[state.currentProfile ?? 0];
-              if (deviceEvent.trigger!.id in mappings) {
+              if (
+                deviceEvent.trigger!.listId in mappings &&
+                deviceEvent.trigger!.id in mappings[deviceEvent.trigger!.listId]
+              ) {
                 const mapping = mappings[deviceEvent.trigger!.listId][deviceEvent.trigger!.id];
                 mapping.state = deviceEvent.trigger!.state!;
                 mapping.stateRaw = deviceEvent.trigger!.stateRaw!;
+              }
+            }
+          });
+        }
+        if (deviceEvent.activationList && get().polling) {
+          set((state) => {
+            if (state.activationListStatus.length) {
+              const statuses = state.activationListStatus[state.currentProfile ?? 0];
+              if (deviceEvent.activationList!.listId in statuses) {
+                statuses[deviceEvent.activationList!.listId].state =
+                  deviceEvent.activationList!.state!;
+              }
+              const profile = state.config.profiles![state.currentProfile];
+              const profileId = profile?.opts.uid;
+              if (profileId !== undefined) {
+                state.activeProfileAssignments = deviceEvent.activationList!.state
+                  ? state.activeProfileAssignments.some(
+                      (assignment) =>
+                        assignment.profile === profileId &&
+                        assignment.listId === deviceEvent.activationList!.listId
+                    )
+                    ? state.activeProfileAssignments
+                    : [
+                        ...state.activeProfileAssignments,
+                        { profile: profileId, listId: deviceEvent.activationList!.listId },
+                      ]
+                  : state.activeProfileAssignments.filter(
+                      (assignment) =>
+                        assignment.profile !== profileId ||
+                        assignment.listId !== deviceEvent.activationList!.listId
+                    );
               }
             }
           });
@@ -1594,6 +1660,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         state.currentProfile = state.config.profiles!.length - 1;
         state.mappingStatus[state.config.profiles!.length - 1] = [];
         state.activationStatus[state.config.profiles!.length - 1] = [];
+        state.activationListStatus[state.config.profiles!.length - 1] = [];
         state.ledStatus[state.config.profiles!.length - 1] = [];
       });
       get().saveConfig();
@@ -1683,6 +1750,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           keepaliveTimeout: timeout,
           activeProfiles: activeProfiles.profiles,
           activeProfileDevices: activeProfiles.profileDevices,
+          activeProfileAssignments: activeProfiles.activeAssignments,
           waitingForReload: false,
         }),
         true
@@ -1973,6 +2041,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 keepaliveTimeout: timeout,
                 activeProfiles: activeProfiles.profiles,
                 activeProfileDevices: activeProfiles.profileDevices,
+                activeProfileAssignments: activeProfiles.activeAssignments,
               }),
               true
             );

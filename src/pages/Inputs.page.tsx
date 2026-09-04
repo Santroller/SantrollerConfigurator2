@@ -289,6 +289,25 @@ function StateBox({
     </>
   );
 }
+function AssignmentListStateBox({ profileIdx, listIdx }: { profileIdx: number; listIdx: number }) {
+  const state = useConfigStore((state) => {
+    const profileId = state.config.profiles![profileIdx]?.opts.uid;
+    return (
+      state.activeProfileAssignments.some(
+        (assignment) => assignment.profile === profileId && assignment.listId === listIdx
+      ) ||
+      state.activationListStatus[profileIdx][listIdx]?.state ||
+      false
+    );
+  });
+  return (
+    <>
+      <Text size="sm">State</Text>
+      <Badge color={state ? 'blue' : 'gray'}>{state ? 'Active' : 'Inactive'}</Badge>
+      <Space h="md" />
+    </>
+  );
+}
 function StateSlider({
   profileIdx,
   mappingIdx,
@@ -3605,12 +3624,6 @@ function SantrollerAssignment({
           </div>
         </Card.Section>
         <Space h="md" />
-        <StateBox
-          mappingIdx={activationIdx}
-          profileIdx={profileIdx}
-          listIdx={listIdx}
-          activationBased
-        />
         <Combobox
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
@@ -3965,6 +3978,7 @@ function SantrollerAssignmentList({
             <Space h="md" />
           </>
         )}
+        <AssignmentListStateBox profileIdx={profileIdx} listIdx={listIdx} />
         <Button
           onClick={() =>
             dispatch({
