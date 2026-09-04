@@ -1553,8 +1553,18 @@ function SantrollerInput({
           dispatch={(mapping, _, analog) =>
             dispatch(
               analog
-                ? { usbAxis: { ...input.usbAxis!, axis: mapping } }
-                : { usbButton: { ...input.usbButton!, button: mapping } }
+                ? {
+                    usbAxis: {
+                      deviceid: (input.usbAxis?.deviceid || input.usbButton?.deviceid)!,
+                      axis: mapping,
+                    },
+                  }
+                : {
+                    usbButton: {
+                      deviceid: (input.usbAxis?.deviceid || input.usbButton?.deviceid)!,
+                      button: mapping,
+                    },
+                  }
             )
           }
           type={type}
