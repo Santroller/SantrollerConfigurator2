@@ -39,10 +39,14 @@ jobs:
           sudo sed -i '/azure.archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:0/priority:1/' /etc/apt/apt-mirrors.txt
           sudo sed -i '/security.ubuntu.com\/ubuntu\/\tpriority/ s/priority:3/priority:2/' /etc/apt/apt-mirrors.txt
           sudo cat /etc/apt/apt-mirrors.txt
+      - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '15.2.Rel1'
       - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential gcc-arm-none-eabi make cabextract
+          sudo apt install build-essential make cabextract
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
