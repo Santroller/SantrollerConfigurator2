@@ -655,6 +655,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const outBuffer2 = new ArrayBuffer(63);
       new Uint8Array(outBuffer2).set(infoBuffer2);
       await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
+      set((state) => {
+        state.savedConfig = proto.Config.encode(state.config).finish()
+      });
     },
     setSyncMode: (mode: boolean) => {
       set((state) => {
