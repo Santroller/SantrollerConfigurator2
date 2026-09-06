@@ -199,6 +199,7 @@ export interface ConfigState {
   activationListStatus: { [id: number]: ActivationListStatus }[];
   guiDevices: { [id: number]: proto.IGuiConfig };
   config: proto.IConfig;
+  savedConfig: Uint8Array;
   connected: boolean;
   hung: boolean;
   latest: boolean;
@@ -233,6 +234,7 @@ export interface ConfigState {
   syncInputs: boolean;
   seller: boolean;
   sellerCheck: boolean;
+  configModified: boolean;
 }
 export interface Actions {
   checkLogin: () => void;
@@ -265,6 +267,7 @@ export interface Actions {
   onReport: (evt: HIDInputReportEvent) => void;
   setActiveProfile: (id: string | null, sourceId?: number | null) => void;
   sendKeepAlive: () => void;
+  commitConfig: () => void;
   saveConfig: () => void;
   buildConfigBuffer: () => { buffer: Uint8Array; mainLen: number; auxLen: number };
   buildConfig: () => { config: proto.IConfig; aux: proto.IAuxConfigBlock };
@@ -340,7 +343,9 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     activationListStatus,
     ledStatus,
     config,
+    savedConfig: proto.Config.encode(config).finish(),
     updatePercentage: 0,
+    configModified: false,
     waitingForReload: false,
     updating: false,
     connected: false,
@@ -637,6 +642,19 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         state.simpleMode = mode;
       });
+    },
+    commitConfig: async () => {
+      const state = get();
+      const infoBuffer2 = proto.Command.encode(
+        proto.Command.create({
+          save: proto.SaveCommand.create({}),
+        })
+      )
+        .ldelim()
+        .finish();
+      const outBuffer2 = new ArrayBuffer(63);
+      new Uint8Array(outBuffer2).set(infoBuffer2);
+      await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
     },
     setSyncMode: (mode: boolean) => {
       set((state) => {
@@ -1922,6 +1940,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
       buffer.set(bufferMain, 0);
       buffer.set(bufferAux, bufferMain.length);
+      const equals = (a: Uint8Array, b: Uint8Array) =>
+        a.length === b.length && a.every((val, index) => val === b[index]);
+      set((old) => ({
+        ...old,
+        configModified: !equals(bufferMain, old.savedConfig),
+      }));
       return { config, aux };
     },
     firmwareUpdate: async () => {

@@ -20,6 +20,7 @@ import {
   AppShell,
   Badge,
   Burger,
+  Button,
   Flex,
   Grid,
   Group,
@@ -47,13 +48,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const addProfile = useConfigStore((state) => state.addProfile);
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const simpleMode = useConfigStore((state) => state.simpleMode);
+  const configModified = useConfigStore((state) => state.configModified && state.connected);
   const nav = useNavigate();
   const profilePage = useMatch('/profiles');
   const seller = useConfigStore((state) => state.seller);
+  const commitConfig = useConfigStore((state) => state.commitConfig);
   return (
     <>
       <AppShell
-        header={{ height: 50 }}
+        header={{ height: configModified ? 80 : 50 }}
         navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
         padding="md"
       >
@@ -75,6 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 fit="scale-down"
                 alt="santroller"
               />
+              {configModified && <Button color="red" onClick={commitConfig}>Save changes</Button>}
             </Grid.Col>
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
@@ -190,7 +194,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       component={RouterLink}
                       to="/profiles"
                       onClick={() => setActiveProfile(i.toString(), null)}
-                      active={profilePage != null && activeProfile === i && currentProfileSource == null}
+                      active={
+                        profilePage != null && activeProfile === i && currentProfileSource == null
+                      }
                       label={label}
                       leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                       defaultOpened={activeDevices.length > 0}
