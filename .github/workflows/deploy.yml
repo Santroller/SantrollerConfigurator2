@@ -20,6 +20,12 @@ concurrency:
   group: 'pages'
   cancel-in-progress: true
 
+env:
+  ARM_TOOLCHAIN_VERSION: '15.2.Rel1'
+  PICO_SDK_TOOLS_TAG: 'v2.3.1-0'
+  PICOTOOL_VERSION: '2.3.1'
+  PICO_SDK_TOOLS_VERSION: '2.3.1'
+
 jobs:
   # Single deploy job since we're just deploying
   deploy:
@@ -42,14 +48,13 @@ jobs:
       - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
-          release: '15.2.Rel1'
+          release: ${{ env.ARM_TOOLCHAIN_VERSION }}
       - name: Install Pico SDK Tools from pico-sdk-tools
         run: |
-          PICO_SDK_TOOLS_TAG="v2.3.1-0"
           TOOLS_DIR="$RUNNER_TEMP/pico-sdk-tools"
           mkdir -p "$TOOLS_DIR/picotool" "$TOOLS_DIR/pioasm"
-          curl -sL "https://github.com/raspberrypi/pico-sdk-tools/releases/download/${PICO_SDK_TOOLS_TAG}/picotool-2.3.1-x86_64-lin.tar.gz" | tar -xz -C "$TOOLS_DIR/picotool"
-          curl -sL "https://github.com/raspberrypi/pico-sdk-tools/releases/download/${PICO_SDK_TOOLS_TAG}/pico-sdk-tools-2.3.1-x86_64-lin.tar.gz" | tar -xz -C "$TOOLS_DIR/pioasm"
+          curl -sL "https://github.com/raspberrypi/pico-sdk-tools/releases/download/${PICO_SDK_TOOLS_TAG}/picotool-${PICOTOOL_VERSION}-x86_64-lin.tar.gz" | tar -xz -C "$TOOLS_DIR/picotool"
+          curl -sL "https://github.com/raspberrypi/pico-sdk-tools/releases/download/${PICO_SDK_TOOLS_TAG}/pico-sdk-tools-${PICO_SDK_TOOLS_VERSION}-x86_64-lin.tar.gz" | tar -xz -C "$TOOLS_DIR/pioasm"
           echo "$TOOLS_DIR/picotool/picotool" >> $GITHUB_PATH
           echo "$TOOLS_DIR/pioasm/pioasm" >> $GITHUB_PATH
           echo "picotool_DIR=$TOOLS_DIR/picotool/picotool" >> $GITHUB_ENV
