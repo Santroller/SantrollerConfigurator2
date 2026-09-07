@@ -298,16 +298,9 @@ function StateBox({
   );
 }
 function AssignmentListStateBox({ profileIdx, listIdx }: { profileIdx: number; listIdx: number }) {
-  const state = useConfigStore((state) => {
-    const profileId = state.config.profiles![profileIdx]?.opts.uid;
-    return (
-      state.activeProfileAssignments.some(
-        (assignment) => assignment.profile === profileId && assignment.listId === listIdx
-      ) ||
-      state.activationListStatus[profileIdx][listIdx]?.state ||
-      false
-    );
-  });
+  const state = useConfigStore(
+    (state) => state.activationListStatus[profileIdx]?.[listIdx]?.state ?? false
+  );
   return (
     <>
       <Text size="sm">State</Text>
@@ -4208,16 +4201,9 @@ function SantrollerAssignmentList({
 
   const [advancedMode, setAdvancedMode] = useState(isComplex);
 
-  const isActive = useConfigStore((state) => {
-    const profileId = state.config.profiles![profileIdx]?.opts.uid;
-    return (
-      state.activeProfileAssignments.some(
-        (assignment) => assignment.profile === profileId && assignment.listId === listIdx
-      ) ||
-      state.activationListStatus[profileIdx]?.[listIdx]?.state ||
-      false
-    );
-  });
+  const isActive = useConfigStore(
+    (state) => state.activationListStatus[profileIdx]?.[listIdx]?.state ?? false
+  );
 
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');

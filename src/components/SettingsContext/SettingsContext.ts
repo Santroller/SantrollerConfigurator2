@@ -6,13 +6,13 @@ import { immer } from 'zustand/middleware/immer';
 import type {} from '@redux-devtools/extension';
 
 import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
+import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import {
   createDeviceConfig,
   getDevicePins,
   getDeviceStatusLabel,
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
-import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import { inputUsesDevice } from '@/components/Inputs/inputRegistry';
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
 import { CRC32 } from '@/CRC32.js';
@@ -222,11 +222,9 @@ export interface ConfigState {
   writeTimeout?: NodeJS.Timeout;
   keepaliveTimeout?: NodeJS.Timeout;
   currentProfile: number;
+  currentProfileInstance: number;
   lastProfile: number;
   activeProfiles: number[];
-  currentProfileSource: number | null;
-  activeProfileDevices: proto.IActiveProfileDevice[];
-  activeProfileAssignments: proto.IActiveProfileAssignment[];
   midiData: number[][];
   console: string;
   sendingKeepAlive: boolean;
@@ -266,9 +264,9 @@ export interface Actions {
   deleteAllDevices: () => void;
   addDevice: (type: string) => void;
   onReport: (evt: HIDInputReportEvent) => void;
-  setActiveProfile: (id: string | null, sourceId?: number | null) => void;
+  setActiveProfile: (id: string | null, instance?: number) => void;
   sendKeepAlive: () => void;
-  commitConfig: () => void;
+  commitConfig: () => Promise<void>;
   saveConfig: () => void;
   buildConfigBuffer: () => { buffer: Uint8Array; mainLen: number; auxLen: number };
   buildConfig: () => { config: proto.IConfig; aux: proto.IAuxConfigBlock };
@@ -361,11 +359,9 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     writing: false,
     polling: false,
     currentProfile: 0,
+    currentProfileInstance: 0,
     lastProfile: 0,
     activeProfiles: [],
-    currentProfileSource: null,
-    activeProfileDevices: [],
-    activeProfileAssignments: [],
     midiData: [],
     guiDevices,
     console: '',
@@ -386,7 +382,6 @@ export const initialConfig = InitState(
     states: [],
   })
 );
-
 
 function createDefault(type: string, id: string) {
   if (!isDeviceKind(type)) {
@@ -468,6 +463,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     commitConfig: async () => {
       const state = get();
+      if (state.writeTimeout) {
+        clearTimeout(state.writeTimeout);
+        state.writeTimeout = undefined;
+      }
+      await get().saveConfig();
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           save: proto.SaveCommand.create({}),
@@ -479,7 +479,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
       new Uint8Array(outBuffer2).set(infoBuffer2);
       await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer2);
       set((state) => {
-        state.savedConfig = proto.Config.encode(state.config).finish()
+        state.savedConfig = proto.Config.encode(state.config).finish();
+        state.configModified = false;
       });
     },
     setSyncMode: (mode: boolean) => {
@@ -626,21 +627,49 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    setActiveProfile: async (id: string | null, sourceId: number | null = null) => {
+    setActiveProfile: async (id: string | null, instance: number = 0) => {
       if (id === 'add') {
         return;
       }
+      const newProfile = parseInt(id ?? '0', 10);
       set((state) => {
         state.lastProfile = state.currentProfile;
-        state.currentProfile = parseInt(id ?? '0', 10);
-        state.currentProfileSource = sourceId;
+        state.currentProfile = newProfile;
+        state.currentProfileInstance = instance;
+        if (state.mappingStatus[newProfile]) {
+          for (const m of Object.values(state.mappingStatus[newProfile])) {
+            m.state = 0;
+            m.stateRaw = 0;
+            m.stateNonZero = 0;
+          }
+        }
+        if (state.ledStatus[newProfile]) {
+          for (const l of Object.values(state.ledStatus[newProfile])) {
+            l.state = 0;
+            l.stateRaw = 0;
+            l.stateNonZero = 0;
+          }
+        }
+        if (state.activationStatus[newProfile]) {
+          for (const group of Object.values(state.activationStatus[newProfile])) {
+            for (const a of group) {
+              a.state = false;
+              a.stateRaw = 0;
+            }
+          }
+        }
+        if (state.activationListStatus[newProfile]) {
+          for (const al of Object.values(state.activationListStatus[newProfile])) {
+            al.state = false;
+          }
+        }
       });
       const state = get();
       const infoBuffer2 = proto.Command.encode(
         proto.Command.create({
           setProfile: proto.SetProfileCommand.create({
             profileId: state.config.profiles![parseInt(id ?? '0', 10)].opts.uid,
-            sourceId: sourceId ?? undefined,
+            instanceId: instance,
           }),
         })
       )
@@ -1046,26 +1075,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 statuses[deviceEvent.activationList!.listId].state =
                   deviceEvent.activationList!.state!;
               }
-              const profile = state.config.profiles![state.currentProfile];
-              const profileId = profile?.opts.uid;
-              if (profileId !== undefined) {
-                state.activeProfileAssignments = deviceEvent.activationList!.state
-                  ? state.activeProfileAssignments.some(
-                      (assignment) =>
-                        assignment.profile === profileId &&
-                        assignment.listId === deviceEvent.activationList!.listId
-                    )
-                    ? state.activeProfileAssignments
-                    : [
-                        ...state.activeProfileAssignments,
-                        { profile: profileId, listId: deviceEvent.activationList!.listId },
-                      ]
-                  : state.activeProfileAssignments.filter(
-                      (assignment) =>
-                        assignment.profile !== profileId ||
-                        assignment.listId !== deviceEvent.activationList!.listId
-                    );
-              }
             }
           });
         }
@@ -1178,19 +1187,30 @@ export const useConfigStore = create<ConfigState & Actions>()(
       device.addEventListener('inputreport', get().onReport);
       const timeout = setInterval(() => get().sendKeepAlive(), 10);
       await device.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
-      const profileData = await receiveFeatureReport(
-        device,
-        proto.ReportId.ReportIdGetActiveProfiles
-      );
-      const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
-        new Uint8Array(profileData.buffer).slice(1)
-      );
+      let activeProfiles: number[] = [];
+      try {
+        const profileData = await receiveFeatureReport(
+          device,
+          proto.ReportId.ReportIdGetActiveProfiles
+        );
+        const payload = new Uint8Array(
+          profileData.buffer,
+          profileData.byteOffset,
+          profileData.byteLength
+        ).slice(1);
+        if (payload.length > 0) {
+          activeProfiles = proto.GetActiveProfiles.decodeDelimited(payload).profiles || [];
+        }
+      } catch (e) {
+        console.error('Failed to get active profiles', e);
+      }
       const state = get();
       if (state.config.profiles![state.currentProfile]) {
         const infoBuffer2 = proto.Command.encode(
           proto.Command.create({
             setProfile: proto.SetProfileCommand.create({
               profileId: state.config.profiles![state.currentProfile].opts.uid,
+              instanceId: state.currentProfileInstance ?? 0,
             }),
           })
         )
@@ -1204,9 +1224,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         (state) => ({
           ...state,
           keepaliveTimeout: timeout,
-          activeProfiles: activeProfiles.profiles,
-          activeProfileDevices: activeProfiles.profileDevices,
-          activeProfileAssignments: activeProfiles.activeAssignments,
+          activeProfiles,
           waitingForReload: false,
         }),
         true
@@ -1461,13 +1479,23 @@ export const useConfigStore = create<ConfigState & Actions>()(
             data.set(new Uint8Array(slice.buffer).slice(1), start);
             start += slice.byteLength - 1;
           }
-          const profileData = await receiveFeatureReport(
-            device,
-            proto.ReportId.ReportIdGetActiveProfiles
-          );
-          const activeProfiles = proto.GetActiveProfiles.decodeDelimited(
-            new Uint8Array(profileData.buffer).slice(1)
-          );
+          let activeProfiles: number[] = [];
+          try {
+            const profileData = await receiveFeatureReport(
+              device,
+              proto.ReportId.ReportIdGetActiveProfiles
+            );
+            const payload = new Uint8Array(
+              profileData.buffer,
+              profileData.byteOffset,
+              profileData.byteLength
+            ).slice(1);
+            if (payload.length > 0) {
+              activeProfiles = proto.GetActiveProfiles.decodeDelimited(payload).profiles || [];
+            }
+          } catch (e) {
+            console.error('Failed to get active profiles', e);
+          }
           if (new CRC32().calculate(data) !== info.dataCrc) {
             console.log('CRC didnt match!');
           }
@@ -1501,9 +1529,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 type: deviceType,
                 latest,
                 keepaliveTimeout: timeout,
-                activeProfiles: activeProfiles.profiles,
-                activeProfileDevices: activeProfiles.profileDevices,
-                activeProfileAssignments: activeProfiles.activeAssignments,
+                activeProfiles,
               }),
               true
             );

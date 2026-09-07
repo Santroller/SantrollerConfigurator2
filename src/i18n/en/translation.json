@@ -1013,6 +1013,12 @@
     "ProKeyboardTouchPad": "Touch Strip",
     "ProKeyboardOverdrive": "Overdrive"
   },
+  "save": {
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "saved": "Saved!",
+    "failed": "Save failed"
+  },
   "connect": {
     "connect": "Connect to a Santroller powered device",
     "webHidNotSupported": "This browser does not support WebHID, therefore Santroller will not work.\nYou need to use a Chromium based browser, Firefox based browsers don't support WebHID.",

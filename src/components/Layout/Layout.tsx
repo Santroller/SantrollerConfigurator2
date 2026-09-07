@@ -1,6 +1,9 @@
 import {
+  IconAlertCircle,
   IconBuildingStore,
+  IconCheck,
   IconChevronRight,
+  IconDeviceFloppy,
   IconDeviceGamepad3,
   IconMoon,
   IconPiano,
@@ -9,6 +12,8 @@ import {
   IconSun,
   IconTag,
 } from '@tabler/icons-react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Link as RouterLink,
   NavLink as RouterNavLink,
@@ -32,6 +37,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [opened, { toggle }] = useDisclosure();
   const connected = useConfigStore((state) => state.connected);
@@ -39,10 +45,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const updating = useConfigStore((state) => state.updating);
   const pollInputs = useConfigStore((state) => state.pollInputs);
   const activeProfile = useConfigStore((state) => state.currentProfile);
+  const currentProfileInstance = useConfigStore((state) => state.currentProfileInstance);
   const activeProfiles = useConfigStore((state) => state.activeProfiles);
-  const currentProfileSource = useConfigStore((state) => state.currentProfileSource);
-  const activeProfileDevices = useConfigStore((state) => state.activeProfileDevices);
-  const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const profiles = useConfigStore((state) => state.config.profiles!);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
@@ -53,10 +57,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const profilePage = useMatch('/profiles');
   const seller = useConfigStore((state) => state.seller);
   const commitConfig = useConfigStore((state) => state.commitConfig);
+
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSave = async () => {
+    if (saveStatus === 'saving') {
+      return;
+    }
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    setSaveStatus('saving');
+    try {
+      await Promise.all([
+        commitConfig(),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
+      setSaveStatus('saved');
+      saveTimeoutRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2500);
+    } catch (e) {
+      console.error('Failed to save configuration:', e);
+      setSaveStatus('error');
+      saveTimeoutRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (configModified && saveStatus === 'saved') {
+      setSaveStatus('idle');
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+    }
+  }, [configModified, saveStatus]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showSave = configModified || saveStatus !== 'idle';
+
   return (
     <>
       <AppShell
-        header={{ height: configModified ? 80 : 50 }}
+        header={{ height: showSave ? 80 : 50 }}
         navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
         padding="md"
       >
@@ -66,19 +121,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Burger opened={opened} h={40} onClick={toggle} hiddenFrom="sm" size="sm" />
             </Grid.Col>
             <Grid.Col span={0}>
-              <Image
-                src={
-                  toolInfo?.logo
-                    ? URL.createObjectURL(
-                        new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })
+              <Flex direction="column" align="center" gap={4}>
+                <Image
+                  src={
+                    toolInfo?.logo
+                      ? URL.createObjectURL(
+                          new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })
+                        )
+                      : 'Icons/logoSide.png'
+                  }
+                  height={40}
+                  fit="scale-down"
+                  alt="santroller"
+                />
+                {showSave && (
+                  <Button
+                    size="xs"
+                    radius="md"
+                    color={
+                      saveStatus === 'saved'
+                        ? 'teal'
+                        : saveStatus === 'error'
+                        ? 'red'
+                        : saveStatus === 'saving'
+                        ? 'blue'
+                        : 'red'
+                    }
+                    loading={saveStatus === 'saving'}
+                    loaderProps={{ type: 'dots' }}
+                    leftSection={
+                      saveStatus === 'saved' ? (
+                        <IconCheck size={16} stroke={2.5} />
+                      ) : saveStatus === 'error' ? (
+                        <IconAlertCircle size={16} stroke={2} />
+                      ) : saveStatus === 'saving' ? undefined : (
+                        <IconDeviceFloppy size={16} stroke={1.5} />
                       )
-                    : 'Icons/logoSide.png'
-                }
-                height={40}
-                fit="scale-down"
-                alt="santroller"
-              />
-              {configModified && <Button color="red" onClick={commitConfig}>Save changes</Button>}
+                    }
+                    onClick={
+                      saveStatus === 'saved' || saveStatus === 'saving' ? undefined : handleSave
+                    }
+                    style={{
+                      transition: 'all 200ms ease',
+                      cursor: saveStatus === 'saved' ? 'default' : undefined,
+                    }}
+                  >
+                    {saveStatus === 'saving'
+                      ? t('save.saving', 'Saving...')
+                      : saveStatus === 'saved'
+                      ? t('save.saved', 'Saved!')
+                      : saveStatus === 'error'
+                      ? t('save.failed', 'Save failed')
+                      : t('save.saveChanges', 'Save changes')}
+                  </Button>
+                )}
+              </Flex>
             </Grid.Col>
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
@@ -161,76 +258,60 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                 defaultOpened
               >
-                {profiles.map((x, i) => {
-                  const activeDevices = activeProfileDevices.filter(
-                    (activeDevice) => activeDevice.profile === x.opts.uid
-                  );
-                  const label = (
-                    <Group gap="xs" justify="space-between" wrap="nowrap">
-                      <span>{x.opts.name}</span>
-                      {activeProfiles?.includes(x.opts.uid) && <Badge>Active</Badge>}
-                    </Group>
-                  );
-                  if (!activeDevices.length) {
-                    return (
+                {profiles.flatMap((x, i) => {
+                  const instanceCount =
+                    activeProfiles?.filter((id) => id === x.opts.uid).length ?? 0;
+
+                  if (instanceCount <= 1) {
+                    const label = (
+                      <Group gap="xs" justify="space-between" wrap="nowrap">
+                        <span>{x.opts.name}</span>
+                        {instanceCount === 1 && <Badge>Active</Badge>}
+                      </Group>
+                    );
+                    return [
                       <NavLink
                         disabled={updating}
                         key={x.opts.uid}
                         component={RouterLink}
                         to="/profiles"
-                        onClick={() => setActiveProfile(i.toString(), null)}
+                        onClick={() => setActiveProfile(i.toString(), 0)}
                         active={
-                          profilePage != null && activeProfile === i && currentProfileSource == null
+                          profilePage != null &&
+                          activeProfile === i &&
+                          currentProfileInstance === 0
+                        }
+                        label={label}
+                        leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
+                      />,
+                    ];
+                  }
+
+                  // Profile is assigned multiple times (e.g. 2 gamepads and 2 drum kits) -> show each instance as a nav link item
+                  return Array.from({ length: instanceCount }).map((_, instanceIdx) => {
+                    const label = (
+                      <Group gap="xs" justify="space-between" wrap="nowrap">
+                        <span>{`${x.opts.name} (${instanceIdx + 1})`}</span>
+                        <Badge>Active</Badge>
+                      </Group>
+                    );
+                    return (
+                      <NavLink
+                        disabled={updating}
+                        key={`${x.opts.uid}-instance-${instanceIdx}`}
+                        component={RouterLink}
+                        to="/profiles"
+                        onClick={() => setActiveProfile(i.toString(), instanceIdx)}
+                        active={
+                          profilePage != null &&
+                          activeProfile === i &&
+                          currentProfileInstance === instanceIdx
                         }
                         label={label}
                         leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                       />
                     );
-                  }
-                  return (
-                    <NavLink
-                      disabled={updating}
-                      key={x.opts.uid}
-                      component={RouterLink}
-                      to="/profiles"
-                      onClick={() => setActiveProfile(i.toString(), null)}
-                      active={
-                        profilePage != null && activeProfile === i && currentProfileSource == null
-                      }
-                      label={label}
-                      leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
-                      defaultOpened={activeDevices.length > 0}
-                    >
-                      {activeDevices.map((activeDevice, activeDeviceIdx) => {
-                        const device = deviceStatus[activeDevice.device.toString()];
-                        const sourceId = activeDevice.sourceId ?? activeDevice.device;
-                        const usbDevice = Object.values(device?.usbDevices ?? {}).find(
-                          (usbDevice) => usbDevice.sourceId === sourceId
-                        );
-                        const deviceName = usbDevice?.name?.trim();
-                        const label = deviceName
-                          ? `${deviceName} (Device ${activeDevice.device})`
-                          : `Device ${activeDevice.device}`;
-                        return (
-                          <NavLink
-                            disabled={updating}
-                            key={`${sourceId}-${activeDeviceIdx}`}
-                            component={RouterLink}
-                            to="/profiles"
-                            onClick={() => setActiveProfile(i.toString(), sourceId)}
-                            active={
-                              profilePage != null &&
-                              activeProfile === i &&
-                              currentProfileSource === sourceId
-                            }
-                            label={label}
-                            leftSection={<IconChevronRight size={16} stroke={1.5} />}
-                            rightSection={<Badge>Active</Badge>}
-                          />
-                        );
-                      })}
-                    </NavLink>
-                  );
+                  });
                 })}
                 {!simpleMode && (
                   <NavLink
