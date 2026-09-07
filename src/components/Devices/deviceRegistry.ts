@@ -212,7 +212,17 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'dmx',
 ]);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
-const defaultMappingDeviceKinds = new Set<DeviceKind>(['crkdDrum', 'crkdNeck', 'wii']);
+const defaultMappingDeviceKinds = new Set<DeviceKind>([
+  'crkdDrum',
+  'crkdNeck',
+  'wii',
+  'psx',
+  'gh5Neck',
+  'protarNeck',
+  'midiSerial',
+  'bhDrum',
+  'worldTourDrum',
+]);
 
 export function isDeviceKind(value: string): value is DeviceKind {
   return value in deviceRegistry;

@@ -47,7 +47,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
   ),
   protarNeckButton: ({ input, dispatch }) => (
     <DropdownBox
-      title="input.protarNeckButton"
+      title="input.protarNeckButton.title"
       e={proto.ProGuitarNeckButtonType}
       val={input.protarNeckButton!.button}
       label="input.protarNeckButton"
@@ -60,7 +60,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
   ),
   protarNeckAxis: ({ input, dispatch }) => (
     <DropdownBox
-      title="input.protarNeckAxis"
+      title="input.protarNeckAxis.title"
       e={proto.ProGuitarNeckAxisType}
       val={input.protarNeckAxis!.axis}
       label="input.protarNeckAxis"

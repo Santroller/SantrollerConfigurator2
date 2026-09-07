@@ -11,11 +11,16 @@ import {
 import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  IconBluetooth,
+  IconChevronDown,
   IconCopy,
+  IconDeviceGamepad,
   IconExclamationCircle,
   IconGripVertical,
   IconPlus,
+  IconSparkles,
   IconTrash,
+  IconUsb,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
@@ -29,6 +34,7 @@ import {
   Center,
   ColorInput,
   Combobox,
+  Divider,
   Flex,
   Group,
   Image,
@@ -36,12 +42,14 @@ import {
   InputBase,
   isNumberLike,
   Loader,
+  Menu,
   Modal,
   MultiSelect,
   NumberInput,
   Overlay,
   Progress,
   SegmentedControl,
+  Select,
   Slider,
   Space,
   Stack,
@@ -645,7 +653,38 @@ function OutputBox({
         />
       );
     case proto.SubType.ProKeys:
-      break;
+      return (
+        <DropdownOutputBox
+          label={label}
+          title={title}
+          extraOptions={[
+            {
+              value: 'ProKeyboard_Keys',
+              label: t('outputs.ProKeyboard_Keys', 'All Keys (Root Note)'),
+            },
+          ]}
+          valExtra={mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined}
+          dispatchExtra={(val) => {
+            if (val === 'ProKeyboard_Keys') {
+              dispatch({ proKeyMultiple: 25 }, false, false);
+            }
+          }}
+          e={proto.ProKeyboardAxisType}
+          e2={proto.ProKeyboardButtonType}
+          val={mapping.proKeyboardAxis!}
+          val2={mapping.proKeyboardButton!}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping.gamepadAxis!}
+          val4={mapping.gamepadButton!}
+          type={type}
+          legendMode={legendMode}
+          dispatch={(axis) => dispatch({ proKeyboardAxis: axis }, true, true)}
+          dispatch2={(button) => dispatch({ proKeyboardButton: button }, true, false)}
+          dispatch3={gamepadAxisCallback}
+          dispatch4={gamepadButtonCallback}
+        />
+      );
     case proto.SubType.Taiko:
       break;
     case proto.SubType.KeyboardMouse:
@@ -729,6 +768,9 @@ function DropdownOutputBox<
   dispatch3,
   dispatch4,
   dispatchMidi,
+  extraOptions,
+  valExtra,
+  dispatchExtra,
 }: {
   e?: T;
   e2?: T2;
@@ -750,21 +792,27 @@ function DropdownOutputBox<
   dispatch3?: (input: T3[keyof T3]) => void;
   dispatch4?: (input: T4[keyof T4]) => void;
   dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
+  extraOptions?: { value: string; label: string }[];
+  valExtra?: string;
+  dispatchExtra?: (val: string) => void;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
     onDropdownOpen: () =>
       inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
-  const v = ((e && e[val as keyof T]) ||
+  const v = (valExtra ||
+    (e && e[val as keyof T]) ||
     (e2 && e2[val2 as keyof T2]) ||
     (e3 && e3[val3 as keyof T3]) ||
     (e4 && e4[val4 as keyof T4]) ||
     (valMidi && Object.entries(valMidi).find((x) => x[0] !== 'deviceid' && x[1])?.[0])) as string;
+  const extraLabel = extraOptions?.find((x) => x.value === v)?.label;
+  const titleLabel = title === 'input' ? t('input.title', 'Input') : t(title);
   const base =
     label === 'outputs' ? (
       <InputBase
-        label={t(title)}
+        label={titleLabel}
         component="button"
         type="button"
         pointer
@@ -772,13 +820,14 @@ function DropdownOutputBox<
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {t(
-          `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
-        )}
+        {extraLabel ||
+          t(
+            `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
+          )}
       </InputBase>
     ) : (
       <InputBase
-        label={t(title)}
+        label={titleLabel}
         component="button"
         type="button"
         pointer
@@ -786,13 +835,16 @@ function DropdownOutputBox<
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {t(`${label}.${v}`)}
+        {extraLabel || t(`${label}.${v}`)}
       </InputBase>
     );
   return (
     <Combobox
       store={inputCombobox}
       onOptionSubmit={(val) => {
+        if (extraOptions?.some((x) => x.value === val) && dispatchExtra) {
+          dispatchExtra(val);
+        }
         if (e && dispatch) {
           const button = e[val as keyof T];
           if (button !== undefined) {
@@ -846,6 +898,11 @@ function DropdownOutputBox<
 
       <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
         <Combobox.Options>
+          {extraOptions?.map((item) => (
+            <Combobox.Option value={item.value} key={item.value} selected={item.value === v}>
+              {item.label}
+            </Combobox.Option>
+          ))}
           {midi && (
             <>
               <Combobox.Option value="midiNote" selected={v === 'midiNote'}>
@@ -858,10 +915,10 @@ function DropdownOutputBox<
                 {t('input.midiPitchBend')}
               </Combobox.Option>
               <Combobox.Option value="midiProGuitarButton" selected={v === 'midiProGuitarButton'}>
-                {t('input.midiProGuitarButton')}
+                {t('input.midiProGuitarButton.title')}
               </Combobox.Option>
               <Combobox.Option value="midiProGuitarAxis" selected={v === 'midiProGuitarAxis'}>
-                {t('input.midiProGuitarAxis')}
+                {t('input.midiProGuitarAxis.title')}
               </Combobox.Option>
             </>
           )}
@@ -1050,9 +1107,32 @@ function SantrollerLabel({
         );
       }
       case 'bhDrum':
-        return <Text>{input.midi?.midiNote?.note}</Text>;
       case 'worldTourDrum':
-        return <Text>{input.midi?.midiNote?.note}</Text>;
+      case 'midiSerial':
+        if (input.midi?.midiNote) {
+          return <Text>{t('input.midiNote', 'MIDI Note')}: {input.midi.midiNote.note}</Text>;
+        }
+        if (input.midi?.midiControlChange) {
+          return <Text>CC {input.midi.midiControlChange.cc}</Text>;
+        }
+        if (input.midi?.midiPitchBend) {
+          return <Text>{t('input.midiPitchBend', 'Pitch Bend')}</Text>;
+        }
+        if (input.midi?.midiProGuitarButton?.button != null) {
+          return <Text>{t(`input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`)}</Text>;
+        }
+        if (input.midi?.midiProGuitarAxis?.axis != null) {
+          return <Text>{t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}</Text>;
+        }
+        return null;
+      case 'protarNeck':
+        if (input.protarNeckButton?.button != null) {
+          return <Text>{t(`input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`)}</Text>;
+        }
+        if (input.protarNeckAxis?.axis != null) {
+          return <Text>{t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}</Text>;
+        }
+        return null;
       case 'cycle':
         return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
       case 'toggle':
@@ -1064,6 +1144,18 @@ function SantrollerLabel({
     if (labelsText || !fallback) {
       return <Text>{labelsText}</Text>;
     }
+  }
+  if (input.protarNeckButton?.button != null) {
+    return <Text>{t(`input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`)}</Text>;
+  }
+  if (input.protarNeckAxis?.axis != null) {
+    return <Text>{t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}</Text>;
+  }
+  if (input.midi?.midiProGuitarButton?.button != null) {
+    return <Text>{t(`input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`)}</Text>;
+  }
+  if (input.midi?.midiProGuitarAxis?.axis != null) {
+    return <Text>{t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}</Text>;
   }
   return fallback ? <Text>{t(`outputs.${label}`)}</Text> : null;
 }
@@ -1079,6 +1171,7 @@ function SantrollerInput({
   activationIdx,
   ledIdx,
   innerIdx,
+  proKeyCount,
   dispatch,
 }: {
   input: proto.IInput;
@@ -1091,6 +1184,7 @@ function SantrollerInput({
   activationIdx?: number;
   ledIdx?: number;
   innerIdx?: number;
+  proKeyCount?: number;
   dispatch: (input: proto.IInput) => void;
 }) {
   const deviceId = getInputDeviceId(input) ?? -1;
@@ -1486,7 +1580,9 @@ function SantrollerInput({
           )}
         </>
       )}
-      {(device?.type === 'worldTourDrum' || device?.type === 'bhDrum') && (
+      {(device?.type === 'worldTourDrum' ||
+        device?.type === 'bhDrum' ||
+        device?.type === 'midiSerial') && (
         <DropdownOutputBox
           title="input"
           valMidi={input.midi ?? undefined}
@@ -1760,7 +1856,23 @@ function SantrollerInput({
       {input.midi?.midiNote && (
         <>
           <NumberInput
-            label={t('input.midiNote')}
+            label={
+              proKeyCount != null
+                ? t('input.rootMidiNote', 'Root MIDI Note')
+                : t('input.midiNote', 'MIDI Note')
+            }
+            description={
+              proKeyCount != null
+                ? t(
+                    'input.rootMidiNote_desc',
+                    'Keys are mapped sequentially starting from this note (Note {{root}} to {{end}})',
+                    {
+                      root: input.midi.midiNote.note,
+                      end: (input.midi.midiNote.note ?? 0) + proKeyCount - 1,
+                    }
+                  )
+                : undefined
+            }
             value={input.midi.midiNote.note}
             onChange={(val) =>
               dispatch({
@@ -1769,7 +1881,7 @@ function SantrollerInput({
             }
           />
           <NumberInput
-            label={t('input.midiChannel')}
+            label={t('input.midiChannel', 'MIDI Channel')}
             value={input.midi.midiNote.channel}
             onChange={(val) =>
               dispatch({
@@ -1828,7 +1940,7 @@ function SantrollerInput({
       )}
       {input.midi?.midiProGuitarButton && (
         <DropdownBox
-          title="input.midiProGuitarButton"
+          title="input.midiProGuitarButton.title"
           e={proto.ProGuitarMidiButtonType}
           val={input.midi!.midiProGuitarButton?.button}
           label="input.midiProGuitarButton"
@@ -1844,7 +1956,7 @@ function SantrollerInput({
       )}
       {input.midi?.midiProGuitarAxis && (
         <DropdownBox
-          title="input.midiProGuitarAxis"
+          title="input.midiProGuitarAxis.title"
           e={proto.ProGuitarAxisType}
           val={input.midi!.midiProGuitarAxis?.axis}
           label="input.midiProGuitarAxis"
@@ -1921,10 +2033,16 @@ function SantrollerMapping({
     proto.ProGuitarButtonType[mapping.mapping.proButton ?? -1] ||
     proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
     proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
-    proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1];
+    proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+    (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
+    (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
+    proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+    proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
   const fixedLabel = FixLabel(mode, type, label, legendMode);
   const img = `Icons/Input/${FixIcon(mode, type, label, legendMode)}.png`;
-  const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
+  const isKey = mapping.mapping.proKeyMultiple != null || mapping.mapping.proKeySingle != null;
+  const button =
+    isKey || Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
   const drum = label?.includes('Pad') || label?.includes('Cymbal');
@@ -1953,6 +2071,9 @@ function SantrollerMapping({
     (status?.crkdDrumCalibration &&
       status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.RawValue][crkdAxis]) ||
     0;
+  const isPressed = useConfigStore(
+    (state) => !!state.mappingStatus[profileIdx]?.[mappingIdx]?.state
+  );
   if (drum && crkdDrum) {
     if (mapping.debounce) {
       dispatch({
@@ -1994,33 +2115,63 @@ function SantrollerMapping({
         </Flex>
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
-        <Card.Section h="60px">
-          {!simpleMode && (
-            <>
-              <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
+        <Group justify="space-between" align="center" mb="xs">
+          <Group gap="xs">
+            {!simpleMode && (
+              <div {...listeners} style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
                 <IconGripVertical size={18} stroke={1.5} />
               </div>
-              <div style={{ position: 'absolute', top: 0, right: 0 }}>
-                <ActionIcon color="red">
-                  <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
-                </ActionIcon>
-                <ActionIcon>
-                  <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
-                </ActionIcon>
-              </div>
-            </>
+            )}
+            <Title order={4}>{t('inputs.mapping_title', { num: mappingIdx + 1 })}</Title>
+            {mapping.mapping.proKeyMultiple != null ? (
+              <Badge variant="light" color="teal">
+                {t('inputs.pro_keys_range', '{{count}} Keys', {
+                  count: mapping.mapping.proKeyMultiple,
+                })}
+              </Badge>
+            ) : button ? (
+              <Badge color={isPressed ? 'blue' : 'gray'}>
+                {isPressed ? t('state.pressed') : t('state.released')}
+              </Badge>
+            ) : axis ? (
+              <Badge variant="light" color="indigo">
+                {t('inputs.axis')}
+              </Badge>
+            ) : null}
+          </Group>
+          {!simpleMode && (
+            <Group gap={4}>
+              <ActionIcon variant="subtle" onClick={copyInput} title="Copy">
+                <IconCopy size={18} />
+              </ActionIcon>
+              <ActionIcon variant="subtle" color="red" onClick={open} title="Delete">
+                <IconTrash size={18} />
+              </ActionIcon>
+            </Group>
           )}
-          <Center>
-            <Image src={img} height={75} w="auto" fit="contain" alt={img} />
-          </Center>
-        </Card.Section>
+        </Group>
+
+        <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="xs" fw={500} c="dimmed">{t('inputs.target_output')}:</Text>
+            <Badge variant="light" color="blue" size="sm">
+              {fixedLabel ? t(`outputs.${fixedLabel}`) : t('inputs.unmapped')}
+            </Badge>
+          </Group>
+        </Card>
+
+        <Center py="xs">
+          <Image src={img} height={70} w="auto" fit="contain" alt={fixedLabel || 'input'} />
+        </Center>
+
         {simpleMode && (
           <>
-            <Space h="md" />
-            <SantrollerLabel input={mapping.input} label={fixedLabel} />
+            <Space h="xs" />
+            <Center>
+              <SantrollerLabel input={mapping.input} label={fixedLabel} />
+            </Center>
           </>
         )}
-        {button && <StateBox mappingIdx={mappingIdx} profileIdx={profileIdx} />}
         {axis && (
           <StateSlider
             mappingIdx={mappingIdx}
@@ -2041,6 +2192,26 @@ function SantrollerMapping({
               mapping={mapping}
               legendMode={legendMode}
             />
+            {mapping.mapping.proKeyMultiple != null && (
+              <>
+                <Space h="md" />
+                <NumberInput
+                  label={t('inputs.pro_keys_count', 'Number of Keys')}
+                  value={mapping.mapping.proKeyMultiple}
+                  min={1}
+                  max={88}
+                  onChange={(val) =>
+                    dispatch({
+                      ...mapping,
+                      mapping: {
+                        ...mapping.mapping,
+                        proKeyMultiple: Number(val) || 25,
+                      },
+                    })
+                  }
+                />
+              </>
+            )}
             <Space h="md" />
             <SantrollerInput
               axis={!!axis}
@@ -2049,6 +2220,7 @@ function SantrollerMapping({
               input={mapping.input}
               legendMode={legendMode}
               type={type}
+              proKeyCount={mapping.mapping.proKeyMultiple ?? undefined}
               dispatch={(input) => {
                 dispatch({
                   ...mapping,
@@ -2647,7 +2819,11 @@ function SantrollerLed({
           proto.ProGuitarButtonType[mapping.mapping.proButton ?? -1] ||
           proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
           proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
-          proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1];
+          proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+          (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
+          (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
+          proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+          proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
 
         const fixedLabel = FixLabel(mode, type, label, legendMode);
         return `Icons/Input/${fixedLabel}.png`;
@@ -2715,6 +2891,41 @@ function SantrollerLed({
     mappingValue = t(`leds.type.static`);
   }
 
+  const isLedActive = useConfigStore(
+    (state) => !!state.ledStatus[profileIdx]?.[ledIdx]?.state
+  );
+
+  let summaryModeText = mappingValue || t('leds.type.static');
+  if (led.mapping.inputMapping && mapping) {
+    const label =
+      proto.GamepadButtonType[mapping.mapping.gamepadButton ?? -1] ||
+      proto.GamepadAxisType[mapping.mapping.gamepadAxis ?? -1] ||
+      proto.GuitarHeroGuitarButtonType[mapping.mapping.ghButton ?? -1] ||
+      proto.GuitarHeroGuitarAxisType[mapping.mapping.ghAxis ?? -1] ||
+      proto.GuitarHeroDrumsAxisType[mapping.mapping.ghDrumAxis ?? -1] ||
+      proto.RockBandGuitarButtonType[mapping.mapping.rbButton ?? -1] ||
+      proto.RockBandGuitarAxisType[mapping.mapping.rbAxis ?? -1] ||
+      proto.RockBandDrumsButtonType[mapping.mapping.rbDrumButton ?? -1] ||
+      proto.RockBandDrumsAxisType[mapping.mapping.rbDrumAxis ?? -1] ||
+      proto.ProGuitarButtonType[mapping.mapping.proButton ?? -1] ||
+      proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
+      proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
+      proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+      (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
+      (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
+      proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+      proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
+    const fixedLabel = FixLabel(mode, type, label, legendMode);
+    if (fixedLabel) {
+      summaryModeText = `${mappingValue}: ${t(`outputs.${fixedLabel}`)}`;
+    }
+  } else if (led.mapping.patternMapping) {
+    const pat = proto.RgbPatternType[led.mapping.patternMapping.pattern ?? -1];
+    if (pat) {
+      summaryModeText = `${mappingValue}: ${t(`leds.pattern.${pat}`)}`;
+    }
+  }
+
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <Modal opened={opened} onClose={close} title={t('delete_device_dialog.title')} centered>
@@ -2736,26 +2947,60 @@ function SantrollerLed({
         </Flex>
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
-        <Card.Section h="60px">
-          {!simpleMode && (
-            <>
-              <div {...listeners} style={{ cursor: 'grab', position: 'absolute', top: 0, left: 0 }}>
+        <Group justify="space-between" align="center" mb="xs">
+          <Group gap="xs">
+            {!simpleMode && (
+              <div {...listeners} style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
                 <IconGripVertical size={18} stroke={1.5} />
               </div>
-              <div style={{ position: 'absolute', top: 0, right: 0 }}>
-                <ActionIcon color="red">
-                  <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
-                </ActionIcon>
-                <ActionIcon>
-                  <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyInput} />
-                </ActionIcon>
-              </div>
-            </>
+            )}
+            <Title order={4}>{t('leds.item_title', { num: ledIdx + 1 })}</Title>
+            {led.mapping.inputMapping && !analog ? (
+              <Badge color={isLedActive ? 'blue' : 'gray'}>
+                {isLedActive ? t('state.active') : t('state.inactive')}
+              </Badge>
+            ) : led.mapping.inputMapping && analog ? (
+              <Badge variant="light" color="indigo">
+                {t('inputs.axis')}
+              </Badge>
+            ) : led.mapping.patternMapping ? (
+              <Badge variant="light" color="cyan">
+                {t('leds.type.pattern')}
+              </Badge>
+            ) : led.mapping.staticMapping ? (
+              <Badge variant="light" color="teal">
+                {t('leds.type.static')}
+              </Badge>
+            ) : (
+              <Badge color={isLedActive ? 'blue' : 'gray'}>
+                {isLedActive ? t('state.active') : t('state.inactive')}
+              </Badge>
+            )}
+          </Group>
+          {!simpleMode && (
+            <Group gap={4}>
+              <ActionIcon variant="subtle" onClick={copyInput} title="Copy">
+                <IconCopy size={18} />
+              </ActionIcon>
+              <ActionIcon variant="subtle" color="red" onClick={open} title="Delete">
+                <IconTrash size={18} />
+              </ActionIcon>
+            </Group>
           )}
-          <Center>
-            <Image src={img} height={75} w="auto" fit="contain" alt={img} />
-          </Center>
-        </Card.Section>
+        </Group>
+
+        <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="xs" fw={500} c="dimmed">{t('leds.summary_mode')}:</Text>
+            <Badge variant="light" color="blue" size="sm">
+              {summaryModeText}
+            </Badge>
+          </Group>
+        </Card>
+
+        <Center py="xs">
+          <Image src={img} height={70} w="auto" fit="contain" alt="LED icon" />
+        </Center>
         {!simpleMode && (
           <>
             {(deviceCombobox.dropdownOpened && (
@@ -3375,12 +3620,6 @@ function SantrollerLed({
             </Button>
           </>
         )}
-        {led.mapping.inputMapping && !analog && (
-          <>
-            <Space h="md" />
-            <StateBox mappingIdx={ledIdx} profileIdx={profileIdx} ledBased />
-          </>
-        )}
       </Card>
     </div>
   );
@@ -3623,17 +3862,17 @@ function SantrollerAssignment({
         </Flex>
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Card.Section>
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
-            <ActionIcon color="red">
-              <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+        <Group justify="space-between" align="center" mb="xs">
+          <Text size="sm" fw={600}>{label || t('pick_value')}</Text>
+          <Group gap={4}>
+            <ActionIcon variant="subtle" onClick={copyAssignment} title="Copy">
+              <IconCopy size={18} />
             </ActionIcon>
-            <ActionIcon>
-              <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyAssignment} />
+            <ActionIcon variant="subtle" color="red" onClick={open} title="Delete">
+              <IconTrash size={18} />
             </ActionIcon>
-          </div>
-        </Card.Section>
-        <Space h="md" />
+          </Group>
+        </Group>
         <Combobox
           store={assignmentTypeCombobox}
           onOptionSubmit={(val) => {
@@ -3942,12 +4181,272 @@ function SantrollerAssignmentList({
   deleteAssignment: () => void;
   copyAssignment: () => void;
 }) {
-  const errorIcon = <IconExclamationCircle />;
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
-  const assignmentTypeCombobox = useCombobox({
-    onDropdownClose: () => assignmentTypeCombobox.resetSelectedOption(),
+
+  const assignments = useMemo(() => mapping.assignments ?? [], [mapping.assignments]);
+
+  const emulationIdx = assignments.findIndex((x) =>
+    DeviceProfileAssignmentTypes.some((y) => x[y] != null)
+  );
+  const emulationItem = emulationIdx !== -1 ? assignments[emulationIdx] : undefined;
+
+  const hostIdx = assignments.findIndex((x) =>
+    HostProfileAssignmentTypes.some((y) => x[y] != null)
+  );
+  const hostItem = hostIdx !== -1 ? assignments[hostIdx] : undefined;
+
+  const triggerIdx = assignments.findIndex((x) =>
+    OtherAssignmentTypes.some((y) => x[y] != null)
+  );
+  const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
+
+  const isComplex =
+    assignments.filter((x) => DeviceProfileAssignmentTypes.some((y) => x[y] != null)).length > 1 ||
+    assignments.filter((x) => HostProfileAssignmentTypes.some((y) => x[y] != null)).length > 1 ||
+    assignments.filter((x) => OtherAssignmentTypes.some((y) => x[y] != null)).length > 1;
+
+  const [advancedMode, setAdvancedMode] = useState(isComplex);
+
+  const isActive = useConfigStore((state) => {
+    const profileId = state.config.profiles![profileIdx]?.opts.uid;
+    return (
+      state.activeProfileAssignments.some(
+        (assignment) => assignment.profile === profileId && assignment.listId === listIdx
+      ) ||
+      state.activationListStatus[profileIdx]?.[listIdx]?.state ||
+      false
+    );
   });
+
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
+  const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
+  const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
+  const hasMidi = Object.values(deviceStatus).some((d) => d.type === 'midiSerial');
+
+  const updateEmulation = (newEmul: proto.IProfileAssignmentInfo) => {
+    const next = [...assignments];
+    if (emulationIdx !== -1) {
+      next[emulationIdx] = newEmul;
+    } else {
+      next.unshift(newEmul);
+    }
+    dispatch({ ...mapping, assignments: next });
+  };
+
+  const updateHost = (newHost: proto.IProfileAssignmentInfo | null) => {
+    const next = [...assignments];
+    if (hostIdx !== -1) {
+      if (newHost === null) {
+        next.splice(hostIdx, 1);
+      } else {
+        next[hostIdx] = newHost;
+      }
+    } else if (newHost !== null) {
+      next.push(newHost);
+    }
+    dispatch({ ...mapping, assignments: next });
+  };
+
+  const updateTrigger = (newTrigger: proto.IProfileAssignmentInfo | null) => {
+    const next = [...assignments];
+    if (triggerIdx !== -1) {
+      if (newTrigger === null) {
+        next.splice(triggerIdx, 1);
+      } else {
+        next[triggerIdx] = newTrigger;
+      }
+    } else if (newTrigger !== null) {
+      next.push(newTrigger);
+    }
+    dispatch({ ...mapping, assignments: next });
+  };
+
+  const applyPreset = (presetKey: string) => {
+    switch (presetKey) {
+      case 'usb_auto':
+        dispatch({
+          ...mapping,
+          assignments: [{ consoleType: { consoleType: null, forcedType: null } }],
+        });
+        break;
+      case 'usb_xbox':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: proto.ConsoleMode.ModeXbox360 } },
+          ],
+        });
+        break;
+      case 'usb_ps3':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: proto.ConsoleMode.ModePs3 } },
+          ],
+        });
+        break;
+      case 'usb_ps4':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: proto.ConsoleMode.ModePs4 } },
+          ],
+        });
+        break;
+      case 'bluetooth':
+        dispatch({
+          ...mapping,
+          assignments: [{ bluetooth: proto.BluetoothMode.BTStandard }],
+        });
+        break;
+      case 'wii_adapter':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: null } },
+            { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
+          ],
+        });
+        break;
+      case 'ps2_adapter':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: null } },
+            { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+          ],
+        });
+        break;
+      case 'boot_switch':
+        dispatch({
+          ...mapping,
+          assignments: [
+            { consoleType: { consoleType: null, forcedType: null } },
+            { input: { input: {} } },
+          ],
+        });
+        break;
+    }
+  };
+
+  const currentEmulMode: 'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation' =
+    emulationItem?.bluetooth != null
+      ? 'bluetooth'
+      : emulationItem?.ps2Emulation != null
+        ? 'ps2Emulation'
+        : emulationItem?.wiiEmulation != null
+          ? 'wiiEmulation'
+          : 'consoleType';
+
+  const currentUsbOption: 'auto' | 'forced' | 'specific' =
+    emulationItem?.consoleType?.forcedType != null
+      ? 'forced'
+      : emulationItem?.consoleType?.consoleType != null
+        ? 'specific'
+        : 'auto';
+
+  const currentSource =
+    hostItem?.wiiExt != null
+      ? 'wiiExt'
+      : hostItem?.ps2Cnt != null
+        ? 'ps2Cnt'
+        : hostItem?.usbType != null
+          ? 'usbType'
+          : hostItem?.usbDevice != null
+            ? 'usbDevice'
+            : hostItem?.midiChannel != null
+              ? 'midiChannel'
+              : 'builtin';
+
+  const currentTrigger =
+    triggerItem?.input != null
+      ? 'input'
+      : triggerItem?.inputAnyTime != null
+        ? 'inputAnyTime'
+        : 'always';
+
+  const sourceOptions = [
+    { value: 'builtin', label: t('assignments.source.builtin') },
+    ...(hasWii || hostItem?.wiiExt != null
+      ? [{ value: 'wiiExt', label: t('assignments.source.wiiExt') }]
+      : []),
+    ...(hasPsx || hostItem?.ps2Cnt != null
+      ? [{ value: 'ps2Cnt', label: t('assignments.source.ps2Cnt') }]
+      : []),
+    ...(hasUsbHost || hostItem?.usbType != null
+      ? [{ value: 'usbType', label: t('assignments.source.usbType') }]
+      : []),
+    ...(hasUsbHost || hostItem?.usbDevice != null
+      ? [{ value: 'usbDevice', label: t('assignments.source.usbDevice') }]
+      : []),
+    ...(hasMidi || hostItem?.midiChannel != null
+      ? [{ value: 'midiChannel', label: t('assignments.source.midiChannel') }]
+      : []),
+  ];
+
+  if (sourceOptions.length === 1) {
+    sourceOptions.push(
+      { value: 'wiiExt', label: t('assignments.source.wiiExt') },
+      { value: 'ps2Cnt', label: t('assignments.source.ps2Cnt') },
+      { value: 'usbType', label: t('assignments.source.usbType') },
+      { value: 'usbDevice', label: t('assignments.source.usbDevice') },
+      { value: 'midiChannel', label: t('assignments.source.midiChannel') }
+    );
+  }
+
+  const summaryText = useMemo(() => {
+    let emul = '';
+    if (emulationItem?.consoleType) {
+      if (emulationItem.consoleType.forcedType) {
+        emul = `USB (${t('consoleMode.' + proto.ConsoleMode[emulationItem.consoleType.forcedType])})`;
+      } else if (emulationItem.consoleType.consoleType) {
+        emul = `USB (${t('consoleType.' + proto.ConsoleType[emulationItem.consoleType.consoleType])})`;
+      } else {
+        emul = t('assignments.preset_usb_auto');
+      }
+    } else if (emulationItem?.bluetooth) {
+      emul = t('assignments.emulation_mode.bluetooth');
+    } else if (emulationItem?.ps2Emulation) {
+      emul = t('assignments.emulation_mode.ps2');
+    } else if (emulationItem?.wiiEmulation) {
+      emul = t('assignments.emulation_mode.wii');
+    } else {
+      emul = t('assignments.no_emulation');
+    }
+
+    let host = '';
+    if (hostItem?.wiiExt) {
+      host = `Wii (${t('wiiExt.' + proto.WiiExtType[hostItem.wiiExt])})`;
+    } else if (hostItem?.ps2Cnt) {
+      host = `PS2 (${t('ps2Cnt.' + proto.PS2ControllerType[hostItem.ps2Cnt])})`;
+    } else if (hostItem?.usbType) {
+      host = `USB (${t('subType.' + proto.SubType[hostItem.usbType])})`;
+    } else if (hostItem?.usbDevice) {
+      host = t('assignments.source.usbDevice');
+    } else if (hostItem?.midiChannel) {
+      host = `MIDI Ch ${hostItem.midiChannel}`;
+    }
+
+    let trig = '';
+    if (triggerItem?.input) {
+      trig = t('assignments.trigger.boot');
+    } else if (triggerItem?.inputAnyTime) {
+      trig = t('assignments.trigger.anytime');
+    }
+
+    const parts = [emul];
+    if (host) parts.push(host);
+    if (trig) parts.push(trig);
+    return parts.join(' + ');
+  }, [emulationItem, hostItem, triggerItem, t]);
+
+  const hasEmulation = emulationItem !== undefined;
+  const triggerAnalog =
+    (triggerItem?.input?.input && isAnalog(triggerItem.input.input)) ||
+    (triggerItem?.inputAnyTime?.input && isAnalog(triggerItem.inputAnyTime.input));
+
   return (
     <>
       <Modal opened={opened} onClose={close} title={t('delete_assignment_dialog.title')} centered>
@@ -3968,76 +4467,435 @@ function SantrollerAssignmentList({
           </Group>
         </Flex>
       </Modal>
-      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
-        <Card.Section>
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
-            <ActionIcon color="red">
-              <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px">
+        <Group justify="space-between" align="center" mb="xs">
+          <Group gap="xs">
+            <Title order={4}>{t('assignments.rule_title', { num: listIdx + 1 })}</Title>
+            <Badge color={isActive ? 'blue' : 'gray'}>
+              {isActive ? t('state.active') : t('state.inactive')}
+            </Badge>
+          </Group>
+          <Group gap={4}>
+            <Menu shadow="md" width={220}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" color="blue" title={t('assignments.presets_title')}>
+                  <IconSparkles size={18} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>{t('assignments.presets_title')}</Menu.Label>
+                <Menu.Item leftSection={<IconUsb size={14} />} onClick={() => applyPreset('usb_auto')}>
+                  {t('assignments.preset_usb_auto')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_xbox')}>
+                  {t('assignments.preset_usb_xbox')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_ps3')}>
+                  {t('assignments.preset_usb_ps3')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_ps4')}>
+                  {t('assignments.preset_usb_ps4')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconBluetooth size={14} />} onClick={() => applyPreset('bluetooth')}>
+                  {t('assignments.preset_bluetooth')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('wii_adapter')}>
+                  {t('assignments.preset_wii_adapter')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('ps2_adapter')}>
+                  {t('assignments.preset_ps2_adapter')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('boot_switch')}>
+                  {t('assignments.preset_boot_switch')}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+            <ActionIcon variant="subtle" onClick={copyAssignment} title="Copy">
+              <IconCopy size={18} />
             </ActionIcon>
-            <ActionIcon>
-              <IconCopy style={{ width: '70%', height: '70%' }} onClick={copyAssignment} />
+            <ActionIcon variant="subtle" color="red" onClick={open} title="Delete">
+              <IconTrash size={18} />
             </ActionIcon>
-          </div>
-          <Space h="xl" />
-        </Card.Section>
-        {!mapping.assignments?.some((x) => DeviceProfileAssignmentTypes.some((y) => x[y])) && (
-          <>
-            <Alert variant="light" color="red" title="Error" icon={errorIcon}>
-              {t('assignments.missingDevice')}
-            </Alert>
-            <Space h="md" />
-          </>
+          </Group>
+        </Group>
+
+        <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="xs" fw={500} c="dimmed">{t('assignments.rule_summary_prefix')}:</Text>
+            <Badge variant="light" color={hasEmulation ? 'teal' : 'red'} size="sm">
+              {summaryText}
+            </Badge>
+          </Group>
+        </Card>
+
+        {!hasEmulation && (
+          <Alert variant="light" color="red" title="Missing Emulation" icon={<IconExclamationCircle size={16} />} mb="xs">
+            <Text size="xs">{t('assignments.missingDevice')}</Text>
+            <Button
+              size="xs"
+              variant="outline"
+              color="red"
+              mt="xs"
+              onClick={() => updateEmulation({ consoleType: { consoleType: null, forcedType: null } })}
+            >
+              {t('assignments.set_default_usb')}
+            </Button>
+          </Alert>
         )}
-        <AssignmentListStateBox profileIdx={profileIdx} listIdx={listIdx} />
-        <Button
-          onClick={() =>
-            dispatch({
-              ...mapping,
-              assignments: [...(mapping.assignments ?? []), { input: { input: {} } }],
-            })
-          }
-        >
-          {t('assignments.match')}
-        </Button>
-        <Space h="md" />
-        {mapping.assignments?.map((assignment, assignmentIdx) => (
-          <SantrollerAssignment
-            key={assignmentIdx}
-            activationIdx={assignmentIdx}
-            listIdx={listIdx}
-            mapping={assignment}
-            legendMode={legendMode}
-            profileIdx={profileIdx}
-            type={type}
-            mode={mode}
-            dispatch={(val) =>
-              dispatch({
-                ...mapping,
-                assignments: [
-                  ...mapping.assignments!.map((cAssignment, cAssignmentIdx) =>
-                    cAssignmentIdx === assignmentIdx ? val : cAssignment
-                  ),
-                ],
-              })
-            }
-            deleteAssignment={() =>
-              dispatch({
-                ...mapping,
-                assignments: [
-                  ...mapping.assignments!.filter(
-                    (_, cAssignmentIdx) => cAssignmentIdx !== assignmentIdx
-                  ),
-                ],
-              })
-            }
-            copyAssignment={() =>
-              dispatch({
-                ...mapping,
-                assignments: [...mapping.assignments!, { ...assignment }],
-              })
-            }
+
+        {!advancedMode ? (
+          <Stack gap="sm">
+            <Stack gap={4}>
+              <Text size="sm" fw={600}>{t('assignments.step1_title')}</Text>
+              <SegmentedControl
+                fullWidth
+                size="xs"
+                value={currentEmulMode}
+                onChange={(val) => {
+                  switch (val) {
+                    case 'consoleType':
+                      updateEmulation({ consoleType: { consoleType: null, forcedType: null } });
+                      break;
+                    case 'bluetooth':
+                      updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
+                      break;
+                    case 'ps2Emulation':
+                      updateEmulation({ ps2Emulation: {} });
+                      break;
+                    case 'wiiEmulation':
+                      updateEmulation({ wiiEmulation: {} });
+                      break;
+                  }
+                }}
+                data={[
+                  { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
+                  { label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' },
+                  { label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' },
+                  { label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' },
+                ]}
+              />
+              {currentEmulMode === 'consoleType' && (
+                <Stack gap={4} mt="xs">
+                  <Select
+                    size="xs"
+                    label={t('assignments.usb_mode.label')}
+                    value={currentUsbOption}
+                    onChange={(val) => {
+                      switch (val) {
+                        case 'auto':
+                          updateEmulation({ consoleType: { consoleType: null, forcedType: null } });
+                          break;
+                        case 'forced':
+                          updateEmulation({ consoleType: { consoleType: null, forcedType: proto.ConsoleMode.ModeXbox360 } });
+                          break;
+                        case 'specific':
+                          updateEmulation({ consoleType: { consoleType: proto.ConsoleType.ConsolePC, forcedType: null } });
+                          break;
+                      }
+                    }}
+                    data={[
+                      { value: 'auto', label: t('assignments.usb_mode.auto') },
+                      { value: 'forced', label: t('assignments.usb_mode.forced') },
+                      { value: 'specific', label: t('assignments.usb_mode.specific') },
+                    ]}
+                  />
+                  {currentUsbOption === 'forced' && (
+                    <DropdownBox
+                      title="activation.forcedType"
+                      e={proto.ConsoleMode}
+                      val={emulationItem?.consoleType?.forcedType ?? proto.ConsoleMode.ModeXbox360}
+                      label="consoleMode"
+                      dispatch={(forcedType) =>
+                        updateEmulation({ consoleType: { consoleType: null, forcedType } })
+                      }
+                    />
+                  )}
+                  {currentUsbOption === 'specific' && (
+                    <DropdownBox
+                      title="activation.consoleType"
+                      e={proto.ConsoleType}
+                      val={emulationItem?.consoleType?.consoleType ?? proto.ConsoleType.ConsolePC}
+                      label="consoleType"
+                      dispatch={(consoleType) =>
+                        updateEmulation({ consoleType: { consoleType, forcedType: null } })
+                      }
+                    />
+                  )}
+                </Stack>
+              )}
+              {currentEmulMode === 'bluetooth' && (
+                <DropdownBox
+                  title="activation.bluetooth"
+                  e={proto.BluetoothMode}
+                  val={emulationItem?.bluetooth ?? proto.BluetoothMode.BTStandard}
+                  label="bluetooth"
+                  dispatch={(bluetooth) => updateEmulation({ bluetooth })}
+                />
+              )}
+            </Stack>
+
+            <Divider my={2} />
+
+            <Stack gap={4}>
+              <Text size="sm" fw={600}>{t('assignments.step2_title')}</Text>
+              <Select
+                size="xs"
+                value={currentSource}
+                onChange={(val) => {
+                  switch (val) {
+                    case 'builtin':
+                      updateHost(null);
+                      break;
+                    case 'wiiExt':
+                      updateHost({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
+                      break;
+                    case 'ps2Cnt':
+                      updateHost({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
+                      break;
+                    case 'usbType':
+                      updateHost({ usbType: proto.SubType.Gamepad });
+                      break;
+                    case 'usbDevice':
+                      updateHost({ usbDevice: { vid: 0, pid: 0 } });
+                      break;
+                    case 'midiChannel':
+                      updateHost({ midiChannel: 10 });
+                      break;
+                  }
+                }}
+                data={sourceOptions}
+              />
+              {currentSource === 'wiiExt' && (
+                <DropdownBox
+                  title="activation.wiiExt"
+                  e={proto.WiiExtType}
+                  val={hostItem?.wiiExt ?? proto.WiiExtType.WiiGuitarHeroGuitar}
+                  label="wiiExt"
+                  dispatch={(wiiExt) => updateHost({ wiiExt })}
+                />
+              )}
+              {currentSource === 'ps2Cnt' && (
+                <DropdownBox
+                  title="activation.ps2Cnt"
+                  e={proto.PS2ControllerType}
+                  val={hostItem?.ps2Cnt ?? proto.PS2ControllerType.PS2ControllerTypeGuitar}
+                  label="ps2Cnt"
+                  dispatch={(ps2Cnt) => updateHost({ ps2Cnt })}
+                />
+              )}
+              {currentSource === 'usbType' && (
+                <DropdownBox
+                  title="activation.usbType"
+                  e={proto.SubType}
+                  val={hostItem?.usbType ?? proto.SubType.Gamepad}
+                  label="subType"
+                  dispatch={(usbType) => updateHost({ usbType })}
+                />
+              )}
+              {currentSource === 'usbDevice' && (
+                <Group grow>
+                  <TextInput
+                    size="xs"
+                    label={t('assignments.vendorId')}
+                    leftSection="0x"
+                    value={(hostItem?.usbDevice?.vid ?? 0).toString(16)}
+                    onChange={(e) =>
+                      updateHost({
+                        usbDevice: {
+                          vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                          pid: hostItem?.usbDevice?.pid ?? 0,
+                        },
+                      })
+                    }
+                  />
+                  <TextInput
+                    size="xs"
+                    label={t('assignments.productId')}
+                    leftSection="0x"
+                    value={(hostItem?.usbDevice?.pid ?? 0).toString(16)}
+                    onChange={(e) =>
+                      updateHost({
+                        usbDevice: {
+                          vid: hostItem?.usbDevice?.vid ?? 0,
+                          pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        },
+                      })
+                    }
+                  />
+                </Group>
+              )}
+              {currentSource === 'midiChannel' && (
+                <NumberInput
+                  size="xs"
+                  label={t('assignments.midiChannel')}
+                  value={hostItem?.midiChannel ?? 10}
+                  min={1}
+                  max={16}
+                  onChange={(val) => updateHost({ midiChannel: parseInt(val.toString(), 10) ?? 1 })}
+                />
+              )}
+            </Stack>
+
+            <Divider my={2} />
+
+            <Stack gap={4}>
+              <Text size="sm" fw={600}>{t('assignments.step3_title')}</Text>
+              <Select
+                size="xs"
+                value={currentTrigger}
+                onChange={(val) => {
+                  switch (val) {
+                    case 'always':
+                      updateTrigger(null);
+                      break;
+                    case 'input':
+                      updateTrigger({ input: { input: {} } });
+                      break;
+                    case 'inputAnyTime':
+                      updateTrigger({ inputAnyTime: { input: {} } });
+                      break;
+                  }
+                }}
+                data={[
+                  { value: 'always', label: t('assignments.trigger.always') },
+                  { value: 'input', label: t('assignments.trigger.boot') },
+                  { value: 'inputAnyTime', label: t('assignments.trigger.anytime') },
+                ]}
+              />
+              {currentTrigger === 'input' && (
+                <Stack gap={4}>
+                  <SantrollerInput
+                    axis={false}
+                    button
+                    type={type}
+                    activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                    mode={mode}
+                    legendMode={legendMode}
+                    input={triggerItem?.input?.input ?? {}}
+                    dispatch={(input) => updateTrigger({ input: { ...(triggerItem?.input ?? {}), input } })}
+                  />
+                  {triggerAnalog ? (
+                    <ActivationTrigger
+                      input={triggerItem?.input ?? { input: {} }}
+                      profileIdx={profileIdx}
+                      listIdx={listIdx}
+                      activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                      dispatch={(input) => updateTrigger({ input })}
+                    />
+                  ) : (
+                    <Switch
+                      size="xs"
+                      label={t('calibration.inverted')}
+                      checked={!!triggerItem?.input?.inverted}
+                      onChange={(evt) =>
+                        updateTrigger({
+                          input: { ...(triggerItem?.input ?? {}), input: triggerItem?.input?.input ?? {}, inverted: evt.currentTarget.checked },
+                        })
+                      }
+                    />
+                  )}
+                </Stack>
+              )}
+              {currentTrigger === 'inputAnyTime' && (
+                <Stack gap={4}>
+                  <SantrollerInput
+                    axis={false}
+                    button
+                    type={type}
+                    activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                    mode={mode}
+                    legendMode={legendMode}
+                    input={triggerItem?.inputAnyTime?.input ?? {}}
+                    dispatch={(input) => updateTrigger({ inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input } })}
+                  />
+                  {triggerAnalog ? (
+                    <ActivationTrigger
+                      input={triggerItem?.inputAnyTime ?? { input: {} }}
+                      profileIdx={profileIdx}
+                      listIdx={listIdx}
+                      activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                      dispatch={(inputAnyTime) => updateTrigger({ inputAnyTime })}
+                    />
+                  ) : (
+                    <Switch
+                      size="xs"
+                      label={t('calibration.inverted')}
+                      checked={!!triggerItem?.inputAnyTime?.inverted}
+                      onChange={(evt) =>
+                        updateTrigger({
+                          inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input: triggerItem?.inputAnyTime?.input ?? {}, inverted: evt.currentTarget.checked },
+                        })
+                      }
+                    />
+                  )}
+                </Stack>
+              )}
+            </Stack>
+          </Stack>
+        ) : (
+          <Stack gap="xs">
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() =>
+                dispatch({
+                  ...mapping,
+                  assignments: [...(mapping.assignments ?? []), { consoleType: { consoleType: null, forcedType: null } }],
+                })
+              }
+            >
+              {t('assignments.match')}
+            </Button>
+            {mapping.assignments?.map((assignment, assignmentIdx) => (
+              <SantrollerAssignment
+                key={assignmentIdx}
+                activationIdx={assignmentIdx}
+                listIdx={listIdx}
+                mapping={assignment}
+                legendMode={legendMode}
+                profileIdx={profileIdx}
+                type={type}
+                mode={mode}
+                dispatch={(val) =>
+                  dispatch({
+                    ...mapping,
+                    assignments: [
+                      ...mapping.assignments!.map((cAssignment, cAssignmentIdx) =>
+                        cAssignmentIdx === assignmentIdx ? val : cAssignment
+                      ),
+                    ],
+                  })
+                }
+                deleteAssignment={() =>
+                  dispatch({
+                    ...mapping,
+                    assignments: [
+                      ...mapping.assignments!.filter(
+                        (_, cAssignmentIdx) => cAssignmentIdx !== assignmentIdx
+                      ),
+                    ],
+                  })
+                }
+                copyAssignment={() =>
+                  dispatch({
+                    ...mapping,
+                    assignments: [...mapping.assignments!, { ...assignment }],
+                  })
+                }
+              />
+            ))}
+          </Stack>
+        )}
+
+        <Divider my="sm" />
+        <Group justify="space-between">
+          <Text size="xs" c="dimmed">{t('assignments.advanced_toggle')}</Text>
+          <Switch
+            size="xs"
+            checked={advancedMode}
+            onChange={(e) => setAdvancedMode(e.currentTarget.checked)}
           />
-        ))}
+        </Group>
       </Card>
     </>
   );
@@ -4396,23 +5254,198 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                     </>
                   )}
                   <Group>
-                    <Button
-                      variant="filled"
-                      onClick={() =>
-                        updateProfile(
-                          {
-                            ...profile,
-                            assignments: [
-                              ...profile.assignments!,
-                              { assignments: [{ input: { input: {} } }] },
-                            ],
-                          },
-                          profileIdx
-                        )
-                      }
-                    >
-                      {t('assignments.add')}
-                    </Button>
+                    <Menu shadow="md" width={240}>
+                      <Menu.Target>
+                        <Button variant="filled" rightSection={<IconChevronDown size={14} />}>
+                          {t('assignments.add')}
+                        </Button>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Label>{t('assignments.presets_title')}</Menu.Label>
+                        <Menu.Item
+                          leftSection={<IconUsb size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      { consoleType: { consoleType: null, forcedType: null } },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_usb_auto')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconDeviceGamepad size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: proto.ConsoleMode.ModeXbox360,
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_usb_xbox')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconDeviceGamepad size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: proto.ConsoleMode.ModePs3,
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_usb_ps3')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconDeviceGamepad size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: proto.ConsoleMode.ModePs4,
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_usb_ps4')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconBluetooth size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  { assignments: [{ bluetooth: proto.BluetoothMode.BTStandard }] },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_bluetooth')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconSparkles size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_wii_adapter')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconSparkles size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_ps2_adapter')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconSparkles size={14} />}
+                          onClick={() =>
+                            updateProfile(
+                              {
+                                ...profile,
+                                assignments: [
+                                  ...profile.assignments!,
+                                  {
+                                    assignments: [
+                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      { input: { input: {} } },
+                                    ],
+                                  },
+                                ],
+                              },
+                              profileIdx
+                            )
+                          }
+                        >
+                          {t('assignments.preset_boot_switch')}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
                     <Button variant="filled" onClick={open3}>
                       {t('clear_all_button')}
                     </Button>
@@ -4424,7 +5457,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               <Table.Tr>
                 <Table.Td>
                   <Space h="md" />
-                  <Group>
+                  <Group align="flex-start" gap="md">
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
@@ -4435,50 +5468,57 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         strategy={rectSortingStrategy}
                       >
                         {profile.assignments?.map((mapping, mappingIdx) => (
-                          <SantrollerAssignmentList
-                            key={mappingIdx}
-                            mapping={mapping}
-                            profileIdx={profileIdx}
-                            listIdx={mappingIdx}
-                            mode={profile.opts.faceButtonMappingMode}
-                            type={profile.opts.deviceToEmulate}
-                            legendMode={legendMode}
-                            dispatch={(val) =>
-                              updateProfile(
-                                {
-                                  ...profile,
-                                  assignments: [
-                                    ...profile.assignments!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx === mappingIdx ? val : cMapping
-                                    ),
-                                  ],
-                                },
-                                profileIdx
-                              )
-                            }
-                            deleteAssignment={() =>
-                              updateProfile(
-                                {
-                                  ...profile,
-                                  assignments: [
-                                    ...profile.assignments!.filter(
-                                      (_, cMappingIdx) => cMappingIdx !== mappingIdx
-                                    ),
-                                  ],
-                                },
-                                profileIdx
-                              )
-                            }
-                            copyAssignment={() =>
-                              updateProfile(
-                                {
-                                  ...profile,
-                                  assignments: [...profile.assignments!, { ...mapping }],
-                                },
-                                profileIdx
-                              )
-                            }
-                          />
+                          <Group key={mappingIdx} align="center" gap="md">
+                            {mappingIdx > 0 && (
+                              <Badge size="lg" variant="filled" color="gray">
+                                {t('assignments.logic_or')}
+                              </Badge>
+                            )}
+                            <SantrollerAssignmentList
+                              key={mappingIdx}
+                              mapping={mapping}
+                              profileIdx={profileIdx}
+                              listIdx={mappingIdx}
+                              mode={profile.opts.faceButtonMappingMode}
+                              type={profile.opts.deviceToEmulate}
+                              legendMode={legendMode}
+                              dispatch={(val) =>
+                                updateProfile(
+                                  {
+                                    ...profile,
+                                    assignments: [
+                                      ...profile.assignments!.map((cMapping, cMappingIdx) =>
+                                        cMappingIdx === mappingIdx ? val : cMapping
+                                      ),
+                                    ],
+                                  },
+                                  profileIdx
+                                )
+                              }
+                              deleteAssignment={() =>
+                                updateProfile(
+                                  {
+                                    ...profile,
+                                    assignments: [
+                                      ...profile.assignments!.filter(
+                                        (_, cMappingIdx) => cMappingIdx !== mappingIdx
+                                      ),
+                                    ],
+                                  },
+                                  profileIdx
+                                )
+                              }
+                              copyAssignment={() =>
+                                updateProfile(
+                                  {
+                                    ...profile,
+                                    assignments: [...profile.assignments!, { ...mapping }],
+                                  },
+                                  profileIdx
+                                )
+                              }
+                            />
+                          </Group>
                         ))}
                       </SortableContext>
                     </DndContext>
