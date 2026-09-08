@@ -617,7 +617,7 @@
       "ps2Cnt": "PS1/2 Controller Port",
       "usbType": "USB Host (By Type)",
       "usbDevice": "USB Host (Specific Device)",
-      "midiChannel": "MIDI Serial"
+      "midiChannel": "MIDI Channel"
     },
     "trigger": {
       "label": "Activation Condition",

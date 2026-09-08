@@ -413,15 +413,21 @@ function OutputBox({
   legendMode,
   title,
   label,
+  midi,
+  valMidi,
   dispatch,
+  dispatchMidi,
 }: {
-  mapping: proto.IOutput;
+  mapping: proto.IOutput | undefined;
   type: proto.SubType;
   mode: proto.FaceButtonMappingMode;
   legendMode: LegendMode;
   title: string;
   label: string;
+  midi?: boolean;
+  valMidi?: proto.IMidiInput | undefined;
   dispatch: (mapping: proto.IOutput, trigger: boolean, analog: boolean) => void;
+  dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
 }) {
   const { t } = useTranslation();
   const outputCombobox = useCombobox({
@@ -456,12 +462,15 @@ function OutputBox({
           mode={mode}
           legendMode={legendMode}
           type={type}
+          midi={midi}
           e={proto.GamepadAxisType}
           e2={proto.GamepadButtonType}
-          val={mapping.gamepadAxis!}
-          val2={mapping.gamepadButton!}
+          val={mapping?.gamepadAxis ?? undefined}
+          val2={mapping?.gamepadButton ?? undefined}
+          valMidi={valMidi}
           dispatch={gamepadAxisCallback}
           dispatch2={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
     case proto.SubType.GuitarHeroGuitar:
@@ -471,14 +480,16 @@ function OutputBox({
           title={title}
           e={proto.GuitarHeroGuitarAxisType}
           e2={proto.GuitarHeroGuitarButtonType}
-          val={mapping.ghAxis!}
-          val2={mapping.ghButton!}
+          val={mapping?.ghAxis ?? undefined}
+          val2={mapping?.ghButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           legendMode={legendMode}
           type={type}
+          midi={midi}
+          valMidi={valMidi}
           dispatch={(axis) =>
             dispatch(
               {
@@ -491,6 +502,7 @@ function OutputBox({
           dispatch2={(button) => dispatch({ ghButton: button }, false, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
     case proto.SubType.RockBandGuitar:
@@ -500,14 +512,16 @@ function OutputBox({
           title={title}
           e={proto.RockBandGuitarAxisType}
           e2={proto.RockBandGuitarButtonType}
-          val={mapping.rbAxis!}
-          val2={mapping.rbButton!}
+          val={mapping?.rbAxis ?? undefined}
+          val2={mapping?.rbButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           legendMode={legendMode}
           type={type}
+          midi={midi}
+          valMidi={valMidi}
           dispatch={(axis) =>
             dispatch(
               { rbAxis: axis },
@@ -521,6 +535,7 @@ function OutputBox({
           dispatch2={(button) => dispatch({ rbButton: button }, false, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
       break;
@@ -532,14 +547,17 @@ function OutputBox({
           e={proto.GuitarHeroDrumsAxisType}
           legendMode={legendMode}
           type={type}
-          val={mapping.ghDrumAxis!}
+          midi={midi}
+          valMidi={valMidi}
+          val={mapping?.ghDrumAxis ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           dispatch={(axis) => dispatch({ ghDrumAxis: axis }, true, true)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
       break;
@@ -550,18 +568,21 @@ function OutputBox({
           title={title}
           e={proto.RockBandDrumsAxisType}
           e2={proto.RockBandDrumsButtonType}
-          val={mapping.rbDrumAxis!}
-          val2={mapping.rbDrumButton!}
+          val={mapping?.rbDrumAxis ?? undefined}
+          val2={mapping?.rbDrumButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           legendMode={legendMode}
           type={type}
+          midi={midi}
+          valMidi={valMidi}
           dispatch={(axis) => dispatch({ rbDrumAxis: axis }, true, true)}
           dispatch2={(button) => dispatch({ rbDrumButton: button }, true, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
       break;
@@ -572,12 +593,14 @@ function OutputBox({
           title={title}
           e={proto.GuitarHeroLiveGuitarAxisType}
           e2={proto.GuitarHeroLiveGuitarButtonType}
-          val={mapping.ghlAxis!}
-          val2={mapping.ghlButton!}
+          val={mapping?.ghlAxis ?? undefined}
+          val2={mapping?.ghlButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
+          midi={midi}
+          valMidi={valMidi}
           type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
@@ -590,6 +613,7 @@ function OutputBox({
           dispatch2={(button) => dispatch({ ghlButton: button }, true, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
       break;
@@ -600,12 +624,14 @@ function OutputBox({
           title={title}
           e={proto.DJHTurntableAxisType}
           e2={proto.DJHTurntableButtonType}
-          val={mapping.djhAxis!}
-          val2={mapping.djhButton!}
+          val={mapping?.djhAxis ?? undefined}
+          val2={mapping?.djhButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
+          midi={midi}
+          valMidi={valMidi}
           type={type}
           legendMode={legendMode}
           dispatch={(axis) =>
@@ -618,6 +644,7 @@ function OutputBox({
           dispatch2={(button) => dispatch({ djhButton: button }, true, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
       break;
@@ -629,13 +656,15 @@ function OutputBox({
           title={title}
           e={proto.ProGuitarAxisType}
           e2={proto.ProGuitarButtonType}
-          val={mapping.proAxis!}
-          val2={mapping.proButton!}
+          val={mapping?.proAxis ?? undefined}
+          val2={mapping?.proButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           type={type}
+          midi={midi}
+          valMidi={valMidi}
           legendMode={legendMode}
           dispatch={(axis) =>
             dispatch({ proAxis: axis }, axis !== proto.ProGuitarAxisType.ProGuitar_Tilt, true)
@@ -643,6 +672,7 @@ function OutputBox({
           dispatch2={(button) => dispatch({ proButton: button }, true, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
     case proto.SubType.ProKeys:
@@ -650,44 +680,51 @@ function OutputBox({
         <DropdownOutputBox
           label={label}
           title={title}
-          extraOptions={[
-            {
-              value: 'ProKeyboard_Keys',
-              label: t('outputs.ProKeyboard_Keys', 'All Keys (Root Note)'),
-            },
-            {
-              value: 'ProKeyboard_Key',
-              label: t('outputs.ProKeyboard_Key', 'Single Key'),
-            },
-          ]}
+          extraOptions={
+            midi
+              ? undefined
+              : [
+                  {
+                    value: 'ProKeyboard_Keys',
+                    label: t('outputs.ProKeyboard_Keys', 'All Keys (Root Note)'),
+                  },
+                  {
+                    value: 'ProKeyboard_Key',
+                    label: t('outputs.ProKeyboard_Key', 'Single Key'),
+                  },
+                ]
+          }
           valExtra={
-            mapping.proKeyMultiple != null
+            mapping?.proKeyMultiple != null
               ? 'ProKeyboard_Keys'
-              : mapping.proKeySingle != null
-              ? 'ProKeyboard_Key'
-              : undefined
+              : mapping?.proKeySingle != null
+                ? 'ProKeyboard_Key'
+                : undefined
           }
           dispatchExtra={(val) => {
             if (val === 'ProKeyboard_Keys') {
-              dispatch({ proKeyMultiple: 25 }, false, false);
+              dispatch({ proKeyMultiple: 25 }, true, true);
             } else if (val === 'ProKeyboard_Key') {
-              dispatch({ proKeySingle: 1 }, false, false);
+              dispatch({ proKeySingle: 1 }, true, true);
             }
           }}
           e={proto.ProKeyboardAxisType}
           e2={proto.ProKeyboardButtonType}
-          val={mapping.proKeyboardAxis!}
-          val2={mapping.proKeyboardButton!}
+          val={mapping?.proKeyboardAxis ?? undefined}
+          val2={mapping?.proKeyboardButton ?? undefined}
           e3={proto.GamepadAxisType}
           e4={proto.GamepadButtonType}
-          val3={mapping.gamepadAxis!}
-          val4={mapping.gamepadButton!}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
           type={type}
+          midi={midi}
+          valMidi={valMidi}
           legendMode={legendMode}
           dispatch={(axis) => dispatch({ proKeyboardAxis: axis }, true, true)}
           dispatch2={(button) => dispatch({ proKeyboardButton: button }, true, false)}
           dispatch3={gamepadAxisCallback}
           dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
         />
       );
     case proto.SubType.Taiko:
@@ -696,7 +733,7 @@ function OutputBox({
       return (
         <TextInput
           label={t('keyboard.keycode')}
-          value={hidReverse[mapping.keycode!]}
+          value={hidReverse[mapping?.keycode ?? 0]}
           onKeyDown={(event) => {
             dispatch({ keycode: ASCII_TO_HID[event.key].code }, true, false);
           }}
@@ -1697,6 +1734,7 @@ function SantrollerInput({
         <OutputBox
           label="outputs"
           title="input"
+          valMidi={input.midi ?? undefined}
           dispatch={(mapping, _, analog) =>
             dispatch(
               analog
@@ -1714,9 +1752,15 @@ function SantrollerInput({
                   }
             )
           }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+          midi
           type={type}
           mode={mode}
-          mapping={input.usbAxis?.axis || input.usbButton!.button!}
+          mapping={input.usbAxis?.axis || input.usbButton?.button}
           legendMode={legendMode}
         />
       )}
@@ -2091,10 +2135,8 @@ function SantrollerMapping({
     proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
   const fixedLabel = FixLabel(mode, type, label, legendMode);
   const img = `Icons/Input/${FixIcon(mode, type, label, legendMode)}.png`;
-  const isKey = mapping.mapping.proKeyMultiple != null || mapping.mapping.proKeySingle != null;
-  const button =
-    isKey || Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
-  const axis = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
+  const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
+  const axis = mapping.mapping.proKeySingle != null || Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
   const drum = label?.includes('Pad') || label?.includes('Cymbal');
   const analogInput = isAnalog(mapping.input);
@@ -4353,7 +4395,7 @@ function SantrollerAssignmentList({
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
   const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
-  const hasMidi = Object.values(deviceStatus).some((d) => d.type === 'midiSerial');
+  const hasMidi = Object.values(deviceStatus).some((d) => d.type === 'midiSerial' || d.type === 'usbHost' || d.type === 'wii' || d.type === 'bhDrum' || d.type === 'wtDrum');
 
   const updateEmulation = (newEmul: proto.IProfileAssignmentInfo) => {
     const next = [...assignments];
