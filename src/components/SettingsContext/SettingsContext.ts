@@ -296,6 +296,26 @@ export interface Actions {
 }
 
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
+  config.profiles?.forEach((profile) => {
+    profile.assignments?.forEach((list) => {
+      list.assignments?.forEach((assignment) => {
+        if (assignment.consoleType) {
+          if (
+            assignment.consoleType.xinputOnWindows === undefined ||
+            assignment.consoleType.xinputOnWindows === null
+          ) {
+            assignment.consoleType.xinputOnWindows = profile.opts?.xinputOnWindows ?? true;
+          }
+          if (
+            assignment.consoleType.ps4OrPs5Mode === undefined ||
+            assignment.consoleType.ps4OrPs5Mode === null
+          ) {
+            assignment.consoleType.ps4OrPs5Mode = profile.opts?.ps4OrPs5Mode ?? false;
+          }
+        }
+      });
+    });
+  });
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, _) => [
       x.deviceid,
@@ -1098,7 +1118,16 @@ export const useConfigStore = create<ConfigState & Actions>()(
     addProfile: () => {
       set((state) => {
         const defaultAssignment: proto.IProfileAssignment = {
-          assignments: [{ consoleType: { consoleType: null, forcedType: null } }],
+          assignments: [
+            {
+              consoleType: {
+                consoleType: null,
+                forcedType: null,
+                xinputOnWindows: true,
+                ps4OrPs5Mode: false,
+              },
+            },
+          ],
         };
         state.config = {
           ...state.config,
@@ -1363,16 +1392,47 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.devices = Object.values(state.deviceStatus).map((x) => x.device);
       // If we are using any of the tap frets then we need slider mappings, otherwise we don't
       // If a subtype supports PS3 mappings, then allow setting the option, otherwise force ps4 mode
-      config.profiles = state.mappingStatus.map((x, i) => ({
-        ...config.profiles![i],
-        supportsSlider:
+      config.profiles = state.mappingStatus.map((x, i) => {
+        const profile = config.profiles![i];
+        const isPs4Subtype = ps4Subtypes.includes(profile.opts.deviceToEmulate);
+        const assignments = profile.assignments?.map((list) => ({
+          ...list,
+          assignments: list.assignments?.map((assignment) => {
+            if (assignment.consoleType) {
+              return {
+                ...assignment,
+                consoleType: {
+                  ...assignment.consoleType,
+                  xinputOnWindows: assignment.consoleType.xinputOnWindows ?? true,
+                  ps4OrPs5Mode: !isPs4Subtype || !!assignment.consoleType.ps4OrPs5Mode,
+                },
+              };
+            }
+            return assignment;
+          }),
+        }));
+        const firstConsoleType = assignments
+          ?.flatMap((l) => l.assignments ?? [])
+          .find((a) => a.consoleType)?.consoleType;
+        const xinputOnWindows = firstConsoleType?.xinputOnWindows ?? true;
+        const ps4OrPs5Mode = !isPs4Subtype || !!firstConsoleType?.ps4OrPs5Mode;
+        const supportsSlider =
           Object.values(x).find((x) => x.mapping.mapping.ghAxis?.toString().includes('Tap')) !==
-          undefined,
-        ps4OrPs5Mode:
-          !ps4Subtypes.includes(config.profiles![i].opts.deviceToEmulate) ||
-          config.profiles![i].opts.ps4OrPs5Mode,
-        mappings: Object.values(x).map((x) => x.mapping),
-      }));
+          undefined;
+
+        return {
+          ...profile,
+          supportsSlider,
+          opts: {
+            ...profile.opts,
+            supportsSlider,
+            xinputOnWindows,
+            ps4OrPs5Mode,
+          },
+          assignments,
+          mappings: Object.values(x).map((x) => x.mapping),
+        };
+      });
       config.guiConfig = Object.values(state.guiDevices);
       if (state.toolInfo) {
         config.guiConfig.push({

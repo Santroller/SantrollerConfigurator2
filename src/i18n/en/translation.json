@@ -55,8 +55,10 @@
       "description": "Syncronise calibrations across inputs that are used multiple times. For example if you have whammy on multiple profiles, turning this on will keep your whammy calibration syncronised, while turning it off means you can have different calibrations per profile."
     },
     "xinput_on_windows": {
-      "label": "Use xinput instead of HID on windows",
-      "description": "Pick if you wish to have your controllers emulate an XInput device or an HID device when plugged into a Windows PC. Note that this setting has no effect on macOS, Linux or on game consoles."
+      "label": "Controller type on Windows",
+      "description": "Pick if you wish to have your controllers emulate an XInput device or an HID device when plugged into a Windows PC. Note that this setting has no effect on macOS, Linux or on game consoles.",
+      "XInput": "XInput",
+      "HID": "HID"
     },
     "ps4EmulationMode": {
       "label": "Controller type on PS4/5",
@@ -274,7 +276,10 @@
   "debounce": { "label": "Debounce", "desc": "Expressed in milliseonds, use 0 to disable" },
   "crkd": {
     "debounce": { "label": "Debounce", "desc": "Debounce expressed in milliseonds" },
-    "holdTick": { "label": "Hold Tick", "desc": "Hold tick expresses how long an input is left active even if no input is detected" }
+    "holdTick": {
+      "label": "Hold Tick",
+      "desc": "Hold tick expresses how long an input is left active even if no input is detected"
+    }
   },
   "pin_detect": "Detect Pin",
   "pin_use_current": "Use current value",

@@ -1103,7 +1103,11 @@ function SantrollerLabel({
       case 'worldTourDrum':
       case 'midiSerial':
         if (input.midi?.midiNote) {
-          return <Text>{t('input.midiNote', 'MIDI Note')}: {input.midi.midiNote.note}</Text>;
+          return (
+            <Text>
+              {t('input.midiNote', 'MIDI Note')}: {input.midi.midiNote.note}
+            </Text>
+          );
         }
         if (input.midi?.midiControlChange) {
           return <Text>CC {input.midi.midiControlChange.cc}</Text>;
@@ -1112,18 +1116,40 @@ function SantrollerLabel({
           return <Text>{t('input.midiPitchBend', 'Pitch Bend')}</Text>;
         }
         if (input.midi?.midiProGuitarButton?.button != null) {
-          return <Text>{t(`input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`)}</Text>;
+          return (
+            <Text>
+              {t(
+                `input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`
+              )}
+            </Text>
+          );
         }
         if (input.midi?.midiProGuitarAxis?.axis != null) {
-          return <Text>{t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}</Text>;
+          return (
+            <Text>
+              {t(
+                `input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`
+              )}
+            </Text>
+          );
         }
         return null;
       case 'protarNeck':
         if (input.protarNeckButton?.button != null) {
-          return <Text>{t(`input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`)}</Text>;
+          return (
+            <Text>
+              {t(
+                `input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`
+              )}
+            </Text>
+          );
         }
         if (input.protarNeckAxis?.axis != null) {
-          return <Text>{t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}</Text>;
+          return (
+            <Text>
+              {t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}
+            </Text>
+          );
         }
         return null;
       case 'cycle':
@@ -1139,16 +1165,36 @@ function SantrollerLabel({
     }
   }
   if (input.protarNeckButton?.button != null) {
-    return <Text>{t(`input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`)}</Text>;
+    return (
+      <Text>
+        {t(
+          `input.protarNeckButton.${proto.ProGuitarNeckButtonType[input.protarNeckButton.button]}`
+        )}
+      </Text>
+    );
   }
   if (input.protarNeckAxis?.axis != null) {
-    return <Text>{t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}</Text>;
+    return (
+      <Text>
+        {t(`input.protarNeckAxis.${proto.ProGuitarNeckAxisType[input.protarNeckAxis.axis]}`)}
+      </Text>
+    );
   }
   if (input.midi?.midiProGuitarButton?.button != null) {
-    return <Text>{t(`input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`)}</Text>;
+    return (
+      <Text>
+        {t(
+          `input.midiProGuitarButton.${proto.ProGuitarMidiButtonType[input.midi.midiProGuitarButton.button]}`
+        )}
+      </Text>
+    );
   }
   if (input.midi?.midiProGuitarAxis?.axis != null) {
-    return <Text>{t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}</Text>;
+    return (
+      <Text>
+        {t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}
+      </Text>
+    );
   }
   return fallback ? <Text>{t(`outputs.${label}`)}</Text> : null;
 }
@@ -2146,7 +2192,9 @@ function SantrollerMapping({
 
         <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
           <Group justify="space-between" wrap="nowrap">
-            <Text size="xs" fw={500} c="dimmed">{t('inputs.target_output')}:</Text>
+            <Text size="xs" fw={500} c="dimmed">
+              {t('inputs.target_output')}:
+            </Text>
             <Badge variant="light" color="blue" size="sm">
               {fixedLabel ? t(`outputs.${fixedLabel}`) : t('inputs.unmapped')}
             </Badge>
@@ -2884,9 +2932,7 @@ function SantrollerLed({
     mappingValue = t(`leds.type.static`);
   }
 
-  const isLedActive = useConfigStore(
-    (state) => !!state.ledStatus[profileIdx]?.[ledIdx]?.state
-  );
+  const isLedActive = useConfigStore((state) => !!state.ledStatus[profileIdx]?.[ledIdx]?.state);
 
   let summaryModeText = mappingValue || t('leds.type.static');
   if (led.mapping.inputMapping && mapping) {
@@ -2984,7 +3030,9 @@ function SantrollerLed({
 
         <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
           <Group justify="space-between" wrap="nowrap">
-            <Text size="xs" fw={500} c="dimmed">{t('leds.summary_mode')}:</Text>
+            <Text size="xs" fw={500} c="dimmed">
+              {t('leds.summary_mode')}:
+            </Text>
             <Badge variant="light" color="blue" size="sm">
               {summaryModeText}
             </Badge>
@@ -3856,7 +3904,9 @@ function SantrollerAssignment({
       </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group justify="space-between" align="center" mb="xs">
-          <Text size="sm" fw={600}>{label || t('pick_value')}</Text>
+          <Text size="sm" fw={600}>
+            {label || t('pick_value')}
+          </Text>
           <Group gap={4}>
             <ActionIcon variant="subtle" onClick={copyAssignment} title="Copy">
               <IconCopy size={18} />
@@ -3974,6 +4024,7 @@ function SantrollerAssignment({
               onChange={(event) =>
                 dispatch({
                   consoleType: {
+                    ...mapping.consoleType,
                     consoleType: event.currentTarget.checked ? proto.ConsoleType.ConsolePC : null,
                   },
                 })
@@ -3989,7 +4040,9 @@ function SantrollerAssignment({
                 e={proto.ConsoleType}
                 val={mapping.consoleType!.consoleType!}
                 label="consoleType"
-                dispatch={(consoleType) => dispatch({ consoleType: { consoleType } })}
+                dispatch={(consoleType) =>
+                  dispatch({ consoleType: { ...mapping.consoleType, consoleType } })
+                }
               />
             )}
             <Space h="md" />
@@ -3999,6 +4052,7 @@ function SantrollerAssignment({
               onChange={(event) =>
                 dispatch({
                   consoleType: {
+                    ...mapping.consoleType,
                     forcedType: event.currentTarget.checked ? proto.ConsoleMode.ModeXbox360 : null,
                   },
                 })
@@ -4015,8 +4069,62 @@ function SantrollerAssignment({
                 e={proto.ConsoleMode}
                 val={mapping.consoleType!.forcedType!}
                 label="consoleMode"
-                dispatch={(forcedType) => dispatch({ consoleType: { forcedType } })}
+                dispatch={(forcedType) =>
+                  dispatch({ consoleType: { ...mapping.consoleType, forcedType } })
+                }
               />
+            )}
+            {!mapping.consoleType.forcedType && (
+              <>
+                <Space h="md" />
+                <Input.Wrapper
+                  label={t('main.xinput_on_windows.label')}
+                  description={t('main.xinput_on_windows.description')}
+                >
+                  <SegmentedControl
+                    fullWidth
+                    data={[
+                      { label: t('main.xinput_on_windows.XInput'), value: 'true' },
+                      { label: t('main.xinput_on_windows.HID'), value: 'false' },
+                    ]}
+                    value={(mapping.consoleType.xinputOnWindows ?? true) ? 'true' : 'false'}
+                    onChange={(val) =>
+                      dispatch({
+                        consoleType: {
+                          ...mapping.consoleType,
+                          xinputOnWindows: val === 'true',
+                        },
+                      })
+                    }
+                  />
+                </Input.Wrapper>
+                {ps4Subtypes.includes(type) && (
+                  <>
+                    <Space h="md" />
+                    <Input.Wrapper
+                      label={t('main.ps4EmulationMode.label')}
+                      description={t('main.ps4EmulationMode.description')}
+                    >
+                      <SegmentedControl
+                        fullWidth
+                        data={[
+                          { label: t('main.ps4EmulationMode.PS3'), value: 'false' },
+                          { label: t('main.ps4EmulationMode.PS4'), value: 'true' },
+                        ]}
+                        value={(mapping.consoleType.ps4OrPs5Mode ?? false) ? 'true' : 'false'}
+                        onChange={(val) =>
+                          dispatch({
+                            consoleType: {
+                              ...mapping.consoleType,
+                              ps4OrPs5Mode: val === 'true',
+                            },
+                          })
+                        }
+                      />
+                    </Input.Wrapper>
+                  </>
+                )}
+              </>
             )}
           </>
         )}
@@ -4189,9 +4297,7 @@ function SantrollerAssignmentList({
   );
   const hostItem = hostIdx !== -1 ? assignments[hostIdx] : undefined;
 
-  const triggerIdx = assignments.findIndex((x) =>
-    OtherAssignmentTypes.some((y) => x[y] != null)
-  );
+  const triggerIdx = assignments.findIndex((x) => OtherAssignmentTypes.some((y) => x[y] != null));
   const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
 
   const isComplex =
@@ -4254,7 +4360,16 @@ function SantrollerAssignmentList({
       case 'usb_auto':
         dispatch({
           ...mapping,
-          assignments: [{ consoleType: { consoleType: null, forcedType: null } }],
+          assignments: [
+            {
+              consoleType: {
+                consoleType: null,
+                forcedType: null,
+                xinputOnWindows: true,
+                ps4OrPs5Mode: false,
+              },
+            },
+          ],
         });
         break;
       case 'usb_xbox':
@@ -4291,7 +4406,14 @@ function SantrollerAssignmentList({
         dispatch({
           ...mapping,
           assignments: [
-            { consoleType: { consoleType: null, forcedType: null } },
+            {
+              consoleType: {
+                consoleType: null,
+                forcedType: null,
+                xinputOnWindows: true,
+                ps4OrPs5Mode: false,
+              },
+            },
             { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
           ],
         });
@@ -4300,7 +4422,14 @@ function SantrollerAssignmentList({
         dispatch({
           ...mapping,
           assignments: [
-            { consoleType: { consoleType: null, forcedType: null } },
+            {
+              consoleType: {
+                consoleType: null,
+                forcedType: null,
+                xinputOnWindows: true,
+                ps4OrPs5Mode: false,
+              },
+            },
             { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
           ],
         });
@@ -4309,7 +4438,14 @@ function SantrollerAssignmentList({
         dispatch({
           ...mapping,
           assignments: [
-            { consoleType: { consoleType: null, forcedType: null } },
+            {
+              consoleType: {
+                consoleType: null,
+                forcedType: null,
+                xinputOnWindows: true,
+                ps4OrPs5Mode: false,
+              },
+            },
             { input: { input: {} } },
           ],
         });
@@ -4470,28 +4606,52 @@ function SantrollerAssignmentList({
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>{t('assignments.presets_title')}</Menu.Label>
-                <Menu.Item leftSection={<IconUsb size={14} />} onClick={() => applyPreset('usb_auto')}>
+                <Menu.Item
+                  leftSection={<IconUsb size={14} />}
+                  onClick={() => applyPreset('usb_auto')}
+                >
                   {t('assignments.preset_usb_auto')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_xbox')}>
+                <Menu.Item
+                  leftSection={<IconDeviceGamepad size={14} />}
+                  onClick={() => applyPreset('usb_xbox')}
+                >
                   {t('assignments.preset_usb_xbox')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_ps3')}>
+                <Menu.Item
+                  leftSection={<IconDeviceGamepad size={14} />}
+                  onClick={() => applyPreset('usb_ps3')}
+                >
                   {t('assignments.preset_usb_ps3')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconDeviceGamepad size={14} />} onClick={() => applyPreset('usb_ps4')}>
+                <Menu.Item
+                  leftSection={<IconDeviceGamepad size={14} />}
+                  onClick={() => applyPreset('usb_ps4')}
+                >
                   {t('assignments.preset_usb_ps4')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconBluetooth size={14} />} onClick={() => applyPreset('bluetooth')}>
+                <Menu.Item
+                  leftSection={<IconBluetooth size={14} />}
+                  onClick={() => applyPreset('bluetooth')}
+                >
                   {t('assignments.preset_bluetooth')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('wii_adapter')}>
+                <Menu.Item
+                  leftSection={<IconSparkles size={14} />}
+                  onClick={() => applyPreset('wii_adapter')}
+                >
                   {t('assignments.preset_wii_adapter')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('ps2_adapter')}>
+                <Menu.Item
+                  leftSection={<IconSparkles size={14} />}
+                  onClick={() => applyPreset('ps2_adapter')}
+                >
                   {t('assignments.preset_ps2_adapter')}
                 </Menu.Item>
-                <Menu.Item leftSection={<IconSparkles size={14} />} onClick={() => applyPreset('boot_switch')}>
+                <Menu.Item
+                  leftSection={<IconSparkles size={14} />}
+                  onClick={() => applyPreset('boot_switch')}
+                >
                   {t('assignments.preset_boot_switch')}
                 </Menu.Item>
               </Menu.Dropdown>
@@ -4507,7 +4667,9 @@ function SantrollerAssignmentList({
 
         <Card padding="xs" radius="sm" withBorder mb="sm" bg="var(--mantine-color-default-hover)">
           <Group justify="space-between" wrap="nowrap">
-            <Text size="xs" fw={500} c="dimmed">{t('assignments.rule_summary_prefix')}:</Text>
+            <Text size="xs" fw={500} c="dimmed">
+              {t('assignments.rule_summary_prefix')}:
+            </Text>
             <Badge variant="light" color={hasEmulation ? 'teal' : 'red'} size="sm">
               {summaryText}
             </Badge>
@@ -4515,14 +4677,29 @@ function SantrollerAssignmentList({
         </Card>
 
         {!hasEmulation && (
-          <Alert variant="light" color="red" title="Missing Emulation" icon={<IconExclamationCircle size={16} />} mb="xs">
+          <Alert
+            variant="light"
+            color="red"
+            title="Missing Emulation"
+            icon={<IconExclamationCircle size={16} />}
+            mb="xs"
+          >
             <Text size="xs">{t('assignments.missingDevice')}</Text>
             <Button
               size="xs"
               variant="outline"
               color="red"
               mt="xs"
-              onClick={() => updateEmulation({ consoleType: { consoleType: null, forcedType: null } })}
+              onClick={() =>
+                updateEmulation({
+                  consoleType: {
+                    consoleType: null,
+                    forcedType: null,
+                    xinputOnWindows: true,
+                    ps4OrPs5Mode: false,
+                  },
+                })
+              }
             >
               {t('assignments.set_default_usb')}
             </Button>
@@ -4532,7 +4709,9 @@ function SantrollerAssignmentList({
         {!advancedMode ? (
           <Stack gap="sm">
             <Stack gap={4}>
-              <Text size="sm" fw={600}>{t('assignments.step1_title')}</Text>
+              <Text size="sm" fw={600}>
+                {t('assignments.step1_title')}
+              </Text>
               <SegmentedControl
                 fullWidth
                 size="xs"
@@ -4540,7 +4719,14 @@ function SantrollerAssignmentList({
                 onChange={(val) => {
                   switch (val) {
                     case 'consoleType':
-                      updateEmulation({ consoleType: { consoleType: null, forcedType: null } });
+                      updateEmulation({
+                        consoleType: {
+                          consoleType: null,
+                          forcedType: null,
+                          xinputOnWindows: emulationItem?.consoleType?.xinputOnWindows ?? true,
+                          ps4OrPs5Mode: emulationItem?.consoleType?.ps4OrPs5Mode ?? false,
+                        },
+                      });
                       break;
                     case 'bluetooth':
                       updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
@@ -4567,15 +4753,37 @@ function SantrollerAssignmentList({
                     label={t('assignments.usb_mode.label')}
                     value={currentUsbOption}
                     onChange={(val) => {
+                      const prevConsole = emulationItem?.consoleType;
                       switch (val) {
                         case 'auto':
-                          updateEmulation({ consoleType: { consoleType: null, forcedType: null } });
+                          updateEmulation({
+                            consoleType: {
+                              consoleType: null,
+                              forcedType: null,
+                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
+                            },
+                          });
                           break;
                         case 'forced':
-                          updateEmulation({ consoleType: { consoleType: null, forcedType: proto.ConsoleMode.ModeXbox360 } });
+                          updateEmulation({
+                            consoleType: {
+                              consoleType: null,
+                              forcedType: proto.ConsoleMode.ModeXbox360,
+                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
+                            },
+                          });
                           break;
                         case 'specific':
-                          updateEmulation({ consoleType: { consoleType: proto.ConsoleType.ConsolePC, forcedType: null } });
+                          updateEmulation({
+                            consoleType: {
+                              consoleType: proto.ConsoleType.ConsolePC,
+                              forcedType: null,
+                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
+                            },
+                          });
                           break;
                       }
                     }}
@@ -4592,7 +4800,13 @@ function SantrollerAssignmentList({
                       val={emulationItem?.consoleType?.forcedType ?? proto.ConsoleMode.ModeXbox360}
                       label="consoleMode"
                       dispatch={(forcedType) =>
-                        updateEmulation({ consoleType: { consoleType: null, forcedType } })
+                        updateEmulation({
+                          consoleType: {
+                            ...emulationItem?.consoleType,
+                            consoleType: null,
+                            forcedType,
+                          },
+                        })
                       }
                     />
                   )}
@@ -4603,9 +4817,75 @@ function SantrollerAssignmentList({
                       val={emulationItem?.consoleType?.consoleType ?? proto.ConsoleType.ConsolePC}
                       label="consoleType"
                       dispatch={(consoleType) =>
-                        updateEmulation({ consoleType: { consoleType, forcedType: null } })
+                        updateEmulation({
+                          consoleType: {
+                            ...emulationItem?.consoleType,
+                            consoleType,
+                            forcedType: null,
+                          },
+                        })
                       }
                     />
+                  )}
+                  {currentUsbOption === 'auto' && (
+                    <>
+                      <Input.Wrapper
+                        size="xs"
+                        label={t('main.xinput_on_windows.label')}
+                        description={t('main.xinput_on_windows.description')}
+                      >
+                        <SegmentedControl
+                          fullWidth
+                          size="xs"
+                          data={[
+                            { label: t('main.xinput_on_windows.XInput'), value: 'true' },
+                            { label: t('main.xinput_on_windows.HID'), value: 'false' },
+                          ]}
+                          value={
+                            (emulationItem?.consoleType?.xinputOnWindows ?? true) ? 'true' : 'false'
+                          }
+                          onChange={(val) =>
+                            updateEmulation({
+                              consoleType: {
+                                ...emulationItem?.consoleType,
+                                consoleType: null,
+                                forcedType: null,
+                                xinputOnWindows: val === 'true',
+                              },
+                            })
+                          }
+                        />
+                      </Input.Wrapper>
+                      {ps4Subtypes.includes(type) && (
+                        <Input.Wrapper
+                          size="xs"
+                          label={t('main.ps4EmulationMode.label')}
+                          description={t('main.ps4EmulationMode.description')}
+                        >
+                          <SegmentedControl
+                            fullWidth
+                            size="xs"
+                            data={[
+                              { label: t('main.ps4EmulationMode.PS3'), value: 'false' },
+                              { label: t('main.ps4EmulationMode.PS4'), value: 'true' },
+                            ]}
+                            value={
+                              (emulationItem?.consoleType?.ps4OrPs5Mode ?? false) ? 'true' : 'false'
+                            }
+                            onChange={(val) =>
+                              updateEmulation({
+                                consoleType: {
+                                  ...emulationItem?.consoleType,
+                                  consoleType: null,
+                                  forcedType: null,
+                                  ps4OrPs5Mode: val === 'true',
+                                },
+                              })
+                            }
+                          />
+                        </Input.Wrapper>
+                      )}
+                    </>
                   )}
                 </Stack>
               )}
@@ -4623,7 +4903,9 @@ function SantrollerAssignmentList({
             <Divider my={2} />
 
             <Stack gap={4}>
-              <Text size="sm" fw={600}>{t('assignments.step2_title')}</Text>
+              <Text size="sm" fw={600}>
+                {t('assignments.step2_title')}
+              </Text>
               <Select
                 size="xs"
                 value={currentSource}
@@ -4725,7 +5007,9 @@ function SantrollerAssignmentList({
             <Divider my={2} />
 
             <Stack gap={4}>
-              <Text size="sm" fw={600}>{t('assignments.step3_title')}</Text>
+              <Text size="sm" fw={600}>
+                {t('assignments.step3_title')}
+              </Text>
               <Select
                 size="xs"
                 value={currentTrigger}
@@ -4758,7 +5042,9 @@ function SantrollerAssignmentList({
                     mode={mode}
                     legendMode={legendMode}
                     input={triggerItem?.input?.input ?? {}}
-                    dispatch={(input) => updateTrigger({ input: { ...(triggerItem?.input ?? {}), input } })}
+                    dispatch={(input) =>
+                      updateTrigger({ input: { ...(triggerItem?.input ?? {}), input } })
+                    }
                   />
                   {triggerAnalog ? (
                     <ActivationTrigger
@@ -4775,7 +5061,11 @@ function SantrollerAssignmentList({
                       checked={!!triggerItem?.input?.inverted}
                       onChange={(evt) =>
                         updateTrigger({
-                          input: { ...(triggerItem?.input ?? {}), input: triggerItem?.input?.input ?? {}, inverted: evt.currentTarget.checked },
+                          input: {
+                            ...(triggerItem?.input ?? {}),
+                            input: triggerItem?.input?.input ?? {},
+                            inverted: evt.currentTarget.checked,
+                          },
                         })
                       }
                     />
@@ -4792,7 +5082,11 @@ function SantrollerAssignmentList({
                     mode={mode}
                     legendMode={legendMode}
                     input={triggerItem?.inputAnyTime?.input ?? {}}
-                    dispatch={(input) => updateTrigger({ inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input } })}
+                    dispatch={(input) =>
+                      updateTrigger({
+                        inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input },
+                      })
+                    }
                   />
                   {triggerAnalog ? (
                     <ActivationTrigger
@@ -4809,7 +5103,11 @@ function SantrollerAssignmentList({
                       checked={!!triggerItem?.inputAnyTime?.inverted}
                       onChange={(evt) =>
                         updateTrigger({
-                          inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input: triggerItem?.inputAnyTime?.input ?? {}, inverted: evt.currentTarget.checked },
+                          inputAnyTime: {
+                            ...(triggerItem?.inputAnyTime ?? {}),
+                            input: triggerItem?.inputAnyTime?.input ?? {},
+                            inverted: evt.currentTarget.checked,
+                          },
                         })
                       }
                     />
@@ -4826,7 +5124,17 @@ function SantrollerAssignmentList({
               onClick={() =>
                 dispatch({
                   ...mapping,
-                  assignments: [...(mapping.assignments ?? []), { consoleType: { consoleType: null, forcedType: null } }],
+                  assignments: [
+                    ...(mapping.assignments ?? []),
+                    {
+                      consoleType: {
+                        consoleType: null,
+                        forcedType: null,
+                        xinputOnWindows: true,
+                        ps4OrPs5Mode: false,
+                      },
+                    },
+                  ],
                 })
               }
             >
@@ -4875,7 +5183,9 @@ function SantrollerAssignmentList({
 
         <Divider my="sm" />
         <Group justify="space-between">
-          <Text size="xs" c="dimmed">{t('assignments.advanced_toggle')}</Text>
+          <Text size="xs" c="dimmed">
+            {t('assignments.advanced_toggle')}
+          </Text>
           <Switch
             size="xs"
             checked={advancedMode}
@@ -5154,18 +5464,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
         </>
       )}
-      <Space h="md" />
-      <Switch
-        label={t('main.xinput_on_windows.label')}
-        description={t('main.xinput_on_windows.description')}
-        checked={!!profile.opts.xinputOnWindows}
-        onChange={(event) =>
-          updateProfile(
-            { ...profile, opts: { ...profile.opts, xinputOnWindows: event.currentTarget.checked } },
-            profileIdx
-          )
-        }
-      />
+
       <Space h="md" />
       <Switch
         label={t('main.syncCalibrations.label')}
@@ -5192,29 +5491,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   )
                 }
               />
-            </>
-          )}
-          {ps4Subtypes.includes(profile.opts.deviceToEmulate!) && (
-            <>
-              <Space h="md" />
-              <Input.Wrapper
-                label={t('main.ps4EmulationMode.label')}
-                description={t('main.ps4EmulationMode.description')}
-              >
-                <SegmentedControl
-                  data={[
-                    { label: t('main.ps4EmulationMode.PS3'), value: false },
-                    { label: t('main.ps4EmulationMode.PS4'), value: true },
-                  ]}
-                  value={!!profile.opts.ps4OrPs5Mode}
-                  onChange={(event) =>
-                    updateProfile(
-                      { ...profile, opts: { ...profile.opts, ps4OrPs5Mode: event } },
-                      profileIdx
-                    )
-                  }
-                />
-              </Input.Wrapper>
             </>
           )}
 
@@ -5258,7 +5534,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile.assignments!,
                                   {
                                     assignments: [
-                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: null,
+                                          xinputOnWindows: true,
+                                          ps4OrPs5Mode: false,
+                                        },
+                                      },
                                     ],
                                   },
                                 ],
@@ -5374,7 +5657,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile.assignments!,
                                   {
                                     assignments: [
-                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: null,
+                                          xinputOnWindows: true,
+                                          ps4OrPs5Mode: false,
+                                        },
+                                      },
                                       { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
                                     ],
                                   },
@@ -5396,7 +5686,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile.assignments!,
                                   {
                                     assignments: [
-                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: null,
+                                          xinputOnWindows: true,
+                                          ps4OrPs5Mode: false,
+                                        },
+                                      },
                                       { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
                                     ],
                                   },
@@ -5418,7 +5715,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                                   ...profile.assignments!,
                                   {
                                     assignments: [
-                                      { consoleType: { consoleType: null, forcedType: null } },
+                                      {
+                                        consoleType: {
+                                          consoleType: null,
+                                          forcedType: null,
+                                          xinputOnWindows: true,
+                                          ps4OrPs5Mode: false,
+                                        },
+                                      },
                                       { input: { input: {} } },
                                     ],
                                   },
