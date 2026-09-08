@@ -126,6 +126,8 @@
     "add": "Add Input",
     "pro_keys_range": "{{count}} Keys",
     "pro_keys_count": "Number of Keys",
+    "pro_key_num": "Key {{num}}",
+    "pro_key_index": "Key Number (1 - 25)",
     "CrkdGreen": "Green Fret",
     "CrkdRed": "Red Fret",
     "CrkdYellow": "Yellow Fret",

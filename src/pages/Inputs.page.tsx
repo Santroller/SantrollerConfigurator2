@@ -655,11 +655,23 @@ function OutputBox({
               value: 'ProKeyboard_Keys',
               label: t('outputs.ProKeyboard_Keys', 'All Keys (Root Note)'),
             },
+            {
+              value: 'ProKeyboard_Key',
+              label: t('outputs.ProKeyboard_Key', 'Single Key'),
+            },
           ]}
-          valExtra={mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined}
+          valExtra={
+            mapping.proKeyMultiple != null
+              ? 'ProKeyboard_Keys'
+              : mapping.proKeySingle != null
+              ? 'ProKeyboard_Key'
+              : undefined
+          }
           dispatchExtra={(val) => {
             if (val === 'ProKeyboard_Keys') {
               dispatch({ proKeyMultiple: 25 }, false, false);
+            } else if (val === 'ProKeyboard_Key') {
+              dispatch({ proKeySingle: 1 }, false, false);
             }
           }}
           e={proto.ProKeyboardAxisType}
@@ -2168,6 +2180,12 @@ function SantrollerMapping({
                   count: mapping.mapping.proKeyMultiple,
                 })}
               </Badge>
+            ) : mapping.mapping.proKeySingle != null ? (
+              <Badge variant="light" color="teal">
+                {t('inputs.pro_key_num', 'Key {{num}}', {
+                  num: mapping.mapping.proKeySingle,
+                })}
+              </Badge>
             ) : button ? (
               <Badge color={isPressed ? 'blue' : 'gray'}>
                 {isPressed ? t('state.pressed') : t('state.released')}
@@ -2240,13 +2258,33 @@ function SantrollerMapping({
                   label={t('inputs.pro_keys_count', 'Number of Keys')}
                   value={mapping.mapping.proKeyMultiple}
                   min={1}
-                  max={88}
+                  max={25}
                   onChange={(val) =>
                     dispatch({
                       ...mapping,
                       mapping: {
                         ...mapping.mapping,
                         proKeyMultiple: Number(val) || 25,
+                      },
+                    })
+                  }
+                />
+              </>
+            )}
+            {mapping.mapping.proKeySingle != null && (
+              <>
+                <Space h="md" />
+                <NumberInput
+                  label={t('inputs.pro_key_index', 'Key Number (1 - 25)')}
+                  value={mapping.mapping.proKeySingle}
+                  min={1}
+                  max={25}
+                  onChange={(val) =>
+                    dispatch({
+                      ...mapping,
+                      mapping: {
+                        ...mapping.mapping,
+                        proKeySingle: Number(val) || 1,
                       },
                     })
                   }
