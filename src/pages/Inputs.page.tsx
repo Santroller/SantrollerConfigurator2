@@ -2138,7 +2138,7 @@ function SantrollerMapping({
   const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
   const axis = mapping.mapping.proKeySingle != null || Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
-  const drum = label?.includes('Pad') || label?.includes('Cymbal');
+  const drum = label?.includes('Pad') || label?.includes('Cymbal') || mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal;
   const analogInput = isAnalog(mapping.input);
   const crkdDrum = mapping.input.crkdDrum;
   const status = useConfigStore((state) => state.deviceStatus[crkdDrum?.deviceid ?? '']);
