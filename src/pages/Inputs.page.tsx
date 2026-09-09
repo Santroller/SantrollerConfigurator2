@@ -260,55 +260,6 @@ function StateSection({
   }
   return <Progress.Section value={(state / 65535) * 100} />;
 }
-function StateBox({
-  profileIdx,
-  mappingIdx,
-  listIdx,
-  activationBased,
-  ledBased,
-  zeroBased,
-}: {
-  profileIdx: number;
-  mappingIdx: number;
-  listIdx?: number;
-  activationBased?: boolean;
-  ledBased?: boolean;
-  zeroBased?: boolean;
-}) {
-  const { t } = useTranslation();
-  const state = useConfigStore((state) =>
-    ledBased
-      ? state.ledStatus[profileIdx][mappingIdx]?.state
-      : activationBased
-        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : zeroBased
-          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
-          : state.mappingStatus[profileIdx][mappingIdx]?.state
-  );
-  return (
-    <>
-      <Text size="sm">State</Text>
-      <Badge color={state ? 'blue' : 'gray'}>
-        {state
-          ? t(activationBased ? 'state.active' : 'state.pressed')
-          : t(activationBased ? 'state.inactive' : 'state.released')}
-      </Badge>
-      <Space h="md" />
-    </>
-  );
-}
-function AssignmentListStateBox({ profileIdx, listIdx }: { profileIdx: number; listIdx: number }) {
-  const state = useConfigStore(
-    (state) => state.activationListStatus[profileIdx]?.[listIdx]?.state ?? false
-  );
-  return (
-    <>
-      <Text size="sm">State</Text>
-      <Badge color={state ? 'blue' : 'gray'}>{state ? 'Active' : 'Inactive'}</Badge>
-      <Space h="md" />
-    </>
-  );
-}
 function StateSlider({
   profileIdx,
   mappingIdx,
@@ -4397,6 +4348,9 @@ function SantrollerAssignmentList({
   );
 
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
+  const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
+  const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
   const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
@@ -4600,23 +4554,22 @@ function SantrollerAssignmentList({
       : []),
   ];
 
-  if (sourceOptions.length === 1) {
-    sourceOptions.push(
-      { value: 'wiiExt', label: t('assignments.source.wiiExt') },
-      { value: 'ps2Cnt', label: t('assignments.source.ps2Cnt') },
-      { value: 'usbType', label: t('assignments.source.usbType') },
-      { value: 'usbDevice', label: t('assignments.source.usbDevice') },
-      { value: 'midiChannel', label: t('assignments.source.midiChannel') }
-    );
-  }
+  const targetOptions = [
+    { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
+    ...(hasBluetooth
+      ? [{ label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' }]
+      : []),
+    ...(hasPsxEmu ? [{ label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' }] : []),
+    ...(hasWiiEmu ? [{ label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' }] : []),
+  ];
 
   const summaryText = useMemo(() => {
     let emul = '';
     if (emulationItem?.consoleType) {
       if (emulationItem.consoleType.forcedType) {
-        emul = `USB (${t('consoleMode.' + proto.ConsoleMode[emulationItem.consoleType.forcedType])})`;
+        emul = `USB (${t(`consoleMode.${proto.ConsoleMode[emulationItem.consoleType.forcedType]}`)})`;
       } else if (emulationItem.consoleType.consoleType) {
-        emul = `USB (${t('consoleType.' + proto.ConsoleType[emulationItem.consoleType.consoleType])})`;
+        emul = `USB (${t(`consoleType.${proto.ConsoleType[emulationItem.consoleType.consoleType]}`)})`;
       } else {
         emul = t('assignments.preset_usb_auto');
       }
@@ -4632,11 +4585,11 @@ function SantrollerAssignmentList({
 
     let host = '';
     if (hostItem?.wiiExt) {
-      host = `Wii (${t('wiiExt.' + proto.WiiExtType[hostItem.wiiExt])})`;
+      host = `Wii (${t(`wiiExt.${proto.WiiExtType[hostItem.wiiExt]}`)})`;
     } else if (hostItem?.ps2Cnt) {
-      host = `PS2 (${t('ps2Cnt.' + proto.PS2ControllerType[hostItem.ps2Cnt])})`;
+      host = `PS2 (${t(`ps2Cnt.${proto.PS2ControllerType[hostItem.ps2Cnt]}`)})`;
     } else if (hostItem?.usbType) {
-      host = `USB (${t('subType.' + proto.SubType[hostItem.usbType])})`;
+      host = `USB (${t(`subType.${proto.SubType[hostItem.usbType]}`)})`;
     } else if (hostItem?.usbDevice) {
       host = t('assignments.source.usbDevice');
     } else if (hostItem?.midiChannel) {
@@ -4651,8 +4604,12 @@ function SantrollerAssignmentList({
     }
 
     const parts = [emul];
-    if (host) parts.push(host);
-    if (trig) parts.push(trig);
+    if (host) {
+      parts.push(host);
+    }
+    if (trig) {
+      parts.push(trig);
+    }
     return parts.join(' + ');
   }, [emulationItem, hostItem, triggerItem, t]);
 
@@ -4833,12 +4790,7 @@ function SantrollerAssignmentList({
                         break;
                     }
                   }}
-                  data={[
-                    { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
-                    { label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' },
-                    { label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' },
-                    { label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' },
-                  ]}
+                  data={targetOptions}
                 />
               </Input.Wrapper>
               {currentEmulMode === 'consoleType' && (
@@ -4998,39 +4950,38 @@ function SantrollerAssignmentList({
             <Divider my={2} />
 
             <Stack gap={4}>
-
               <Input.Wrapper
                 size="xs"
                 label={t('assignments.step2_title')}
                 description={t('assignments.step2_desc')}
               >
-              <Select
-                size="xs"
-                value={currentSource}
-                onChange={(val) => {
-                  switch (val) {
-                    case 'builtin':
-                      updateHost(null);
-                      break;
-                    case 'wiiExt':
-                      updateHost({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
-                      break;
-                    case 'ps2Cnt':
-                      updateHost({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
-                      break;
-                    case 'usbType':
-                      updateHost({ usbType: proto.SubType.Gamepad });
-                      break;
-                    case 'usbDevice':
-                      updateHost({ usbDevice: { vid: 0, pid: 0 } });
-                      break;
-                    case 'midiChannel':
-                      updateHost({ midiChannel: 10 });
-                      break;
-                  }
-                }}
-                data={sourceOptions}
-              />
+                <Select
+                  size="xs"
+                  value={currentSource}
+                  onChange={(val) => {
+                    switch (val) {
+                      case 'builtin':
+                        updateHost(null);
+                        break;
+                      case 'wiiExt':
+                        updateHost({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
+                        break;
+                      case 'ps2Cnt':
+                        updateHost({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
+                        break;
+                      case 'usbType':
+                        updateHost({ usbType: proto.SubType.Gamepad });
+                        break;
+                      case 'usbDevice':
+                        updateHost({ usbDevice: { vid: 0, pid: 0 } });
+                        break;
+                      case 'midiChannel':
+                        updateHost({ midiChannel: 10 });
+                        break;
+                    }
+                  }}
+                  data={sourceOptions}
+                />
               </Input.Wrapper>
               {currentSource === 'wiiExt' && (
                 <DropdownBox

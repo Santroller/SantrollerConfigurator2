@@ -178,7 +178,7 @@ export class DeviceStatus {
     };
   }
   id: string;
-  type: string;
+  type: keyof Omit<proto.IDevice, "deviceid">;
   cycleState: number;
   toggleState: boolean;
   connected: boolean = false;
