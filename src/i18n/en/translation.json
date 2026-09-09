@@ -602,7 +602,7 @@
       "usb": "USB",
       "bluetooth": "Bluetooth",
       "ps2": "PS1/2 Port",
-      "wii": "Wii Remote"
+      "wii": "Wii Extension"
     },
     "usb_mode": {
       "label": "USB Console Mode",

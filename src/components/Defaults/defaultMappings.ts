@@ -76,6 +76,19 @@ function ps2Button(button: proto.PS2ButtonType, deviceid: number, output: proto.
     },
   };
 }
+function ps2TriggerButton(button: proto.PS2ButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+  return {
+    mapping: output,
+    input: {
+      ps2Button: {
+        button,
+        deviceid,
+      },
+    },
+    min: 0,
+    max: 65535,
+  };
+}
 
 function ps2Axis(axis: proto.PS2AxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
   return {
@@ -710,8 +723,8 @@ export function getPs2Defaults(
     ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
     ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
     ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
+    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
+    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
     ps2Button(proto.PS2ButtonType.PS2ButtonL3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftThumbClick }),
     ps2Button(proto.PS2ButtonType.PS2ButtonR3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightThumbClick }),
     ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
