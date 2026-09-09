@@ -4360,7 +4360,7 @@ function SantrollerAssignmentList({
       d.type === 'usbHost' ||
       d.type === 'wii' ||
       d.type === 'bhDrum' ||
-      d.type === 'wtDrum'
+      d.type === 'worldTourDrum'
   );
 
   const updateEmulation = (newEmul: proto.IProfileAssignmentInfo) => {
@@ -4679,24 +4679,30 @@ function SantrollerAssignmentList({
                 >
                   {t('assignments.preset_usb_ps4')}
                 </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconBluetooth size={14} />}
-                  onClick={() => applyPreset('bluetooth')}
-                >
-                  {t('assignments.preset_bluetooth')}
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconSparkles size={14} />}
-                  onClick={() => applyPreset('wii_adapter')}
-                >
-                  {t('assignments.preset_wii_adapter')}
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconSparkles size={14} />}
-                  onClick={() => applyPreset('ps2_adapter')}
-                >
-                  {t('assignments.preset_ps2_adapter')}
-                </Menu.Item>
+                {hasBluetooth && (
+                  <Menu.Item
+                    leftSection={<IconBluetooth size={14} />}
+                    onClick={() => applyPreset('bluetooth')}
+                  >
+                    {t('assignments.preset_bluetooth')}
+                  </Menu.Item>
+                )}
+                {hasWii && (
+                  <Menu.Item
+                    leftSection={<IconSparkles size={14} />}
+                    onClick={() => applyPreset('wii_adapter')}
+                  >
+                    {t('assignments.preset_wii_adapter')}
+                  </Menu.Item>
+                )}
+                {hasPsx && (
+                  <Menu.Item
+                    leftSection={<IconSparkles size={14} />}
+                    onClick={() => applyPreset('ps2_adapter')}
+                  >
+                    {t('assignments.preset_ps2_adapter')}
+                  </Menu.Item>
+                )}
                 <Menu.Item
                   leftSection={<IconSparkles size={14} />}
                   onClick={() => applyPreset('boot_switch')}
@@ -5317,6 +5323,12 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
+  const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
+  const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
+  const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
+  const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
+  const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
+  const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
   useEffect(() => {
     localStorage.setItem('legendMode', LegendMode[legendMode]);
   }, [legendMode]);
@@ -5680,81 +5692,90 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         >
                           {t('assignments.preset_usb_ps4')}
                         </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconBluetooth size={14} />}
-                          onClick={() =>
-                            updateProfile(
-                              {
-                                ...profile,
-                                assignments: [
-                                  ...profile.assignments!,
-                                  { assignments: [{ bluetooth: proto.BluetoothMode.BTStandard }] },
-                                ],
-                              },
-                              profileIdx
-                            )
-                          }
-                        >
-                          {t('assignments.preset_bluetooth')}
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconSparkles size={14} />}
-                          onClick={() =>
-                            updateProfile(
-                              {
-                                ...profile,
-                                assignments: [
-                                  ...profile.assignments!,
-                                  {
-                                    assignments: [
-                                      {
-                                        consoleType: {
-                                          consoleType: null,
-                                          forcedType: null,
-                                          xinputOnWindows: true,
-                                          ps4OrPs5Mode: false,
+                        {hasBluetooth && (
+                          <Menu.Item
+                            leftSection={<IconBluetooth size={14} />}
+                            onClick={() =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [
+                                    ...profile.assignments!,
+                                    {
+                                      assignments: [{ bluetooth: proto.BluetoothMode.BTStandard }],
+                                    },
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                          >
+                            {t('assignments.preset_bluetooth')}
+                          </Menu.Item>
+                        )}
+                        {hasWii && (
+                          <Menu.Item
+                            leftSection={<IconSparkles size={14} />}
+                            onClick={() =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [
+                                    ...profile.assignments!,
+                                    {
+                                      assignments: [
+                                        {
+                                          consoleType: {
+                                            consoleType: null,
+                                            forcedType: null,
+                                            xinputOnWindows: true,
+                                            ps4OrPs5Mode: false,
+                                          },
                                         },
-                                      },
-                                      { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
-                                    ],
-                                  },
-                                ],
-                              },
-                              profileIdx
-                            )
-                          }
-                        >
-                          {t('assignments.preset_wii_adapter')}
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconSparkles size={14} />}
-                          onClick={() =>
-                            updateProfile(
-                              {
-                                ...profile,
-                                assignments: [
-                                  ...profile.assignments!,
-                                  {
-                                    assignments: [
-                                      {
-                                        consoleType: {
-                                          consoleType: null,
-                                          forcedType: null,
-                                          xinputOnWindows: true,
-                                          ps4OrPs5Mode: false,
+                                        { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                          >
+                            {t('assignments.preset_wii_adapter')}
+                          </Menu.Item>
+                        )}
+
+                        {hasPsx && (
+                          <Menu.Item
+                            leftSection={<IconSparkles size={14} />}
+                            onClick={() =>
+                              updateProfile(
+                                {
+                                  ...profile,
+                                  assignments: [
+                                    ...profile.assignments!,
+                                    {
+                                      assignments: [
+                                        {
+                                          consoleType: {
+                                            consoleType: null,
+                                            forcedType: null,
+                                            xinputOnWindows: true,
+                                            ps4OrPs5Mode: false,
+                                          },
                                         },
-                                      },
-                                      { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
-                                    ],
-                                  },
-                                ],
-                              },
-                              profileIdx
-                            )
-                          }
-                        >
-                          {t('assignments.preset_ps2_adapter')}
-                        </Menu.Item>
+                                        { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                          >
+                            {t('assignments.preset_ps2_adapter')}
+                          </Menu.Item>
+                        )}
                         <Menu.Item
                           leftSection={<IconSparkles size={14} />}
                           onClick={() =>
