@@ -2136,9 +2136,14 @@ function SantrollerMapping({
   const fixedLabel = FixLabel(mode, type, label, legendMode);
   const img = `Icons/Input/${FixIcon(mode, type, label, legendMode)}.png`;
   const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
-  const axis = mapping.mapping.proKeySingle != null || Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
+  const axis =
+    mapping.mapping.proKeySingle != null ||
+    Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   const stick = label?.includes('Stick');
-  const drum = label?.includes('Pad') || label?.includes('Cymbal') || mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal;
+  const drum =
+    label?.includes('Pad') ||
+    label?.includes('Cymbal') ||
+    mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal;
   const analogInput = isAnalog(mapping.input);
   const crkdDrum = mapping.input.crkdDrum;
   const status = useConfigStore((state) => state.deviceStatus[crkdDrum?.deviceid ?? '']);
@@ -4395,7 +4400,14 @@ function SantrollerAssignmentList({
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
   const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
-  const hasMidi = Object.values(deviceStatus).some((d) => d.type === 'midiSerial' || d.type === 'usbHost' || d.type === 'wii' || d.type === 'bhDrum' || d.type === 'wtDrum');
+  const hasMidi = Object.values(deviceStatus).some(
+    (d) =>
+      d.type === 'midiSerial' ||
+      d.type === 'usbHost' ||
+      d.type === 'wii' ||
+      d.type === 'bhDrum' ||
+      d.type === 'wtDrum'
+  );
 
   const updateEmulation = (newEmul: proto.IProfileAssignmentInfo) => {
     const next = [...assignments];
@@ -4789,43 +4801,46 @@ function SantrollerAssignmentList({
         {!advancedMode ? (
           <Stack gap="sm">
             <Stack gap={4}>
-              <Text size="sm" fw={600}>
-                {t('assignments.step1_title')}
-              </Text>
-              <SegmentedControl
-                fullWidth
+              <Input.Wrapper
                 size="xs"
-                value={currentEmulMode}
-                onChange={(val) => {
-                  switch (val) {
-                    case 'consoleType':
-                      updateEmulation({
-                        consoleType: {
-                          consoleType: null,
-                          forcedType: null,
-                          xinputOnWindows: emulationItem?.consoleType?.xinputOnWindows ?? true,
-                          ps4OrPs5Mode: emulationItem?.consoleType?.ps4OrPs5Mode ?? false,
-                        },
-                      });
-                      break;
-                    case 'bluetooth':
-                      updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
-                      break;
-                    case 'ps2Emulation':
-                      updateEmulation({ ps2Emulation: {} });
-                      break;
-                    case 'wiiEmulation':
-                      updateEmulation({ wiiEmulation: {} });
-                      break;
-                  }
-                }}
-                data={[
-                  { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
-                  { label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' },
-                  { label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' },
-                  { label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' },
-                ]}
-              />
+                label={t('assignments.step1_title')}
+                description={t('assignments.step1_desc')}
+              >
+                <SegmentedControl
+                  fullWidth
+                  size="xs"
+                  value={currentEmulMode}
+                  onChange={(val) => {
+                    switch (val) {
+                      case 'consoleType':
+                        updateEmulation({
+                          consoleType: {
+                            consoleType: null,
+                            forcedType: null,
+                            xinputOnWindows: emulationItem?.consoleType?.xinputOnWindows ?? true,
+                            ps4OrPs5Mode: emulationItem?.consoleType?.ps4OrPs5Mode ?? false,
+                          },
+                        });
+                        break;
+                      case 'bluetooth':
+                        updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
+                        break;
+                      case 'ps2Emulation':
+                        updateEmulation({ ps2Emulation: {} });
+                        break;
+                      case 'wiiEmulation':
+                        updateEmulation({ wiiEmulation: {} });
+                        break;
+                    }
+                  }}
+                  data={[
+                    { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
+                    { label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' },
+                    { label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' },
+                    { label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' },
+                  ]}
+                />
+              </Input.Wrapper>
               {currentEmulMode === 'consoleType' && (
                 <Stack gap={4} mt="xs">
                   <Select
@@ -4983,9 +4998,12 @@ function SantrollerAssignmentList({
             <Divider my={2} />
 
             <Stack gap={4}>
-              <Text size="sm" fw={600}>
-                {t('assignments.step2_title')}
-              </Text>
+
+              <Input.Wrapper
+                size="xs"
+                label={t('assignments.step2_title')}
+                description={t('assignments.step2_desc')}
+              >
               <Select
                 size="xs"
                 value={currentSource}
@@ -5013,6 +5031,7 @@ function SantrollerAssignmentList({
                 }}
                 data={sourceOptions}
               />
+              </Input.Wrapper>
               {currentSource === 'wiiExt' && (
                 <DropdownBox
                   title="activation.wiiExt"

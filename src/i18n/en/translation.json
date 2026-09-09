@@ -592,7 +592,7 @@
     "preset_ps2_adapter": "PS1/2 Adapter",
     "preset_boot_switch": "Button Boot Switch",
     "preset_apply": "Apply Preset",
-    "step1_title": "1. Target Connection (Emulation)",
+    "step1_title": "1. Target Connection",
     "step1_desc": "How this Santroller device connects to the console or PC",
     "step2_title": "2. Controller Source",
     "step2_desc": "Which physical controller or port is used for this profile",
