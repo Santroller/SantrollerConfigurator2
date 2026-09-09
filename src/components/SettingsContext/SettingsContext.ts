@@ -23,6 +23,8 @@ const HID_RESPONSE_TIMEOUT_MS = 3_000;
 
 class HidResponseTimeoutError extends Error {}
 
+const equals = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((val, index) => val === b[index]);
 function withHidTimeout<T>(operation: Promise<T>, description: string): Promise<T> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -1456,8 +1458,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
       buffer.set(bufferMain, 0);
       buffer.set(bufferAux, bufferMain.length);
-      const equals = (a: Uint8Array, b: Uint8Array) =>
-        a.length === b.length && a.every((val, index) => val === b[index]);
       set((old) => ({
         ...old,
         configModified: !equals(bufferMain, old.savedConfig),
@@ -1508,7 +1508,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
         device.addEventListener('inputreport', get().onReport);
         try {
           let latest = false;
-          const infoData = await receiveFeatureReport(device, proto.ReportId.ReportIdConfigInfo);
           try {
             const commitHash = await receiveFeatureReport(
               device,
@@ -1524,20 +1523,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
             latest = deviceVersion === latestVersion;
           } catch (e) {
             console.log(e);
-          }
-          const info = proto.ConfigInfo.decode(
-            new Uint8Array(infoData.buffer).slice(1),
-            infoData.byteLength - 1
-          );
-          if (info.magic >>> 0 !== magic) {
-            console.log('magic didnt match!');
-          }
-          const data = new Uint8Array(info.dataSize);
-          let start = 0;
-          while (start < info.dataSize) {
-            const slice = await receiveFeatureReport(device, proto.ReportId.ReportIdConfig);
-            data.set(new Uint8Array(slice.buffer).slice(1), start);
-            start += slice.byteLength - 1;
           }
           let activeProfiles: number[] = [];
           try {
@@ -1556,9 +1541,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
           } catch (e) {
             console.error('Failed to get active profiles', e);
           }
-          if (new CRC32().calculate(data) !== info.dataCrc) {
-            console.log('CRC didnt match!');
-          }
           let deviceType = 'pico_w';
           try {
             const deviceTypeData = await receiveFeatureReport(
@@ -1573,6 +1555,16 @@ export const useConfigStore = create<ConfigState & Actions>()(
             console.log(e);
           }
           try {
+            const { data, info } = await fetchConfigData(device, false);
+            let dataSaved: Uint8Array | undefined = undefined;
+            try {
+              const { data: fetchedDataSaved } = await fetchConfigData(device, true);
+              dataSaved = fetchedDataSaved;
+            } catch (e) {
+              console.error('Failed to get saved config data', e);
+              // If fetching the saved config data fails, fall back to using the current config data.
+              dataSaved = data;
+            }
             const config = proto.Config.decode(data, info.mainSize);
             const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
             const timeout = setInterval(() => get().sendKeepAlive(), 10);
@@ -1590,6 +1582,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 latest,
                 keepaliveTimeout: timeout,
                 activeProfiles,
+                savedConfig: dataSaved,
+                configModified: !equals(dataSaved, data),
               }),
               true
             );
@@ -1628,6 +1622,31 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
   }))
 );
+async function fetchConfigData(device: HIDDevice, saved: boolean) {
+  const infoData = await receiveFeatureReport(
+    device,
+    saved ? proto.ReportId.ReportIdConfigInfoSaved : proto.ReportId.ReportIdConfigInfo
+  );
+  const info = proto.ConfigInfo.decode(
+    new Uint8Array(infoData.buffer).slice(1),
+    infoData.byteLength - 1
+  );
+  if (info.magic >>> 0 !== magic) {
+    console.log('magic didnt match!');
+  }
+  const data = new Uint8Array(info.dataSize);
+  let start = 0;
+  while (start < info.dataSize) {
+    const slice = await receiveFeatureReport(device, proto.ReportId.ReportIdConfig);
+    data.set(new Uint8Array(slice.buffer).slice(1), start);
+    start += slice.byteLength - 1;
+  }
+
+  if (new CRC32().calculate(data) !== info.dataCrc) {
+    console.log('CRC didnt match!');
+  }
+  return { data, info };
+}
 const disconnect = (e: any) => {
   if (useConfigStore.getState().hidDevice === e.device) {
     useConfigStore.getState().disconnect();
