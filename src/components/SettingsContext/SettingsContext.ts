@@ -20,7 +20,7 @@ import { proto } from './config.js';
 
 export * from './config.js';
 const HID_RESPONSE_TIMEOUT_MS = 3_000;
-
+type DeviceType = keyof Omit<proto.IDevice, "deviceid">
 class HidResponseTimeoutError extends Error {}
 
 const equals = (a: Uint8Array, b: Uint8Array) =>
@@ -105,7 +105,7 @@ export class ActivationListStatus {
 }
 export class DeviceStatus {
   [immerable] = true;
-  constructor(id: string, type: string, device: proto.IDevice) {
+  constructor(id: string, type: DeviceType, device: proto.IDevice) {
     this.id = id;
     this.type = type;
     this.device = device;
@@ -178,7 +178,7 @@ export class DeviceStatus {
     };
   }
   id: string;
-  type: keyof Omit<proto.IDevice, "deviceid">;
+  type: DeviceType;
   cycleState: number;
   toggleState: boolean;
   connected: boolean = false;
@@ -321,7 +321,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, _) => [
       x.deviceid,
-      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x !== 'deviceid')!, x),
+      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x !== 'deviceid')! as DeviceType, x),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
