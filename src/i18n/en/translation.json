@@ -55,7 +55,7 @@
       "description": "Syncronise calibrations across inputs that are used multiple times. For example if you have whammy on multiple profiles, turning this on will keep your whammy calibration syncronised, while turning it off means you can have different calibrations per profile."
     },
     "xinput_on_windows": {
-      "label": "Controller type on Windows",
+      "label": "Controller type on Windows (for USB)",
       "description": "Pick if you wish to have your controllers emulate an XInput device or an HID device when plugged into a Windows PC. Note that this setting has no effect on macOS, Linux or on game consoles.",
       "XInput": "XInput",
       "HID": "HID"

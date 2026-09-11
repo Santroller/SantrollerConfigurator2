@@ -5911,7 +5911,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             {
                               mapping: {},
                               input: {
-                                gpio: { analog: false, pin: 0, pinMode: proto.PinMode.PullUp },
+                                gpio: { analog: false, pin: -1, pinMode: proto.PinMode.PullUp },
                               },
                             },
                           ],
