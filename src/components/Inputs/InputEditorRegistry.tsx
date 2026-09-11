@@ -11,7 +11,7 @@ type InputEditorProps = {
 const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> = {
   crkd: ({ input, dispatch }) => (
     <DropdownBox
-      title="input"
+      title="input.title"
       e={proto.CrkdNeckButtonType}
       val={input.crkd!.button}
       label="inputs"
@@ -20,7 +20,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
   ),
   crkdDrum: ({ input, dispatch }) => (
     <DropdownBox
-      title="input"
+      title="input.title"
       e={proto.CrkdDrumAxisType}
       val={input.crkdDrum!.axis}
       label="inputs"
@@ -29,7 +29,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
   ),
   gh5Neck: ({ input, dispatch }) => (
     <DropdownBox
-      title="input"
+      title="input.title"
       e={proto.Gh5NeckButtonType}
       val={input.gh5Neck!.button}
       label="inputs"
@@ -38,7 +38,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
   ),
   accelerometer: ({ input, dispatch }) => (
     <DropdownBox
-      title="input"
+      title="input.title"
       e={proto.AccelerometerInputType}
       val={input.accelerometer!.type}
       label="accelerometer.inputs"
