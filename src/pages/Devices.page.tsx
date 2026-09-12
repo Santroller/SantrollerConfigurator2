@@ -241,7 +241,7 @@ function DeviceCard({
         </Flex>
         <Card.Section>
           <Center>
-            <Image src={image} height={160} w="auto" fit="contain" alt={title} />
+            <Image src={image} height={160} fit="scale-down" alt={title} />
           </Center>
         </Card.Section>
         <Flex mt="md" mb="xs" justify="center" align="center" gap="xs">
