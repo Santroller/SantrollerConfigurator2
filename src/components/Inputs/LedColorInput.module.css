@@ -1,0 +1,20 @@
+/*
+ * In Mantine's ColorPicker and ColorSwatch, an alpha channel is displayed with a checkerboard
+ * pattern. For LEDs, the "alpha" channel actually controls brightness/white level (startW/endW).
+ * We re-theme the checkerboard background to solid black so the slider smoothly transitions
+ * from black (LED off / 0% brightness) to the chosen color (100% brightness), and the preview
+ * swatches show the dimmed LED color instead of optical transparency.
+ */
+
+.dropdown :global([data-alpha]) .sliderOverlay:first-child,
+.dropdown :global([data-alpha] .mantine-ColorPicker-sliderOverlay:first-child) {
+  background-image: none !important;
+  background-color: #000 !important;
+}
+
+.colorPreview :global(.mantine-ColorSwatch-alphaOverlay),
+.dropdown :global(.mantine-ColorSwatch-alphaOverlay) {
+  background-image: none !important;
+  background-color: #000 !important;
+}
+

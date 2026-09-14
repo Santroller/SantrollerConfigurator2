@@ -32,7 +32,6 @@ import {
   Button,
   Card,
   Center,
-  ColorInput,
   Combobox,
   Divider,
   Flex,
@@ -79,6 +78,7 @@ import {
   getInputDeviceId,
   isAnalogInput,
 } from '@/components/Inputs/inputRegistry';
+import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
@@ -3511,26 +3511,23 @@ function SantrollerLed({
                 <>
                   <Space h="md" />
                   <Group grow>
-                    <ColorInput
+                    <LedColorInput
                       label={t('leds.released')}
-                      placeholder="Input placeholder"
-                      format="rgba"
-                      value={`rgba(${led.device.rgb?.startR}, ${led.device.rgb?.startG}, ${led.device.rgb?.startB}, ${(led.device.rgb!.startW! / 255).toFixed(2)})`}
-                      onChange={(val) => {
-                        if (!val) {
-                          return;
-                        }
-                        const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
+                      r={led.device.rgb?.startR}
+                      g={led.device.rgb?.startG}
+                      b={led.device.rgb?.startB}
+                      w={led.device.rgb?.startW}
+                      onChange={({ r, g, b, w }) => {
                         dispatch({
                           ...led,
                           device: {
                             ...led.device,
                             rgb: {
                               ...led.device.rgb!,
-                              startR: parseInt(r, 10),
-                              startG: parseInt(g, 10),
-                              startB: parseInt(b, 10),
-                              startW: parseFloat(w) * 255,
+                              startR: r,
+                              startG: g,
+                              startB: b,
+                              startW: w,
                             },
                           },
                         });
@@ -3565,26 +3562,23 @@ function SantrollerLed({
             <Space h="md" />
             {led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow && (
               <Group grow>
-                <ColorInput
+                <LedColorInput
                   label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
-                  placeholder="Input placeholder"
-                  format="rgba"
-                  value={`rgba(${led.device.rgb?.endR}, ${led.device.rgb?.endG}, ${led.device.rgb?.endB}, ${(led.device.rgb!.endW! / 255).toFixed(2)})`}
-                  onChange={(val) => {
-                    if (!val) {
-                      return;
-                    }
-                    const [r, g, b, w] = val.split('(')[1].split(')')[0].split(', ');
+                  r={led.device.rgb?.endR}
+                  g={led.device.rgb?.endG}
+                  b={led.device.rgb?.endB}
+                  w={led.device.rgb?.endW}
+                  onChange={({ r, g, b, w }) => {
                     dispatch({
                       ...led,
                       device: {
                         ...led.device,
                         rgb: {
                           ...led.device.rgb!,
-                          endR: parseInt(r, 10),
-                          endG: parseInt(g, 10),
-                          endB: parseInt(b, 10),
-                          endW: parseFloat(w) * 255,
+                          endR: r,
+                          endG: g,
+                          endB: b,
+                          endW: w,
                         },
                       },
                     });
