@@ -42,8 +42,16 @@
     "accelerometer": "Accelerometer",
     "ws2812": "WS2812 LEDs",
     "apa102": "APA102 LEDs",
-    "STP16CPC": "STP16CPC LED Driver",
-    "cycle": "Cycling input"
+    "cycle": "Cycling input",
+    "bluetooth_paired_devices": "Paired Devices",
+    "bluetooth_no_devices": "No paired Bluetooth devices",
+    "bluetooth_device_name": "Name",
+    "bluetooth_device_mac": "MAC Address",
+    "bluetooth_device_type": "Controller Type",
+    "bluetooth_device_mode": "Mode",
+    "bluetooth_scan": "Pair New Device",
+    "bluetooth_scanning": "Scanning (10s)...",
+    "bluetooth_connected_devices": "Connected Devices"
   },
   "main": {
     "invert_y_hid": {
@@ -661,6 +669,18 @@
     "BTStandard": "Standard Bluetooth",
     "BTWiimote": "Wii Remote Emulation"
   },
+  "BtControllerType": {
+    "BtControllerTypeGeneric": "Generic Gamepad",
+    "BtControllerTypePS3": "PS3 Controller",
+    "BtControllerTypePS4": "PS4/5 Controller",
+    "BtControllerTypePS5": "PS5 Controller",
+    "BtControllerTypeSwitch": "Nintendo Switch Controller",
+    "BtControllerTypeXboxOne": "Xbox One Controller",
+    "BtControllerTypeGhlIos": "Guitar Hero Live (iOS)",
+    "BtControllerTypeWii": "Wii Remote",
+    "BtControllerTypeWiiUPro": "Wii U Pro Controller",
+    "BtControllerTypeSantroller": "Santroller"
+  },
   "add_device_dialog": {
     "title": "Add device",
     "confirm": "Add device",
@@ -1040,7 +1060,9 @@
     "startUpdate": "Start Update",
     "downloadPico1": "Download UF2 (Pico 1 / RP2040)",
     "downloadPico2": "Download UF2 (Pico 2 / RP2350)",
-    "sellerWarning": "If you have purchased this device from a seller, it should already have Santroller on it, and you should be able to just use the Connect button. If for some reason you need to reset the device to factory settings, you should ask the Seller for a UF2 file instead of using the ones below, as the Seller can provie a UF2 that has everything set up already, while the UF2 files below are blank and have no configuration."
+    "sellerWarning": "If you have purchased this device from a seller, it should already have Santroller on it, and you should be able to just use the Connect button. If for some reason you need to reset the device to factory settings, you should ask the Seller for a UF2 file instead of using the ones below, as the Seller can provie a UF2 that has everything set up already, while the UF2 files below are blank and have no configuration.",
+    "missingDongleFirmwareTitle": "Xbox Wireless Dongle Firmware Missing",
+    "missingDongleFirmware": "Your device is missing the Xbox Wireless dongle firmware. This cannot be updated via OTA — you must reflash via UF2 to restore dongle support."
   },
   "labels": {
     "title": "Label",

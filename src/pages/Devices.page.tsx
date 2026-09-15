@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconBluetooth, IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   Accordion,
   ActionIcon,
@@ -25,6 +25,7 @@ import {
   Switch,
   Table,
   TagsInput,
+  Text,
   Title,
   useCombobox,
 } from '@mantine/core';
@@ -1811,12 +1812,18 @@ function PSXEmulationDevice({ id }: { id: string }) {
 }
 
 function BluetoothDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const bluetoothStates = useConfigStore((state) => state.bluetoothStates);
+  const removeBluetoothPairing = useConfigStore((state) => state.removeBluetoothPairing);
+  const scanningBluetooth = useConfigStore((state) => state.scanningBluetooth);
+  const scanBluetooth = useConfigStore((state) => state.scanBluetooth);
   const device = status.device;
   if (!device.bt) {
     throw new Error('device null!');
   }
+  const hasConnectedDevices = status.btDevices && Object.values(status.btDevices).length > 0;
   return (
     <DeviceCard
       connected={status.connected}
@@ -1824,7 +1831,121 @@ function BluetoothDevice({ id }: { id: string }) {
       image="covers/devices/bluetooth.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <></>
+      {hasConnectedDevices && (
+        <>
+          <Title order={5} mb="xs">
+            {t('devices.bluetooth_connected_devices')}
+          </Title>
+          <Table mb="md">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t('devices.bluetooth_device_name')}</Table.Th>
+                <Table.Th>{t('devices.bluetooth_device_type')}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {Object.values(status.btDevices).map((x) => (
+                <Table.Tr key={x.sourceId ?? x.id}>
+                  <Table.Td>{x.name || '-'}</Table.Td>
+                  <Table.Td>
+                    <Badge size="xs" variant="outline">
+                      {t(`subType.${proto.SubType[x.subtype]}`, proto.SubType[x.subtype])}
+                    </Badge>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </>
+      )}
+
+      <Group justify="space-between" mb="xs">
+        <Title order={5}>
+          {t('devices.bluetooth_paired_devices')}
+        </Title>
+        <Button
+          size="xs"
+          leftSection={<IconBluetooth size={16} />}
+          loading={scanningBluetooth}
+          disabled={scanningBluetooth}
+          onClick={scanBluetooth}
+        >
+          {scanningBluetooth
+            ? t('devices.bluetooth_scanning')
+            : t('devices.bluetooth_scan')}
+        </Button>
+      </Group>
+      {bluetoothStates.length === 0 ? (
+        <Text c="dimmed" size="sm">
+          {t('devices.bluetooth_no_devices')}
+        </Text>
+      ) : (
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>{t('devices.bluetooth_device_name')}</Table.Th>
+              <Table.Th>{t('devices.bluetooth_device_mac')}</Table.Th>
+              <Table.Th>{t('devices.bluetooth_device_type')}</Table.Th>
+              <Table.Th>{t('devices.bluetooth_device_mode')}</Table.Th>
+              <Table.Th />
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {bluetoothStates.map((state) => {
+              const macStr = Array.from(state.macAddress || [])
+                .map((b) => b.toString(16).padStart(2, '0').toUpperCase())
+                .join(':');
+              const ctrlType =
+                state.controllerType != null
+                  ? t(
+                      `BtControllerType.${proto.BtControllerType[state.controllerType]}`,
+                      proto.BtControllerType[state.controllerType]
+                    )
+                  : t('BtControllerType.BtControllerTypeGeneric');
+              const isSantroller =
+                state.controllerType === proto.BtControllerType.BtControllerTypeSantroller;
+              const subTypeStr =
+                isSantroller && state.subtype != null
+                  ? t(`subType.${proto.SubType[state.subtype]}`, proto.SubType[state.subtype])
+                  : null;
+              return (
+                <Table.Tr key={state.id}>
+                  <Table.Td>{state.name || '-'}</Table.Td>
+                  <Table.Td>
+                    <Text ff="monospace" size="xs">
+                      {macStr}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <span>{ctrlType}</span>
+                      {subTypeStr && (
+                        <Badge size="xs" variant="outline">
+                          {subTypeStr}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge size="xs" color={state.ble ? 'blue' : 'gray'}>
+                      {state.ble ? 'BLE' : 'Classic'}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      onClick={() => removeBluetoothPairing(state.id)}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      )}
     </DeviceCard>
   );
 }

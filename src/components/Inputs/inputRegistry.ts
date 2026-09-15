@@ -21,6 +21,8 @@ const inputKinds = [
   'ps2Button',
   'usbButton',
   'usbAxis',
+  'btButton',
+  'btAxis',
   'multiplexer',
   'protarNeckAxis',
   'protarNeckButton',
@@ -81,6 +83,8 @@ const inputRegistry: Partial<Record<InputKind, InputDefinition>> = {
   },
   usbAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.usbAxis) },
   usbButton: { usesDevice: hasDevice((input) => input.usbButton) },
+  btAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.btAxis) },
+  btButton: { usesDevice: hasDevice((input) => input.btButton) },
   ps2Axis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.ps2Axis) },
   ps2Button: { usesDevice: hasDevice((input) => input.ps2Button) },
   midi: {
@@ -178,6 +182,11 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   usbHost: {
     create: (deviceid) => ({
       usbButton: { button: { gamepadButton: proto.GamepadButtonType.Gamepad_A }, deviceid },
+    }),
+  },
+  bt: {
+    create: (deviceid) => ({
+      btButton: { button: { gamepadButton: proto.GamepadButtonType.Gamepad_A }, deviceid },
     }),
   },
   protarNeck: {

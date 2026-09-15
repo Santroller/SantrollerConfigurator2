@@ -1,6 +1,6 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, FileButton, Progress, Space } from '@mantine/core';
+import { Alert, Button, FileButton, Group, Progress, Space } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
@@ -17,6 +17,7 @@ export function ConnectPage() {
   const updatePercentage = useConfigStore((state) => state.updatePercentage);
   const latest = useConfigStore((state) => state.latest);
   const simpleMode = useConfigStore((state) => state.simpleMode);
+  const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
   const { t } = useTranslation();
   return (
     <>
@@ -90,6 +91,39 @@ export function ConnectPage() {
             </Button>
             <Progress size="xl" value={updatePercentage} />
           </Alert>
+        )}
+
+        {needsUf2Update && connected && !hung && (
+          <>
+            <Space h="md" />
+            <Alert
+              variant="light"
+              color="yellow"
+              title={t('connect.missingDongleFirmwareTitle')}
+              icon={<IconExclamationCircle />}
+            >
+              {t('connect.missingDongleFirmware')}
+              <Space h="md" />
+              <Group>
+                <Button
+                  component="a"
+                  download="santroller_pico1.uf2"
+                  href="santroller_pico1.uf2"
+                  target="_blank"
+                >
+                  {t('connect.downloadPico1')}
+                </Button>
+                <Button
+                  component="a"
+                  download="santroller_pico2.uf2"
+                  href="santroller_pico2.uf2"
+                  target="_blank"
+                >
+                  {t('connect.downloadPico2')}
+                </Button>
+              </Group>
+            </Alert>
+          </>
         )}
       </Layout>
     </>

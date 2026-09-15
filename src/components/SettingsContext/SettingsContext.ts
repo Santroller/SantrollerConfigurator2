@@ -111,6 +111,7 @@ export class DeviceStatus {
     this.device = device;
     this.wiiExtType = proto.WiiExtType.WiiNoExtension;
     this.usbDevices = {};
+    this.btDevices = {};
     this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
     this.cycleState = 0;
     this.toggleState = false;
@@ -186,6 +187,7 @@ export class DeviceStatus {
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
+  btDevices: { [key: number]: proto.IBtDeviceHotplugEvent };
   crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType]: proto.ICrkdCalibrationData };
   static label(status: DeviceStatus) {
     return getDeviceStatusLabel(status);
@@ -236,8 +238,16 @@ export interface ConfigState {
   seller: boolean;
   sellerCheck: boolean;
   configModified: boolean;
+  bluetoothStates: proto.IBluetoothPairingState[];
+  tlvEntries: proto.IBluetoothTlvEntry[];
+  missingStaticFirmware: boolean;
+  needsUf2Update: boolean;
+  scanningBluetooth: boolean;
 }
 export interface Actions {
+  scanBluetooth: () => Promise<void>;
+  refreshBluetoothPairings: () => Promise<void>;
+  removeBluetoothPairing: (id: number) => void;
   checkLogin: () => void;
   setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
@@ -392,6 +402,11 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     toolInfo,
     simpleMode: !!toolInfo && !localStorage.getItem('auth'),
     syncInputs: config.syncCalibrations || false,
+    bluetoothStates: aux.bluetoothStates ?? [],
+    tlvEntries: aux.tlvEntries ?? [],
+    missingStaticFirmware: false,
+    needsUf2Update: false,
+    scanningBluetooth: false,
   };
 }
 
@@ -402,6 +417,8 @@ export const initialConfig = InitState(
   }),
   proto.AuxConfigBlock.create({
     states: [],
+    bluetoothStates: [],
+    tlvEntries: [],
   })
 );
 
@@ -1016,6 +1033,21 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
           });
         }
+        if (deviceEvent.bt) {
+          set((state) => {
+            if (deviceEvent.bt!.id in state.deviceStatus) {
+              const id = deviceEvent.bt!.sourceId ?? 0;
+              if (deviceEvent.bt!.connected) {
+                state.deviceStatus[deviceEvent.bt!.id].btDevices[id] = deviceEvent.bt!;
+              } else {
+                delete state.deviceStatus[deviceEvent.bt!.id].btDevices[id];
+              }
+            }
+          });
+          if (deviceEvent.bt.connected) {
+            get().refreshBluetoothPairings();
+          }
+        }
         if (deviceEvent.wii) {
           set((state) => {
             if (deviceEvent.wii!.id in state.deviceStatus) {
@@ -1452,7 +1484,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
         .map((x) =>
           proto.ToggleInputState.create({ id: parseInt(x.id, 10), state: x.toggleState })
         );
-      const aux = { states, toggleStates };
+      const aux = {
+        states,
+        toggleStates,
+        bluetoothStates: state.bluetoothStates,
+        tlvEntries: state.tlvEntries,
+      };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
       const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
@@ -1463,6 +1500,57 @@ export const useConfigStore = create<ConfigState & Actions>()(
         configModified: !equals(bufferMain, old.savedConfig),
       }));
       return { config, aux };
+    },
+    removeBluetoothPairing: (id: number) => {
+      set((state) => {
+        state.bluetoothStates = state.bluetoothStates.filter((x) => x.id !== id);
+        state.configModified = true;
+      });
+    },
+    scanBluetooth: async () => {
+      const state = get();
+      if (!state.hidDevice || state.scanningBluetooth) {
+        return;
+      }
+      set((state) => {
+        state.scanningBluetooth = true;
+      });
+      try {
+        const cmdBuffer = proto.Command.encode(
+          proto.Command.create({
+            scan: proto.ScanCommand.create({}),
+          })
+        )
+          .ldelim()
+          .finish();
+        const outBuffer = new ArrayBuffer(63);
+        new Uint8Array(outBuffer).set(cmdBuffer);
+        await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
+      } catch (e) {
+        console.error('Failed to send scan command', e);
+      }
+      setTimeout(async () => {
+        set((state) => {
+          state.scanningBluetooth = false;
+        });
+        await get().refreshBluetoothPairings();
+      }, 10000);
+    },
+    refreshBluetoothPairings: async () => {
+      const state = get();
+      if (!state.hidDevice || !state.connected) {
+        return;
+      }
+      try {
+        const { data, info } = await fetchConfigData(state.hidDevice, false);
+        const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
+        set((state) => {
+          state.bluetoothStates = aux.bluetoothStates ?? [];
+          state.tlvEntries = aux.tlvEntries ?? [];
+        });
+      } catch (e) {
+        console.error('Failed to refresh bluetooth pairings', e);
+      }
     },
     firmwareUpdate: async () => {
       const state = get();
@@ -1580,6 +1668,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 crc: info.dataCrc,
                 type: deviceType,
                 latest,
+                missingStaticFirmware: !!info.missingStaticFirmware,
+                needsUf2Update: !!info.needsUf2Update,
                 keepaliveTimeout: timeout,
                 activeProfiles,
                 savedConfig: dataSaved,
@@ -1589,6 +1679,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             );
             await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
           } catch (e) {
+            console.error('Failed to load config on connect', e);
             set(
               (old) => ({
                 ...old,
@@ -1628,8 +1719,7 @@ async function fetchConfigData(device: HIDDevice, saved: boolean) {
     saved ? proto.ReportId.ReportIdConfigInfoSaved : proto.ReportId.ReportIdConfigInfo
   );
   const info = proto.ConfigInfo.decode(
-    new Uint8Array(infoData.buffer).slice(1),
-    infoData.byteLength - 1
+    new Uint8Array(infoData.buffer, infoData.byteOffset + 1, infoData.byteLength - 1)
   );
   if (info.magic >>> 0 !== magic) {
     console.log('magic didnt match!');
@@ -1638,8 +1728,13 @@ async function fetchConfigData(device: HIDDevice, saved: boolean) {
   let start = 0;
   while (start < info.dataSize) {
     const slice = await receiveFeatureReport(device, proto.ReportId.ReportIdConfig);
-    data.set(new Uint8Array(slice.buffer).slice(1), start);
-    start += slice.byteLength - 1;
+    const toCopy = Math.min(slice.byteLength - 1, info.dataSize - start);
+    if (toCopy <= 0) {
+      break;
+    }
+    const chunk = new Uint8Array(slice.buffer, slice.byteOffset + 1, toCopy);
+    data.set(chunk, start);
+    start += toCopy;
   }
 
   if (new CRC32().calculate(data) !== info.dataCrc) {

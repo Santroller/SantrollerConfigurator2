@@ -208,7 +208,6 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'ws2812',
   'apa102',
   'stp16cpc',
-  'bt',
   'dmx',
 ]);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);

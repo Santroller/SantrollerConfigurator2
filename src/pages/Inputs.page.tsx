@@ -1715,6 +1715,40 @@ function SantrollerInput({
           legendMode={legendMode}
         />
       )}
+      {device?.type === 'bt' && (
+        <OutputBox
+          label="outputs"
+          title="input"
+          valMidi={input.midi ?? undefined}
+          dispatch={(mapping, _, analog) =>
+            dispatch(
+              analog
+                ? {
+                    btAxis: {
+                      deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid)!,
+                      axis: mapping,
+                    },
+                  }
+                : {
+                    btButton: {
+                      deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid)!,
+                      button: mapping,
+                    },
+                  }
+            )
+          }
+          dispatchMidi={(midi) =>
+            dispatch({
+              midi: { ...midi!, deviceid: deviceId },
+            })
+          }
+          midi
+          type={type}
+          mode={mode}
+          mapping={input.btAxis?.axis || input.btButton?.button}
+          legendMode={legendMode}
+        />
+      )}
       <RegisteredInputEditor input={input} dispatch={dispatch} />
       {input.vtechExpander && (
         <>
@@ -3703,6 +3737,8 @@ const HostProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'ps2Cnt',
   'usbType',
   'usbDevice',
+  'bluetoothDevice',
+  'bluetoothType',
   'midiChannel',
 ];
 const DeviceProfileAssignmentTypes: ProfileAssignmentTypes[] = [
@@ -3980,6 +4016,12 @@ function SantrollerAssignment({
               case 'usbDevice':
                 dispatch({ usbDevice: { vid: 0, pid: 0 } });
                 break;
+              case 'bluetoothDevice':
+                dispatch({ bluetoothDevice: { vid: 0, pid: 0 } });
+                break;
+              case 'bluetoothType':
+                dispatch({ bluetoothType: proto.SubType.Gamepad });
+                break;
               case 'input':
                 dispatch({
                   input: { input: {} },
@@ -4034,6 +4076,15 @@ function SantrollerAssignment({
             val={mapping.usbType}
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
+          />
+        )}
+        {mapping.bluetoothType && (
+          <DropdownBox
+            title="activation.bluetoothType"
+            e={proto.SubType}
+            val={mapping.bluetoothType}
+            label="subType"
+            dispatch={(bluetoothType) => dispatch({ bluetoothType })}
           />
         )}
         {mapping.midiChannel && (
@@ -4211,6 +4262,38 @@ function SantrollerAssignment({
                 dispatch({
                   usbDevice: {
                     ...mapping.usbDevice!,
+                    pid: parseInt((event.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                  },
+                })
+              }
+            />
+          </>
+        )}
+        {mapping.bluetoothDevice && (
+          <>
+            <TextInput
+              label={t('assignments.vendorId')}
+              leftSection="0x"
+              accept="\w"
+              value={mapping.bluetoothDevice.vid.toString(16)}
+              onChange={(event) =>
+                dispatch({
+                  bluetoothDevice: {
+                    ...mapping.bluetoothDevice!,
+                    vid: parseInt((event.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                  },
+                })
+              }
+            />
+            <TextInput
+              label={t('assignments.productId')}
+              leftSection="0x"
+              accept="\w"
+              value={mapping.bluetoothDevice.pid.toString(16)}
+              onChange={(event) =>
+                dispatch({
+                  bluetoothDevice: {
+                    ...mapping.bluetoothDevice!,
                     pid: parseInt((event.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                   },
                 })
@@ -4514,13 +4597,17 @@ function SantrollerAssignmentList({
       ? 'wiiExt'
       : hostItem?.ps2Cnt != null
         ? 'ps2Cnt'
-        : hostItem?.usbType != null
-          ? 'usbType'
-          : hostItem?.usbDevice != null
-            ? 'usbDevice'
-            : hostItem?.midiChannel != null
-              ? 'midiChannel'
-              : 'builtin';
+        : hostItem?.bluetoothType != null
+          ? 'bluetoothType'
+          : hostItem?.usbType != null
+            ? 'usbType'
+            : hostItem?.usbDevice != null
+              ? 'usbDevice'
+              : hostItem?.bluetoothDevice != null
+                ? 'bluetoothDevice'
+                : hostItem?.midiChannel != null
+                  ? 'midiChannel'
+                  : 'builtin';
 
   const currentTrigger =
     triggerItem?.input != null
@@ -4542,6 +4629,12 @@ function SantrollerAssignmentList({
       : []),
     ...(hasUsbHost || hostItem?.usbDevice != null
       ? [{ value: 'usbDevice', label: t('assignments.source.usbDevice') }]
+      : []),
+    ...(hasBluetooth || hostItem?.bluetoothType != null
+      ? [{ value: 'bluetoothType', label: t('assignments.source.bluetoothType') }]
+      : []),
+    ...(hasBluetooth || hostItem?.bluetoothDevice != null
+      ? [{ value: 'bluetoothDevice', label: t('assignments.source.bluetoothDevice') }]
       : []),
     ...(hasMidi || hostItem?.midiChannel != null
       ? [{ value: 'midiChannel', label: t('assignments.source.midiChannel') }]
@@ -4586,6 +4679,10 @@ function SantrollerAssignmentList({
       host = `USB (${t(`subType.${proto.SubType[hostItem.usbType]}`)})`;
     } else if (hostItem?.usbDevice) {
       host = t('assignments.source.usbDevice');
+    } else if (hostItem?.bluetoothType) {
+      host = `USB (${t(`subType.${proto.SubType[hostItem.bluetoothType]}`)})`;
+    } else if (hostItem?.bluetoothDevice) {
+      host = t('assignments.source.bluetoothDevice');
     } else if (hostItem?.midiChannel) {
       host = `MIDI Ch ${hostItem.midiChannel}`;
     }
@@ -4975,6 +5072,12 @@ function SantrollerAssignmentList({
                       case 'usbDevice':
                         updateHost({ usbDevice: { vid: 0, pid: 0 } });
                         break;
+                      case 'bluetoothType':
+                        updateHost({ bluetoothType: proto.SubType.Gamepad });
+                        break;
+                      case 'bluetoothDevice':
+                        updateHost({ bluetoothDevice: { vid: 0, pid: 0 } });
+                        break;
                       case 'midiChannel':
                         updateHost({ midiChannel: 10 });
                         break;
@@ -5035,6 +5138,47 @@ function SantrollerAssignmentList({
                       updateHost({
                         usbDevice: {
                           vid: hostItem?.usbDevice?.vid ?? 0,
+                          pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        },
+                      })
+                    }
+                  />
+                </Group>
+              )}
+              {currentSource === 'bluetoothType' && (
+                <DropdownBox
+                  title="activation.bluetoothType"
+                  e={proto.SubType}
+                  val={hostItem?.bluetoothType ?? proto.SubType.Gamepad}
+                  label="subType"
+                  dispatch={(bluetoothType) => updateHost({ bluetoothType })}
+                />
+              )}
+              {currentSource === 'bluetoothDevice' && (
+                <Group grow>
+                  <TextInput
+                    size="xs"
+                    label={t('assignments.vendorId')}
+                    leftSection="0x"
+                    value={(hostItem?.bluetoothDevice?.vid ?? 0).toString(16)}
+                    onChange={(e) =>
+                      updateHost({
+                        bluetoothDevice: {
+                          vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                          pid: hostItem?.bluetoothDevice?.pid ?? 0,
+                        },
+                      })
+                    }
+                  />
+                  <TextInput
+                    size="xs"
+                    label={t('assignments.productId')}
+                    leftSection="0x"
+                    value={(hostItem?.bluetoothDevice?.pid ?? 0).toString(16)}
+                    onChange={(e) =>
+                      updateHost({
+                        bluetoothDevice: {
+                          vid: hostItem?.bluetoothDevice?.vid ?? 0,
                           pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                         },
                       })
