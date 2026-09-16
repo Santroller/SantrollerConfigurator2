@@ -213,6 +213,7 @@ export interface ConfigState {
   waitingForReload: boolean;
   writing: boolean;
   polling: boolean;
+  refreshingBluetooth: boolean;
   updating: boolean;
   detected: number;
   type: string;
@@ -399,6 +400,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     console: '',
     type: '',
     sendingKeepAlive: false,
+    refreshingBluetooth: false,
     toolInfo,
     simpleMode: !!toolInfo && !localStorage.getItem('auth'),
     syncInputs: config.syncCalibrations || false,
@@ -1538,15 +1540,19 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     refreshBluetoothPairings: async () => {
       const state = get();
-      if (!state.hidDevice || !state.connected) {
+      if (!state.hidDevice || !state.connected || state.refreshingBluetooth) {
         return;
       }
       try {
+        set((state) => {
+          state.refreshingBluetooth = true;
+        });
         const { data, info } = await fetchConfigData(state.hidDevice, false);
         const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
         set((state) => {
           state.bluetoothStates = aux.bluetoothStates ?? [];
           state.tlvEntries = aux.tlvEntries ?? [];
+          state.refreshingBluetooth = false;
         });
       } catch (e) {
         console.error('Failed to refresh bluetooth pairings', e);
