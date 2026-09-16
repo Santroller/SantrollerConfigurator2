@@ -32,8 +32,12 @@ const hasDevice =
   (input: proto.IInput, deviceid: number) =>
     getInput(input)?.deviceid === deviceid;
 
-const inputRegistry: Partial<Record<InputKind, InputDefinition>> = {
+const inputRegistry: Record<InputKind, InputDefinition> = {
   gpio: { isAnalog: (input) => !!input.gpio?.analog },
+  fixed: {},
+  key: {},
+  mouseAxis: { isAnalog: () => true },
+  mouseButton: {},
   mpr121: { usesDevice: hasDevice((input) => input.mpr121) },
   ads1115: { isAnalog: () => true, usesDevice: hasDevice((input) => input.ads1115) },
   wiiAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.wiiAxis) },
