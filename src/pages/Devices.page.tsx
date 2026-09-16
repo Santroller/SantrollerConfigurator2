@@ -1650,7 +1650,6 @@ function EncoderDevice({ id }: { id: string }) {
   const encoder = device.encoder;
   return (
     <DeviceCard
-      connected={status.connected}
       title="devices.encoder"
       image="covers/devices/encoder.png"
       deleteDevice={() => deleteDevice(id)}
