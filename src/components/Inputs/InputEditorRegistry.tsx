@@ -36,6 +36,15 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
       dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
     />
   ),
+  encoder: ({ input, dispatch }) => (
+    <DropdownBox
+      title="input.title"
+      e={proto.EncoderInputType}
+      val={input.encoder!.type}
+      label="encoder.inputs"
+      dispatch={(type) => dispatch({ encoder: { ...input.encoder!, type } })}
+    />
+  ),
   accelerometer: ({ input, dispatch }) => (
     <DropdownBox
       title="input.title"

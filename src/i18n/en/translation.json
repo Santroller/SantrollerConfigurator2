@@ -120,6 +120,9 @@
     "output_pin": "Output pin",
     "device": "Matrix Device"
   },
+  "encoder": {
+    "deltaRate": "Sampling Rate (ms)"
+  },
   "axis": {
     "calibration": "Axis Calibration",
     "pressed": "Pressed Value",

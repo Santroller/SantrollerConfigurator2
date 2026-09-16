@@ -77,6 +77,7 @@ const inputRegistry: Partial<Record<InputKind, InputDefinition>> = {
     isAnalog: () => true,
     usesDevice: hasDevice((input) => input.accelerometer),
   },
+  encoder: { isAnalog: () => true, usesDevice: hasDevice((input) => input.encoder) },
   multiplexer: {
     isAnalog: () => true,
     usesDevice: hasDevice((input) => input.multiplexer),
@@ -154,6 +155,11 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   vtechExpander: { create: (deviceid) => ({ vtechExpander: { button: 0, deviceid } }) },
   matrix: {
     create: (deviceid) => ({ matrix: { outputPin: -1, pin: -1, deviceid } }),
+  },
+  encoder: {
+    create: (deviceid) => ({
+      encoder: { type: proto.EncoderInputType.EncoderDelta, deviceid },
+    }),
   },
   crkdNeck: {
     create: (deviceid) => ({

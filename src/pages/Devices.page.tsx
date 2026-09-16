@@ -1663,6 +1663,22 @@ function EncoderDevice({ id }: { id: string }) {
           updateDevice({ deviceid: parseInt(id, 10), encoder: { ...encoder, dataPin: pin } }, id)
         }
       />
+
+      <NumberInput
+        label={t('encoder.deltaRate')}
+        min={1}
+        max={512}
+        value={encoder.deltaRate || 0}
+        onChange={(e) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              encoder: { ...encoder, deltaRate: parseInt(e.toString(), 10) },
+            },
+            id
+          )
+        }
+      />
     </DeviceCard>
   );
 }
