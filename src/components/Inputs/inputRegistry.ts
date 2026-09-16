@@ -2,39 +2,6 @@ import { proto } from '@/components/SettingsContext/config';
 
 export type InputKind = keyof proto.IInput;
 
-const inputKinds = [
-  'gpio',
-  'fixed',
-  'mpr121',
-  'midi',
-  'mouseAxis',
-  'mouseButton',
-  'wiiAxis',
-  'wiiButton',
-  'key',
-  'crkd',
-  'encoder',
-  'shortcut',
-  'ads1115',
-  'accelerometer',
-  'gh5Neck',
-  'ps2Axis',
-  'ps2Button',
-  'usbButton',
-  'usbAxis',
-  'btButton',
-  'btAxis',
-  'multiplexer',
-  'protarNeckAxis',
-  'protarNeckButton',
-  'vtechExpander',
-  'held',
-  'matrix',
-  'crkdDrum',
-  'cycle',
-  'toggle',
-] as const satisfies readonly InputKind[];
-
 export type SelectedInput = {
   [Kind in InputKind]: {
     kind: Kind;
@@ -237,11 +204,14 @@ export function createStandaloneInput(type: string) {
   return standaloneInputRegistry[type]?.();
 }
 
-export function getSelectedInput(input: proto.IInput): SelectedInput | undefined {
-  for (const kind of inputKinds) {
-    const value = input[kind];
+export function getSelectedInput(input?: proto.IInput | null): SelectedInput | undefined {
+  if (!input) {
+    return undefined;
+  }
+
+  for (const [kind, value] of Object.entries(input)) {
     if (value != null) {
-      return { kind, value } as SelectedInput;
+      return { kind: kind as InputKind, value } as SelectedInput;
     }
   }
 
