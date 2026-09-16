@@ -573,6 +573,13 @@
     "confirm": "Delete assignment",
     "cancel": "Cancel"
   },
+  "delete_profile_dialog": {
+    "title": "Deleting profile",
+    "desc": "Are you sure you wish to delete this profile?",
+    "desc_named": "Are you sure you wish to delete profile \"{{name}}\"?",
+    "confirm": "Delete profile",
+    "cancel": "Cancel"
+  },
   "assignments": {
     "type": "Assignment Type",
     "title": "Assignments",

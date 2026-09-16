@@ -5772,42 +5772,70 @@ function BlankProfileWizard({
 
     // Generate mappings
     const newMappings: proto.IMapping[] = [];
-    newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
-    hostAssignments.forEach((item) => {
-      if (item.wiiExt != null) {
-        const wiiDev = Object.values(deviceStatus).find((d) => d.type === 'wii');
-        newMappings.push(
-          ...getDefaultMappings(
-            'wii',
-            deviceToEmulate,
-            wiiDev ? parseInt(wiiDev.id, 10) : undefined,
-            wiiDev
-          )
-        );
-      } else if (item.ps2Cnt != null) {
-        const psxDev = Object.values(deviceStatus).find((d) => d.type === 'psx');
-        newMappings.push(
-          ...getDefaultMappings(
-            'psx',
-            deviceToEmulate,
-            psxDev ? parseInt(psxDev.id, 10) : undefined,
-            psxDev
-          )
-        );
-      } else if (item.midiChannel != null) {
-        const midiDev = Object.values(deviceStatus).find(
-          (d) => d.type === 'midiSerial' || d.type === 'bhDrum' || d.type === 'worldTourDrum'
-        );
-        newMappings.push(
-          ...getDefaultMappings(
-            midiDev ? midiDev.type : 'midiSerial',
-            deviceToEmulate,
-            midiDev ? parseInt(midiDev.id, 10) : undefined,
-            midiDev
-          )
-        );
+    if (hostAssignments.length === 0) {
+      newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
+    } else {
+      hostAssignments.forEach((item) => {
+        if (item.wiiExt != null) {
+          const wiiDev = Object.values(deviceStatus).find((d) => d.type === 'wii');
+          newMappings.push(
+            ...getDefaultMappings(
+              'wii',
+              deviceToEmulate,
+              wiiDev ? parseInt(wiiDev.id, 10) : 0,
+              wiiDev ? { ...wiiDev, wiiExtType: item.wiiExt } : { wiiExtType: item.wiiExt }
+            )
+          );
+        } else if (item.ps2Cnt != null) {
+          const psxDev = Object.values(deviceStatus).find((d) => d.type === 'psx');
+          newMappings.push(
+            ...getDefaultMappings(
+              'psx',
+              deviceToEmulate,
+              psxDev ? parseInt(psxDev.id, 10) : 0,
+              psxDev ? { ...psxDev, ps2CntType: item.ps2Cnt } : { ps2CntType: item.ps2Cnt }
+            )
+          );
+        } else if (item.midiChannel != null) {
+          const midiDev = Object.values(deviceStatus).find(
+            (d) => d.type === 'midiSerial' || d.type === 'bhDrum' || d.type === 'worldTourDrum'
+          );
+          newMappings.push(
+            ...getDefaultMappings(
+              midiDev ? midiDev.type : 'midiSerial',
+              deviceToEmulate,
+              midiDev ? parseInt(midiDev.id, 10) : 0,
+              midiDev
+            )
+          );
+        } else if (item.usbType != null || item.usbDevice != null) {
+          const usbDev = Object.values(deviceStatus).find((d) => d.type === 'usbHost');
+          const hostType = item.usbType ?? deviceToEmulate;
+          newMappings.push(
+            ...getDefaultMappings(
+              'usbHost',
+              hostType,
+              usbDev ? parseInt(usbDev.id, 10) : 0,
+              usbDev
+            )
+          );
+        } else if (item.bluetoothType != null || item.bluetoothDevice != null) {
+          const btDev = Object.values(deviceStatus).find((d) => d.type === 'bt');
+          const hostType = item.bluetoothType ?? deviceToEmulate;
+          newMappings.push(
+            ...getDefaultMappings(
+              'bt',
+              hostType,
+              btDev ? parseInt(btDev.id, 10) : 0,
+              btDev
+            )
+          );
+        }
+      });
+      if (newMappings.length === 0) {
+        newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
       }
-    });
+    }
 
     updateProfile(
       {
@@ -6041,6 +6069,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const [opened2, { open: open2, close: close2 }] = useDisclosure(false);
   const [opened3, { open: open3, close: close3 }] = useDisclosure(false);
   const [opened4, { open: open4, close: close4 }] = useDisclosure(false);
+  const [deleteProfileOpened, { open: openDeleteProfile, close: closeDeleteProfile }] =
+    useDisclosure(false);
   const { t } = useTranslation();
   const profiles = useConfigStore((state) => state.config.profiles!);
   const updateProfile = useConfigStore((state) => state.updateProfile);
@@ -6185,6 +6215,34 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </Group>
         </Flex>
       </Modal>
+      <Modal
+        opened={deleteProfileOpened}
+        onClose={closeDeleteProfile}
+        title={t('delete_profile_dialog.title')}
+        centered
+      >
+        {profile?.opts?.name
+          ? t('delete_profile_dialog.desc_named', {
+              name: profile.opts.name,
+              defaultValue: t('delete_profile_dialog.desc'),
+            })
+          : t('delete_profile_dialog.desc')}
+        <Space h="md" />
+        <Flex justify="flex-end">
+          <Group align="flex-end">
+            <Button
+              onClick={() => {
+                deleteProfile(profileIdx);
+                closeDeleteProfile();
+              }}
+              color="red"
+            >
+              {t('delete_profile_dialog.confirm')}
+            </Button>
+            <Button onClick={closeDeleteProfile}>{t('delete_profile_dialog.cancel')}</Button>
+          </Group>
+        </Flex>
+      </Modal>
       <Space h="md" />
       {!simpleMode && (
         <>
@@ -6199,15 +6257,17 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                 style={{ width: '70%', height: '70%' }}
               />
             </ActionIcon>
-            <ActionIcon
-              color="red"
-              title={t('main.delete_profile')}
-              onClick={() => deleteProfile(profileIdx)}
-            >
-              <IconTrash
-                style={{ width: '70%', height: '70%' }}
-              />
-            </ActionIcon>
+            {profiles.length > 1 && (
+              <ActionIcon
+                color="red"
+                title={t('main.delete_profile')}
+                onClick={openDeleteProfile}
+              >
+                <IconTrash
+                  style={{ width: '70%', height: '70%' }}
+                />
+              </ActionIcon>
+            )}
           </Group>
           <Space h="md" />
           <TextInput

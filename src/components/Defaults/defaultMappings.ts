@@ -1115,7 +1115,70 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
 export const getMidiDefaults = getMidiDrumDefaults;
 
 // ---------------------------------------------------------------------------
-// 7. Central Defaults Dispatcher
+// 7. USB Host & Bluetooth Defaults (Pass-through based on SubType)
+// ---------------------------------------------------------------------------
+export function getUsbHostDefaults(subType: proto.SubType, deviceId = 0): proto.IMapping[] {
+  const gpio = getGpioDefaults(subType);
+  return gpio.map((m) => {
+    if (m.input?.gpio?.analog) {
+      return {
+        mapping: m.mapping,
+        input: {
+          usbAxis: {
+            deviceid: deviceId,
+            axis: m.mapping!,
+          },
+        },
+        min: m.min ?? 0,
+        max: m.max ?? 65535,
+        center: m.center ?? 0,
+        debounce: m.debounce,
+      };
+    }
+    return {
+      mapping: m.mapping,
+      input: {
+        usbButton: {
+          deviceid: deviceId,
+          button: m.mapping!,
+        },
+      },
+    };
+  });
+}
+
+export function getBluetoothDefaults(subType: proto.SubType, deviceId = 0): proto.IMapping[] {
+  const gpio = getGpioDefaults(subType);
+  return gpio.map((m) => {
+    if (m.input?.gpio?.analog) {
+      return {
+        mapping: m.mapping,
+        input: {
+          btAxis: {
+            deviceid: deviceId,
+            axis: m.mapping!,
+          },
+        },
+        min: m.min ?? 0,
+        max: m.max ?? 65535,
+        center: m.center ?? 0,
+        debounce: m.debounce,
+      };
+    }
+    return {
+      mapping: m.mapping,
+      input: {
+        btButton: {
+          deviceid: deviceId,
+          button: m.mapping!,
+        },
+      },
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 8. Central Defaults Dispatcher
 // ---------------------------------------------------------------------------
 export function getDefaultMappings(
   deviceType: string,
@@ -1140,6 +1203,10 @@ export function getDefaultMappings(
     case 'bhDrum':
     case 'worldTourDrum':
       return getMidiDrumDefaults(subType, deviceId);
+    case 'usbHost':
+      return getUsbHostDefaults(subType, deviceId);
+    case 'bt':
+      return getBluetoothDefaults(subType, deviceId);
     case 'gpio':
     default:
       return getGpioDefaults(subType);

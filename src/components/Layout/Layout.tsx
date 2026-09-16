@@ -12,6 +12,7 @@ import {
   IconSettings,
   IconSun,
   IconTag,
+  IconTrash,
 } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +32,9 @@ import {
   Grid,
   Group,
   Image,
+  Modal,
   NavLink,
+  Space,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -52,6 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
   const cloneProfile = useConfigStore((state) => state.cloneProfile);
+  const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const configModified = useConfigStore((state) => state.configModified && state.connected);
@@ -61,6 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const commitConfig = useConfigStore((state) => state.commitConfig);
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [profileToDelete, setProfileToDelete] = useState<number | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSave = async () => {
@@ -109,9 +114,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showSave = configModified || saveStatus !== 'idle';
+  const targetProfile = profileToDelete !== null ? profiles[profileToDelete] : null;
 
   return (
     <>
+      <Modal
+        opened={profileToDelete !== null}
+        onClose={() => setProfileToDelete(null)}
+        title={t('delete_profile_dialog.title')}
+        centered
+      >
+        {targetProfile?.opts?.name
+          ? t('delete_profile_dialog.desc_named', {
+              name: targetProfile.opts.name,
+              defaultValue: t('delete_profile_dialog.desc'),
+            })
+          : t('delete_profile_dialog.desc')}
+        <Space h="md" />
+        <Flex justify="flex-end">
+          <Group align="flex-end">
+            <Button
+              onClick={() => {
+                if (profileToDelete !== null) {
+                  deleteProfile(profileToDelete);
+                  setProfileToDelete(null);
+                }
+              }}
+              color="red"
+            >
+              {t('delete_profile_dialog.confirm')}
+            </Button>
+            <Button onClick={() => setProfileToDelete(null)}>
+              {t('delete_profile_dialog.cancel')}
+            </Button>
+          </Group>
+        </Flex>
+      </Modal>
       <AppShell
         header={{ height: showSave ? 80 : 50 }}
         navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
@@ -271,19 +309,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         <Group gap={4} wrap="nowrap">
                           {instanceCount === 1 && <Badge>Active</Badge>}
                           {!simpleMode && (
-                            <ActionIcon
-                              size="xs"
-                              variant="subtle"
-                              color="gray"
-                              title={t('main.clone_profile')}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                cloneProfile(i);
-                              }}
-                            >
-                              <IconCopy size={13} />
-                            </ActionIcon>
+                            <>
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                color="gray"
+                                title={t('main.clone_profile')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  cloneProfile(i);
+                                }}
+                              >
+                                <IconCopy size={13} />
+                              </ActionIcon>
+                              {profiles.length > 1 && (
+                                <ActionIcon
+                                  size="xs"
+                                  variant="subtle"
+                                  color="red"
+                                  title={t('main.delete_profile')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setProfileToDelete(i);
+                                  }}
+                                >
+                                  <IconTrash size={13} />
+                                </ActionIcon>
+                              )}
+                            </>
                           )}
                         </Group>
                       </Group>
@@ -314,19 +369,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         <Group gap={4} wrap="nowrap">
                           <Badge>Active</Badge>
                           {!simpleMode && (
-                            <ActionIcon
-                              size="xs"
-                              variant="subtle"
-                              color="gray"
-                              title={t('main.clone_profile')}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                cloneProfile(i);
-                              }}
-                            >
-                              <IconCopy size={13} />
-                            </ActionIcon>
+                            <>
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                color="gray"
+                                title={t('main.clone_profile')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  cloneProfile(i);
+                                }}
+                              >
+                                <IconCopy size={13} />
+                              </ActionIcon>
+                              {profiles.length > 1 && (
+                                <ActionIcon
+                                  size="xs"
+                                  variant="subtle"
+                                  color="red"
+                                  title={t('main.delete_profile')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setProfileToDelete(i);
+                                  }}
+                                >
+                                  <IconTrash size={13} />
+                                </ActionIcon>
+                              )}
+                            </>
                           )}
                         </Group>
                       </Group>

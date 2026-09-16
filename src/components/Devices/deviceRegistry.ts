@@ -221,6 +221,8 @@ const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'midiSerial',
   'bhDrum',
   'worldTourDrum',
+  'usbHost',
+  'bt',
 ]);
 
 export function isDeviceKind(value: string): value is DeviceKind {

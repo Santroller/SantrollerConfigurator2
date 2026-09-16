@@ -829,6 +829,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     deleteProfile: (id: number) => {
       set((state) => {
+        if (!state.config.profiles || state.config.profiles.length <= 1) {
+          return;
+        }
         if (state.currentProfile === id) {
           state.currentProfile = Math.max(id - 1, 0);
         }
