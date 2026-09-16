@@ -3,6 +3,7 @@ import {
   IconBuildingStore,
   IconCheck,
   IconChevronRight,
+  IconCopy,
   IconDeviceFloppy,
   IconDeviceGamepad3,
   IconMoon,
@@ -50,6 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const profiles = useConfigStore((state) => state.config.profiles!);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
+  const cloneProfile = useConfigStore((state) => state.cloneProfile);
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const configModified = useConfigStore((state) => state.configModified && state.connected);
@@ -264,9 +266,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
                   if (instanceCount <= 1) {
                     const label = (
-                      <Group gap="xs" justify="space-between" wrap="nowrap">
+                      <Group gap="xs" justify="space-between" wrap="nowrap" style={{ width: '100%' }}>
                         <span>{x.opts.name}</span>
-                        {instanceCount === 1 && <Badge>Active</Badge>}
+                        <Group gap={4} wrap="nowrap">
+                          {instanceCount === 1 && <Badge>Active</Badge>}
+                          {!simpleMode && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              color="gray"
+                              title={t('main.clone_profile')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                cloneProfile(i);
+                              }}
+                            >
+                              <IconCopy size={13} />
+                            </ActionIcon>
+                          )}
+                        </Group>
                       </Group>
                     );
                     return [
@@ -290,9 +309,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   // Profile is assigned multiple times (e.g. 2 gamepads and 2 drum kits) -> show each instance as a nav link item
                   return Array.from({ length: instanceCount }).map((_, instanceIdx) => {
                     const label = (
-                      <Group gap="xs" justify="space-between" wrap="nowrap">
+                      <Group gap="xs" justify="space-between" wrap="nowrap" style={{ width: '100%' }}>
                         <span>{`${x.opts.name} (${instanceIdx + 1})`}</span>
-                        <Badge>Active</Badge>
+                        <Group gap={4} wrap="nowrap">
+                          <Badge>Active</Badge>
+                          {!simpleMode && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              color="gray"
+                              title={t('main.clone_profile')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                cloneProfile(i);
+                              }}
+                            >
+                              <IconCopy size={13} />
+                            </ActionIcon>
+                          )}
+                        </Group>
                       </Group>
                     );
                     return (

@@ -14,6 +14,7 @@ import {
   IconBluetooth,
   IconChevronDown,
   IconCopy,
+  IconCpu,
   IconDeviceGamepad,
   IconExclamationCircle,
   IconGripVertical,
@@ -57,6 +58,7 @@ import {
   Tabs,
   Text,
   TextInput,
+  ThemeIcon,
   Title,
   useCombobox,
 } from '@mantine/core';
@@ -82,8 +84,10 @@ import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
+import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import {
   DeviceStatus,
+  isDeviceAssigned,
   ps4Subtypes,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
@@ -1238,6 +1242,8 @@ function SantrollerInput({
   const detecting = useConfigStore((state) => state.detecting);
   const device = useConfigStore((state) => state.deviceStatus[deviceId]);
   const simpleMode = useConfigStore((state) => state.simpleMode);
+  const currentProfile = useConfigStore((state) => state.currentProfile);
+  const profile = useConfigStore((state) => state.config.profiles?.[currentProfile]);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -1258,32 +1264,36 @@ function SantrollerInput({
           {t('devices.gpio')}
         </Text>
         <Text fz="xs" span opacity="0.7">
-          {t(input.gpio.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')}
+          ({t(input.gpio.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')})
         </Text>
       </Group>
     );
-  } else if (input.mouseAxis) {
-    deviceValue = <Text>{t(`devices.mouseAxis`)}</Text>;
-  } else if (input.mouseButton) {
-    deviceValue = <Text>{t(`devices.mouseButton`)}</Text>;
-  } else if (input.key) {
-    deviceValue = <Text>{t(`devices.key`)}</Text>;
   } else if (input.shortcut) {
-    deviceValue = <Text>{t(`devices.shortcut`)}</Text>;
-  } else if (input.held) {
-    deviceValue = <Text>{t(`devices.held`)}</Text>;
-  } else if (device) {
     deviceValue = (
-      <Group gap="2">
-        <Text fz="sm" span>
-          {t(`devices.${device.type}`)}
-        </Text>
-
-        <Text fz="xs" span opacity="0.7">
-          ({DeviceStatus.label(device)})
-        </Text>
-      </Group>
+      <Text fz="sm" span>
+        {t('devices.shortcut')}
+      </Text>
     );
+  } else if (input.held) {
+    deviceValue = (
+      <Text fz="sm" span>
+        {t('devices.held')}
+      </Text>
+    );
+  } else if (deviceId !== undefined && deviceId !== -1) {
+    const dev = deviceStatus[deviceId.toString()];
+    if (dev) {
+      deviceValue = (
+        <Group gap="2">
+          <Text fz="sm" span>
+            {t(`devices.${dev.type}`)}
+          </Text>
+          <Text fz="xs" span opacity="0.7">
+            ({DeviceStatus.label(dev)})
+          </Text>
+        </Group>
+      );
+    }
   }
   if (
     detectedMapping !== undefined &&
@@ -1321,6 +1331,10 @@ function SantrollerInput({
             deviceCombobox.closeDropdown();
             if (isNumberLike(val)) {
               const deviceid = parseInt(val, 10);
+              const targetDevice = deviceStatus[deviceid];
+              if (targetDevice && !isDeviceAssigned(targetDevice.type, profile)) {
+                return;
+              }
               const nextInput = createDeviceInput(deviceStatus[deviceid].type, deviceid, {
                 axis,
                 button,
@@ -1354,19 +1368,29 @@ function SantrollerInput({
             <Combobox.Options>
               {Object.values(deviceStatus)
                 .filter((status) => isInputDeviceKind(status.type))
-                .map((item) => (
-                  <Combobox.Option value={item.id} key={item.id}>
-                    <Group gap="2">
-                      <Text fz="sm" span>
-                        {t(`devices.${item.type}`)}
-                      </Text>
+                .map((item) => {
+                  const assigned = isDeviceAssigned(item.type, profile);
+                  return (
+                    <Combobox.Option value={item.id} key={item.id} disabled={!assigned}>
+                      <Group justify="space-between" wrap="nowrap" w="100%">
+                        <Group gap="2">
+                          <Text fz="sm" span>
+                            {t(`devices.${item.type}`)}
+                          </Text>
 
-                      <Text fz="xs" span opacity="0.7">
-                        ({DeviceStatus.label(item)})
-                      </Text>
-                    </Group>
-                  </Combobox.Option>
-                ))}
+                          <Text fz="xs" span opacity="0.7">
+                            ({DeviceStatus.label(item)})
+                          </Text>
+                        </Group>
+                        {!assigned && (
+                          <Badge size="xs" color="red" variant="light">
+                            {t('assignments.not_assigned')}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Combobox.Option>
+                  );
+                })}
               <Combobox.Option value="gpio_analog">
                 <Group gap="2">
                   <Text fz="sm" span>
@@ -2150,10 +2174,7 @@ function SantrollerMapping({
     (status?.crkdDrumCalibration &&
       status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.HoldTick][crkdAxis]) ||
     0;
-  const crkdRaw =
-    (status?.crkdDrumCalibration &&
-      status.crkdDrumCalibration[proto.CrkdDrumCalibrationType.RawValue][crkdAxis]) ||
-    0;
+
   const isPressed = useConfigStore(
     (state) => !!state.mappingStatus[profileIdx]?.[mappingIdx]?.state
   );
@@ -4374,6 +4395,292 @@ function SantrollerAssignment({
   );
 }
 
+export const getHostSourceType = (item: proto.IProfileAssignmentInfo): string | null => {
+  if (item.wiiExt != null) {
+    return 'wiiExt';
+  }
+  if (item.ps2Cnt != null) {
+    return 'ps2Cnt';
+  }
+  if (item.usbType != null) {
+    return 'usbType';
+  }
+  if (item.usbDevice != null) {
+    return 'usbDevice';
+  }
+  if (item.bluetoothType != null) {
+    return 'bluetoothType';
+  }
+  if (item.bluetoothDevice != null) {
+    return 'bluetoothDevice';
+  }
+  if (item.midiChannel != null) {
+    return 'midiChannel';
+  }
+  return null;
+};
+
+export function ControllerSourcesEditor({
+  assignments,
+  onAddSource,
+  onRemoveSource,
+  onUpdateSource,
+  hasUsbHost,
+  hasBluetooth,
+  hasMidi,
+  hasWii,
+  hasPsx,
+}: {
+  assignments: proto.IProfileAssignmentInfo[];
+  onAddSource: (type: string) => void;
+  onRemoveSource: (idx: number) => void;
+  onUpdateSource: (idx: number, updated: proto.IProfileAssignmentInfo) => void;
+  hasUsbHost: boolean;
+  hasBluetooth: boolean;
+  hasMidi: boolean;
+  hasWii: boolean;
+  hasPsx: boolean;
+}) {
+  const { t } = useTranslation();
+  const hostIndices = useMemo(() => {
+    return assignments
+      .map((item, idx) => ({ item, idx, type: getHostSourceType(item) }))
+      .filter(
+        (x): x is { item: proto.IProfileAssignmentInfo; idx: number; type: string } =>
+          x.type !== null
+      );
+  }, [assignments]);
+
+  return (
+    <Stack gap="xs">
+      <div>
+        <Text size="xs" fw={500}>
+          {t('assignments.step2_title')}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t('assignments.step2_desc')}
+        </Text>
+      </div>
+
+      <Card padding="xs" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
+        <Group justify="space-between" align="center">
+          <Group gap="xs">
+            <ThemeIcon size="sm" variant="transparent" color="teal">
+              <IconCpu size={16} />
+            </ThemeIcon>
+            <Text size="xs" fw={500}>
+              {t('assignments.default_pins_active_title')}
+            </Text>
+          </Group>
+          <Badge size="xs" variant="light" color="teal">
+            {t('assignments.always_available')}
+          </Badge>
+        </Group>
+        <Text size="xs" c="dimmed" mt={4}>
+          {t('assignments.default_pins_active_desc')}
+        </Text>
+      </Card>
+
+      {hostIndices.map(({ item, idx, type: hType }, listSourceIdx) => (
+        <Card
+          key={idx}
+          padding="xs"
+          radius="sm"
+          withBorder
+          bg="var(--mantine-color-default-hover)"
+        >
+          <Stack gap={4}>
+            <Group justify="space-between" align="center">
+              <Badge size="sm" variant="light" color="blue">
+                {t(`assignments.source.${hType}`)} #{listSourceIdx + 1}
+              </Badge>
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="red"
+                onClick={() => onRemoveSource(idx)}
+                title="Remove source"
+              >
+                <IconTrash size={14} />
+              </ActionIcon>
+            </Group>
+
+            {hType === 'wiiExt' && (
+              <DropdownBox
+                title="activation.wiiExt"
+                e={proto.WiiExtType}
+                val={item.wiiExt ?? proto.WiiExtType.WiiGuitarHeroGuitar}
+                label="wiiExt"
+                dispatch={(wiiExt) => onUpdateSource(idx, { wiiExt })}
+              />
+            )}
+            {hType === 'ps2Cnt' && (
+              <DropdownBox
+                title="activation.ps2Cnt"
+                e={proto.PS2ControllerType}
+                val={item.ps2Cnt ?? proto.PS2ControllerType.PS2ControllerTypeGuitar}
+                label="ps2Cnt"
+                dispatch={(ps2Cnt) => onUpdateSource(idx, { ps2Cnt })}
+              />
+            )}
+            {hType === 'usbType' && (
+              <DropdownBox
+                title="activation.usbType"
+                e={proto.SubType}
+                val={item.usbType ?? proto.SubType.Gamepad}
+                label="subType"
+                dispatch={(usbType) => onUpdateSource(idx, { usbType })}
+              />
+            )}
+            {hType === 'usbDevice' && (
+              <Group grow>
+                <TextInput
+                  size="xs"
+                  label={t('assignments.vendorId')}
+                  leftSection="0x"
+                  value={(item.usbDevice?.vid ?? 0).toString(16)}
+                  onChange={(e) =>
+                    onUpdateSource(idx, {
+                      usbDevice: {
+                        vid:
+                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        pid: item.usbDevice?.pid ?? 0,
+                      },
+                    })
+                  }
+                />
+                <TextInput
+                  size="xs"
+                  label={t('assignments.productId')}
+                  leftSection="0x"
+                  value={(item.usbDevice?.pid ?? 0).toString(16)}
+                  onChange={(e) =>
+                    onUpdateSource(idx, {
+                      usbDevice: {
+                        vid: item.usbDevice?.vid ?? 0,
+                        pid:
+                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                      },
+                    })
+                  }
+                />
+              </Group>
+            )}
+            {hType === 'bluetoothType' && (
+              <DropdownBox
+                title="activation.bluetoothType"
+                e={proto.SubType}
+                val={item.bluetoothType ?? proto.SubType.Gamepad}
+                label="subType"
+                dispatch={(bluetoothType) => onUpdateSource(idx, { bluetoothType })}
+              />
+            )}
+            {hType === 'bluetoothDevice' && (
+              <Group grow>
+                <TextInput
+                  size="xs"
+                  label={t('assignments.vendorId')}
+                  leftSection="0x"
+                  value={(item.bluetoothDevice?.vid ?? 0).toString(16)}
+                  onChange={(e) =>
+                    onUpdateSource(idx, {
+                      bluetoothDevice: {
+                        vid:
+                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        pid: item.bluetoothDevice?.pid ?? 0,
+                      },
+                    })
+                  }
+                />
+                <TextInput
+                  size="xs"
+                  label={t('assignments.productId')}
+                  leftSection="0x"
+                  value={(item.bluetoothDevice?.pid ?? 0).toString(16)}
+                  onChange={(e) =>
+                    onUpdateSource(idx, {
+                      bluetoothDevice: {
+                        vid: item.bluetoothDevice?.vid ?? 0,
+                        pid:
+                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                      },
+                    })
+                  }
+                />
+              </Group>
+            )}
+            {hType === 'midiChannel' && (
+              <NumberInput
+                size="xs"
+                label={t('assignments.midiChannel')}
+                value={item.midiChannel ?? 10}
+                min={1}
+                max={16}
+                onChange={(val) =>
+                  onUpdateSource(idx, {
+                    midiChannel: parseInt(val?.toString() ?? '1', 10) || 1,
+                  })
+                }
+              />
+            )}
+          </Stack>
+        </Card>
+      ))}
+
+      <Menu shadow="md" width={220}>
+        <Menu.Target>
+          <Button size="xs" variant="light" leftSection={<IconPlus size={14} />}>
+            {hostIndices.length === 0
+              ? t('assignments.add_source')
+              : t('assignments.add_another_source')}
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {(hasUsbHost ||
+            assignments.some((x) => x.usbType != null || x.usbDevice != null)) && (
+            <>
+              <Menu.Item onClick={() => onAddSource('usbType')}>
+                {t('assignments.source.usbType')}
+              </Menu.Item>
+              <Menu.Item onClick={() => onAddSource('usbDevice')}>
+                {t('assignments.source.usbDevice')}
+              </Menu.Item>
+            </>
+          )}
+          {(hasBluetooth ||
+            assignments.some(
+              (x) => x.bluetoothType != null || x.bluetoothDevice != null
+            )) && (
+            <>
+              <Menu.Item onClick={() => onAddSource('bluetoothType')}>
+                {t('assignments.source.bluetoothType')}
+              </Menu.Item>
+              <Menu.Item onClick={() => onAddSource('bluetoothDevice')}>
+                {t('assignments.source.bluetoothDevice')}
+              </Menu.Item>
+            </>
+          )}
+          {(hasMidi || assignments.some((x) => x.midiChannel != null)) && (
+            <Menu.Item onClick={() => onAddSource('midiChannel')}>
+              {t('assignments.source.midiChannel')}
+            </Menu.Item>
+          )}
+          {(hasWii || assignments.some((x) => x.wiiExt != null)) && (
+            <Menu.Item onClick={() => onAddSource('wiiExt')}>
+              {t('assignments.source.wiiExt')}
+            </Menu.Item>
+          )}
+          {(hasPsx || assignments.some((x) => x.ps2Cnt != null)) && (
+            <Menu.Item onClick={() => onAddSource('ps2Cnt')}>
+              {t('assignments.source.ps2Cnt')}
+            </Menu.Item>
+          )}
+        </Menu.Dropdown>
+      </Menu>
+    </Stack>
+  );
+}
+
 function SantrollerAssignmentList({
   mapping,
   profileIdx,
@@ -4405,17 +4712,20 @@ function SantrollerAssignmentList({
   );
   const emulationItem = emulationIdx !== -1 ? assignments[emulationIdx] : undefined;
 
-  const hostIdx = assignments.findIndex((x) =>
-    HostProfileAssignmentTypes.some((y) => x[y] != null)
-  );
-  const hostItem = hostIdx !== -1 ? assignments[hostIdx] : undefined;
+  const hostIndices = useMemo(() => {
+    return assignments
+      .map((item, idx) => ({ item, idx, type: getHostSourceType(item) }))
+      .filter(
+        (x): x is { item: proto.IProfileAssignmentInfo; idx: number; type: string } =>
+          x.type !== null
+      );
+  }, [assignments]);
 
   const triggerIdx = assignments.findIndex((x) => OtherAssignmentTypes.some((y) => x[y] != null));
   const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
 
   const isComplex =
     assignments.filter((x) => DeviceProfileAssignmentTypes.some((y) => x[y] != null)).length > 1 ||
-    assignments.filter((x) => HostProfileAssignmentTypes.some((y) => x[y] != null)).length > 1 ||
     assignments.filter((x) => OtherAssignmentTypes.some((y) => x[y] != null)).length > 1;
 
   const [advancedMode, setAdvancedMode] = useState(isComplex);
@@ -4450,17 +4760,41 @@ function SantrollerAssignmentList({
     dispatch({ ...mapping, assignments: next });
   };
 
-  const updateHost = (newHost: proto.IProfileAssignmentInfo | null) => {
+  const addHostSource = (sourceType: string) => {
     const next = [...assignments];
-    if (hostIdx !== -1) {
-      if (newHost === null) {
-        next.splice(hostIdx, 1);
-      } else {
-        next[hostIdx] = newHost;
-      }
-    } else if (newHost !== null) {
-      next.push(newHost);
+    switch (sourceType) {
+      case 'wiiExt':
+        next.push({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
+        break;
+      case 'ps2Cnt':
+        next.push({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
+        break;
+      case 'usbType':
+        next.push({ usbType: proto.SubType.Gamepad });
+        break;
+      case 'usbDevice':
+        next.push({ usbDevice: { vid: 0, pid: 0 } });
+        break;
+      case 'bluetoothType':
+        next.push({ bluetoothType: proto.SubType.Gamepad });
+        break;
+      case 'bluetoothDevice':
+        next.push({ bluetoothDevice: { vid: 0, pid: 0 } });
+        break;
+      case 'midiChannel':
+        next.push({ midiChannel: 10 });
+        break;
     }
+    dispatch({ ...mapping, assignments: next });
+  };
+
+  const removeHostSource = (targetIdx: number) => {
+    const next = assignments.filter((_, idx) => idx !== targetIdx);
+    dispatch({ ...mapping, assignments: next });
+  };
+
+  const updateHostSource = (targetIdx: number, updated: proto.IProfileAssignmentInfo) => {
+    const next = assignments.map((x, idx) => (idx === targetIdx ? updated : x));
     dispatch({ ...mapping, assignments: next });
   };
 
@@ -4592,54 +4926,12 @@ function SantrollerAssignmentList({
         ? 'specific'
         : 'auto';
 
-  const currentSource =
-    hostItem?.wiiExt != null
-      ? 'wiiExt'
-      : hostItem?.ps2Cnt != null
-        ? 'ps2Cnt'
-        : hostItem?.bluetoothType != null
-          ? 'bluetoothType'
-          : hostItem?.usbType != null
-            ? 'usbType'
-            : hostItem?.usbDevice != null
-              ? 'usbDevice'
-              : hostItem?.bluetoothDevice != null
-                ? 'bluetoothDevice'
-                : hostItem?.midiChannel != null
-                  ? 'midiChannel'
-                  : 'builtin';
-
   const currentTrigger =
     triggerItem?.input != null
       ? 'input'
       : triggerItem?.inputAnyTime != null
         ? 'inputAnyTime'
         : 'always';
-
-  const sourceOptions = [
-    { value: 'builtin', label: t('assignments.source.builtin') },
-    ...(hasWii || hostItem?.wiiExt != null
-      ? [{ value: 'wiiExt', label: t('assignments.source.wiiExt') }]
-      : []),
-    ...(hasPsx || hostItem?.ps2Cnt != null
-      ? [{ value: 'ps2Cnt', label: t('assignments.source.ps2Cnt') }]
-      : []),
-    ...(hasUsbHost || hostItem?.usbType != null
-      ? [{ value: 'usbType', label: t('assignments.source.usbType') }]
-      : []),
-    ...(hasUsbHost || hostItem?.usbDevice != null
-      ? [{ value: 'usbDevice', label: t('assignments.source.usbDevice') }]
-      : []),
-    ...(hasBluetooth || hostItem?.bluetoothType != null
-      ? [{ value: 'bluetoothType', label: t('assignments.source.bluetoothType') }]
-      : []),
-    ...(hasBluetooth || hostItem?.bluetoothDevice != null
-      ? [{ value: 'bluetoothDevice', label: t('assignments.source.bluetoothDevice') }]
-      : []),
-    ...(hasMidi || hostItem?.midiChannel != null
-      ? [{ value: 'midiChannel', label: t('assignments.source.midiChannel') }]
-      : []),
-  ];
 
   const targetOptions = [
     { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
@@ -4670,21 +4962,24 @@ function SantrollerAssignmentList({
       emul = t('assignments.no_emulation');
     }
 
-    let host = '';
-    if (hostItem?.wiiExt) {
-      host = `Wii (${t(`wiiExt.${proto.WiiExtType[hostItem.wiiExt]}`)})`;
-    } else if (hostItem?.ps2Cnt) {
-      host = `PS2 (${t(`ps2Cnt.${proto.PS2ControllerType[hostItem.ps2Cnt]}`)})`;
-    } else if (hostItem?.usbType) {
-      host = `USB (${t(`subType.${proto.SubType[hostItem.usbType]}`)})`;
-    } else if (hostItem?.usbDevice) {
-      host = t('assignments.source.usbDevice');
-    } else if (hostItem?.bluetoothType) {
-      host = `USB (${t(`subType.${proto.SubType[hostItem.bluetoothType]}`)})`;
-    } else if (hostItem?.bluetoothDevice) {
-      host = t('assignments.source.bluetoothDevice');
-    } else if (hostItem?.midiChannel) {
-      host = `MIDI Ch ${hostItem.midiChannel}`;
+    const hostParts: string[] = [];
+
+    for (const { item } of hostIndices) {
+      if (item.wiiExt != null) {
+        hostParts.push(`Wii (${t(`wiiExt.${proto.WiiExtType[item.wiiExt]}`)})`);
+      } else if (item.ps2Cnt != null) {
+        hostParts.push(`PS2 (${t(`ps2Cnt.${proto.PS2ControllerType[item.ps2Cnt]}`)})`);
+      } else if (item.usbType != null) {
+        hostParts.push(`USB (${t(`subType.${proto.SubType[item.usbType]}`)})`);
+      } else if (item.usbDevice != null) {
+        hostParts.push(t('assignments.source.usbDevice'));
+      } else if (item.bluetoothType != null) {
+        hostParts.push(`Bluetooth (${t(`subType.${proto.SubType[item.bluetoothType]}`)})`);
+      } else if (item.bluetoothDevice != null) {
+        hostParts.push(t('assignments.source.bluetoothDevice'));
+      } else if (item.midiChannel != null) {
+        hostParts.push(`MIDI Ch ${item.midiChannel}`);
+      }
     }
 
     let trig = '';
@@ -4695,14 +4990,14 @@ function SantrollerAssignmentList({
     }
 
     const parts = [emul];
-    if (host) {
-      parts.push(host);
+    if (hostParts.length > 0) {
+      parts.push(...hostParts);
     }
     if (trig) {
       parts.push(trig);
     }
     return parts.join(' + ');
-  }, [emulationItem, hostItem, triggerItem, t]);
+  }, [emulationItem, hostIndices, triggerItem, t]);
 
   const hasEmulation = emulationItem !== undefined;
   const triggerAnalog =
@@ -5046,157 +5341,17 @@ function SantrollerAssignmentList({
 
             <Divider my={2} />
 
-            <Stack gap={4}>
-              <Input.Wrapper
-                size="xs"
-                label={t('assignments.step2_title')}
-                description={t('assignments.step2_desc')}
-              >
-                <Select
-                  size="xs"
-                  value={currentSource}
-                  onChange={(val) => {
-                    switch (val) {
-                      case 'builtin':
-                        updateHost(null);
-                        break;
-                      case 'wiiExt':
-                        updateHost({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
-                        break;
-                      case 'ps2Cnt':
-                        updateHost({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
-                        break;
-                      case 'usbType':
-                        updateHost({ usbType: proto.SubType.Gamepad });
-                        break;
-                      case 'usbDevice':
-                        updateHost({ usbDevice: { vid: 0, pid: 0 } });
-                        break;
-                      case 'bluetoothType':
-                        updateHost({ bluetoothType: proto.SubType.Gamepad });
-                        break;
-                      case 'bluetoothDevice':
-                        updateHost({ bluetoothDevice: { vid: 0, pid: 0 } });
-                        break;
-                      case 'midiChannel':
-                        updateHost({ midiChannel: 10 });
-                        break;
-                    }
-                  }}
-                  data={sourceOptions}
-                />
-              </Input.Wrapper>
-              {currentSource === 'wiiExt' && (
-                <DropdownBox
-                  title="activation.wiiExt"
-                  e={proto.WiiExtType}
-                  val={hostItem?.wiiExt ?? proto.WiiExtType.WiiGuitarHeroGuitar}
-                  label="wiiExt"
-                  dispatch={(wiiExt) => updateHost({ wiiExt })}
-                />
-              )}
-              {currentSource === 'ps2Cnt' && (
-                <DropdownBox
-                  title="activation.ps2Cnt"
-                  e={proto.PS2ControllerType}
-                  val={hostItem?.ps2Cnt ?? proto.PS2ControllerType.PS2ControllerTypeGuitar}
-                  label="ps2Cnt"
-                  dispatch={(ps2Cnt) => updateHost({ ps2Cnt })}
-                />
-              )}
-              {currentSource === 'usbType' && (
-                <DropdownBox
-                  title="activation.usbType"
-                  e={proto.SubType}
-                  val={hostItem?.usbType ?? proto.SubType.Gamepad}
-                  label="subType"
-                  dispatch={(usbType) => updateHost({ usbType })}
-                />
-              )}
-              {currentSource === 'usbDevice' && (
-                <Group grow>
-                  <TextInput
-                    size="xs"
-                    label={t('assignments.vendorId')}
-                    leftSection="0x"
-                    value={(hostItem?.usbDevice?.vid ?? 0).toString(16)}
-                    onChange={(e) =>
-                      updateHost({
-                        usbDevice: {
-                          vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                          pid: hostItem?.usbDevice?.pid ?? 0,
-                        },
-                      })
-                    }
-                  />
-                  <TextInput
-                    size="xs"
-                    label={t('assignments.productId')}
-                    leftSection="0x"
-                    value={(hostItem?.usbDevice?.pid ?? 0).toString(16)}
-                    onChange={(e) =>
-                      updateHost({
-                        usbDevice: {
-                          vid: hostItem?.usbDevice?.vid ?? 0,
-                          pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                        },
-                      })
-                    }
-                  />
-                </Group>
-              )}
-              {currentSource === 'bluetoothType' && (
-                <DropdownBox
-                  title="activation.bluetoothType"
-                  e={proto.SubType}
-                  val={hostItem?.bluetoothType ?? proto.SubType.Gamepad}
-                  label="subType"
-                  dispatch={(bluetoothType) => updateHost({ bluetoothType })}
-                />
-              )}
-              {currentSource === 'bluetoothDevice' && (
-                <Group grow>
-                  <TextInput
-                    size="xs"
-                    label={t('assignments.vendorId')}
-                    leftSection="0x"
-                    value={(hostItem?.bluetoothDevice?.vid ?? 0).toString(16)}
-                    onChange={(e) =>
-                      updateHost({
-                        bluetoothDevice: {
-                          vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                          pid: hostItem?.bluetoothDevice?.pid ?? 0,
-                        },
-                      })
-                    }
-                  />
-                  <TextInput
-                    size="xs"
-                    label={t('assignments.productId')}
-                    leftSection="0x"
-                    value={(hostItem?.bluetoothDevice?.pid ?? 0).toString(16)}
-                    onChange={(e) =>
-                      updateHost({
-                        bluetoothDevice: {
-                          vid: hostItem?.bluetoothDevice?.vid ?? 0,
-                          pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                        },
-                      })
-                    }
-                  />
-                </Group>
-              )}
-              {currentSource === 'midiChannel' && (
-                <NumberInput
-                  size="xs"
-                  label={t('assignments.midiChannel')}
-                  value={hostItem?.midiChannel ?? 10}
-                  min={1}
-                  max={16}
-                  onChange={(val) => updateHost({ midiChannel: parseInt(val.toString(), 10) ?? 1 })}
-                />
-              )}
-            </Stack>
+            <ControllerSourcesEditor
+              assignments={assignments}
+              onAddSource={addHostSource}
+              onRemoveSource={removeHostSource}
+              onUpdateSource={updateHostSource}
+              hasUsbHost={hasUsbHost}
+              hasBluetooth={hasBluetooth}
+              hasMidi={hasMidi}
+              hasWii={hasWii}
+              hasPsx={hasPsx}
+            />
 
             <Divider my={2} />
 
@@ -5436,6 +5591,450 @@ enum LegendMode {
   Nintendo = 3,
   PlayStation = 4,
 }
+
+function BlankProfileWizard({
+  profile,
+  profileIdx,
+  onSkip,
+  updateProfile,
+}: {
+  profile: proto.IProfile;
+  profileIdx: number;
+  onSkip: () => void;
+  updateProfile: (profile: proto.IProfile, index: number) => void;
+}) {
+  const { t } = useTranslation();
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+
+  const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
+  const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
+  const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
+  const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
+  const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
+  const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
+  const hasMidi = Object.values(deviceStatus).some(
+    (d) =>
+      d.type === 'midiSerial' ||
+      d.type === 'usbHost' ||
+      d.type === 'wii' ||
+      d.type === 'bhDrum' ||
+      d.type === 'worldTourDrum'
+  );
+
+  const initialRule = profile.assignments?.[0]?.assignments ?? [];
+  const initialEmul = initialRule.find((x) =>
+    DeviceProfileAssignmentTypes.some((y) => x[y] != null)
+  );
+  const initialHost = initialRule.filter((x) => getHostSourceType(x) !== null);
+  const initialTrigger = initialRule.find((x) =>
+    OtherAssignmentTypes.some((y) => x[y] != null)
+  );
+
+  const [name, setName] = useState<string>(profile.opts?.name ?? 'Device');
+  const [deviceToEmulate, setDeviceToEmulate] = useState<proto.SubType>(
+    profile.opts?.deviceToEmulate ?? proto.SubType.Gamepad
+  );
+
+  // Step 1: Target Connection
+  const [currentEmulMode, setCurrentEmulMode] = useState<
+    'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation'
+  >(
+    initialEmul?.bluetooth != null
+      ? 'bluetooth'
+      : initialEmul?.ps2Emulation != null
+        ? 'ps2Emulation'
+        : initialEmul?.wiiEmulation != null
+          ? 'wiiEmulation'
+          : 'consoleType'
+  );
+  const [usbMode, setUsbMode] = useState<'auto' | 'forced' | 'specific'>(
+    initialEmul?.consoleType?.forcedType != null
+      ? 'forced'
+      : initialEmul?.consoleType?.consoleType != null
+        ? 'specific'
+        : 'auto'
+  );
+  const [forcedConsole, setForcedConsole] = useState<proto.ConsoleMode>(
+    initialEmul?.consoleType?.forcedType ?? proto.ConsoleMode.ModeXbox360
+  );
+  const [specificConsole, setSpecificConsole] = useState<proto.ConsoleType>(
+    initialEmul?.consoleType?.consoleType ?? proto.ConsoleType.ConsolePC
+  );
+  const [xinputOnWindows, setXinputOnWindows] = useState<boolean>(
+    initialEmul?.consoleType?.xinputOnWindows ?? true
+  );
+  const [ps4OrPs5Mode, setPs4OrPs5Mode] = useState<boolean>(
+    initialEmul?.consoleType?.ps4OrPs5Mode ?? false
+  );
+  const [bluetoothMode, setBluetoothMode] = useState<proto.BluetoothMode>(
+    initialEmul?.bluetooth ?? proto.BluetoothMode.BTStandard
+  );
+
+  // Step 2: Controller Sources
+  const [hostAssignments, setHostAssignments] =
+    useState<proto.IProfileAssignmentInfo[]>(initialHost);
+
+  const addHostSource = (sourceType: string) => {
+    switch (sourceType) {
+      case 'wiiExt':
+        setHostAssignments((prev) => [...prev, { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar }]);
+        break;
+      case 'ps2Cnt':
+        setHostAssignments((prev) => [
+          ...prev,
+          { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+        ]);
+        break;
+      case 'usbType':
+        setHostAssignments((prev) => [...prev, { usbType: proto.SubType.Gamepad }]);
+        break;
+      case 'usbDevice':
+        setHostAssignments((prev) => [...prev, { usbDevice: { vid: 0, pid: 0 } }]);
+        break;
+      case 'bluetoothType':
+        setHostAssignments((prev) => [...prev, { bluetoothType: proto.SubType.Gamepad }]);
+        break;
+      case 'bluetoothDevice':
+        setHostAssignments((prev) => [...prev, { bluetoothDevice: { vid: 0, pid: 0 } }]);
+        break;
+      case 'midiChannel':
+        setHostAssignments((prev) => [...prev, { midiChannel: 10 }]);
+        break;
+    }
+  };
+
+  const removeHostSource = (idx: number) => {
+    setHostAssignments((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateHostSource = (idx: number, updated: proto.IProfileAssignmentInfo) => {
+    setHostAssignments((prev) => prev.map((item, i) => (i === idx ? updated : item)));
+  };
+
+  // Step 3: Activation Trigger
+  const [triggerType, setTriggerType] = useState<'always' | 'input' | 'inputAnyTime'>(
+    initialTrigger?.input != null
+      ? 'input'
+      : initialTrigger?.inputAnyTime != null
+        ? 'inputAnyTime'
+        : 'always'
+  );
+  const [triggerInput, setTriggerInput] = useState<proto.IInput | undefined>(
+    initialTrigger?.input?.input ?? initialTrigger?.inputAnyTime?.input ?? undefined
+  );
+
+  const targetOptions = [
+    { label: t('assignments.emulation_mode.usb'), value: 'consoleType' },
+    ...(hasBluetooth
+      ? [{ label: t('assignments.emulation_mode.bluetooth'), value: 'bluetooth' }]
+      : []),
+    ...(hasPsxEmu ? [{ label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' }] : []),
+    ...(hasWiiEmu ? [{ label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' }] : []),
+  ];
+
+  const handleApply = () => {
+    const finalAssignments: proto.IProfileAssignmentInfo[] = [];
+
+    // Emulation
+    switch (currentEmulMode) {
+      case 'consoleType':
+        finalAssignments.push({
+          consoleType: {
+            consoleType: usbMode === 'specific' ? specificConsole : null,
+            forcedType: usbMode === 'forced' ? forcedConsole : null,
+            xinputOnWindows,
+            ps4OrPs5Mode,
+          },
+        });
+        break;
+      case 'bluetooth':
+        finalAssignments.push({ bluetooth: bluetoothMode });
+        break;
+      case 'ps2Emulation':
+        finalAssignments.push({ ps2Emulation: {} });
+        break;
+      case 'wiiEmulation':
+        finalAssignments.push({ wiiEmulation: {} });
+        break;
+    }
+
+    // Host sources
+    hostAssignments.forEach((item) => {
+      finalAssignments.push(item);
+    });
+
+    // Trigger
+    if (triggerType === 'input') {
+      finalAssignments.push({ input: { input: triggerInput || {} } });
+    } else if (triggerType === 'inputAnyTime') {
+      finalAssignments.push({ inputAnyTime: { input: triggerInput || {} } });
+    }
+
+    // Generate mappings
+    const newMappings: proto.IMapping[] = [];
+    newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
+    hostAssignments.forEach((item) => {
+      if (item.wiiExt != null) {
+        const wiiDev = Object.values(deviceStatus).find((d) => d.type === 'wii');
+        newMappings.push(
+          ...getDefaultMappings(
+            'wii',
+            deviceToEmulate,
+            wiiDev ? parseInt(wiiDev.id, 10) : undefined,
+            wiiDev
+          )
+        );
+      } else if (item.ps2Cnt != null) {
+        const psxDev = Object.values(deviceStatus).find((d) => d.type === 'psx');
+        newMappings.push(
+          ...getDefaultMappings(
+            'psx',
+            deviceToEmulate,
+            psxDev ? parseInt(psxDev.id, 10) : undefined,
+            psxDev
+          )
+        );
+      } else if (item.midiChannel != null) {
+        const midiDev = Object.values(deviceStatus).find(
+          (d) => d.type === 'midiSerial' || d.type === 'bhDrum' || d.type === 'worldTourDrum'
+        );
+        newMappings.push(
+          ...getDefaultMappings(
+            midiDev ? midiDev.type : 'midiSerial',
+            deviceToEmulate,
+            midiDev ? parseInt(midiDev.id, 10) : undefined,
+            midiDev
+          )
+        );
+      }
+    });
+
+    updateProfile(
+      {
+        ...profile,
+        opts: {
+          ...profile.opts,
+          name,
+          deviceToEmulate,
+        },
+        assignments: [{ assignments: finalAssignments }],
+        mappings: newMappings,
+      },
+      profileIdx
+    );
+  };
+
+  return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder maw={560} mx="auto" my="md">
+      <Stack gap="md">
+        <Group justify="space-between" align="flex-start">
+          <Group gap="xs">
+            <ThemeIcon size="lg" radius="md" variant="light" color="blue">
+              <IconSparkles size={20} />
+            </ThemeIcon>
+            <Stack gap={0}>
+              <Title order={4}>{t('assignments.setup_wizard_title')}</Title>
+              <Text size="xs" c="dimmed">
+                {t('assignments.setup_wizard_desc')}
+              </Text>
+            </Stack>
+          </Group>
+        </Group>
+
+        <Divider />
+
+        <TextInput
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+          label={t('main.profile_name.label')}
+          size="xs"
+        />
+
+        <DropdownBox
+          title="main.device_to_emulate.label"
+          description="main.device_to_emulate.description"
+          e={proto.SubType}
+          val={deviceToEmulate}
+          label="subType"
+          dispatch={(val) => setDeviceToEmulate(val)}
+        />
+
+        <Divider />
+
+        {/* Step 1: Target Connection */}
+        <Stack gap={4}>
+          <Input.Wrapper
+            size="xs"
+            label={t('assignments.step1_title')}
+            description={t('assignments.step1_desc')}
+          >
+            <SegmentedControl
+              fullWidth
+              size="xs"
+              value={currentEmulMode}
+              onChange={(val) =>
+                setCurrentEmulMode(
+                  val as 'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation'
+                )
+              }
+              data={targetOptions}
+            />
+          </Input.Wrapper>
+          {currentEmulMode === 'consoleType' && (
+            <Stack gap={4} mt="xs">
+              <Select
+                size="xs"
+                label={t('assignments.usb_mode.label')}
+                value={usbMode}
+                onChange={(val) => setUsbMode((val as 'auto' | 'forced' | 'specific') ?? 'auto')}
+                data={[
+                  { value: 'auto', label: t('assignments.usb_mode.auto') },
+                  { value: 'forced', label: t('assignments.usb_mode.forced') },
+                  { value: 'specific', label: t('assignments.usb_mode.specific') },
+                ]}
+              />
+              {usbMode === 'forced' && (
+                <DropdownBox
+                  title="activation.forcedType"
+                  e={proto.ConsoleMode}
+                  val={forcedConsole}
+                  label="consoleMode"
+                  dispatch={(mode) => setForcedConsole(mode)}
+                />
+              )}
+              {usbMode === 'specific' && (
+                <DropdownBox
+                  title="activation.consoleType"
+                  e={proto.ConsoleType}
+                  val={specificConsole}
+                  label="consoleType"
+                  dispatch={(tVal) => setSpecificConsole(tVal)}
+                />
+              )}
+              {usbMode === 'auto' && (
+                <>
+                  <Input.Wrapper
+                    size="xs"
+                    label={t('main.xinput_on_windows.label')}
+                    description={t('main.xinput_on_windows.description')}
+                  >
+                    <SegmentedControl
+                      fullWidth
+                      size="xs"
+                      data={[
+                        { label: t('main.xinput_on_windows.XInput'), value: 'true' },
+                        { label: t('main.xinput_on_windows.HID'), value: 'false' },
+                      ]}
+                      value={xinputOnWindows ? 'true' : 'false'}
+                      onChange={(val) => setXinputOnWindows(val === 'true')}
+                    />
+                  </Input.Wrapper>
+                  {ps4Subtypes.includes(deviceToEmulate) && (
+                    <Input.Wrapper
+                      size="xs"
+                      label={t('main.ps4EmulationMode.label')}
+                      description={t('main.ps4EmulationMode.description')}
+                    >
+                      <SegmentedControl
+                        fullWidth
+                        size="xs"
+                        data={[
+                          { label: t('main.ps4EmulationMode.PS3'), value: 'false' },
+                          { label: t('main.ps4EmulationMode.PS4'), value: 'true' },
+                        ]}
+                        value={ps4OrPs5Mode ? 'true' : 'false'}
+                        onChange={(val) => setPs4OrPs5Mode(val === 'true')}
+                      />
+                    </Input.Wrapper>
+                  )}
+                </>
+              )}
+            </Stack>
+          )}
+          {currentEmulMode === 'bluetooth' && (
+            <DropdownBox
+              title="activation.bluetooth"
+              e={proto.BluetoothMode}
+              val={bluetoothMode}
+              label="bluetooth"
+              dispatch={(mode) => setBluetoothMode(mode)}
+            />
+          )}
+        </Stack>
+
+        <Divider />
+
+        {/* Step 2: Controller Sources */}
+        <ControllerSourcesEditor
+          assignments={hostAssignments}
+          onAddSource={addHostSource}
+          onRemoveSource={removeHostSource}
+          onUpdateSource={updateHostSource}
+          hasUsbHost={hasUsbHost}
+          hasBluetooth={hasBluetooth}
+          hasMidi={hasMidi}
+          hasWii={hasWii}
+          hasPsx={hasPsx}
+        />
+
+        <Divider />
+
+        {/* Step 3: Activation Trigger */}
+        <Stack gap={4}>
+          <Text size="sm" fw={600}>
+            {t('assignments.step3_title')}
+          </Text>
+          <Select
+            size="xs"
+            value={triggerType}
+            onChange={(val) =>
+              setTriggerType((val as 'always' | 'input' | 'inputAnyTime') ?? 'always')
+            }
+            data={[
+              { value: 'always', label: t('assignments.trigger.always') },
+              { value: 'input', label: t('assignments.trigger.boot') },
+              { value: 'inputAnyTime', label: t('assignments.trigger.anytime') },
+            ]}
+          />
+          {triggerType !== 'always' && (
+            <Stack gap={4} mt="xs">
+              <SantrollerInput
+                axis={false}
+                button
+                type={deviceToEmulate}
+                mode={profile.opts?.faceButtonMappingMode ?? proto.FaceButtonMappingMode.LegendBased}
+                legendMode={
+                  LegendMode[
+                    (localStorage.getItem('legendMode') ?? 'Xbox360') as keyof typeof LegendMode
+                  ] ?? LegendMode.Xbox360
+                }
+                input={triggerInput ?? {}}
+                dispatch={(input) => setTriggerInput(input)}
+              />
+            </Stack>
+          )}
+        </Stack>
+
+        <Divider />
+
+        <Group justify="space-between" mt="sm">
+          <Button variant="subtle" color="gray" onClick={onSkip}>
+            {t('assignments.setup_wizard_skip')}
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            leftSection={<IconSparkles size={16} />}
+            onClick={handleApply}
+          >
+            {t('assignments.setup_wizard_apply')}
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
+
 function Profile({ profileIdx }: { profileIdx: number }) {
   const errorIcon = <IconExclamationCircle />;
   const [opened, { open, close }] = useDisclosure(false);
@@ -5447,6 +6046,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const updateProfile = useConfigStore((state) => state.updateProfile);
   const updateProfiles = useConfigStore((state) => state.updateProfiles);
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
+  const cloneProfile = useConfigStore((state) => state.cloneProfile);
   const loadDefaults = useConfigStore((state) => state.loadDefaults);
   const setSyncMode = useConfigStore((state) => state.setSyncMode);
   const [legendMode, setLegendMode] = useState<LegendMode>(
@@ -5462,11 +6062,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     useSensor(KeyboardSensor)
   );
   const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
-  const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
-  const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
-  const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
   useEffect(() => {
     localStorage.setItem('legendMode', LegendMode[legendMode]);
   }, [legendMode]);
@@ -5591,12 +6188,24 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Space h="md" />
       {!simpleMode && (
         <>
-          <Group>
+          <Group gap="xs" align="center">
             <Title order={2}>Settings</Title>
-            <ActionIcon color="red">
+            <ActionIcon
+              color="blue"
+              title={t('main.clone_profile')}
+              onClick={() => cloneProfile(profileIdx)}
+            >
+              <IconCopy
+                style={{ width: '70%', height: '70%' }}
+              />
+            </ActionIcon>
+            <ActionIcon
+              color="red"
+              title={t('main.delete_profile')}
+              onClick={() => deleteProfile(profileIdx)}
+            >
               <IconTrash
                 style={{ width: '70%', height: '70%' }}
-                onClick={() => deleteProfile(profileIdx)}
               />
             </ActionIcon>
           </Group>
@@ -6071,21 +6680,29 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   </Button>
                   {Object.values(deviceStatus)
                     .filter(hasDefaults)
-                    .map((item) => (
-                      <Button
-                        value={item.id}
-                        key={item.id}
-                        onClick={() => {
-                          setDefaultTarget(item);
-                          open();
-                        }}
-                      >
-                        {t(`defaults_dialog.for`, {
-                          device: t(`devices.${item.type}`),
-                          status: DeviceStatus.label(item),
-                        })}
-                      </Button>
-                    ))}
+                    .map((item) => {
+                      const assigned = isDeviceAssigned(item.type, profile);
+                      return (
+                        <Button
+                          value={item.id}
+                          key={item.id}
+                          disabled={!assigned}
+                          title={!assigned ? t('assignments.device_not_assigned') : undefined}
+                          onClick={() => {
+                            if (!assigned) {
+                              return;
+                            }
+                            setDefaultTarget(item);
+                            open();
+                          }}
+                        >
+                          {t(`defaults_dialog.for`, {
+                            device: t(`devices.${item.type}`),
+                            status: DeviceStatus.label(item),
+                          })}
+                        </Button>
+                      );
+                    })}
                   <Button variant="filled" onClick={open2}>
                     {t('clear_all_button')}
                   </Button>
@@ -6464,7 +7081,9 @@ function Profile({ profileIdx }: { profileIdx: number }) {
 export function InputsPage() {
   const activeProfile = useConfigStore((state) => state.currentProfile);
   const profiles = useConfigStore((state) => state.config.profiles!);
+  const updateProfile = useConfigStore((state) => state.updateProfile);
   const pollInputs = useConfigStore((state) => state.pollInputs);
+  const [skippedProfiles, setSkippedProfiles] = useState<Set<number>>(new Set());
 
   const [loaded, setLoaded] = useState(false);
   // Give the loader a sec to render before rendering the rest of the page
@@ -6488,10 +7107,31 @@ export function InputsPage() {
       </Layout>
     );
   }
+
+  const profile = profiles[activeProfile];
+  const isBlank =
+    (!profile.mappings || profile.mappings.length === 0) &&
+    !skippedProfiles.has(profile.opts?.uid ?? activeProfile);
+
   return (
     <Layout>
       <RequireDevice>
-        <Profile profileIdx={activeProfile} />
+        {isBlank ? (
+          <BlankProfileWizard
+            key={`wizard-${profile.opts?.uid ?? activeProfile}`}
+            profile={profile}
+            profileIdx={activeProfile}
+            onSkip={() =>
+              setSkippedProfiles((prev) => new Set(prev).add(profile.opts?.uid ?? activeProfile))
+            }
+            updateProfile={updateProfile}
+          />
+        ) : (
+          <Profile
+            key={`profile-${profile.opts?.uid ?? activeProfile}`}
+            profileIdx={activeProfile}
+          />
+        )}
       </RequireDevice>
     </Layout>
   );

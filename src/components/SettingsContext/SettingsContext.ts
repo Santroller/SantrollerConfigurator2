@@ -196,6 +196,40 @@ export class DeviceStatus {
     return getDevicePins(status.device);
   }
 }
+
+export function requiresAssignment(deviceType: string): boolean {
+  return (
+    deviceType === 'bt' ||
+    deviceType === 'usbHost' ||
+    deviceType === 'midiSerial' ||
+    deviceType === 'bhDrum' ||
+    deviceType === 'worldTourDrum'
+  );
+}
+
+export function isDeviceAssigned(deviceType: string, profile?: proto.IProfile | null): boolean {
+  if (!requiresAssignment(deviceType)) {
+    return true;
+  }
+  if (!profile || !profile.assignments) {
+    return false;
+  }
+  const allAssignments = profile.assignments.flatMap((x) => x.assignments ?? []);
+
+  if (deviceType === 'bt') {
+    return allAssignments.some((x) => x.bluetoothType != null || x.bluetoothDevice != null);
+  }
+  if (deviceType === 'usbHost') {
+    return allAssignments.some(
+      (x) => x.usbType != null || x.usbDevice != null || x.midiChannel != null
+    );
+  }
+  if (deviceType === 'midiSerial' || deviceType === 'bhDrum' || deviceType === 'worldTourDrum') {
+    return allAssignments.some((x) => x.midiChannel != null);
+  }
+  return true;
+}
+
 export interface ConfigState {
   deviceStatus: { [id: string]: DeviceStatus };
   mappingStatus: { [id: number]: MappingStatus }[];
@@ -265,6 +299,7 @@ export interface Actions {
   updateCycle: (id: number, state: number) => void;
   updateToggle: (id: number, state: boolean) => void;
   addProfile: () => void;
+  cloneProfile: (id: number) => void;
   deleteProfile: (id: number) => void;
   updateConfig: (config: proto.IConfig) => void;
   deleteDevice: (id: string) => void;
@@ -898,6 +933,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         const type = device?.type ?? 'gpio';
         const profile = state.config.profiles![state.currentProfile];
+        if (device && requiresAssignment(device.type) && !isDeviceAssigned(device.type, profile)) {
+          return;
+        }
         const defaults = getDefaultMappings(
           type,
           profile.opts.deviceToEmulate,
@@ -1192,6 +1230,48 @@ export const useConfigStore = create<ConfigState & Actions>()(
           0: new ActivationListStatus(0),
         };
         state.ledStatus[newIdx] = [];
+      });
+      get().saveConfig();
+    },
+    cloneProfile: (id: number) => {
+      set((state) => {
+        const sourceProfile = state.config.profiles?.[id];
+        if (!sourceProfile) {
+          return;
+        }
+        const cloned: proto.IProfile = JSON.parse(JSON.stringify(sourceProfile));
+        const newUid =
+          Math.max(0, ...(state.config.profiles?.map((x) => x.opts?.uid ?? 0) || [])) + 1;
+        cloned.opts = {
+          ...cloned.opts,
+          name: `${sourceProfile.opts?.name ?? 'Device'} (Copy)`,
+          uid: newUid,
+        };
+        state.config = {
+          ...state.config,
+          profiles: [...(state.config.profiles || []), cloned],
+        };
+        const newIdx = state.config.profiles!.length - 1;
+        state.currentProfile = newIdx;
+        state.mappingStatus = state.config.profiles!.map((p) =>
+          Object.fromEntries((p.mappings ?? []).map((x, i) => [i, new MappingStatus(i, x)]))
+        );
+        state.activationStatus = state.config.profiles!.map((p) =>
+          Object.fromEntries(
+            (p.assignments ?? []).map((x, listIdx) => [
+              listIdx,
+              (x.assignments ?? []).map((a, i) => new ActivationStatus(i, a!)),
+            ])
+          )
+        );
+        state.activationListStatus = state.config.profiles!.map((p) =>
+          Object.fromEntries(
+            (p.assignments ?? []).map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
+          )
+        );
+        state.ledStatus = state.config.profiles!.map((p) =>
+          Object.fromEntries((p.leds ?? []).map((x, i) => [i, new LedStatus(i, x)]))
+        );
       });
       get().saveConfig();
     },
