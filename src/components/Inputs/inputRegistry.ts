@@ -13,6 +13,7 @@ const inputKinds = [
   'wiiButton',
   'key',
   'crkd',
+  'encoder',
   'shortcut',
   'ads1115',
   'accelerometer',
