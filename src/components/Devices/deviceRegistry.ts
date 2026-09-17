@@ -157,8 +157,8 @@ const deviceRegistry: DeviceDefinitions = {
     create: () => ({ i2c: i2c(400000), interrupt: -1 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
-  encoder: { create: () => ({ dataPin: -1 }) },
-  debug: { create: () => ({ uart: uart() }) },
+  encoder: { create: () => ({ dataPin: -1 }), pins: ({ dataPin }) => [dataPin, dataPin+1] },
+  debug: { create: () => ({ uart: uart() }), pins: ({ uart }) => [uart.tx, uart.rx] },
   ws2812: {
     create: () => ({ pin: -1, count: 0, type: proto.WS2812Type.Ws2812Rgb }),
     pins: ({ pin }) => [pin],
