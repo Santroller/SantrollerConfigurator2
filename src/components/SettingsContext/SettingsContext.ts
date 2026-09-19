@@ -1887,7 +1887,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
               .trim()
               .substring(0, 8);
             latest = deviceVersion === latestVersion;
-            latest = false;
           } catch (e) {
             console.log(e);
           }
