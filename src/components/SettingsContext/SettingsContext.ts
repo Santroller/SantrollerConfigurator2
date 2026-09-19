@@ -20,7 +20,12 @@ import { proto } from './config.js';
 
 export * from './config.js';
 const HID_RESPONSE_TIMEOUT_MS = 3_000;
-type DeviceType = keyof Omit<proto.IDevice, "deviceid">
+const KEEPALIVE_INTERVAL_MS = 10;
+const FIRMWARE_BLOCK_SIZE = 4096;
+const FIRMWARE_UPLOAD_CHUNK_SIZE = 63;
+const LEGACY_FIRMWARE_BLOCK_SIZE = 256;
+const LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE = 32;
+type DeviceType = keyof Omit<proto.IDevice, 'deviceid'>;
 class HidResponseTimeoutError extends Error {}
 
 const equals = (a: Uint8Array, b: Uint8Array) =>
@@ -41,8 +46,65 @@ function withHidTimeout<T>(operation: Promise<T>, description: string): Promise<
   });
 }
 
+function delay(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 function receiveFeatureReport(device: HIDDevice, reportId: number) {
   return withHidTimeout(device.receiveFeatureReport(reportId), 'response');
+}
+
+function collectionHasFeatureReport(collection: HIDCollectionInfo, reportId: number): boolean {
+  return (
+    !!collection.featureReports?.some((report) => report.reportId === reportId) ||
+    !!collection.children?.some((child) => collectionHasFeatureReport(child, reportId))
+  );
+}
+
+function reportByteLength(report: HIDReportInfo): number | undefined {
+  const bitLength = report.items?.reduce(
+    (total, item) => total + (item.reportSize ?? 0) * (item.reportCount ?? 0),
+    0
+  );
+  return bitLength ? Math.ceil(bitLength / 8) : undefined;
+}
+
+function findOutputReport(
+  collection: HIDCollectionInfo,
+  reportId: number
+): HIDReportInfo | undefined {
+  return (
+    collection.outputReports?.find((report) => report.reportId === reportId) ??
+    collection.children
+      ?.map((child) => findOutputReport(child, reportId))
+      .find((report): report is HIDReportInfo => !!report)
+  );
+}
+
+function findFeatureReport(
+  collection: HIDCollectionInfo,
+  reportId: number
+): HIDReportInfo | undefined {
+  return (
+    collection.featureReports?.find((report) => report.reportId === reportId) ??
+    collection.children
+      ?.map((child) => findFeatureReport(child, reportId))
+      .find((report): report is HIDReportInfo => !!report)
+  );
+}
+
+function findFastFirmwareUploadReports(device: HIDDevice): {
+  outputReport?: HIDReportInfo;
+  featureReport?: HIDReportInfo;
+} {
+  for (const collection of device.collections) {
+    if (collectionHasFeatureReport(collection, proto.ReportId.ReportIdUpdateFirmware)) {
+      const outputReport = findOutputReport(collection, proto.ReportId.ReportIdUploadFirmware);
+      const featureReport = findFeatureReport(collection, proto.ReportId.ReportIdUploadFirmware);
+      return { outputReport, featureReport };
+    }
+  }
+  return {};
 }
 
 export const ps4Subtypes = [
@@ -367,7 +429,11 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const deviceStatus = Object.fromEntries(
     config.devices!.map((x, _) => [
       x.deviceid,
-      new DeviceStatus(x.deviceid.toString(), Object.keys(x).find((x) => x !== 'deviceid')! as DeviceType, x),
+      new DeviceStatus(
+        x.deviceid.toString(),
+        Object.keys(x).find((x) => x !== 'deviceid')! as DeviceType,
+        x
+      ),
     ])
   );
   const mappingStatus = config.profiles!.map((profile) =>
@@ -865,7 +931,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     sendKeepAlive: async () => {
       const state = get();
       const dev = state.hidDevice;
-      if (!dev || state.sendingKeepAlive || state.writing) {
+      if (!dev || state.sendingKeepAlive || state.writing || state.updating) {
         return;
       }
       // only ever have a single keep alive in flight at once, and ignore additional requests while one is in flight
@@ -878,8 +944,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
           'keepalive acknowledgement'
         );
       } catch (e) {
-        console.error('Failed to send keep alive', e);
-        if (e instanceof HidResponseTimeoutError) {
+        const updating = get().updating;
+        if (!updating) {
+          console.error('Failed to send keep alive', e);
+        }
+        if (e instanceof HidResponseTimeoutError && !updating) {
           set((state) => {
             state.hung = true;
             if (state.keepaliveTimeout) {
@@ -1333,7 +1402,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         true
       );
       device.addEventListener('inputreport', get().onReport);
-      const timeout = setInterval(() => get().sendKeepAlive(), 10);
+      const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
       await device.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
       let activeProfiles: number[] = [];
       try {
@@ -1411,7 +1480,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         const data = JSON.parse((await file?.text()) ?? '');
         const config = proto.Config.fromObject(data.config);
         const aux = proto.AuxConfigBlock.fromObject(data.aux);
-        const timeout = setInterval(() => get().sendKeepAlive(), 10);
+        const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
         set(
           (old) => ({
             ...old,
@@ -1643,30 +1712,150 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     firmwareUpdate: async () => {
       const state = get();
-      set((old) => ({ ...old, updatePercentage: 1, updating: true }));
-      const updateFile = await (await fetch(`santroller_ota_${state.type}.bin`)).bytes();
-      const firmwareInfo = proto.FirmwareUpdate.create({
-        chunkOffset: 0,
-        chunkSize: 32,
-        firmwareSize: updateFile.length,
-        offset: 0,
-      });
-      const buffer = new ArrayBuffer(63);
-      for (let i = 0; i < updateFile.length; i += 256) {
-        firmwareInfo.chunkOffset = 0;
-        firmwareInfo.offset = i;
-        const firmwareInfoBuffer = proto.FirmwareUpdate.encodeDelimited(firmwareInfo)
-          .ldelim()
-          .finish();
-        new Uint8Array(buffer).set(firmwareInfoBuffer);
-        await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUpdateFirmware, buffer);
-        for (let j = 0; j < 256 && i + j < updateFile.length; j += 32) {
-          const buffer2 = new ArrayBuffer(33);
-          new Uint8Array(buffer2).set([proto.ReportId.ReportIdUploadFirmware]);
-          new Uint8Array(buffer2).set(updateFile.slice(i + j, i + j + 32), 1);
-          await state.hidDevice?.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, buffer2);
-          set((old) => ({ ...old, updatePercentage: 1 + ((i + j) / updateFile.length) * 99 }));
+      if (!state.hidDevice) {
+        console.error('Cannot update firmware without a connected HID device');
+        return;
+      }
+      const hidDevice = state.hidDevice;
+      set((state) => {
+        state.updatePercentage = 1;
+        state.updating = true;
+        state.waitingForReload = true;
+        if (state.keepaliveTimeout) {
+          clearInterval(state.keepaliveTimeout);
+          state.keepaliveTimeout = undefined;
         }
+      });
+      while (get().sendingKeepAlive) {
+        await delay(KEEPALIVE_INTERVAL_MS);
+      }
+      try {
+        const updateFile = await (await fetch(`santroller_ota_${state.type}.bin`)).bytes();
+        const fastFirmwareUploadReports = findFastFirmwareUploadReports(hidDevice);
+        const firmwareInfo = proto.FirmwareUpdate.create({
+          chunkOffset: 0,
+          chunkSize: FIRMWARE_UPLOAD_CHUNK_SIZE,
+          firmwareSize: updateFile.length,
+          offset: 0,
+        });
+        const firmwareInfoReport = new Uint8Array(63);
+        const uploadLegacy = async () => {
+          firmwareInfo.chunkSize = LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE;
+          const uploadReport = new Uint8Array(LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE + 1);
+          uploadReport[0] = proto.ReportId.ReportIdUploadFirmware;
+          for (let i = 0; i < updateFile.length; i += LEGACY_FIRMWARE_BLOCK_SIZE) {
+            firmwareInfo.chunkOffset = 0;
+            firmwareInfo.offset = i;
+            firmwareInfoReport.fill(0);
+            firmwareInfoReport.set(
+              proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
+            );
+            await hidDevice.sendFeatureReport(
+              proto.ReportId.ReportIdUpdateFirmware,
+              firmwareInfoReport
+            );
+            for (
+              let j = 0;
+              j < LEGACY_FIRMWARE_BLOCK_SIZE && i + j < updateFile.length;
+              j += LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE
+            ) {
+              uploadReport.fill(0, 1);
+              uploadReport.set(
+                updateFile.subarray(i + j, i + j + LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE),
+                1
+              );
+              await hidDevice.sendFeatureReport(
+                proto.ReportId.ReportIdUploadFirmware,
+                uploadReport
+              );
+            }
+            set((old) => ({
+              ...old,
+              updatePercentage:
+                1 +
+                (Math.min(i + LEGACY_FIRMWARE_BLOCK_SIZE, updateFile.length) / updateFile.length) *
+                  99,
+            }));
+          }
+        };
+        const uploadFast = async (sendChunk: (chunk: BufferSource) => Promise<void>) => {
+          firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
+          firmwareInfo.chunkOffset = 0;
+          firmwareInfo.offset = 0;
+          firmwareInfoReport.fill(0);
+          firmwareInfoReport.set(
+            proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
+          );
+          await hidDevice.sendFeatureReport(
+            proto.ReportId.ReportIdUpdateFirmware,
+            firmwareInfoReport
+          );
+
+          const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
+          let offset = 0;
+          while (offset < updateFile.length) {
+            const blockOffset = offset % FIRMWARE_BLOCK_SIZE;
+            const chunkSize = Math.min(
+              FIRMWARE_UPLOAD_CHUNK_SIZE,
+              FIRMWARE_BLOCK_SIZE - blockOffset,
+              updateFile.length - offset
+            );
+            uploadReport.fill(0);
+            uploadReport.set(updateFile.subarray(offset, offset + chunkSize));
+            await sendChunk(uploadReport);
+            offset += chunkSize;
+            if (offset % FIRMWARE_BLOCK_SIZE === 0 || offset === updateFile.length) {
+              set((old) => ({
+                ...old,
+                updatePercentage: 1 + (offset / updateFile.length) * 99,
+              }));
+            }
+          }
+        };
+        if (
+          fastFirmwareUploadReports.featureReport &&
+          reportByteLength(fastFirmwareUploadReports.featureReport) === FIRMWARE_UPLOAD_CHUNK_SIZE
+        ) {
+          await uploadFast((chunk) =>
+            hidDevice.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, chunk)
+          );
+        } else if (fastFirmwareUploadReports.outputReport) {
+          try {
+            await uploadFast((chunk) =>
+              hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, chunk)
+            );
+          } catch (e) {
+            if (!(e instanceof DOMException && e.name === 'NotAllowedError')) {
+              throw e;
+            }
+            console.warn(
+              'Firmware upload output report rejected; retrying with legacy feature reports',
+              {
+                reportId: fastFirmwareUploadReports.outputReport.reportId,
+                advertisedLength: reportByteLength(fastFirmwareUploadReports.outputReport),
+                sentLength: FIRMWARE_UPLOAD_CHUNK_SIZE,
+                error: e,
+              }
+            );
+            await uploadLegacy();
+          }
+        } else {
+          await uploadLegacy();
+        }
+      } catch (e) {
+        console.error('Failed to update firmware', e);
+        const current = get();
+        const timeout =
+          current.hidDevice?.opened && !current.keepaliveTimeout
+            ? setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS)
+            : current.keepaliveTimeout;
+        set((state) => {
+          state.updatePercentage = 0;
+          state.updating = false;
+          state.waitingForReload = false;
+          state.keepaliveTimeout = timeout;
+        });
+        return;
       }
       state.disconnect();
     },
@@ -1698,6 +1887,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               .trim()
               .substring(0, 8);
             latest = deviceVersion === latestVersion;
+            latest = false;
           } catch (e) {
             console.log(e);
           }
@@ -1744,7 +1934,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             }
             const config = proto.Config.decode(data, info.mainSize);
             const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
-            const timeout = setInterval(() => get().sendKeepAlive(), 10);
+            const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
             set(
               (old) => ({
                 ...old,
