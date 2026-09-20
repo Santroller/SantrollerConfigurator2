@@ -1311,7 +1311,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (!sourceProfile) {
           return;
         }
-        const cloned: proto.IProfile = JSON.parse(JSON.stringify(sourceProfile));
+        const cloned: proto.IProfile = proto.Profile.decode(proto.Profile.encode(sourceProfile).finish());
         const newUid =
           Math.max(0, ...(state.config.profiles?.map((x) => x.opts?.uid ?? 0) || [])) + 1;
         cloned.opts = {
