@@ -293,6 +293,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
         gpioButton({ ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Pedal }),
       ];
 
@@ -317,6 +318,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
         gpioButton({ rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Pedal }),
       ];
 
@@ -380,6 +382,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_GHTV }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
       ];
 
     case proto.SubType.DjHeroTurntable:
@@ -397,6 +400,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
       ];
 
     case proto.SubType.Taiko:
@@ -407,6 +411,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
       ];
 
     case proto.SubType.Dancepad:
@@ -419,6 +424,7 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_B }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
       ];
 
     case proto.SubType.ProKeys:

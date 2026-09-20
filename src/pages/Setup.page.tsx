@@ -11,23 +11,6 @@ export function SetupPage() {
         <Alert variant="light" color="red" title="Note" icon={<IconExclamationCircle />}>
           {t('connect.sellerWarning')}
         </Alert>
-        <Space h="md" />
-        <Alert
-          variant="light"
-          color="red"
-          title="Santroller 2 is incomplete!"
-          icon={<IconExclamationCircle />}
-        >
-          Santroller 2 is currently not finished. Right now, several features are missing in
-          comparison to the normal tool
-          <Space h="md" />
-          Notable missing features:
-          <ul>
-            <li>A bunch of device types aren't emulated yet</li>
-            <li>Buttons for creating default inputs aren't hooked up yet in some places</li>
-            <li>Mouse and keyboard isn't emulated yet</li>
-          </ul>
-        </Alert>
 
         <Space h="md" />
         <Space h="md" />
