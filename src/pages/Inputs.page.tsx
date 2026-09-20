@@ -3565,6 +3565,7 @@ function SantrollerLed({
                   proto.StageKitLedType.StageKitRed,
                   proto.StageKitLedType.StageKitGreen,
                   proto.StageKitLedType.StageKitYellow,
+                  proto.StageKitLedType.StageKitRGBY
                 ].includes(led.mapping.stageKitMapping.type) && (
                   <>
                     <MultiSelect
