@@ -63,6 +63,7 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useTimeout } from '@mantine/hooks';
+import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   getLabel,
@@ -84,7 +85,6 @@ import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
-import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import {
   DeviceStatus,
   isDeviceAssigned,
@@ -3021,6 +3021,16 @@ function SantrollerLed({
     mappingValue = t(`leds.type.pattern`);
   } else if (led.mapping.staticMapping) {
     mappingValue = t(`leds.type.static`);
+  } else if (led.mapping.euphoriaMapping) {
+    mappingValue = t(`leds.type.euphoria`);
+  } else if (led.mapping.playerMapping) {
+    mappingValue = t(`leds.type.player`);
+  } else if (led.mapping.playstationMapping) {
+    mappingValue = t(`leds.type.playstation`);
+  } else if (led.mapping.rumbleMapping) {
+    mappingValue = t(`leds.type.rumble`);
+  } else if (led.mapping.stageKitMapping) {
+    mappingValue = t(`leds.type.stageKit`);
   }
 
   const isLedActive = useConfigStore((state) => !!state.ledStatus[profileIdx]?.[ledIdx]?.state);
@@ -3332,6 +3342,46 @@ function SantrollerLed({
                         },
                       });
                       break;
+                    case 'euphoria':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          euphoriaMapping: {},
+                        },
+                      });
+                      break;
+                    case 'player':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          playerMapping: { playerId: 0 },
+                        },
+                      });
+                      break;
+                    case 'playstation':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          playstationMapping: {},
+                        },
+                      });
+                      break;
+                    case 'rumble':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          rumbleMapping: { type: proto.LedRumbleType.RumbleLeft },
+                        },
+                      });
+                      break;
+                    case 'stageKit':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          stageKitMapping: { type: proto.StageKitLedType.StageKitStrobe },
+                        },
+                      });
+                      break;
                   }
                 }}
               >
@@ -3354,6 +3404,13 @@ function SantrollerLed({
                     <Combobox.Option value="input">{t('leds.type.input')}</Combobox.Option>
                     <Combobox.Option value="pattern">{t('leds.type.pattern')}</Combobox.Option>
                     <Combobox.Option value="static">{t('leds.type.static')}</Combobox.Option>
+                    <Combobox.Option value="euphoria">{t('leds.type.euphoria')}</Combobox.Option>
+                    <Combobox.Option value="player">{t('leds.type.player')}</Combobox.Option>
+                    <Combobox.Option value="playstation">
+                      {t('leds.type.playstation')}
+                    </Combobox.Option>
+                    <Combobox.Option value="rumble">{t('leds.type.rumble')}</Combobox.Option>
+                    <Combobox.Option value="stageKit">{t('leds.type.stageKit')}</Combobox.Option>
                   </Combobox.Options>
                 </Combobox.Dropdown>
               </Combobox>
@@ -3420,6 +3477,7 @@ function SantrollerLed({
                 searchable
               />
             )}
+            <Space h="md" />
             {led.mapping.inputMapping?.input && (
               <>
                 <DropdownBox
@@ -3453,7 +3511,90 @@ function SantrollerLed({
                 />
               </>
             )}
-            <Space h="md" />
+            {led.mapping.playerMapping && (
+              <>
+                <Text size="sm">{t('leds.playerId')}</Text>
+                <NumberInput
+                  value={led.mapping.playerMapping.playerId}
+                  min={1}
+                  max={8}
+                  onChange={(e) =>
+                    dispatch({
+                      ...led,
+                      mapping: {
+                        playerMapping: {
+                          ...led.mapping.playerMapping,
+                          playerId: parseInt(e.toString(), 10),
+                        },
+                      },
+                    })
+                  }
+                />
+              </>
+            )}
+            {led.mapping.rumbleMapping && (
+              <DropdownBox
+                title="leds.rumble.label"
+                e={proto.LedRumbleType}
+                val={led.mapping.rumbleMapping.type}
+                label="leds.rumble"
+                dispatch={(type) =>
+                  dispatch({
+                    ...led,
+                    mapping: { rumbleMapping: { ...led.mapping.rumbleMapping!, type } },
+                  })
+                }
+              />
+            )}
+            {led.mapping.stageKitMapping && (
+              <>
+                <DropdownBox
+                  title="leds.stageKit.label"
+                  e={proto.StageKitLedType}
+                  val={led.mapping.stageKitMapping.type}
+                  label="leds.stageKit"
+                  dispatch={(type) =>
+                    dispatch({
+                      ...led,
+                      mapping: { stageKitMapping: { ...led.mapping.stageKitMapping!, type } },
+                    })
+                  }
+                />
+                {[
+                  proto.StageKitLedType.StageKitBlue,
+                  proto.StageKitLedType.StageKitRed,
+                  proto.StageKitLedType.StageKitGreen,
+                  proto.StageKitLedType.StageKitYellow,
+                ].includes(led.mapping.stageKitMapping.type) && (
+                  <>
+                    <MultiSelect
+                      label={t('leds.stagekit.index_label')}
+                      value={Array.from(Array(8).keys())
+                        .filter((x) => (led.mapping.stageKitMapping!.index ?? 0) & (1 << x))
+                        .map((x) => x.toString())}
+                      data={Array.from({ length: 8 }, (_, x) => x.toString())}
+                      clearable
+                      maxValues={8}
+                      onChange={(val) =>
+                        dispatch({
+                          ...led,
+                          mapping: {
+                            stageKitMapping: {
+                              ...led.mapping.stageKitMapping!,
+                              index: val.reduce(
+                                (prev, current) => (prev ?? 0) | (1 << parseInt(current, 10)),
+                                0
+                              ),
+                            },
+                          },
+                        })
+                      }
+                      searchable
+                    />
+                  </>
+                )}
+              </>
+            )}
             {led.mapping.patternMapping && (
               <>
                 <DropdownBox
@@ -4482,13 +4623,7 @@ export function ControllerSourcesEditor({
       </Card>
 
       {hostIndices.map(({ item, idx, type: hType }, listSourceIdx) => (
-        <Card
-          key={idx}
-          padding="xs"
-          radius="sm"
-          withBorder
-          bg="var(--mantine-color-default-hover)"
-        >
+        <Card key={idx} padding="xs" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
           <Stack gap={4}>
             <Group justify="space-between" align="center">
               <Badge size="sm" variant="light" color="blue">
@@ -4542,8 +4677,7 @@ export function ControllerSourcesEditor({
                   onChange={(e) =>
                     onUpdateSource(idx, {
                       usbDevice: {
-                        vid:
-                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                         pid: item.usbDevice?.pid ?? 0,
                       },
                     })
@@ -4558,8 +4692,7 @@ export function ControllerSourcesEditor({
                     onUpdateSource(idx, {
                       usbDevice: {
                         vid: item.usbDevice?.vid ?? 0,
-                        pid:
-                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                       },
                     })
                   }
@@ -4585,8 +4718,7 @@ export function ControllerSourcesEditor({
                   onChange={(e) =>
                     onUpdateSource(idx, {
                       bluetoothDevice: {
-                        vid:
-                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                         pid: item.bluetoothDevice?.pid ?? 0,
                       },
                     })
@@ -4601,8 +4733,7 @@ export function ControllerSourcesEditor({
                     onUpdateSource(idx, {
                       bluetoothDevice: {
                         vid: item.bluetoothDevice?.vid ?? 0,
-                        pid:
-                          parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                        pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
                       },
                     })
                   }
@@ -4636,8 +4767,7 @@ export function ControllerSourcesEditor({
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          {(hasUsbHost ||
-            assignments.some((x) => x.usbType != null || x.usbDevice != null)) && (
+          {(hasUsbHost || assignments.some((x) => x.usbType != null || x.usbDevice != null)) && (
             <>
               <Menu.Item onClick={() => onAddSource('usbType')}>
                 {t('assignments.source.usbType')}
@@ -4648,9 +4778,7 @@ export function ControllerSourcesEditor({
             </>
           )}
           {(hasBluetooth ||
-            assignments.some(
-              (x) => x.bluetoothType != null || x.bluetoothDevice != null
-            )) && (
+            assignments.some((x) => x.bluetoothType != null || x.bluetoothDevice != null)) && (
             <>
               <Menu.Item onClick={() => onAddSource('bluetoothType')}>
                 {t('assignments.source.bluetoothType')}
@@ -5626,9 +5754,7 @@ function BlankProfileWizard({
     DeviceProfileAssignmentTypes.some((y) => x[y] != null)
   );
   const initialHost = initialRule.filter((x) => getHostSourceType(x) !== null);
-  const initialTrigger = initialRule.find((x) =>
-    OtherAssignmentTypes.some((y) => x[y] != null)
-  );
+  const initialTrigger = initialRule.find((x) => OtherAssignmentTypes.some((y) => x[y] != null));
 
   const [name, setName] = useState<string>(profile.opts?.name ?? 'Device');
   const [deviceToEmulate, setDeviceToEmulate] = useState<proto.SubType>(
@@ -5812,23 +5938,13 @@ function BlankProfileWizard({
           const usbDev = Object.values(deviceStatus).find((d) => d.type === 'usbHost');
           const hostType = item.usbType ?? deviceToEmulate;
           newMappings.push(
-            ...getDefaultMappings(
-              'usbHost',
-              hostType,
-              usbDev ? parseInt(usbDev.id, 10) : 0,
-              usbDev
-            )
+            ...getDefaultMappings('usbHost', hostType, usbDev ? parseInt(usbDev.id, 10) : 0, usbDev)
           );
         } else if (item.bluetoothType != null || item.bluetoothDevice != null) {
           const btDev = Object.values(deviceStatus).find((d) => d.type === 'bt');
           const hostType = item.bluetoothType ?? deviceToEmulate;
           newMappings.push(
-            ...getDefaultMappings(
-              'bt',
-              hostType,
-              btDev ? parseInt(btDev.id, 10) : 0,
-              btDev
-            )
+            ...getDefaultMappings('bt', hostType, btDev ? parseInt(btDev.id, 10) : 0, btDev)
           );
         }
       });
@@ -6030,7 +6146,9 @@ function BlankProfileWizard({
                 axis={false}
                 button
                 type={deviceToEmulate}
-                mode={profile.opts?.faceButtonMappingMode ?? proto.FaceButtonMappingMode.LegendBased}
+                mode={
+                  profile.opts?.faceButtonMappingMode ?? proto.FaceButtonMappingMode.LegendBased
+                }
                 legendMode={
                   LegendMode[
                     (localStorage.getItem('legendMode') ?? 'Xbox360') as keyof typeof LegendMode
@@ -6253,19 +6371,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               title={t('main.clone_profile')}
               onClick={() => cloneProfile(profileIdx)}
             >
-              <IconCopy
-                style={{ width: '70%', height: '70%' }}
-              />
+              <IconCopy style={{ width: '70%', height: '70%' }} />
             </ActionIcon>
             {profiles.length > 1 && (
-              <ActionIcon
-                color="red"
-                title={t('main.delete_profile')}
-                onClick={openDeleteProfile}
-              >
-                <IconTrash
-                  style={{ width: '70%', height: '70%' }}
-                />
+              <ActionIcon color="red" title={t('main.delete_profile')} onClick={openDeleteProfile}>
+                <IconTrash style={{ width: '70%', height: '70%' }} />
               </ActionIcon>
             )}
           </Group>
