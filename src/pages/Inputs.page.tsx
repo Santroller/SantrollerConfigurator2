@@ -3378,7 +3378,7 @@ function SantrollerLed({
                       dispatch({
                         ...led,
                         mapping: {
-                          stageKitMapping: { type: proto.StageKitLedType.StageKitStrobe },
+                          stageKitMapping: {index:0, indexMappingMode: proto.StageKitIndexMappingMode.StageKitIndexSequential, type: proto.StageKitLedType.StageKitStrobe },
                         },
                       });
                       break;
@@ -3568,6 +3568,18 @@ function SantrollerLed({
                   proto.StageKitLedType.StageKitRGBY
                 ].includes(led.mapping.stageKitMapping.type) && (
                   <>
+                    <DropdownBox
+                      title="leds.stageKit.index_mapping_mode.label"
+                      e={proto.StageKitIndexMappingMode}
+                      val={led.mapping.stageKitMapping.indexMappingMode}
+                      label="leds.stageKit.index_mapping_mode"
+                      dispatch={(indexMappingMode) =>
+                        dispatch({
+                          ...led,
+                          mapping: { stageKitMapping: { ...led.mapping.stageKitMapping!, indexMappingMode } },
+                        })
+                      }
+                    />
                     <MultiSelect
                       label={t('leds.stagekit.index_label')}
                       value={Array.from(Array(8).keys())
