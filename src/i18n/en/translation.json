@@ -2,7 +2,7 @@
   "devices": {
     "wii": "Wii Extension",
     "bt": "Bluetooth",
-    "encoder": "Incremental Encoder (DJH Turntable Platter)",
+    "encoder": "Incremental Encoder / DJH Turntable Platter",
     "matrix": "Matrix Input",
     "toggle": "Toggle Input",
     "dmx": "DMX",
