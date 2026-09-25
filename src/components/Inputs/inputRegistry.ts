@@ -158,14 +158,36 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
     }),
   },
   usbHost: {
-    create: (deviceid) => ({
-      usbButton: { button: { gamepadButton: proto.GamepadButtonType.Gamepad_A }, deviceid },
-    }),
+    create: (deviceid, { axis }) =>
+      axis
+        ? {
+            usbAxis: {
+              axis: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+              deviceid,
+            },
+          }
+        : {
+            usbButton: {
+              button: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+              deviceid,
+            },
+          },
   },
   bt: {
-    create: (deviceid) => ({
-      btButton: { button: { gamepadButton: proto.GamepadButtonType.Gamepad_A }, deviceid },
-    }),
+    create: (deviceid, { axis }) =>
+      axis
+        ? {
+            btAxis: {
+              axis: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+              deviceid,
+            },
+          }
+        : {
+            btButton: {
+              button: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+              deviceid,
+            },
+          },
   },
   protarNeck: {
     create: (deviceid, { axis }) =>

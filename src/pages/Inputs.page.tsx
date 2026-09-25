@@ -63,7 +63,20 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useTimeout } from '@mantine/hooks';
-import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
+import {
+  getDefaultMappings,
+  getDefaultPs2Input,
+  getDefaultUsbOutput,
+  getDefaultWiiInput,
+  getOutputSubType,
+  getPs2ControllerTypeFromInput,
+  getPs2InputsForControllerType,
+  getWiiExtensionTypeFromInput,
+  getWiiInputsForExtensionType,
+  PS2_CONTROLLER_TYPES,
+  USB_HOST_SUBTYPES,
+  WII_EXTENSION_TYPES,
+} from '@/components/Defaults/defaultMappings';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   getLabel,
@@ -920,37 +933,45 @@ function DropdownOutputBox<
             </>
           )}
           {e &&
-            Object.keys(e).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item === v}>
-                {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
-                )}
-              </Combobox.Option>
-            ))}
+            Object.keys(e)
+              .filter((key) => isNaN(Number(key)))
+              .map((item) => (
+                <Combobox.Option value={item} key={item} selected={item === v}>
+                  {t(
+                    `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                  )}
+                </Combobox.Option>
+              ))}
           {e2 &&
-            Object.keys(e2).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item === v}>
-                {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
-                )}
-              </Combobox.Option>
-            ))}
+            Object.keys(e2)
+              .filter((key) => isNaN(Number(key)))
+              .map((item) => (
+                <Combobox.Option value={item} key={item} selected={item === v}>
+                  {t(
+                    `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                  )}
+                </Combobox.Option>
+              ))}
           {e3 &&
-            Object.keys(e3).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item === v}>
-                {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
-                )}
-              </Combobox.Option>
-            ))}
+            Object.keys(e3)
+              .filter((key) => isNaN(Number(key)))
+              .map((item) => (
+                <Combobox.Option value={item} key={item} selected={item === v}>
+                  {t(
+                    `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                  )}
+                </Combobox.Option>
+              ))}
           {e4 &&
-            Object.keys(e4).map((item) => (
-              <Combobox.Option value={item} key={item} selected={item === v}>
-                {t(
-                  `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
-                )}
-              </Combobox.Option>
-            ))}
+            Object.keys(e4)
+              .filter((key) => isNaN(Number(key)))
+              .map((item) => (
+                <Combobox.Option value={item} key={item} selected={item === v}>
+                  {t(
+                    `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, item, legendMode)}`
+                  )}
+                </Combobox.Option>
+              ))}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
@@ -1156,11 +1177,39 @@ function SantrollerLabel({
           );
         }
         return null;
+      case 'psx':
+        if (input.ps2Button?.button != null) {
+          return <Text>{t(`inputs.${proto.PS2ButtonType[input.ps2Button.button]}`)}</Text>;
+        }
+        if (input.ps2Axis?.axis != null) {
+          return <Text>{t(`inputs.${proto.PS2AxisType[input.ps2Axis.axis]}`)}</Text>;
+        }
+        return null;
+      case 'wii':
+        if (input.wiiButton?.button != null) {
+          return <Text>{t(`inputs.${proto.WiiButtonType[input.wiiButton.button]}`)}</Text>;
+        }
+        if (input.wiiAxis?.axis != null) {
+          return <Text>{t(`inputs.${proto.WiiAxisType[input.wiiAxis.axis]}`)}</Text>;
+        }
+        return null;
       case 'cycle':
         return <Text>{input.cycle?.input?.gpio?.pin}</Text>;
       case 'toggle':
         return <Text>{input.toggle?.input?.gpio?.pin}</Text>;
     }
+  }
+  if (input.ps2Button?.button != null) {
+    return <Text>{t(`inputs.${proto.PS2ButtonType[input.ps2Button.button]}`)}</Text>;
+  }
+  if (input.ps2Axis?.axis != null) {
+    return <Text>{t(`inputs.${proto.PS2AxisType[input.ps2Axis.axis]}`)}</Text>;
+  }
+  if (input.wiiButton?.button != null) {
+    return <Text>{t(`inputs.${proto.WiiButtonType[input.wiiButton.button]}`)}</Text>;
+  }
+  if (input.wiiAxis?.axis != null) {
+    return <Text>{t(`inputs.${proto.WiiAxisType[input.wiiAxis.axis]}`)}</Text>;
   }
   if (input.gpio) {
     const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
@@ -1201,6 +1250,48 @@ function SantrollerLabel({
     );
   }
   return fallback ? <Text>{t(`outputs.${label}`)}</Text> : null;
+}
+
+function createBiEnum<T extends number>(map: Record<string, T>): StandardEnum<T> {
+  const res: any = { ...map };
+  for (const [k, v] of Object.entries(map)) {
+    res[v] = k;
+  }
+  return res as StandardEnum<T>;
+}
+
+const USB_HOST_SUBTYPES_ENUM = createBiEnum(
+  Object.fromEntries(USB_HOST_SUBTYPES.map((st) => [proto.SubType[st], st]))
+);
+
+const PS2_CONTROLLER_TYPES_ENUM = createBiEnum(
+  Object.fromEntries(PS2_CONTROLLER_TYPES.map((t) => [proto.PS2ControllerType[t], t]))
+);
+
+function getPs2InputsForType(type: proto.PS2ControllerType): {
+  axes: StandardEnum<proto.PS2AxisType>;
+  buttons: StandardEnum<proto.PS2ButtonType>;
+} {
+  const { axes, buttons } = getPs2InputsForControllerType(type);
+  return {
+    axes: createBiEnum(Object.fromEntries(axes.map((a) => [proto.PS2AxisType[a], a]))),
+    buttons: createBiEnum(Object.fromEntries(buttons.map((b) => [proto.PS2ButtonType[b], b]))),
+  };
+}
+
+const WII_EXTENSION_TYPES_ENUM = createBiEnum(
+  Object.fromEntries(WII_EXTENSION_TYPES.map((t) => [proto.WiiExtType[t], t]))
+);
+
+function getWiiInputsForType(type: proto.WiiExtType): {
+  axes: StandardEnum<proto.WiiAxisType>;
+  buttons: StandardEnum<proto.WiiButtonType>;
+} {
+  const { axes, buttons } = getWiiInputsForExtensionType(type);
+  return {
+    axes: createBiEnum(Object.fromEntries(axes.map((a) => [proto.WiiAxisType[a], a]))),
+    buttons: createBiEnum(Object.fromEntries(buttons.map((b) => [proto.WiiButtonType[b], b]))),
+  };
 }
 
 function SantrollerInput({
@@ -1253,6 +1344,116 @@ function SantrollerInput({
   const pinModeCombobox = useCombobox({
     onDropdownClose: () => pinModeCombobox.resetSelectedOption(),
   });
+
+  const allAssignments = useMemo(
+    () => profile?.assignments?.flatMap((x) => x.assignments ?? []) ?? [],
+    [profile?.assignments]
+  );
+
+  const effectiveUsbType = useMemo(() => {
+    const currentOutput = input.usbAxis?.axis || input.usbButton?.button;
+    const inferred = getOutputSubType(currentOutput);
+    if (inferred != null) {
+      return inferred;
+    }
+
+    const assigned = allAssignments.find((a) => a.usbType != null)?.usbType;
+    if (assigned != null) {
+      return assigned;
+    }
+
+    if (USB_HOST_SUBTYPES.includes(type)) {
+      return type;
+    }
+    return proto.SubType.Gamepad;
+  }, [input.usbAxis?.axis, input.usbButton?.button, allAssignments, type]);
+
+  const effectiveBtType = useMemo(() => {
+    const currentOutput = input.btAxis?.axis || input.btButton?.button;
+    const inferred = getOutputSubType(currentOutput);
+    if (inferred != null) {
+      return inferred;
+    }
+
+    const assigned = allAssignments.find((a) => a.bluetoothType != null)?.bluetoothType;
+    if (assigned != null) {
+      return assigned;
+    }
+
+    if (USB_HOST_SUBTYPES.includes(type)) {
+      return type;
+    }
+    return proto.SubType.Gamepad;
+  }, [input.btAxis?.axis, input.btButton?.button, allAssignments, type]);
+
+  const effectivePs2Type = useMemo(() => {
+    const inferred = getPs2ControllerTypeFromInput(input);
+    if (inferred != null) {
+      return inferred;
+    }
+
+    const connected = deviceStatus[deviceId]?.ps2CntType;
+    if (connected != null && connected !== proto.PS2ControllerType.PS2ControllerTypeUnknown) {
+      return connected;
+    }
+
+    const assigned = allAssignments.find((a) => a.ps2Cnt != null)?.ps2Cnt;
+    if (assigned != null && assigned !== proto.PS2ControllerType.PS2ControllerTypeUnknown) {
+      return assigned;
+    }
+
+    if (type === proto.SubType.GuitarHeroGuitar || type === proto.SubType.RockBandGuitar) {
+      return proto.PS2ControllerType.PS2ControllerTypeGuitar;
+    }
+    if (type === proto.SubType.Taiko) {
+      return proto.PS2ControllerType.PS2ControllerTypeTaiko;
+    }
+    return proto.PS2ControllerType.PS2ControllerTypeDualshock;
+  }, [input, deviceStatus, deviceId, allAssignments, type]);
+
+  const ps2Inputs = useMemo(() => getPs2InputsForType(effectivePs2Type), [effectivePs2Type]);
+
+  const effectiveWiiType = useMemo(() => {
+    let preferred: proto.WiiExtType | undefined;
+    const connected = deviceStatus[deviceId]?.wiiExtType;
+    if (
+      connected != null &&
+      connected !== proto.WiiExtType.WiiNoExtension &&
+      connected !== proto.WiiExtType.WiiNotInitialised
+    ) {
+      preferred = connected;
+    } else {
+      const assigned = allAssignments.find((a) => a.wiiExt != null)?.wiiExt;
+      if (
+        assigned != null &&
+        assigned !== proto.WiiExtType.WiiNoExtension &&
+        assigned !== proto.WiiExtType.WiiNotInitialised
+      ) {
+        preferred = assigned;
+      } else if (
+        type === proto.SubType.GuitarHeroGuitar ||
+        type === proto.SubType.RockBandGuitar
+      ) {
+        preferred = proto.WiiExtType.WiiGuitarHeroGuitar;
+      } else if (
+        type === proto.SubType.GuitarHeroDrums ||
+        type === proto.SubType.RockBandDrums
+      ) {
+        preferred = proto.WiiExtType.WiiGuitarHeroDrums;
+      } else if (type === proto.SubType.Taiko) {
+        preferred = proto.WiiExtType.WiiTaikoNoTatsujinController;
+      } else if (type === proto.SubType.DjHeroTurntable) {
+        preferred = proto.WiiExtType.WiiDjHeroTurntable;
+      } else {
+        preferred = proto.WiiExtType.WiiClassicController;
+      }
+    }
+
+    const inferred = getWiiExtensionTypeFromInput(input, preferred);
+    return inferred ?? preferred ?? proto.WiiExtType.WiiClassicController;
+  }, [input, deviceStatus, deviceId, allAssignments, type]);
+
+  const wiiInputs = useMemo(() => getWiiInputsForType(effectiveWiiType), [effectiveWiiType]);
   if (simpleMode) {
     return <SantrollerLabel input={input} label="" fallback={false} />;
   }
@@ -1662,116 +1863,222 @@ function SantrollerInput({
           }
         />
       )}
-      {device?.type === 'wii' && (
-        <DropdownOutputBox
-          title="input"
-          e={proto.WiiAxisType}
-          e2={proto.WiiButtonType}
-          legendMode={legendMode}
-          type={type}
-          val={input.wiiAxis?.axis}
-          val2={input.wiiButton?.button}
-          valMidi={input.midi ?? undefined}
-          label="wii.inputs"
-          midi
-          dispatch={(axis) =>
-            dispatch({ wiiAxis: { ...input.wiiAxis!, axis, deviceid: deviceId } })
-          }
-          dispatch2={(button) =>
-            dispatch({ wiiButton: { ...input.wiiButton!, button, deviceid: deviceId } })
-          }
-          dispatchMidi={(midi) =>
-            dispatch({
-              midi: { ...midi!, deviceid: deviceId },
-            })
-          }
-        />
+      {(device?.type === 'wii' || input.wiiAxis || input.wiiButton) && (
+        <>
+          <DropdownBox
+            title="activation.wiiExt"
+            e={WII_EXTENSION_TYPES_ENUM}
+            val={effectiveWiiType}
+            label="wiiExt"
+            dispatch={(newType) => {
+              dispatch(getDefaultWiiInput(newType as proto.WiiExtType, deviceId, !!axis));
+            }}
+          />
+          <Space h="md" />
+          <DropdownOutputBox
+            title="input"
+            e={wiiInputs.axes}
+            e2={wiiInputs.buttons}
+            legendMode={legendMode}
+            type={type}
+            val={input.wiiAxis?.axis}
+            val2={input.wiiButton?.button}
+            valMidi={input.midi ?? undefined}
+            label="inputs"
+            midi
+            dispatch={(axisVal) =>
+              dispatch({
+                wiiAxis: {
+                  deviceid: (input.wiiAxis?.deviceid || input.wiiButton?.deviceid || deviceId)!,
+                  axis: axisVal as proto.WiiAxisType,
+                },
+              })
+            }
+            dispatch2={(buttonVal) =>
+              dispatch({
+                wiiButton: {
+                  deviceid: (input.wiiAxis?.deviceid || input.wiiButton?.deviceid || deviceId)!,
+                  button: buttonVal as proto.WiiButtonType,
+                },
+              })
+            }
+            dispatchMidi={(midi) =>
+              dispatch({
+                midi: { ...midi!, deviceid: deviceId },
+              })
+            }
+          />
+        </>
       )}
-      {(input.ps2Axis || input.ps2Button) && (
-        <DropdownOutputBox
-          title="input"
-          e={proto.PS2AxisType}
-          e2={proto.PS2ButtonType}
-          val={input.ps2Axis?.axis}
-          val2={input.ps2Button?.button}
-          label="ps2.inputs"
-          legendMode={legendMode}
-          type={type}
-          dispatch={(axis) =>
-            dispatch({ ps2Axis: { ...input.ps2Axis!, axis, deviceid: deviceId } })
-          }
-          dispatch2={(button) =>
-            dispatch({ ps2Button: { ...input.ps2Button!, button, deviceid: deviceId } })
-          }
-        />
+      {(device?.type === 'psx' || input.ps2Axis || input.ps2Button) && (
+        <>
+          <DropdownBox
+            title="activation.ps2Cnt"
+            e={PS2_CONTROLLER_TYPES_ENUM}
+            val={effectivePs2Type}
+            label="ps2Cnt"
+            dispatch={(newType) => {
+              dispatch(getDefaultPs2Input(newType as proto.PS2ControllerType, deviceId, !!axis));
+            }}
+          />
+          <Space h="md" />
+          <DropdownOutputBox
+            title="input"
+            e={ps2Inputs.axes}
+            e2={ps2Inputs.buttons}
+            val={input.ps2Axis?.axis}
+            val2={input.ps2Button?.button}
+            label="inputs"
+            legendMode={legendMode}
+            type={type}
+            dispatch={(ps2AxisVal) =>
+              dispatch({
+                ps2Axis: { axis: ps2AxisVal as proto.PS2AxisType, deviceid: deviceId },
+              })
+            }
+            dispatch2={(ps2ButtonVal) =>
+              dispatch({
+                ps2Button: { button: ps2ButtonVal as proto.PS2ButtonType, deviceid: deviceId },
+              })
+            }
+          />
+        </>
       )}
-      {device?.type === 'usbHost' && (
-        <OutputBox
-          label="outputs"
-          title="input"
-          valMidi={input.midi ?? undefined}
-          dispatch={(mapping, _, analog) =>
-            dispatch(
-              analog
-                ? {
-                    usbAxis: {
-                      deviceid: (input.usbAxis?.deviceid || input.usbButton?.deviceid)!,
-                      axis: mapping,
-                    },
-                  }
-                : {
-                    usbButton: {
-                      deviceid: (input.usbAxis?.deviceid || input.usbButton?.deviceid)!,
-                      button: mapping,
-                    },
-                  }
-            )
-          }
-          dispatchMidi={(midi) =>
-            dispatch({
-              midi: { ...midi!, deviceid: deviceId },
-            })
-          }
-          midi
-          type={type}
-          mode={mode}
-          mapping={input.usbAxis?.axis || input.usbButton?.button}
-          legendMode={legendMode}
-        />
+      {(device?.type === 'usbHost' || input.usbAxis || input.usbButton) && (
+        <>
+          <DropdownBox
+            title="activation.usbType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={effectiveUsbType}
+            label="subType"
+            dispatch={(newType) => {
+              const { isAnalog: newAnalog, output } = getDefaultUsbOutput(
+                newType as proto.SubType,
+                !!axis
+              );
+              dispatch(
+                newAnalog
+                  ? {
+                      usbAxis: {
+                        deviceid: (input.usbAxis?.deviceid ||
+                          input.usbButton?.deviceid ||
+                          deviceId)!,
+                        axis: output,
+                      },
+                    }
+                  : {
+                      usbButton: {
+                        deviceid: (input.usbAxis?.deviceid ||
+                          input.usbButton?.deviceid ||
+                          deviceId)!,
+                        button: output,
+                      },
+                    }
+              );
+            }}
+          />
+          <Space h="md" />
+          <OutputBox
+            label="outputs"
+            title="input"
+            valMidi={input.midi ?? undefined}
+            dispatch={(mapping, _, analog) =>
+              dispatch(
+                analog
+                  ? {
+                      usbAxis: {
+                        deviceid: (input.usbAxis?.deviceid ||
+                          input.usbButton?.deviceid ||
+                          deviceId)!,
+                        axis: mapping,
+                      },
+                    }
+                  : {
+                      usbButton: {
+                        deviceid: (input.usbAxis?.deviceid ||
+                          input.usbButton?.deviceid ||
+                          deviceId)!,
+                        button: mapping,
+                      },
+                    }
+              )
+            }
+            dispatchMidi={(midi) =>
+              dispatch({
+                midi: { ...midi!, deviceid: deviceId },
+              })
+            }
+            midi
+            type={effectiveUsbType}
+            mode={mode}
+            mapping={input.usbAxis?.axis || input.usbButton?.button}
+            legendMode={legendMode}
+          />
+        </>
       )}
-      {device?.type === 'bt' && (
-        <OutputBox
-          label="outputs"
-          title="input"
-          valMidi={input.midi ?? undefined}
-          dispatch={(mapping, _, analog) =>
-            dispatch(
-              analog
-                ? {
-                    btAxis: {
-                      deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid)!,
-                      axis: mapping,
-                    },
-                  }
-                : {
-                    btButton: {
-                      deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid)!,
-                      button: mapping,
-                    },
-                  }
-            )
-          }
-          dispatchMidi={(midi) =>
-            dispatch({
-              midi: { ...midi!, deviceid: deviceId },
-            })
-          }
-          midi
-          type={type}
-          mode={mode}
-          mapping={input.btAxis?.axis || input.btButton?.button}
-          legendMode={legendMode}
-        />
+      {(device?.type === 'bt' || input.btAxis || input.btButton) && (
+        <>
+          <DropdownBox
+            title="activation.bluetoothType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={effectiveBtType}
+            label="subType"
+            dispatch={(newType) => {
+              const { isAnalog: newAnalog, output } = getDefaultUsbOutput(
+                newType as proto.SubType,
+                !!axis
+              );
+              dispatch(
+                newAnalog
+                  ? {
+                      btAxis: {
+                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
+                        axis: output,
+                      },
+                    }
+                  : {
+                      btButton: {
+                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
+                        button: output,
+                      },
+                    }
+              );
+            }}
+          />
+          <Space h="md" />
+          <OutputBox
+            label="outputs"
+            title="input"
+            valMidi={input.midi ?? undefined}
+            dispatch={(mapping, _, analog) =>
+              dispatch(
+                analog
+                  ? {
+                      btAxis: {
+                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
+                        axis: mapping,
+                      },
+                    }
+                  : {
+                      btButton: {
+                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
+                        button: mapping,
+                      },
+                    }
+              )
+            }
+            dispatchMidi={(midi) =>
+              dispatch({
+                midi: { ...midi!, deviceid: deviceId },
+              })
+            }
+            midi
+            type={effectiveBtType}
+            mode={mode}
+            mapping={input.btAxis?.axis || input.btButton?.button}
+            legendMode={legendMode}
+          />
+        </>
       )}
       <RegisteredInputEditor input={input} dispatch={dispatch} />
       {input.vtechExpander && (
@@ -3378,7 +3685,12 @@ function SantrollerLed({
                       dispatch({
                         ...led,
                         mapping: {
-                          stageKitMapping: {index:0, indexMappingMode: proto.StageKitIndexMappingMode.StageKitIndexSequential, type: proto.StageKitLedType.StageKitStrobe },
+                          stageKitMapping: {
+                            index: 0,
+                            indexMappingMode:
+                              proto.StageKitIndexMappingMode.StageKitIndexSequential,
+                            type: proto.StageKitLedType.StageKitStrobe,
+                          },
                         },
                       });
                       break;
@@ -3565,7 +3877,7 @@ function SantrollerLed({
                   proto.StageKitLedType.StageKitRed,
                   proto.StageKitLedType.StageKitGreen,
                   proto.StageKitLedType.StageKitYellow,
-                  proto.StageKitLedType.StageKitRGBY
+                  proto.StageKitLedType.StageKitRGBY,
                 ].includes(led.mapping.stageKitMapping.type) && (
                   <>
                     <DropdownBox
@@ -3576,7 +3888,9 @@ function SantrollerLed({
                       dispatch={(indexMappingMode) =>
                         dispatch({
                           ...led,
-                          mapping: { stageKitMapping: { ...led.mapping.stageKitMapping!, indexMappingMode } },
+                          mapping: {
+                            stageKitMapping: { ...led.mapping.stageKitMapping!, indexMappingMode },
+                          },
                         })
                       }
                     />

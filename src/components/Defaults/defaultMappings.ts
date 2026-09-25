@@ -529,15 +529,17 @@ export function getWiiDefaults(
   const isDrumExt = ext === proto.WiiExtType.WiiGuitarHeroDrums;
   const isTaikoExt = ext === proto.WiiExtType.WiiTaikoNoTatsujinController;
   const isDjExt = ext === proto.WiiExtType.WiiDjHeroTurntable;
+  const isNunchuk = ext === proto.WiiExtType.WiiNunchuk;
+  const isUDraw = ext === proto.WiiExtType.WiiThqUdrawTablet;
+  const isDrawsome = ext === proto.WiiExtType.WiiUbisoftDrawsomeTablet;
   const isClassicExt =
     ext === proto.WiiExtType.WiiClassicController ||
-    ext === proto.WiiExtType.WiiClassicControllerPro ||
-    ext === proto.WiiExtType.WiiNunchuk;
+    ext === proto.WiiExtType.WiiClassicControllerPro;
 
   // 1. Guitar Extension (or Guitar SubTypes if not specifically detected otherwise)
   if (
     isGuitarExt ||
-    (!isDrumExt && !isTaikoExt && !isDjExt && !isClassicExt && (subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar))
+    (!isDrumExt && !isTaikoExt && !isDjExt && !isClassicExt && !isNunchuk && !isUDraw && !isDrawsome && (subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar))
   ) {
     if (subType === proto.SubType.RockBandGuitar) {
       return [
@@ -585,6 +587,52 @@ export function getWiiDefaults(
 
   // 2. Drum Extension (or Drum SubTypes)
   if (isDrumExt || subType === proto.SubType.GuitarHeroDrums || subType === proto.SubType.RockBandDrums) {
+    if (subType === proto.SubType.RockBandDrums) {
+      return [
+        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+      ];
+    }
+    if (subType === proto.SubType.GuitarHeroDrums) {
+      return [
+        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+      ];
+    }
     return [
       wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
       wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
@@ -596,6 +644,10 @@ export function getWiiDefaults(
       wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
       wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
       wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
       wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
       wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
       wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
@@ -637,7 +689,43 @@ export function getWiiDefaults(
     ];
   }
 
-  // 5. Default / Classic Controller (Full Gamepad)
+  // 5. Nunchuk
+  if (isNunchuk) {
+    return [
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+      wiiButton(proto.WiiButtonType.WiiButtonNunchukC, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+      wiiButton(proto.WiiButtonType.WiiButtonNunchukZ, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationZ, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukRotationPitch, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
+      wiiAxis(proto.WiiAxisType.WiiAxisNunchukRotationRoll, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+    ];
+  }
+
+  // 6. uDraw Tablet
+  if (isUDraw) {
+    return [
+      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenPressure, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenClick, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton2, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
+    ];
+  }
+
+  // 7. Drawsome Tablet
+  if (isDrawsome) {
+    return [
+      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenPressure, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+    ];
+  }
+
+  // 8. Default / Classic Controller (Full Gamepad)
   return [
     wiiAxis(proto.WiiAxisType.WiiAxisClassicLeftStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
     wiiAxis(proto.WiiAxisType.WiiAxisClassicLeftStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
@@ -655,6 +743,8 @@ export function getWiiDefaults(
     wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
@@ -672,6 +762,12 @@ export function getPs2Defaults(
   const cntType = deviceStatus?.ps2CntType;
   const isGuitar = cntType === proto.PS2ControllerType.PS2ControllerTypeGuitar;
   const isTaiko = cntType === proto.PS2ControllerType.PS2ControllerTypeTaiko;
+  const isMouse = cntType === proto.PS2ControllerType.PS2ControllerTypeMouse;
+  const isNegCon = cntType === proto.PS2ControllerType.PS2ControllerTypeNegCon;
+  const isJogCon = cntType === proto.PS2ControllerType.PS2ControllerTypeJogCon;
+  const isGunCon = cntType === proto.PS2ControllerType.PS2ControllerTypeGunCon;
+  const isDualshock2 = cntType === proto.PS2ControllerType.PS2ControllerTypeDualshock2;
+  const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
 
   if (isGuitar || subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar) {
     if (subType === proto.SubType.RockBandGuitar) {
@@ -684,8 +780,18 @@ export function getPs2Defaults(
         ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
         ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
         ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
         ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
       ];
     }
     return [
@@ -697,8 +803,18 @@ export function getPs2Defaults(
       ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
       ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
       ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
       ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
       ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
     ];
   }
 
@@ -713,12 +829,59 @@ export function getPs2Defaults(
     ];
   }
 
-  // Standard PS2 DualShock / Gamepad
-  return [
-    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisRightStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisRightStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
+  if (isMouse) {
+    return [
+      ps2Axis(proto.PS2AxisType.PS2AxisMouseX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      ps2Axis(proto.PS2AxisType.PS2AxisMouseY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+      ps2Button(proto.PS2ButtonType.PS2ButtonMouseLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonMouseRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+    ];
+  }
+
+  if (isNegCon) {
+    return [
+      ps2Axis(proto.PS2AxisType.PS2AxisNegConTwist, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      ps2Axis(proto.PS2AxisType.PS2AxisNegConI, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisNegConIi, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisNegConL, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConA, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConB, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConR, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+    ];
+  }
+
+  if (isJogCon) {
+    return [
+      ps2Axis(proto.PS2AxisType.PS2AxisJogConWheel, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTriangle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
+      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+    ];
+  }
+
+  if (isGunCon) {
+    return [
+      ps2Axis(proto.PS2AxisType.PS2AxisGunConHSync, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+      ps2Axis(proto.PS2AxisType.PS2AxisGunConVSync, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+    ];
+  }
+
+  const standardButtons: proto.IMapping[] = [
     ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
     ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
     ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
@@ -731,11 +894,43 @@ export function getPs2Defaults(
     ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
     ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
     ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonL3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftThumbClick }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonR3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightThumbClick }),
     ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
     ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
   ];
+
+  if (isDigital) {
+    return standardButtons;
+  }
+
+  const sticks: proto.IMapping[] = [
+    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
+    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
+    ps2Axis(proto.PS2AxisType.PS2AxisRightStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
+    ps2Axis(proto.PS2AxisType.PS2AxisRightStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
+    ps2Button(proto.PS2ButtonType.PS2ButtonL3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftThumbClick }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonR3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightThumbClick }),
+  ];
+
+  if (isDualshock2) {
+    const pressureAxes: proto.IMapping[] = [
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Cross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Circle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Square, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Triangle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2UpButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2DownButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2LeftButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2RightButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2L1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2R1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2L2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
+      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2R2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+    ];
+    return [...sticks, ...standardButtons, ...pressureAxes];
+  }
+
+  // Standard PS2 DualShock
+  return [...sticks, ...standardButtons];
 }
 
 // ---------------------------------------------------------------------------
@@ -1217,4 +1412,271 @@ export function getDefaultMappings(
     default:
       return getGpioDefaults(subType);
   }
+}
+
+// ---------------------------------------------------------------------------
+// 9. Derived Metadata & Helpers for Input Mapping
+// ---------------------------------------------------------------------------
+
+export const USB_HOST_SUBTYPES: proto.SubType[] = [
+  proto.SubType.Gamepad,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+  proto.SubType.GuitarHeroDrums,
+  proto.SubType.RockBandDrums,
+  proto.SubType.LiveGuitar,
+  proto.SubType.DjHeroTurntable,
+  proto.SubType.ProGuitarMustang,
+  proto.SubType.ProGuitarSquire,
+  proto.SubType.ProKeys,
+  proto.SubType.Dancepad,
+  proto.SubType.Taiko,
+  proto.SubType.KeyboardMouse,
+];
+
+const SUBTYPE_OUTPUT_KEYS: Partial<Record<keyof proto.IOutput, proto.SubType>> = (() => {
+  const map: Partial<Record<keyof proto.IOutput, proto.SubType>> = {
+    keycode: proto.SubType.KeyboardMouse,
+  };
+  const specificSubTypes = [
+    proto.SubType.GuitarHeroGuitar,
+    proto.SubType.RockBandGuitar,
+    proto.SubType.GuitarHeroDrums,
+    proto.SubType.RockBandDrums,
+    proto.SubType.LiveGuitar,
+    proto.SubType.DjHeroTurntable,
+    proto.SubType.ProGuitarMustang,
+    proto.SubType.ProKeys,
+  ];
+  for (const st of specificSubTypes) {
+    for (const m of getGpioDefaults(st)) {
+      if (m.mapping) {
+        for (const k of Object.keys(m.mapping) as (keyof proto.IOutput)[]) {
+          if (k !== 'gamepadButton' && k !== 'gamepadAxis' && !map[k]) {
+            map[k] = st;
+          }
+        }
+      }
+    }
+  }
+  return map;
+})();
+
+export function getOutputSubType(output?: proto.IOutput | null): proto.SubType | undefined {
+  if (!output) {
+    return undefined;
+  }
+  for (const [key, val] of Object.entries(output)) {
+    if (val != null) {
+      const match = SUBTYPE_OUTPUT_KEYS[key as keyof proto.IOutput];
+      if (match != null) {
+        return match;
+      }
+    }
+  }
+  if (output.gamepadButton != null || output.gamepadAxis != null) {
+    return proto.SubType.Gamepad;
+  }
+  return undefined;
+}
+
+export function getDefaultUsbOutput(
+  subType: proto.SubType,
+  isAxis: boolean
+): { isAnalog: boolean; output: proto.IOutput } {
+  if (subType === proto.SubType.KeyboardMouse) {
+    return isAxis
+      ? { isAnalog: true, output: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX } }
+      : { isAnalog: false, output: { keycode: 4 } };
+  }
+  const defaults = getUsbHostDefaults(subType);
+  const match = defaults.find((m) =>
+    isAxis ? m.input?.usbAxis != null : m.input?.usbButton != null
+  );
+  if (match) {
+    return {
+      isAnalog: isAxis,
+      output: isAxis
+        ? (match.input?.usbAxis?.axis ?? {})
+        : (match.input?.usbButton?.button ?? {}),
+    };
+  }
+  return isAxis
+    ? { isAnalog: true, output: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX } }
+    : { isAnalog: false, output: { gamepadButton: proto.GamepadButtonType.Gamepad_A } };
+}
+
+export const PS2_CONTROLLER_TYPES: proto.PS2ControllerType[] = [
+  proto.PS2ControllerType.PS2ControllerTypeDualshock,
+  proto.PS2ControllerType.PS2ControllerTypeDualshock2,
+  proto.PS2ControllerType.PS2ControllerTypeDigital,
+  proto.PS2ControllerType.PS2ControllerTypeGuitar,
+  proto.PS2ControllerType.PS2ControllerTypeTaiko,
+  proto.PS2ControllerType.PS2ControllerTypeMouse,
+  proto.PS2ControllerType.PS2ControllerTypeNegCon,
+  proto.PS2ControllerType.PS2ControllerTypeJogCon,
+  proto.PS2ControllerType.PS2ControllerTypeGunCon,
+];
+
+export function getPs2InputsForControllerType(controllerType: proto.PS2ControllerType): {
+  axes: proto.PS2AxisType[];
+  buttons: proto.PS2ButtonType[];
+} {
+  const mappings = getPs2Defaults(proto.SubType.Gamepad, 0, { ps2CntType: controllerType });
+  const axes: proto.PS2AxisType[] = [];
+  const buttons: proto.PS2ButtonType[] = [];
+  for (const m of mappings) {
+    if (m.input?.ps2Axis?.axis != null && !axes.includes(m.input.ps2Axis.axis)) {
+      axes.push(m.input.ps2Axis.axis);
+    }
+    if (m.input?.ps2Button?.button != null && !buttons.includes(m.input.ps2Button.button)) {
+      buttons.push(m.input.ps2Button.button);
+    }
+  }
+  return { axes, buttons };
+}
+
+export function getPs2ControllerTypeFromInput(
+  input: proto.IInput
+): proto.PS2ControllerType | undefined {
+  const axis = input.ps2Axis?.axis;
+  const button = input.ps2Button?.button;
+  if (axis == null && button == null) {
+    return undefined;
+  }
+  const checkOrder = [
+    proto.PS2ControllerType.PS2ControllerTypeGuitar,
+    proto.PS2ControllerType.PS2ControllerTypeTaiko,
+    proto.PS2ControllerType.PS2ControllerTypeMouse,
+    proto.PS2ControllerType.PS2ControllerTypeNegCon,
+    proto.PS2ControllerType.PS2ControllerTypeJogCon,
+    proto.PS2ControllerType.PS2ControllerTypeGunCon,
+    proto.PS2ControllerType.PS2ControllerTypeDualshock2,
+    proto.PS2ControllerType.PS2ControllerTypeDualshock,
+    proto.PS2ControllerType.PS2ControllerTypeDigital,
+  ];
+  for (const cntType of checkOrder) {
+    const { axes, buttons } = getPs2InputsForControllerType(cntType);
+    if (axis != null && axes.includes(axis)) {
+      return cntType;
+    }
+    if (button != null && buttons.includes(button)) {
+      return cntType;
+    }
+  }
+  return undefined;
+}
+
+export function getDefaultPs2Input(
+  controllerType: proto.PS2ControllerType,
+  deviceId: number,
+  isAxis: boolean
+): proto.IInput {
+  const { axes, buttons } = getPs2InputsForControllerType(controllerType);
+  if (isAxis && axes.length > 0) {
+    return { ps2Axis: { axis: axes[0], deviceid: deviceId } };
+  }
+  if (!isAxis && buttons.length > 0) {
+    return { ps2Button: { button: buttons[0], deviceid: deviceId } };
+  }
+  if (axes.length > 0) {
+    return { ps2Axis: { axis: axes[0], deviceid: deviceId } };
+  }
+  return {
+    ps2Button: {
+      button: buttons[0] ?? proto.PS2ButtonType.PS2ButtonCross,
+      deviceid: deviceId,
+    },
+  };
+}
+
+export const WII_EXTENSION_TYPES: proto.WiiExtType[] = [
+  proto.WiiExtType.WiiClassicController,
+  proto.WiiExtType.WiiClassicControllerPro,
+  proto.WiiExtType.WiiNunchuk,
+  proto.WiiExtType.WiiGuitarHeroGuitar,
+  proto.WiiExtType.WiiGuitarHeroDrums,
+  proto.WiiExtType.WiiDjHeroTurntable,
+  proto.WiiExtType.WiiTaikoNoTatsujinController,
+  proto.WiiExtType.WiiThqUdrawTablet,
+  proto.WiiExtType.WiiUbisoftDrawsomeTablet,
+];
+
+export function getWiiInputsForExtensionType(extType: proto.WiiExtType): {
+  axes: proto.WiiAxisType[];
+  buttons: proto.WiiButtonType[];
+} {
+  const mappings = getWiiDefaults(proto.SubType.Gamepad, 0, { wiiExtType: extType });
+  const axes: proto.WiiAxisType[] = [];
+  const buttons: proto.WiiButtonType[] = [];
+  for (const m of mappings) {
+    if (m.input?.wiiAxis?.axis != null && !axes.includes(m.input.wiiAxis.axis)) {
+      axes.push(m.input.wiiAxis.axis);
+    }
+    if (m.input?.wiiButton?.button != null && !buttons.includes(m.input.wiiButton.button)) {
+      buttons.push(m.input.wiiButton.button);
+    }
+  }
+  return { axes, buttons };
+}
+
+export function getWiiExtensionTypeFromInput(
+  input: proto.IInput,
+  preferredType?: proto.WiiExtType
+): proto.WiiExtType | undefined {
+  const axis = input.wiiAxis?.axis;
+  const button = input.wiiButton?.button;
+  if (axis == null && button == null) {
+    return undefined;
+  }
+  if (preferredType != null) {
+    const { axes, buttons } = getWiiInputsForExtensionType(preferredType);
+    if ((axis != null && axes.includes(axis)) || (button != null && buttons.includes(button))) {
+      return preferredType;
+    }
+  }
+  const checkOrder = [
+    proto.WiiExtType.WiiGuitarHeroGuitar,
+    proto.WiiExtType.WiiDjHeroTurntable,
+    proto.WiiExtType.WiiNunchuk,
+    proto.WiiExtType.WiiThqUdrawTablet,
+    proto.WiiExtType.WiiUbisoftDrawsomeTablet,
+    proto.WiiExtType.WiiClassicController,
+    proto.WiiExtType.WiiClassicControllerPro,
+    proto.WiiExtType.WiiGuitarHeroDrums,
+    proto.WiiExtType.WiiTaikoNoTatsujinController,
+  ];
+  for (const extType of checkOrder) {
+    const { axes, buttons } = getWiiInputsForExtensionType(extType);
+    if (axis != null && axes.includes(axis)) {
+      return extType;
+    }
+    if (button != null && buttons.includes(button)) {
+      return extType;
+    }
+  }
+  return undefined;
+}
+
+export function getDefaultWiiInput(
+  extType: proto.WiiExtType,
+  deviceId: number,
+  isAxis: boolean
+): proto.IInput {
+  const { axes, buttons } = getWiiInputsForExtensionType(extType);
+  if (isAxis && axes.length > 0) {
+    return { wiiAxis: { axis: axes[0], deviceid: deviceId } };
+  }
+  if (!isAxis && buttons.length > 0) {
+    return { wiiButton: { button: buttons[0], deviceid: deviceId } };
+  }
+  if (axes.length > 0) {
+    return { wiiAxis: { axis: axes[0], deviceid: deviceId } };
+  }
+  return {
+    wiiButton: {
+      button: buttons[0] ?? proto.WiiButtonType.WiiButtonClassicA,
+      deviceid: deviceId,
+    },
+  };
 }
