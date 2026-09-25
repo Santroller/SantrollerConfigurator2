@@ -1671,7 +1671,7 @@ function EncoderDevice({ id }: { id: string }) {
         label={t('encoder.divisor')}
         min={1}
         max={4}
-        value={encoder.divisor || 0}
+        value={encoder.divisor || 1}
         onChange={(e) =>
           updateDevice(
             {
