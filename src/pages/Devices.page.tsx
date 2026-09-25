@@ -1657,9 +1657,29 @@ function EncoderDevice({ id }: { id: string }) {
       <PinBox
         label="encoder.data_pin"
         pin={encoder.dataPin}
-        valid={AllPinsNamed}
+        valid={usbHostValidPins}
         dispatch={(pin) =>
           updateDevice({ deviceid: parseInt(id, 10), encoder: { ...encoder, dataPin: pin } }, id)
+        }
+      />
+      <PinBox
+        label="encoder.clock_pin"
+        pin={encoder.dataPin + 1}
+        valid={usbHostValidPins}
+      />
+      <NumberInput
+        label={t('encoder.divisor')}
+        min={1}
+        max={4}
+        value={encoder.divisor || 0}
+        onChange={(e) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              encoder: { ...encoder, divisor: parseInt(e.toString(), 10) },
+            },
+            id
+          )
         }
       />
 
