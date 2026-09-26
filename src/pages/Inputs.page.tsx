@@ -65,17 +65,9 @@ import {
 import { useDisclosure, useTimeout } from '@mantine/hooks';
 import {
   getDefaultMappings,
-  getDefaultPs2Input,
   getDefaultUsbOutput,
-  getDefaultWiiInput,
   getOutputSubType,
-  getPs2ControllerTypeFromInput,
-  getPs2InputsForControllerType,
-  getWiiExtensionTypeFromInput,
-  getWiiInputsForExtensionType,
-  PS2_CONTROLLER_TYPES,
   USB_HOST_SUBTYPES,
-  WII_EXTENSION_TYPES,
 } from '@/components/Defaults/defaultMappings';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
@@ -1264,36 +1256,6 @@ const USB_HOST_SUBTYPES_ENUM = createBiEnum(
   Object.fromEntries(USB_HOST_SUBTYPES.map((st) => [proto.SubType[st], st]))
 );
 
-const PS2_CONTROLLER_TYPES_ENUM = createBiEnum(
-  Object.fromEntries(PS2_CONTROLLER_TYPES.map((t) => [proto.PS2ControllerType[t], t]))
-);
-
-function getPs2InputsForType(type: proto.PS2ControllerType): {
-  axes: StandardEnum<proto.PS2AxisType>;
-  buttons: StandardEnum<proto.PS2ButtonType>;
-} {
-  const { axes, buttons } = getPs2InputsForControllerType(type);
-  return {
-    axes: createBiEnum(Object.fromEntries(axes.map((a) => [proto.PS2AxisType[a], a]))),
-    buttons: createBiEnum(Object.fromEntries(buttons.map((b) => [proto.PS2ButtonType[b], b]))),
-  };
-}
-
-const WII_EXTENSION_TYPES_ENUM = createBiEnum(
-  Object.fromEntries(WII_EXTENSION_TYPES.map((t) => [proto.WiiExtType[t], t]))
-);
-
-function getWiiInputsForType(type: proto.WiiExtType): {
-  axes: StandardEnum<proto.WiiAxisType>;
-  buttons: StandardEnum<proto.WiiButtonType>;
-} {
-  const { axes, buttons } = getWiiInputsForExtensionType(type);
-  return {
-    axes: createBiEnum(Object.fromEntries(axes.map((a) => [proto.WiiAxisType[a], a]))),
-    buttons: createBiEnum(Object.fromEntries(buttons.map((b) => [proto.WiiButtonType[b], b]))),
-  };
-}
-
 function SantrollerInput({
   input,
   axis,
@@ -1386,74 +1348,6 @@ function SantrollerInput({
     return proto.SubType.Gamepad;
   }, [input.btAxis?.axis, input.btButton?.button, allAssignments, type]);
 
-  const effectivePs2Type = useMemo(() => {
-    const inferred = getPs2ControllerTypeFromInput(input);
-    if (inferred != null) {
-      return inferred;
-    }
-
-    const connected = deviceStatus[deviceId]?.ps2CntType;
-    if (connected != null && connected !== proto.PS2ControllerType.PS2ControllerTypeUnknown) {
-      return connected;
-    }
-
-    const assigned = allAssignments.find((a) => a.ps2Cnt != null)?.ps2Cnt;
-    if (assigned != null && assigned !== proto.PS2ControllerType.PS2ControllerTypeUnknown) {
-      return assigned;
-    }
-
-    if (type === proto.SubType.GuitarHeroGuitar || type === proto.SubType.RockBandGuitar) {
-      return proto.PS2ControllerType.PS2ControllerTypeGuitar;
-    }
-    if (type === proto.SubType.Taiko) {
-      return proto.PS2ControllerType.PS2ControllerTypeTaiko;
-    }
-    return proto.PS2ControllerType.PS2ControllerTypeDualshock;
-  }, [input, deviceStatus, deviceId, allAssignments, type]);
-
-  const ps2Inputs = useMemo(() => getPs2InputsForType(effectivePs2Type), [effectivePs2Type]);
-
-  const effectiveWiiType = useMemo(() => {
-    let preferred: proto.WiiExtType | undefined;
-    const connected = deviceStatus[deviceId]?.wiiExtType;
-    if (
-      connected != null &&
-      connected !== proto.WiiExtType.WiiNoExtension &&
-      connected !== proto.WiiExtType.WiiNotInitialised
-    ) {
-      preferred = connected;
-    } else {
-      const assigned = allAssignments.find((a) => a.wiiExt != null)?.wiiExt;
-      if (
-        assigned != null &&
-        assigned !== proto.WiiExtType.WiiNoExtension &&
-        assigned !== proto.WiiExtType.WiiNotInitialised
-      ) {
-        preferred = assigned;
-      } else if (
-        type === proto.SubType.GuitarHeroGuitar ||
-        type === proto.SubType.RockBandGuitar
-      ) {
-        preferred = proto.WiiExtType.WiiGuitarHeroGuitar;
-      } else if (
-        type === proto.SubType.GuitarHeroDrums ||
-        type === proto.SubType.RockBandDrums
-      ) {
-        preferred = proto.WiiExtType.WiiGuitarHeroDrums;
-      } else if (type === proto.SubType.Taiko) {
-        preferred = proto.WiiExtType.WiiTaikoNoTatsujinController;
-      } else if (type === proto.SubType.DjHeroTurntable) {
-        preferred = proto.WiiExtType.WiiDjHeroTurntable;
-      } else {
-        preferred = proto.WiiExtType.WiiClassicController;
-      }
-    }
-
-    const inferred = getWiiExtensionTypeFromInput(input, preferred);
-    return inferred ?? preferred ?? proto.WiiExtType.WiiClassicController;
-  }, [input, deviceStatus, deviceId, allAssignments, type]);
-
-  const wiiInputs = useMemo(() => getWiiInputsForType(effectiveWiiType), [effectiveWiiType]);
   if (simpleMode) {
     return <SantrollerLabel input={input} label="" fallback={false} />;
   }
@@ -1865,20 +1759,10 @@ function SantrollerInput({
       )}
       {(device?.type === 'wii' || input.wiiAxis || input.wiiButton) && (
         <>
-          <DropdownBox
-            title="activation.wiiExt"
-            e={WII_EXTENSION_TYPES_ENUM}
-            val={effectiveWiiType}
-            label="wiiExt"
-            dispatch={(newType) => {
-              dispatch(getDefaultWiiInput(newType as proto.WiiExtType, deviceId, !!axis));
-            }}
-          />
-          <Space h="md" />
           <DropdownOutputBox
             title="input"
-            e={wiiInputs.axes}
-            e2={wiiInputs.buttons}
+            e={proto.WiiAxisType}
+            e2={proto.WiiButtonType}
             legendMode={legendMode}
             type={type}
             val={input.wiiAxis?.axis}
@@ -1912,20 +1796,10 @@ function SantrollerInput({
       )}
       {(device?.type === 'psx' || input.ps2Axis || input.ps2Button) && (
         <>
-          <DropdownBox
-            title="activation.ps2Cnt"
-            e={PS2_CONTROLLER_TYPES_ENUM}
-            val={effectivePs2Type}
-            label="ps2Cnt"
-            dispatch={(newType) => {
-              dispatch(getDefaultPs2Input(newType as proto.PS2ControllerType, deviceId, !!axis));
-            }}
-          />
-          <Space h="md" />
           <DropdownOutputBox
             title="input"
-            e={ps2Inputs.axes}
-            e2={ps2Inputs.buttons}
+            e={proto.PS2AxisType}
+            e2={proto.PS2ButtonType}
             val={input.ps2Axis?.axis}
             val2={input.ps2Button?.button}
             label="inputs"
