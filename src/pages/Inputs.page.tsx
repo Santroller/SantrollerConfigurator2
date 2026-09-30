@@ -4435,7 +4435,7 @@ function SantrollerAssignment({
         {mapping.usbType && (
           <DropdownBox
             title="activation.usbType"
-            e={proto.SubType}
+            e={USB_HOST_SUBTYPES_ENUM}
             val={mapping.usbType}
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
@@ -4444,7 +4444,7 @@ function SantrollerAssignment({
         {mapping.bluetoothType && (
           <DropdownBox
             title="activation.bluetoothType"
-            e={proto.SubType}
+            e={USB_HOST_SUBTYPES_ENUM}
             val={mapping.bluetoothType}
             label="subType"
             dispatch={(bluetoothType) => dispatch({ bluetoothType })}
@@ -4862,7 +4862,7 @@ export function ControllerSourcesEditor({
             {hType === 'usbType' && (
               <DropdownBox
                 title="activation.usbType"
-                e={proto.SubType}
+                e={USB_HOST_SUBTYPES_ENUM}
                 val={item.usbType ?? proto.SubType.Gamepad}
                 label="subType"
                 dispatch={(usbType) => onUpdateSource(idx, { usbType })}
@@ -4903,7 +4903,7 @@ export function ControllerSourcesEditor({
             {hType === 'bluetoothType' && (
               <DropdownBox
                 title="activation.bluetoothType"
-                e={proto.SubType}
+                e={USB_HOST_SUBTYPES_ENUM}
                 val={item.bluetoothType ?? proto.SubType.Gamepad}
                 label="subType"
                 dispatch={(bluetoothType) => onUpdateSource(idx, { bluetoothType })}

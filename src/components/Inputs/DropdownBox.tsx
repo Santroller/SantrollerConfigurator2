@@ -6,7 +6,7 @@ export type StandardEnum<T> = {
   [nu: number]: string;
 };
 
-export function DropdownBox<T extends StandardEnum<unknown>>({
+export function DropdownBox<T extends number>({
   e,
   val,
   title,
@@ -14,12 +14,12 @@ export function DropdownBox<T extends StandardEnum<unknown>>({
   description,
   dispatch,
 }: {
-  e: T;
-  val: T[keyof T];
+  e: StandardEnum<T>;
+  val: T;
   title: string;
   label: string;
   description?: string;
-  dispatch: (input: T[keyof T]) => void;
+  dispatch: (input: T) => void;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -30,8 +30,8 @@ export function DropdownBox<T extends StandardEnum<unknown>>({
     <Combobox
       store={inputCombobox}
       onOptionSubmit={(value) => {
-        const selected = e[value as keyof T];
-        if (selected !== undefined) {
+        const selected = e[value as keyof typeof e];
+        if (typeof selected === 'number') {
           dispatch(selected);
         }
         inputCombobox.closeDropdown();
@@ -48,7 +48,7 @@ export function DropdownBox<T extends StandardEnum<unknown>>({
           rightSectionPointerEvents="none"
           onClick={() => inputCombobox.toggleDropdown()}
         >
-          {t(`${label}.${e[val as keyof T]}`)}
+          {t(`${label}.${e[val as keyof typeof e]}`)}
         </InputBase>
       </Combobox.Target>
 
@@ -58,7 +58,7 @@ export function DropdownBox<T extends StandardEnum<unknown>>({
             Object.keys(e)
               .filter((key) => isNaN(Number(key)))
               .map((item) => (
-                <Combobox.Option value={item} key={item} selected={e[val as keyof T] === item}>
+                <Combobox.Option value={item} key={item} selected={e[val as keyof typeof e] === item}>
                   {t(`${label}.${item}`)}
                 </Combobox.Option>
               ))}
