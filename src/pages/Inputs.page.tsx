@@ -73,6 +73,7 @@ import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   getLabel,
   getMatrixLabel,
+  getSwitchNetworkLabel,
   getMultiplexerLabel,
   hasDefaults,
   isLed,
@@ -1099,8 +1100,22 @@ function SantrollerLabel({
       }
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
-      case 'switchNetwork':
+      case 'switchNetwork': {
+        const networkButton = device?.device.switchNetwork?.buttons?.[input.switchNetwork?.button ?? -1];
+        if (networkButton) {
+          const label = getSwitchNetworkLabel(
+            Object.values(guiDevices),
+            networkButton.pin,
+            networkButton.otherPin,
+            true,
+            false
+          );
+          if (label) {
+            return <Text>{label}</Text>;
+          }
+        }
         return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
+      }
       case 'matrix': {
         const labelsText3 = getMatrixLabel(
           Object.values(guiDevices),
@@ -1999,10 +2014,21 @@ function SantrollerInput({
           label={t('switchNetwork.button')}
           value={input.switchNetwork.button?.toString() ?? null}
           data={
-            device?.device.switchNetwork?.buttons?.map((networkButton, index) => ({
-              value: index.toString(),
-              label: `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
-            })) ?? []
+            device?.device.switchNetwork?.buttons?.map((networkButton, index) => {
+              const label = getSwitchNetworkLabel(
+                Object.values(guiDevices),
+                networkButton.pin,
+                networkButton.otherPin,
+                false,
+                true
+              );
+              return {
+                value: index.toString(),
+                label: label
+                  ? `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin} ${label}`
+                  : `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
+              };
+            }) ?? []
           }
           allowDeselect={false}
           onChange={(button) => {

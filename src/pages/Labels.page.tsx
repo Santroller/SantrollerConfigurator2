@@ -476,6 +476,81 @@ function MatrixLabel({
   );
 }
 
+function SwitchNetworkLabel({
+  id,
+  label,
+  deleteLabel,
+}: {
+  id: string;
+  label: proto.IGuiConfig;
+  deleteLabel: () => void;
+}) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const { t } = useTranslation();
+  const updateLabel = useConfigStore((state) => state.updateLabel);
+  const copyLabel = useConfigStore((state) => state.copyLabel);
+  const seller = useConfigStore((state) => state.seller);
+  return (
+    <>
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
+        <Space h="md" />
+        <Flex justify="flex-end">
+          <Group align="flex-end">
+            <Button onClick={() => { deleteLabel(); close(); }} color="red">
+              {t('labels.remove.confirm')}
+            </Button>
+            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+          </Group>
+        </Flex>
+      </Modal>
+      <Card key={id} shadow="sm" padding="lg" radius="md" withBorder>
+        <Flex justify="flex-end">
+          <ActionIcon color="red"><IconTrash style={{ width: '70%', height: '70%' }} onClick={open} /></ActionIcon>
+          <ActionIcon><IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} /></ActionIcon>
+        </Flex>
+        <TextInput
+          value={label.switchNetworkLabel?.label}
+          onChange={(e) => updateLabel(
+            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, label: e.currentTarget.value } },
+            parseInt(id, 10)
+          )}
+          label={t('labels.title')}
+        />
+        <PinBox
+          label="switchNetwork.pin"
+          pin={label.switchNetworkLabel!.pin!}
+          valid={AllPinsNamed}
+          dispatch={(pin) => updateLabel(
+            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, pin } },
+            parseInt(id, 10)
+          )}
+        />
+        <PinBox
+          label="switchNetwork.other_pin"
+          pin={label.switchNetworkLabel!.otherPin!}
+          valid={AllPinsNamed}
+          dispatch={(otherPin) => updateLabel(
+            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, otherPin } },
+            parseInt(id, 10)
+          )}
+        />
+        {seller && <>
+          <Space h="md" />
+          <Switch
+            checked={label.switchNetworkLabel!.showToCustomer ?? false}
+            onChange={(e) => updateLabel(
+              { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, showToCustomer: e.currentTarget.checked } },
+              parseInt(id, 10)
+            )}
+            label={t('labels.showToCustomer')}
+          />
+        </>}
+      </Card>
+    </>
+  );
+}
+
 function MultiplexerLabel({
   id,
   label,
@@ -711,6 +786,7 @@ const labelEditors: Record<LabelKind, React.FunctionComponent<LabelEditorProps>>
   ledLabel: LedLabel,
   matrixLabel: MatrixLabel,
   multiplexerLabel: MultiplexerLabel,
+  switchNetworkLabel: SwitchNetworkLabel,
 };
 
 function RegisteredLabelEditor(props: LabelEditorProps) {
@@ -729,6 +805,7 @@ export function LabelsPage() {
   const addLedLabel = useConfigStore((state) => state.addLedLabel);
   const addMultiplexerLabel = useConfigStore((state) => state.addMultiplexerLabel);
   const addMatrixLabel = useConfigStore((state) => state.addMatrixLabel);
+  const addSwitchNetworkLabel = useConfigStore((state) => state.addSwitchNetworkLabel);
   const deleteLabel = useConfigStore((state) => state.deleteLabel);
   const { t } = useTranslation();
   const labels = useConfigStore((state) => state.guiDevices);
@@ -768,6 +845,9 @@ export function LabelsPage() {
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMatrixLabel}>
                   {t('labels.addMatrix')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconPlus size={14} />} onClick={addSwitchNetworkLabel}>
+                  {t('labels.addSwitchNetwork')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMultiplexerLabel}>
                   {t('labels.addMultiplexer')}

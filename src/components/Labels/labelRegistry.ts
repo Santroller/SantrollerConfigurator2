@@ -1,6 +1,6 @@
 import { proto } from '@/components/SettingsContext/config';
 
-export type LabelKind = 'label' | 'ledLabel' | 'matrixLabel' | 'multiplexerLabel';
+export type LabelKind = 'label' | 'ledLabel' | 'matrixLabel' | 'multiplexerLabel' | 'switchNetworkLabel';
 
 type LabelDefinition = {
   create: () => Record<string, unknown>;
@@ -14,6 +14,9 @@ const labelRegistry: Record<LabelKind, LabelDefinition> = {
   },
   multiplexerLabel: {
     create: () => ({ label: 'Label', deviceid: -1, channel: 0 }),
+  },
+  switchNetworkLabel: {
+    create: () => ({ label: 'Label', deviceid: -1, pin: -1, otherPin: -1 }),
   },
 };
 
