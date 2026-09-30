@@ -2105,6 +2105,7 @@ const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>>
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
   matrix: MatrixDevice,
+  switchNetwork: SwitchNetworkDevice,
   cycle: CycleDevice,
   toggle: ToggleDevice,
   dmx: DMXDevice,
