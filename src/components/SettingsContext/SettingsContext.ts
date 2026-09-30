@@ -354,6 +354,7 @@ export interface Actions {
   addLedLabel: () => void;
   addMultiplexerLabel: () => void;
   addMatrixLabel: () => void;
+  addSwitchNetworkLabel: () => void;
   deleteAllLabels: () => void;
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
@@ -705,6 +706,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         const id = getNextLabelId(state.guiDevices);
         state.guiDevices[id] = createLabelConfig('matrixLabel', id);
+      });
+      get().saveConfig();
+    },
+    addSwitchNetworkLabel: () => {
+      set((state) => {
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('switchNetworkLabel', id);
       });
       get().saveConfig();
     },
