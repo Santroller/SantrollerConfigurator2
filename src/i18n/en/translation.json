@@ -128,7 +128,7 @@
     "buttons": "Buttons",
     "button": "Button",
     "pin": "Pin",
-    "otherPin": "Other pin",
+    "other_pin": "Other pin",
     "addButton": "Add button"
   },
   "encoder": {
@@ -742,6 +742,10 @@
     "setup_wizard_apply": "Apply & Load Defaults",
     "setup_wizard_skip": "Skip (Start Blank)",
     "emulated_device": "Emulated Device"
+  },
+  "toggle": {
+    "state": "Current State",
+    "title": "Toggle Device"
   },
   "wiiExt": {
     "WiiNunchuk": "Nunchuk",

@@ -1314,6 +1314,7 @@ function SantrollerInput({
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const currentProfile = useConfigStore((state) => state.currentProfile);
   const profile = useConfigStore((state) => state.config.profiles?.[currentProfile]);
+  const guiDevices = useConfigStore((state) => state.guiDevices);
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
   });
@@ -1718,21 +1719,7 @@ function SantrollerInput({
       )}
       {input.toggle && (
         <>
-          <Switch checked={deviceStatus[input.toggle.deviceid].toggleState} />
-          <Switch
-            label={t('cycle.forward_input')}
-            checked={input.toggle.input !== null}
-            onChange={(event) => {
-              dispatch({
-                toggle: {
-                  ...input.toggle!,
-                  input: event.currentTarget.checked
-                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
-                    : null,
-                },
-              });
-            }}
-          />
+          <Switch label={t('toggle.state')} checked={deviceStatus[input.toggle.deviceid].toggleState} />
           {input.toggle.input && (
             <SantrollerInput
               axis={!!axis}
