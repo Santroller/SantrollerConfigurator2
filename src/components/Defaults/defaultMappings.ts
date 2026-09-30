@@ -1434,6 +1434,23 @@ export const USB_HOST_SUBTYPES: proto.SubType[] = [
   proto.SubType.KeyboardMouse,
 ];
 
+export const USB_HOST_INPUT_SUBTYPES: proto.SubType[] = [
+  proto.SubType.Gamepad,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+  proto.SubType.GuitarHeroDrums,
+  proto.SubType.RockBandDrums,
+  proto.SubType.LiveGuitar,
+  proto.SubType.DjHeroTurntable,
+  proto.SubType.ProGuitarMustang,
+  proto.SubType.ProGuitarSquire,
+  proto.SubType.ProKeys,
+  proto.SubType.Dancepad,
+  proto.SubType.Taiko,
+  proto.SubType.KeyboardMouse,
+  proto.SubType.Midi
+];
+
 const SUBTYPE_OUTPUT_KEYS: Partial<Record<keyof proto.IOutput, proto.SubType>> = (() => {
   const map: Partial<Record<keyof proto.IOutput, proto.SubType>> = {
     keycode: proto.SubType.KeyboardMouse,

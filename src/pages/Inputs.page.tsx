@@ -67,6 +67,7 @@ import {
   getDefaultMappings,
   getDefaultUsbOutput,
   getOutputSubType,
+  USB_HOST_INPUT_SUBTYPES,
   USB_HOST_SUBTYPES,
 } from '@/components/Defaults/defaultMappings';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
@@ -1271,6 +1272,9 @@ function createBiEnum<T extends number>(map: Record<string, T>): StandardEnum<T>
 
 const USB_HOST_SUBTYPES_ENUM = createBiEnum(
   Object.fromEntries(USB_HOST_SUBTYPES.map((st) => [proto.SubType[st], st]))
+);
+const USB_HOST_INPUT_SUBTYPES_ENUM = createBiEnum(
+  Object.fromEntries(USB_HOST_INPUT_SUBTYPES.map((st) => [proto.SubType[st], st]))
 );
 
 function SantrollerInput({
@@ -4474,7 +4478,7 @@ function SantrollerAssignment({
         {mapping.usbType && (
           <DropdownBox
             title="activation.usbType"
-            e={USB_HOST_SUBTYPES_ENUM}
+            e={USB_HOST_INPUT_SUBTYPES_ENUM}
             val={mapping.usbType}
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
@@ -4483,7 +4487,7 @@ function SantrollerAssignment({
         {mapping.bluetoothType && (
           <DropdownBox
             title="activation.bluetoothType"
-            e={USB_HOST_SUBTYPES_ENUM}
+            e={USB_HOST_INPUT_SUBTYPES_ENUM}
             val={mapping.bluetoothType}
             label="subType"
             dispatch={(bluetoothType) => dispatch({ bluetoothType })}
