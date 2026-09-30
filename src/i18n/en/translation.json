@@ -123,6 +123,13 @@
     "output_pin": "Output pin",
     "device": "Matrix Device"
   },
+  "switchNetwork": {
+    "pins": "Network pins",
+    "buttons": "Buttons",
+    "pin": "Pin",
+    "otherPin": "Other pin",
+    "addButton": "Add button"
+  },
   "encoder": {
     "deltaRate": "Sampling Rate (ms)"
   },
