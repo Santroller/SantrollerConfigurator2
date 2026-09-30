@@ -1099,6 +1099,8 @@ function SantrollerLabel({
       }
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
+      case 'switchNetwork':
+        return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
       case 'matrix': {
         const labelsText3 = getMatrixLabel(
           Object.values(guiDevices),
