@@ -58,6 +58,24 @@ export function getMatrixLabel(
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
 
+export function getSwitchNetworkLabel(
+  guiDevices: proto.IGuiConfig[],
+  pin: number,
+  otherPin: number,
+  customer: boolean,
+  bracketed: boolean = true
+) {
+  const labels = Object.entries(guiDevices)
+    .filter(
+      (x) =>
+        x[1].switchNetworkLabel?.pin === pin &&
+        x[1].switchNetworkLabel?.otherPin === otherPin &&
+        (!customer || x[1].switchNetworkLabel?.showToCustomer)
+    )
+    .map((x) => x[1].switchNetworkLabel?.label);
+  return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
+}
+
 export function PinBox({
   pin,
   valid,
