@@ -907,7 +907,7 @@ function DropdownOutputBox<
               {item.label}
             </Combobox.Option>
           ))}
-          {midi && (
+          {midi && type === proto.SubType.Midi && (
             <>
               <Combobox.Option value="midiNote" selected={v === 'midiNote'}>
                 {t('input.midiNote')}
@@ -1335,6 +1335,9 @@ function SantrollerInput({
   );
 
   const effectiveUsbType = useMemo(() => {
+    if (input.midi) {
+      return proto.SubType.Midi;
+    }
     const currentOutput = input.usbAxis?.axis || input.usbButton?.button;
     const inferred = getOutputSubType(currentOutput);
     if (inferred != null) {
@@ -1353,6 +1356,9 @@ function SantrollerInput({
   }, [input.usbAxis?.axis, input.usbButton?.button, allAssignments, type]);
 
   const effectiveBtType = useMemo(() => {
+    if (input.midi) {
+      return proto.SubType.Midi;
+    }
     const currentOutput = input.btAxis?.axis || input.btButton?.button;
     const inferred = getOutputSubType(currentOutput);
     if (inferred != null) {
@@ -1364,7 +1370,7 @@ function SantrollerInput({
       return assigned;
     }
 
-    if (USB_HOST_SUBTYPES.includes(type)) {
+    if (USB_HOST_INPUT_SUBTYPES.includes(type)) {
       return type;
     }
     return proto.SubType.Gamepad;
@@ -1830,7 +1836,7 @@ function SantrollerInput({
         <>
           <DropdownBox
             title="activation.usbType"
-            e={USB_HOST_SUBTYPES_ENUM}
+            e={USB_HOST_INPUT_SUBTYPES_ENUM}
             val={effectiveUsbType}
             label="subType"
             dispatch={(newType) => {
@@ -1839,8 +1845,15 @@ function SantrollerInput({
                 !!axis
               );
               dispatch(
-                newAnalog
-                  ? {
+                newType === proto.SubType.Midi ? {
+                  midi: {
+                    deviceid: deviceId,
+                    midiNote: {
+                      channel: 10,
+                      note: 1,
+                    }
+                  },
+                }: newAnalog ? {
                       usbAxis: {
                         deviceid: (input.usbAxis?.deviceid ||
                           input.usbButton?.deviceid ||
@@ -1902,7 +1915,7 @@ function SantrollerInput({
         <>
           <DropdownBox
             title="activation.bluetoothType"
-            e={USB_HOST_SUBTYPES_ENUM}
+            e={USB_HOST_INPUT_SUBTYPES_ENUM}
             val={effectiveBtType}
             label="subType"
             dispatch={(newType) => {
@@ -4478,7 +4491,7 @@ function SantrollerAssignment({
         {mapping.usbType && (
           <DropdownBox
             title="activation.usbType"
-            e={USB_HOST_INPUT_SUBTYPES_ENUM}
+            e={USB_HOST_SUBTYPES_ENUM}
             val={mapping.usbType}
             label="subType"
             dispatch={(usbType) => dispatch({ usbType })}
@@ -4487,7 +4500,7 @@ function SantrollerAssignment({
         {mapping.bluetoothType && (
           <DropdownBox
             title="activation.bluetoothType"
-            e={USB_HOST_INPUT_SUBTYPES_ENUM}
+            e={USB_HOST_SUBTYPES_ENUM}
             val={mapping.bluetoothType}
             label="subType"
             dispatch={(bluetoothType) => dispatch({ bluetoothType })}
