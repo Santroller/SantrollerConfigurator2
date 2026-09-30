@@ -126,6 +126,7 @@
   "switchNetwork": {
     "pins": "Network pins",
     "buttons": "Buttons",
+    "button": "Button",
     "pin": "Pin",
     "otherPin": "Other pin",
     "addButton": "Add button"
