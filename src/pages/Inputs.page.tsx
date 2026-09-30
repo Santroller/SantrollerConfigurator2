@@ -1099,8 +1099,32 @@ function SantrollerLabel({
       }
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
-      case 'switchNetwork':
+      case 'switchNetwork': {
+        const networkButton = device?.device.switchNetwork?.buttons?.[input.switchNetwork?.button ?? -1];
+        if (networkButton) {
+          const pinLabel = getLabel(
+            t,
+            Object.values(guiDevices),
+            [],
+            networkButton.pin,
+            true,
+            false
+          );
+          const otherPinLabel = getLabel(
+            t,
+            Object.values(guiDevices),
+            [],
+            networkButton.otherPin,
+            true,
+            false
+          );
+          const labels = [pinLabel, otherPinLabel].filter(Boolean).join(' / ');
+          if (labels) {
+            return <Text>{labels}</Text>;
+          }
+        }
         return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
+      }
       case 'matrix': {
         const labelsText3 = getMatrixLabel(
           Object.values(guiDevices),
