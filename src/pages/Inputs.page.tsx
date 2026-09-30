@@ -1992,6 +1992,16 @@ function SantrollerInput({
           />
         </>
       )}
+      {input.switchNetwork && (
+        <NumberInput
+          label={t('switchNetwork.button')}
+          value={input.switchNetwork.button}
+          min={0}
+          onChange={(button) =>
+            dispatch({ switchNetwork: { ...input.switchNetwork!, button: Number(button) } })
+          }
+        />
+      )}
       {input.gpio && (
         <>
           <Group grow>
