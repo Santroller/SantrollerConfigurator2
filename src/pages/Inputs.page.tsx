@@ -414,6 +414,19 @@ function OutputBox({
     [dispatch]
   );
   switch (type) {
+    case proto.SubType.Midi:
+      return (
+        <DropdownOutputBox
+          label={label}
+          title={title}
+          mode={mode}
+          legendMode={legendMode}
+          type={type}
+          midi={midi}
+          valMidi={valMidi}
+          dispatchMidi={dispatchMidi}
+        />
+      );
     case proto.SubType.Gamepad:
     case proto.SubType.Dancepad:
     case proto.SubType.StageKit:
@@ -824,7 +837,7 @@ function DropdownOutputBox<
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {extraLabel ||
+        {extraLabel || valMidi ? t(`input.${v}`) :
           t(
             `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
           )}
