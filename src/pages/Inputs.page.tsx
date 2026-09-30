@@ -1999,10 +1999,32 @@ function SantrollerInput({
           label={t('switchNetwork.button')}
           value={input.switchNetwork.button?.toString() ?? null}
           data={
-            device?.device.switchNetwork?.buttons?.map((networkButton, index) => ({
-              value: index.toString(),
-              label: `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
-            })) ?? []
+            device?.device.switchNetwork?.buttons?.map((networkButton, index) => {
+              const pinLabel = getLabel(
+                t,
+                Object.values(guiDevices),
+                [],
+                networkButton.pin,
+                false,
+                false
+              );
+              const otherPinLabel = getLabel(
+                t,
+                Object.values(guiDevices),
+                [],
+                networkButton.otherPin,
+                false,
+                false
+              );
+              const labels = [pinLabel, otherPinLabel].filter(Boolean).join(' / ');
+
+              return {
+                value: index.toString(),
+                label: labels
+                  ? `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin} (${labels})`
+                  : `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
+              };
+            }) ?? []
           }
           allowDeselect={false}
           onChange={(button) => {
