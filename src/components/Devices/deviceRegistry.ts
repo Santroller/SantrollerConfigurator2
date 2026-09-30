@@ -189,6 +189,11 @@ const deviceRegistry: DeviceDefinitions = {
       Array.from(Array(32).keys()).filter((pin) => (outPins | inPins) & (1 << pin)),
     formatStatus: (_, pins) => pins,
   },
+  switchNetwork: {
+    create: () => ({ pins: 0, buttons: [] }),
+    pins: ({ pins }) => Array.from(Array(32).keys()).filter((pin) => pins & (1 << pin)),
+    formatStatus: (_, pins) => pins,
+  },
   crkdDrum: {
     create: () => ({ uart: uart() }),
     pins: ({ uart }) => [uart.tx, uart.rx],

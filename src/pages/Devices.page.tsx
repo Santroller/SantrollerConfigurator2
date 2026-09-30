@@ -1701,6 +1701,94 @@ function EncoderDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function SwitchNetworkDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const { t } = useTranslation();
+  const device = status.device;
+  if (!device.switchNetwork) {
+    throw new Error('device null!');
+  }
+  const network = device.switchNetwork;
+  const buttons = network.buttons ?? [];
+
+  const updateNetwork = (next: proto.ISwitchNetworkDevice) =>
+    updateDevice({ deviceid: parseInt(id, 10), switchNetwork: next }, id);
+
+  return (
+    <DeviceCard
+      title="devices.switchNetwork"
+      image="covers/devices/matrix.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <MultiSelect
+        label={t('switchNetwork.pins')}
+        value={Array.from(Array(32).keys())
+          .filter((pin) => network.pins! & (1 << pin))
+          .map((pin) => pin.toString())}
+        data={Object.entries(AllPinsNamed).map(([value, pin]) => ({
+          value,
+          label: t(pin.label, pin),
+        }))}
+        clearable
+        maxValues={32}
+        searchable
+        onChange={(val) =>
+          updateNetwork({
+            ...network,
+            pins: val.reduce((acc, pin) => acc | (1 << parseInt(pin, 10)), 0),
+          })
+        }
+      />
+      <Stack mt="md">
+        <Text fw={500}>{t('switchNetwork.buttons')}</Text>
+        {buttons.map((button, index) => (
+          <Group key={index} grow align="end">
+            <PinBox
+              label={t('switchNetwork.pin')}
+              pin={button.pin}
+              valid={AllPinsNamed}
+              dispatch={(pin) => {
+                const next = [...buttons];
+                next[index] = { ...next[index], pin };
+                updateNetwork({ ...network, buttons: next });
+              }}
+            />
+            <PinBox
+              label={t('switchNetwork.otherPin')}
+              pin={button.otherPin}
+              valid={AllPinsNamed}
+              dispatch={(otherPin) => {
+                const next = [...buttons];
+                next[index] = { ...next[index], otherPin };
+                updateNetwork({ ...network, buttons: next });
+              }}
+            />
+            <ActionIcon color="red" onClick={() => updateNetwork({
+              ...network,
+              buttons: buttons.filter((_, buttonIndex) => buttonIndex !== index),
+            })}>
+              <IconTrash style={{ width: '70%', height: '70%' }} />
+            </ActionIcon>
+          </Group>
+        ))}
+        <Button
+          leftSection={<IconPlus size={16} />}
+          onClick={() =>
+            updateNetwork({
+              ...network,
+              buttons: [...buttons, { pin: -1, otherPin: -1 }],
+            })
+          }
+        >
+          {t('switchNetwork.addButton')}
+        </Button>
+      </Stack>
+    </DeviceCard>
+  );
+}
+
 function MatrixDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -2017,6 +2105,7 @@ const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>>
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
   matrix: MatrixDevice,
+  switchNetwork: SwitchNetworkDevice,
   cycle: CycleDevice,
   toggle: ToggleDevice,
   dmx: DMXDevice,

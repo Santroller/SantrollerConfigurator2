@@ -1099,6 +1099,8 @@ function SantrollerLabel({
       }
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
+      case 'switchNetwork':
+        return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
       case 'matrix': {
         const labelsText3 = getMatrixLabel(
           Object.values(guiDevices),
@@ -1991,6 +1993,16 @@ function SantrollerInput({
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, outputPin: pin } })}
           />
         </>
+      )}
+      {input.switchNetwork && (
+        <NumberInput
+          label={t('switchNetwork.button')}
+          value={input.switchNetwork.button}
+          min={0}
+          onChange={(button) =>
+            dispatch({ switchNetwork: { ...input.switchNetwork!, button: Number(button) } })
+          }
+        />
       )}
       {input.gpio && (
         <>
