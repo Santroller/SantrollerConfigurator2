@@ -73,6 +73,7 @@ import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   getLabel,
   getMatrixLabel,
+  getSwitchNetworkLabel,
   getMultiplexerLabel,
   hasDefaults,
   isLed,
@@ -1102,25 +1103,15 @@ function SantrollerLabel({
       case 'switchNetwork': {
         const networkButton = device?.device.switchNetwork?.buttons?.[input.switchNetwork?.button ?? -1];
         if (networkButton) {
-          const pinLabel = getLabel(
-            t,
+          const label = getSwitchNetworkLabel(
             Object.values(guiDevices),
-            [],
             networkButton.pin,
-            true,
-            false
-          );
-          const otherPinLabel = getLabel(
-            t,
-            Object.values(guiDevices),
-            [],
             networkButton.otherPin,
             true,
             false
           );
-          const labels = [pinLabel, otherPinLabel].filter(Boolean).join(' / ');
-          if (labels) {
-            return <Text>{labels}</Text>;
+          if (label) {
+            return <Text>{label}</Text>;
           }
         }
         return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
@@ -2024,28 +2015,17 @@ function SantrollerInput({
           value={input.switchNetwork.button?.toString() ?? null}
           data={
             device?.device.switchNetwork?.buttons?.map((networkButton, index) => {
-              const pinLabel = getLabel(
-                t,
+              const label = getSwitchNetworkLabel(
                 Object.values(guiDevices),
-                [],
                 networkButton.pin,
-                false,
-                false
-              );
-              const otherPinLabel = getLabel(
-                t,
-                Object.values(guiDevices),
-                [],
                 networkButton.otherPin,
                 false,
-                false
+                true
               );
-              const labels = [pinLabel, otherPinLabel].filter(Boolean).join(' / ');
-
               return {
                 value: index.toString(),
-                label: labels
-                  ? `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin} (${labels})`
+                label: label
+                  ? `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin} ${label}`
                   : `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
               };
             }) ?? []
