@@ -4,6 +4,7 @@
     "bt": "Bluetooth",
     "encoder": "Incremental Encoder / DJH Turntable Platter",
     "matrix": "Matrix Input",
+    "switchNetwork": "Switch Network",
     "toggle": "Toggle Input",
     "dmx": "DMX",
     "stp16cpc": "STP16CPC LED Driver",
