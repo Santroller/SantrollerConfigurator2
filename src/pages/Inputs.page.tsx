@@ -1995,13 +1995,27 @@ function SantrollerInput({
         </>
       )}
       {input.switchNetwork && (
-        <NumberInput
+        <Select
           label={t('switchNetwork.button')}
-          value={input.switchNetwork.button}
-          min={0}
-          onChange={(button) =>
-            dispatch({ switchNetwork: { ...input.switchNetwork!, button: Number(button) } })
+          value={input.switchNetwork.button?.toString() ?? null}
+          data={
+            device?.device.switchNetwork?.buttons?.map((networkButton, index) => ({
+              value: index.toString(),
+              label: `GPIO ${networkButton.pin} + GPIO ${networkButton.otherPin}`,
+            })) ?? []
           }
+          allowDeselect={false}
+          onChange={(button) => {
+            if (button !== null) {
+              dispatch({
+                switchNetwork: {
+                  ...input.switchNetwork!,
+                  button: Number(button),
+                },
+              });
+            }
+          }}
+          placeholder={t('switchNetwork.button')}
         />
       )}
       {input.gpio && (
