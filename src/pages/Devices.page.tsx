@@ -22,6 +22,7 @@ import {
   SegmentedControl,
   SimpleGrid,
   Space,
+  Stack,
   Switch,
   Table,
   TagsInput,
@@ -1748,7 +1749,7 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.pin')}
               pin={button.pin}
-              valid={AllPinsNamed}
+              valid={Object.fromEntries(Object.entries(AllPinsNamed).filter(([pin, _]) => network.pins! & (1 << parseInt(pin, 10))))}
               dispatch={(pin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], pin };
@@ -1758,7 +1759,7 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.otherPin')}
               pin={button.otherPin}
-              valid={AllPinsNamed}
+              valid={Object.fromEntries(Object.entries(AllPinsNamed).filter(([pin, _]) => network.pins! & (1 << parseInt(pin, 10))))}
               dispatch={(otherPin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], otherPin };
