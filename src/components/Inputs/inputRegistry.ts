@@ -77,6 +77,7 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   protarNeckButton: { usesDevice: hasDevice((input) => input.protarNeckButton) },
   vtechExpander: { usesDevice: hasDevice((input) => input.vtechExpander) },
   matrix: { usesDevice: hasDevice((input) => input.matrix) },
+  switchNetwork: { usesDevice: hasDevice((input) => input.switchNetwork) },
   shortcut: {
     usesDevice: (input, deviceid) =>
       input.shortcut?.inputs?.some((nestedInput) => inputUsesDevice(nestedInput, deviceid)) ??
@@ -127,6 +128,9 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   vtechExpander: { create: (deviceid) => ({ vtechExpander: { button: 0, deviceid } }) },
   matrix: {
     create: (deviceid) => ({ matrix: { outputPin: -1, pin: -1, deviceid } }),
+  },
+  switchNetwork: {
+    create: (deviceid) => ({ switchNetwork: { button: 0, deviceid } }),
   },
   encoder: {
     create: (deviceid) => ({
