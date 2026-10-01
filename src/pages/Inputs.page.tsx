@@ -710,7 +710,10 @@ function OutputBox({
           label={t('keyboard.keycode')}
           value={hidReverse[mapping?.keycode ?? 0]}
           onKeyDown={(event) => {
-            dispatch({ keycode: ASCII_TO_HID[event.key].code }, true, false);
+            const entry = ASCII_TO_HID[event.key];
+            if (entry) {
+              dispatch({ keycode: entry.code }, true, false);
+            }
           }}
         />
       );
@@ -2403,10 +2406,17 @@ function SantrollerMapping({
     (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
     (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
     proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
-    proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
-  const fixedLabel = FixLabel(mode, type, label, legendMode);
-  const img = `Icons/Input/${FixIcon(mode, type, label, legendMode)}.png`;
-  const button = Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v);
+    proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1] ||
+    (mapping.mapping.keycode != null
+      ? hidReverse[mapping.mapping.keycode]
+        ? `${hidReverse[mapping.mapping.keycode]}`
+        : `Key ${mapping.mapping.keycode}`
+      : undefined);
+  const fixedLabel = FixLabel(mode, type, label || '', legendMode);
+  const img = `Icons/Input/${FixIcon(mode, type, label || '', legendMode)}.png`;
+  const button =
+    mapping.mapping.keycode != null ||
+    Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v != null);
   const axis =
     mapping.mapping.proKeySingle != null ||
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
@@ -2529,13 +2539,20 @@ function SantrollerMapping({
               {t('inputs.target_output')}:
             </Text>
             <Badge variant="light" color="blue" size="sm">
-              {fixedLabel ? t(`outputs.${fixedLabel}`) : t('inputs.unmapped')}
+              {fixedLabel ? t(`outputs.${fixedLabel}`, label ?? '') : t('inputs.unmapped')}
             </Badge>
           </Group>
         </Card>
 
         <Center py="xs">
-          <Image src={img} height={70} w="auto" fit="contain" alt={fixedLabel || 'input'} />
+          <Image
+            src={img}
+            height={70}
+            w="auto"
+            fit="contain"
+            alt={fixedLabel || 'input'}
+            fallbackSrc="/Icons/Generic.png"
+          />
         </Center>
 
         {simpleMode && (
@@ -2680,18 +2697,19 @@ function SantrollerMapping({
                       <DropdownBox
                         title="trigger_type.label"
                         e={proto.AnalogToDigitalTriggerType}
-                        val={mapping.trigger!}
+                        val={mapping.trigger ?? proto.AnalogToDigitalTriggerType.JoyHigh}
                         label="trigger_type"
                         dispatch={(trigger) => dispatch({ ...mapping, trigger })}
                       />
                     )}
 
-                    {mapping.trigger === proto.AnalogToDigitalTriggerType.JoyHigh && (
+                    {(mapping.trigger ?? proto.AnalogToDigitalTriggerType.JoyHigh) ===
+                      proto.AnalogToDigitalTriggerType.JoyHigh && (
                       <StateSlider
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
                         center={32767}
-                        min={mapping.triggerValue!}
+                        min={mapping.triggerValue ?? 32767}
                         max={65535}
                         deadzone={mapping.deadzone!}
                         raw
@@ -2703,7 +2721,7 @@ function SantrollerMapping({
                         profileIdx={profileIdx}
                         center={32767}
                         min={0}
-                        max={mapping.triggerValue!}
+                        max={mapping.triggerValue ?? 32767}
                         deadzone={mapping.deadzone!}
                         raw
                       />
@@ -2713,8 +2731,8 @@ function SantrollerMapping({
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
                         center={32767}
-                        min={mapping.triggerValue!}
-                        max={mapping.maxTriggerValue!}
+                        min={mapping.triggerValue ?? 32767}
+                        max={mapping.maxTriggerValue ?? 65535}
                         deadzone={mapping.deadzone!}
                         raw
                       />
@@ -2731,17 +2749,17 @@ function SantrollerMapping({
                     <Group>
                       <Slider
                         flex={1}
-                        value={mapping.triggerValue!}
+                        value={mapping.triggerValue ?? 32767}
                         min={0}
                         max={65535}
                         onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
                       />
                       <NumberInput
-                        value={mapping.triggerValue!}
+                        value={mapping.triggerValue ?? 32767}
                         min={0}
                         max={65535}
                         onChange={(e) =>
-                          dispatch({ ...mapping, triggerValue: parseInt(e.toString(), 10) })
+                          dispatch({ ...mapping, triggerValue: parseInt(e.toString(), 10) || 0 })
                         }
                         w={100}
                       />
@@ -2752,8 +2770,8 @@ function SantrollerMapping({
                           dispatch({
                             ...mapping,
                             triggerValue:
-                              useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                                .stateRaw,
+                              useConfigStore.getState().mappingStatus[profileIdx]?.[mappingIdx]
+                                ?.stateRaw ?? 0,
                           });
                         }}
                       >
@@ -2768,18 +2786,21 @@ function SantrollerMapping({
                         <Group>
                           <Slider
                             flex={1}
-                            value={mapping.maxTriggerValue!}
+                            value={mapping.maxTriggerValue ?? 65535}
                             min={0}
                             max={65535}
                             onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
                           />
 
                           <NumberInput
-                            value={mapping.maxTriggerValue!}
+                            value={mapping.maxTriggerValue ?? 65535}
                             min={0}
                             max={65535}
                             onChange={(e) =>
-                              dispatch({ ...mapping, maxTriggerValue: parseInt(e.toString(), 10) })
+                              dispatch({
+                                ...mapping,
+                                maxTriggerValue: parseInt(e.toString(), 10) || 0,
+                              })
                             }
                             w={100}
                           />
@@ -2790,8 +2811,8 @@ function SantrollerMapping({
                               dispatch({
                                 ...mapping,
                                 maxTriggerValue:
-                                  useConfigStore.getState().mappingStatus[profileIdx][mappingIdx]
-                                    .stateRaw,
+                                  useConfigStore.getState().mappingStatus[profileIdx]?.[mappingIdx]
+                                    ?.stateRaw ?? 0,
                               });
                             }}
                           >
