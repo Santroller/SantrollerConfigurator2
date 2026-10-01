@@ -4,8 +4,16 @@ import {
   createSlotInput,
   getProfileSlotLabel,
   getProfileSlots,
+  isDrumInput,
   withSlotMidiChannel,
 } from './inputRegistry';
+
+describe('isDrumInput', () => {
+  it('treats MIDI channel 10 as percussion', () => {
+    expect(isDrumInput({ midi: { midiNote: { note: 38, channel: 10 }, deviceid: 0 } })).toBe(true);
+    expect(isDrumInput({ midi: { midiNote: { note: 38, channel: 1 }, deviceid: 0 } })).toBe(false);
+  });
+});
 
 describe('MIDI slots', () => {
   const profile: proto.IProfile = {

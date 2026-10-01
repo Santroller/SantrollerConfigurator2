@@ -811,7 +811,6 @@ function CrkdDrumDevice({ id }: { id: string }) {
       />
       <Accordion>
         <Accordion.Item value="debounce">
-          <Accordion.Control>Debounce</Accordion.Control>
           <Accordion.Control>{t('crkdDrum.debounce', 'Debounce')}</Accordion.Control>
           <Accordion.Panel>
             <>
@@ -824,7 +823,6 @@ function CrkdDrumDevice({ id }: { id: string }) {
           </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item value="min">
-          <Accordion.Control>Min Threshold</Accordion.Control>
           <Accordion.Control>{t('crkdDrum.min', 'Min Threshold')}</Accordion.Control>
           <Accordion.Panel>
             <>
@@ -837,7 +835,6 @@ function CrkdDrumDevice({ id }: { id: string }) {
           </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item value="max">
-          <Accordion.Control>Max Threshold</Accordion.Control>
           <Accordion.Control>{t('crkdDrum.max', 'Max Threshold')}</Accordion.Control>
           <Accordion.Panel>
             <>
@@ -1548,7 +1545,6 @@ function USBHostDevice({ id }: { id: string }) {
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Connected Devices</Table.Th>
             <Table.Th>{t('devices.connected_devices', 'Connected Devices')}</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -1669,7 +1665,6 @@ function EncoderDevice({ id }: { id: string }) {
           updateDevice({ deviceid: parseInt(id, 10), encoder: { ...encoder, dataPin: pin } }, id)
         }
       />
-      <PinBox label="encoder.clock_pin" pin={encoder.dataPin + 1} valid={usbHostValidPins} />
       <PinBox label="encoder.clock_pin" pin={encoder.dataPin + 1} valid={usbHostValidPins} />
       <NumberInput
         label={t('encoder.divisor')}
@@ -1974,7 +1969,7 @@ function BluetoothDevice({ id }: { id: string }) {
       {hasConnectedDevices && (
         <>
           <Title order={5} mb="xs">
-            {t('devices.bluetooth_connected_devices')}
+            {t('devices.connected_devices', 'Connected Devices')}
           </Title>
           <Table mb="md">
             <Table.Thead>
@@ -2001,7 +1996,6 @@ function BluetoothDevice({ id }: { id: string }) {
 
       <Group justify="space-between" mb="xs">
         <Title order={5}>{t('devices.bluetooth_paired_devices')}</Title>
-        <Title order={5}>{t('devices.bluetooth_paired_devices')}</Title>
         <Button
           size="xs"
           leftSection={<IconBluetooth size={16} />}
@@ -2009,7 +2003,6 @@ function BluetoothDevice({ id }: { id: string }) {
           disabled={scanningBluetooth}
           onClick={scanBluetooth}
         >
-          {scanningBluetooth ? t('devices.bluetooth_scanning') : t('devices.bluetooth_scan')}
           {scanningBluetooth ? t('devices.bluetooth_scanning') : t('devices.bluetooth_scan')}
         </Button>
       </Group>

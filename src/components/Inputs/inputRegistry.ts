@@ -438,6 +438,18 @@ export function isAnalogInput(input: proto.IInput) {
   return kind ? (inputRegistry[kind]?.isAnalog?.(input) ?? false) : false;
 }
 
+export const MIDI_PERCUSSION_CHANNEL = 10;
+
+export function isDrumInput(input: proto.IInput): boolean {
+  if (input.crkdDrum) {
+    return true;
+  }
+  const midi = input.midi;
+  return [midi?.midiNote, midi?.midiControlChange, midi?.midiPitchBend].some(
+    (message) => message?.channel === MIDI_PERCUSSION_CHANNEL
+  );
+}
+
 export function inputUsesDevice(input: proto.IInput, deviceid: number): boolean {
   const kind = getSelectedInput(input)?.kind;
   return kind ? (inputRegistry[kind]?.usesDevice?.(input, deviceid) ?? false) : false;

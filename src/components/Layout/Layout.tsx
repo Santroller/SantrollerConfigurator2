@@ -217,7 +217,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Grid.Col>
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
-                <ActionIcon variant="filled" aria-label="Theme" onClick={toggleColorScheme} />
                 <ActionIcon
                   variant="filled"
                   aria-label={t('layout.theme', 'Theme')}
@@ -325,8 +324,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       >
                         <span>{x.opts.name}</span>
                         <Group gap={4} wrap="nowrap">
-                          {instanceCount === 1 && <Badge>Active</Badge>}
-                          {instanceCount === 1 && <Badge>{t('state.active', 'Active')}</Badge>}
+                          {instanceCount === 1 && (
+                            <Badge>{t('main.profile_active', 'Active')}</Badge>
+                          )}
                           {!simpleMode && (
                             <>
                               <ActionIcon
@@ -389,8 +389,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       >
                         <span>{`${x.opts.name} (${instanceIdx + 1})`}</span>
                         <Group gap={4} wrap="nowrap">
-                          <Badge>Active</Badge>
-                          <Badge>{t('state.active', 'Active')}</Badge>
+                          <Badge>{t('main.profile_active', 'Active')}</Badge>
                           {!simpleMode && (
                             <>
                               <ActionIcon

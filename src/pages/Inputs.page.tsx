@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -91,6 +91,7 @@ import {
   getProfileSlotLabel,
   getProfileSlots,
   isAnalogInput,
+  isDrumInput,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
@@ -107,6 +108,21 @@ import { ASCII_TO_HID } from '@/devices/keyboard';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
 
 const hidReverse = Object.fromEntries(Object.entries(ASCII_TO_HID).map(([k, v]) => [v.code, k]));
+const DRUM_HIT_DISPLAY_MS = 3000;
+function useDecayedValue(live: number, enabled?: boolean) {
+  const [shown, setShown] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    if (!enabled || !live) {
+      return;
+    }
+    setShown(live);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setShown(0), DRUM_HIT_DISPLAY_MS);
+  }, [enabled, live]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return enabled ? shown : live;
+}
 function StateLabelLabel({
   profileIdx,
   mappingIdx,
@@ -139,16 +155,16 @@ function StateLabelLabel({
           ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
           : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
-  const state = useConfigStore((state) =>
+  const liveState = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
-        : zeroBased
-          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
-          : state.mappingStatus[profileIdx][mappingIdx]?.state
+        : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
-  return <span>{raw ? stateRaw : state}</span>;
+  const decay = zeroBased && !ledBased && !activationBased;
+  const value = useDecayedValue(Number(raw ? stateRaw : liveState) || 0, decay);
+  return <span>{value}</span>;
 }
 function StateLabel({
   profileIdx,
@@ -229,17 +245,18 @@ function StateSection({
           ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
           : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
-  const state = useConfigStore((state) =>
+  const liveState = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
         ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
           ? 65535
           : 0
-        : zeroBased
-          ? state.mappingStatus[profileIdx][mappingIdx]?.stateNonZero
-          : state.mappingStatus[profileIdx][mappingIdx]?.state
+        : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
+  const decay = zeroBased && !ledBased && !activationBased;
+  const decayedRaw = useDecayedValue(stateRaw ?? 0, decay);
+  const state = useDecayedValue(liveState ?? 0, decay);
   let minCalc = min;
   let maxCalc = max;
   if (min > max) {
@@ -251,7 +268,7 @@ function StateSection({
     const maxPerc = (maxCalc / 65535) * 100;
     return (
       <>
-        <Progress.Section value={(stateRaw / 65535) * 100} />
+        <Progress.Section value={(decayedRaw / 65535) * 100} />
         <Overlay
           gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%,  rgba(255, 0, 0, 0) ${maxPerc}%, rgba(0, 0, 0, 0) 100%, rgba(255, 0, 0, 0.2) 100%)`}
           opacity={0.85}
@@ -266,7 +283,7 @@ function StateSection({
     const deadZoneEndPerc = ((center + deadzone) / 65535) * 100;
     return (
       <>
-        <Progress.Section value={(stateRaw / 65535) * 100} />
+        <Progress.Section value={(decayedRaw / 65535) * 100} />
         <Overlay
           gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(0, 0, 0, 0) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneStartPerc}%, rgba(255, 0, 0, 0.2) ${deadZoneEndPerc}%,  rgba(255, 0, 0, 0) ${deadZoneEndPerc}%, rgba(0, 0, 0, 0) ${maxPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%)`}
           opacity={0.85}
@@ -2554,7 +2571,8 @@ function SantrollerMapping({
   const drum =
     label?.includes('Pad') ||
     label?.includes('Cymbal') ||
-    mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal;
+    mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal ||
+    isDrumInput(mapping.input);
   const analogInput = isAnalog(mapping.input);
   const crkdDrum = mapping.input.crkdDrum;
   const status = useConfigStore((state) => state.deviceStatus[crkdDrum?.deviceid ?? '']);
@@ -2701,7 +2719,7 @@ function SantrollerMapping({
             min={mapping.min!}
             max={mapping.max!}
             deadzone={mapping.deadzone!}
-            zeroBased={drum && !!analogInput}
+            zeroBased={drum}
           />
         )}
         {!simpleMode && (
@@ -2843,6 +2861,7 @@ function SantrollerMapping({
                         max={65535}
                         deadzone={mapping.deadzone!}
                         raw
+                        zeroBased={drum}
                       />
                     )}
                     {mapping.trigger === proto.AnalogToDigitalTriggerType.JoyLow && (
@@ -2854,6 +2873,7 @@ function SantrollerMapping({
                         max={mapping.triggerValue ?? 32767}
                         deadzone={mapping.deadzone!}
                         raw
+                        zeroBased={drum}
                       />
                     )}
                     {mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
@@ -2865,6 +2885,7 @@ function SantrollerMapping({
                         max={mapping.maxTriggerValue ?? 65535}
                         deadzone={mapping.deadzone!}
                         raw
+                        zeroBased={drum}
                       />
                     )}
                     {(mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
@@ -3033,6 +3054,7 @@ function SantrollerMapping({
                         max={mapping.max!}
                         deadzone={mapping.deadzone!}
                         raw
+                        zeroBased={drum}
                       />
                       {stick && (
                         <>
@@ -3184,6 +3206,7 @@ function SantrollerMapping({
                         crkd={crkdAxis}
                         crkdId={mapping.input.crkdDrum!.deviceid}
                         raw
+                        zeroBased={drum}
                       />
                       <Text size="sm" fw={700}>
                         Min

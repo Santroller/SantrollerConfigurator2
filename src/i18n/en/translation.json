@@ -53,7 +53,6 @@
     "bluetooth_device_mode": "Mode",
     "bluetooth_scan": "Pair New Device",
     "bluetooth_scanning": "Scanning (10s)...",
-    "bluetooth_connected_devices": "Connected Devices",
     "connected_devices": "Connected Devices"
   },
   "keyboard": {
@@ -138,7 +137,8 @@
       "label": "Profile name"
     },
     "clone_profile": "Clone Profile",
-    "delete_profile": "Delete Profile"
+    "delete_profile": "Delete Profile",
+    "profile_active": "Active"
   },
   "held": {
     "time": "Time (ms)"
