@@ -74,8 +74,8 @@ import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import {
   getLabel,
   getMatrixLabel,
-  getSwitchNetworkLabel,
   getMultiplexerLabel,
+  getSwitchNetworkLabel,
   hasDefaults,
   isLed,
   PinBox,
@@ -837,10 +837,11 @@ function DropdownOutputBox<
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {extraLabel || valMidi ? t(`input.${v}`) :
-          t(
-            `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
-          )}
+        {extraLabel || valMidi
+          ? t(`input.${v}`)
+          : t(
+              `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
+            )}
       </InputBase>
     ) : (
       <InputBase
@@ -1115,7 +1116,8 @@ function SantrollerLabel({
       case 'vtechExpander':
         return <Text>{input.vtechExpander?.button}</Text>;
       case 'switchNetwork': {
-        const networkButton = device?.device.switchNetwork?.buttons?.[input.switchNetwork?.button ?? -1];
+        const networkButton =
+          device?.device.switchNetwork?.buttons?.[input.switchNetwork?.button ?? -1];
         if (networkButton) {
           const label = getSwitchNetworkLabel(
             Object.values(guiDevices),
@@ -1128,7 +1130,11 @@ function SantrollerLabel({
             return <Text>{label}</Text>;
           }
         }
-        return <Text>{t('switchNetwork.button')}: {input.switchNetwork?.button}</Text>;
+        return (
+          <Text>
+            {t('switchNetwork.button')}: {input.switchNetwork?.button}
+          </Text>
+        );
       }
       case 'matrix': {
         const labelsText3 = getMatrixLabel(
@@ -1742,7 +1748,10 @@ function SantrollerInput({
       )}
       {input.toggle && (
         <>
-          <Switch label={t('toggle.state')} checked={deviceStatus[input.toggle.deviceid].toggleState} />
+          <Switch
+            label={t('toggle.state')}
+            checked={deviceStatus[input.toggle.deviceid].toggleState}
+          />
           {input.toggle.input && (
             <SantrollerInput
               axis={!!axis}
@@ -1858,30 +1867,33 @@ function SantrollerInput({
                 !!axis
               );
               dispatch(
-                newType === proto.SubType.Midi ? {
-                  midi: {
-                    deviceid: deviceId,
-                    midiNote: {
-                      channel: 10,
-                      note: 1,
-                    }
-                  },
-                }: newAnalog ? {
-                      usbAxis: {
-                        deviceid: (input.usbAxis?.deviceid ||
-                          input.usbButton?.deviceid ||
-                          deviceId)!,
-                        axis: output,
+                newType === proto.SubType.Midi
+                  ? {
+                      midi: {
+                        deviceid: deviceId,
+                        midiNote: {
+                          channel: 10,
+                          note: 1,
+                        },
                       },
                     }
-                  : {
-                      usbButton: {
-                        deviceid: (input.usbAxis?.deviceid ||
-                          input.usbButton?.deviceid ||
-                          deviceId)!,
-                        button: output,
-                      },
-                    }
+                  : newAnalog
+                    ? {
+                        usbAxis: {
+                          deviceid: (input.usbAxis?.deviceid ||
+                            input.usbButton?.deviceid ||
+                            deviceId)!,
+                          axis: output,
+                        },
+                      }
+                    : {
+                        usbButton: {
+                          deviceid: (input.usbAxis?.deviceid ||
+                            input.usbButton?.deviceid ||
+                            deviceId)!,
+                          button: output,
+                        },
+                      }
               );
             }}
           />

@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import { proto } from '@/components/SettingsContext/config';
 
 export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid'>;
@@ -41,7 +42,7 @@ const deviceRegistry: DeviceDefinitions = {
     create: () => ({ i2c: i2c(400000), mappingMode: proto.MappingMode.PerInput }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
     formatStatus: (status, pins) =>
-      `${status.wiiExtType !== proto.WiiExtType.WiiNoExtension ? 'Connected' : 'Disconnected'}, ${pins}`,
+      `${status.wiiExtType !== proto.WiiExtType.WiiNoExtension ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
   },
   crazyGuitarNeck: {
     create: () => ({ i2c: i2c(100000) }),
@@ -72,7 +73,7 @@ const deviceRegistry: DeviceDefinitions = {
     }),
     pins: ({ firstPin }) => [firstPin, firstPin + 1],
     formatStatus: (status, pins) =>
-      `${Object.values(status.usbDevices).length ? 'Connected' : 'Disconnected'}, ${pins}`,
+      `${Object.values(status.usbDevices).length ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
   },
   multiplexer: {
     create: () => ({
@@ -105,7 +106,7 @@ const deviceRegistry: DeviceDefinitions = {
     }),
     pins: ({ spi, ackPin, attPin }) => [spi.mosi, spi.miso, spi.sck, ackPin, attPin],
     formatStatus: (status, pins) =>
-      `${status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown ? 'Connected' : 'Disconnected'}, ${pins}`,
+      `${status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
   },
   snes: {
     create: () => ({
@@ -157,7 +158,7 @@ const deviceRegistry: DeviceDefinitions = {
     create: () => ({ i2c: i2c(400000), interrupt: -1 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
-  encoder: { create: () => ({ dataPin: -1 }), pins: ({ dataPin }) => [dataPin, dataPin+1] },
+  encoder: { create: () => ({ dataPin: -1 }), pins: ({ dataPin }) => [dataPin, dataPin + 1] },
   debug: { create: () => ({ uart: uart() }), pins: ({ uart }) => [uart.tx, uart.rx] },
   ws2812: {
     create: () => ({ pin: -1, count: 0, type: proto.WS2812Type.Ws2812Rgb }),
@@ -208,13 +209,7 @@ const deviceRegistry: DeviceDefinitions = {
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
 
-const nonInputDeviceKinds = new Set<DeviceKind>([
-  'debug',
-  'ws2812',
-  'apa102',
-  'stp16cpc',
-  'dmx',
-]);
+const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'ws2812', 'apa102', 'stp16cpc', 'dmx']);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'crkdDrum',
@@ -274,12 +269,12 @@ export function getDeviceStatusLabel(status: DeviceStatusSnapshot): string {
     .map((pin) => `GP${pin}`)
     .join(', ');
   if (!kind) {
-    return `${status.connected ? 'Connected' : 'Disconnected'}, ${pins}`;
+    return `${status.connected ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`;
   }
 
   const label = deviceRegistry[kind].formatStatus
     ? deviceRegistry[kind].formatStatus(status, pins)
-    : `${status.connected ? 'Connected' : 'Disconnected'}, ${pins}`;
+    : `${status.connected ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`;
   const detail = resolveDeviceDetail(kind, status.device);
   return detail ? `${label}, ${detail}` : label;
 }

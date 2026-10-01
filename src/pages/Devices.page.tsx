@@ -765,6 +765,7 @@ function CrkdDrumCalibration({
   type: proto.CrkdDrumCalibrationType;
   data: proto.ICrkdCalibrationData;
 }) {
+  const { t } = useTranslation();
   const updateCrkdDrumCalibration = useConfigStore((state) => state.updateCrkdDrumCalibration);
   const keys = Object.keys(data) as Array<keyof proto.ICrkdCalibrationData>;
   return (
@@ -780,6 +781,7 @@ function CrkdDrumCalibration({
   );
 }
 function CrkdDrumDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -810,6 +812,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
       <Accordion>
         <Accordion.Item value="debounce">
           <Accordion.Control>Debounce</Accordion.Control>
+          <Accordion.Control>{t('crkdDrum.debounce', 'Debounce')}</Accordion.Control>
           <Accordion.Panel>
             <>
               <CrkdDrumCalibration
@@ -822,6 +825,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
         </Accordion.Item>
         <Accordion.Item value="min">
           <Accordion.Control>Min Threshold</Accordion.Control>
+          <Accordion.Control>{t('crkdDrum.min', 'Min Threshold')}</Accordion.Control>
           <Accordion.Panel>
             <>
               <CrkdDrumCalibration
@@ -834,6 +838,7 @@ function CrkdDrumDevice({ id }: { id: string }) {
         </Accordion.Item>
         <Accordion.Item value="max">
           <Accordion.Control>Max Threshold</Accordion.Control>
+          <Accordion.Control>{t('crkdDrum.max', 'Max Threshold')}</Accordion.Control>
           <Accordion.Panel>
             <>
               <CrkdDrumCalibration
@@ -1006,7 +1011,7 @@ function APA102Device({ id }: { id: string }) {
       />
       <LabeledDropdown
         data={apa102TypeData}
-        label="Type"
+        label="apa102.type"
         value={`apa102.types.${proto.APA102Type[apa102.type]}`}
         dispatch={(val) =>
           updateDevice(
@@ -1333,8 +1338,8 @@ function CycleDevice({ id }: { id: string }) {
             onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
           />
           <TagsInput
-            label="Enter a value"
-            placeholder="Enter value"
+            label={t('cycle.enter_value', 'Enter a value')}
+            placeholder={t('cycle.enter_value_placeholder', 'Enter value')}
             splitChars={[',', ' ', '|']}
             withPillsReorder
             allowDuplicates
@@ -1544,6 +1549,7 @@ function USBHostDevice({ id }: { id: string }) {
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Connected Devices</Table.Th>
+            <Table.Th>{t('devices.connected_devices', 'Connected Devices')}</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -1663,11 +1669,8 @@ function EncoderDevice({ id }: { id: string }) {
           updateDevice({ deviceid: parseInt(id, 10), encoder: { ...encoder, dataPin: pin } }, id)
         }
       />
-      <PinBox
-        label="encoder.clock_pin"
-        pin={encoder.dataPin + 1}
-        valid={usbHostValidPins}
-      />
+      <PinBox label="encoder.clock_pin" pin={encoder.dataPin + 1} valid={usbHostValidPins} />
+      <PinBox label="encoder.clock_pin" pin={encoder.dataPin + 1} valid={usbHostValidPins} />
       <NumberInput
         label={t('encoder.divisor')}
         min={1}
@@ -1749,7 +1752,11 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.pin')}
               pin={button.pin}
-              valid={Object.fromEntries(Object.entries(AllPinsNamed).filter(([pin, _]) => network.pins! & (1 << parseInt(pin, 10))))}
+              valid={Object.fromEntries(
+                Object.entries(AllPinsNamed).filter(
+                  ([pin, _]) => network.pins! & (1 << parseInt(pin, 10))
+                )
+              )}
               dispatch={(pin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], pin };
@@ -1759,17 +1766,26 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.otherPin')}
               pin={button.otherPin}
-              valid={Object.fromEntries(Object.entries(AllPinsNamed).filter(([pin, _]) => network.pins! & (1 << parseInt(pin, 10))))}
+              valid={Object.fromEntries(
+                Object.entries(AllPinsNamed).filter(
+                  ([pin, _]) => network.pins! & (1 << parseInt(pin, 10))
+                )
+              )}
               dispatch={(otherPin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], otherPin };
                 updateNetwork({ ...network, buttons: next });
               }}
             />
-            <ActionIcon color="red" onClick={() => updateNetwork({
-              ...network,
-              buttons: buttons.filter((_, buttonIndex) => buttonIndex !== index),
-            })}>
+            <ActionIcon
+              color="red"
+              onClick={() =>
+                updateNetwork({
+                  ...network,
+                  buttons: buttons.filter((_, buttonIndex) => buttonIndex !== index),
+                })
+              }
+            >
               <IconTrash style={{ width: '70%', height: '70%' }} />
             </ActionIcon>
           </Group>
@@ -1984,9 +2000,8 @@ function BluetoothDevice({ id }: { id: string }) {
       )}
 
       <Group justify="space-between" mb="xs">
-        <Title order={5}>
-          {t('devices.bluetooth_paired_devices')}
-        </Title>
+        <Title order={5}>{t('devices.bluetooth_paired_devices')}</Title>
+        <Title order={5}>{t('devices.bluetooth_paired_devices')}</Title>
         <Button
           size="xs"
           leftSection={<IconBluetooth size={16} />}
@@ -1994,9 +2009,8 @@ function BluetoothDevice({ id }: { id: string }) {
           disabled={scanningBluetooth}
           onClick={scanBluetooth}
         >
-          {scanningBluetooth
-            ? t('devices.bluetooth_scanning')
-            : t('devices.bluetooth_scan')}
+          {scanningBluetooth ? t('devices.bluetooth_scanning') : t('devices.bluetooth_scan')}
+          {scanningBluetooth ? t('devices.bluetooth_scanning') : t('devices.bluetooth_scan')}
         </Button>
       </Group>
       {bluetoothStates.length === 0 ? (

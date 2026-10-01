@@ -4,6 +4,8 @@ import { CommercialToolPage } from './pages/Commercial';
 import { ConnectPage } from './pages/Connect.page';
 import { DebugPage } from './pages/Debug.page';
 import { DevicesPage } from './pages/Devices.page';
+import { GuidePage } from './pages/Guide.page';
+import { GuideCatalogPage } from './pages/GuideCatalog.page';
 import { InputsPage } from './pages/Inputs.page';
 import { LabelsPage } from './pages/Labels.page';
 import { SetupPage } from './pages/Setup.page';
@@ -12,6 +14,18 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <ConnectPage />,
+  },
+  {
+    path: '/guides',
+    element: <GuideCatalogPage />,
+  },
+  {
+    path: '/guides/:guideId',
+    element: <GuidePage />,
+  },
+  {
+    path: '/guide',
+    element: <GuideCatalogPage />,
   },
   {
     path: '/devices',

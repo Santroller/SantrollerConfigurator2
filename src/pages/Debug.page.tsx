@@ -28,6 +28,7 @@ function MidiRow({ data, i }: { data: number[]; i: number }) {
   return (
     <Table.Tr key={i}>
       <Table.Td>{t(types[data[0] & 0xf0] || 'unknown')}</Table.Td>
+      <Table.Td>{t(`debug.midi.${types[data[0] & 0xf0] || 'unknown'}`)}</Table.Td>
       <Table.Td>{(data[0] & 0x0f) + 1}</Table.Td>
       <Table.Td>
         <Text>

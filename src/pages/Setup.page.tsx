@@ -8,11 +8,15 @@ export function SetupPage() {
   return (
     <>
       <Layout>
-        <Alert variant="light" color="red" title="Note" icon={<IconExclamationCircle />}>
+        <Alert
+          variant="light"
+          color="red"
+          title={t('connect.sellerWarningTitle', 'Note')}
+          icon={<IconExclamationCircle />}
+        >
           {t('connect.sellerWarning')}
         </Alert>
 
-        <Space h="md" />
         <Space h="md" />
         <Text size="h1">{t('getting_started.title')}</Text>
         <Text size="sm">{t('getting_started.text')}</Text>

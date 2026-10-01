@@ -1,22 +1,40 @@
+import i18next from 'i18next';
 import { proto } from '@/components/SettingsContext/config';
 
-export type LabelKind = 'label' | 'ledLabel' | 'matrixLabel' | 'multiplexerLabel' | 'switchNetworkLabel';
+export type LabelKind =
+  | 'label'
+  | 'ledLabel'
+  | 'matrixLabel'
+  | 'multiplexerLabel'
+  | 'switchNetworkLabel';
 
 type LabelDefinition = {
   create: () => Record<string, unknown>;
 };
 
 const labelRegistry: Record<LabelKind, LabelDefinition> = {
-  label: { create: () => ({ label: 'Label', pin: -1 }) },
-  ledLabel: { create: () => ({ label: 'Label', deviceid: -1, activeLed: [] }) },
+  label: { create: () => ({ label: i18next.t('labels.title', 'Label'), pin: -1 }) },
+  ledLabel: {
+    create: () => ({ label: i18next.t('labels.title', 'Label'), deviceid: -1, activeLed: [] }),
+  },
   matrixLabel: {
-    create: () => ({ label: 'Label', deviceid: -1, inputPin: -1, outputPin: -1 }),
+    create: () => ({
+      label: i18next.t('labels.title', 'Label'),
+      deviceid: -1,
+      inputPin: -1,
+      outputPin: -1,
+    }),
   },
   multiplexerLabel: {
-    create: () => ({ label: 'Label', deviceid: -1, channel: 0 }),
+    create: () => ({ label: i18next.t('labels.title', 'Label'), deviceid: -1, channel: 0 }),
   },
   switchNetworkLabel: {
-    create: () => ({ label: 'Label', deviceid: -1, pin: -1, otherPin: -1 }),
+    create: () => ({
+      label: i18next.t('labels.title', 'Label'),
+      deviceid: -1,
+      pin: -1,
+      otherPin: -1,
+    }),
   },
 };
 

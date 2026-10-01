@@ -81,7 +81,7 @@ export function ConnectPage() {
           <Alert
             variant="light"
             color="red"
-            title="Controller firmware out of date"
+            title={t('connect.outdatedTitle')}
             icon={<IconExclamationCircle />}
           >
             {t('connect.outdated')}

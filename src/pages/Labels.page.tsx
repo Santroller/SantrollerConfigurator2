@@ -497,7 +497,13 @@ function SwitchNetworkLabel({
         <Space h="md" />
         <Flex justify="flex-end">
           <Group align="flex-end">
-            <Button onClick={() => { deleteLabel(); close(); }} color="red">
+            <Button
+              onClick={() => {
+                deleteLabel();
+                close();
+              }}
+              color="red"
+            >
               {t('labels.remove.confirm')}
             </Button>
             <Button onClick={close}>{t('labels.remove.cancel')}</Button>
@@ -506,46 +512,69 @@ function SwitchNetworkLabel({
       </Modal>
       <Card key={id} shadow="sm" padding="lg" radius="md" withBorder>
         <Flex justify="flex-end">
-          <ActionIcon color="red"><IconTrash style={{ width: '70%', height: '70%' }} onClick={open} /></ActionIcon>
-          <ActionIcon><IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} /></ActionIcon>
+          <ActionIcon color="red">
+            <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+          <ActionIcon>
+            <IconCopy style={{ width: '70%', height: '70%' }} onClick={() => copyLabel(label)} />
+          </ActionIcon>
         </Flex>
         <TextInput
           value={label.switchNetworkLabel?.label}
-          onChange={(e) => updateLabel(
-            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, label: e.currentTarget.value } },
-            parseInt(id, 10)
-          )}
+          onChange={(e) =>
+            updateLabel(
+              {
+                ...label,
+                switchNetworkLabel: { ...label.switchNetworkLabel!, label: e.currentTarget.value },
+              },
+              parseInt(id, 10)
+            )
+          }
           label={t('labels.title')}
         />
         <PinBox
           label="switchNetwork.pin"
           pin={label.switchNetworkLabel!.pin!}
           valid={AllPinsNamed}
-          dispatch={(pin) => updateLabel(
-            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, pin } },
-            parseInt(id, 10)
-          )}
+          dispatch={(pin) =>
+            updateLabel(
+              { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, pin } },
+              parseInt(id, 10)
+            )
+          }
         />
         <PinBox
           label="switchNetwork.other_pin"
           pin={label.switchNetworkLabel!.otherPin!}
           valid={AllPinsNamed}
-          dispatch={(otherPin) => updateLabel(
-            { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, otherPin } },
-            parseInt(id, 10)
-          )}
-        />
-        {seller && <>
-          <Space h="md" />
-          <Switch
-            checked={label.switchNetworkLabel!.showToCustomer ?? false}
-            onChange={(e) => updateLabel(
-              { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, showToCustomer: e.currentTarget.checked } },
+          dispatch={(otherPin) =>
+            updateLabel(
+              { ...label, switchNetworkLabel: { ...label.switchNetworkLabel!, otherPin } },
               parseInt(id, 10)
-            )}
-            label={t('labels.showToCustomer')}
-          />
-        </>}
+            )
+          }
+        />
+        {seller && (
+          <>
+            <Space h="md" />
+            <Switch
+              checked={label.switchNetworkLabel!.showToCustomer ?? false}
+              onChange={(e) =>
+                updateLabel(
+                  {
+                    ...label,
+                    switchNetworkLabel: {
+                      ...label.switchNetworkLabel!,
+                      showToCustomer: e.currentTarget.checked,
+                    },
+                  },
+                  parseInt(id, 10)
+                )
+              }
+              label={t('labels.showToCustomer')}
+            />
+          </>
+        )}
       </Card>
     </>
   );

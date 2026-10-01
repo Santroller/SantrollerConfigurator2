@@ -58,7 +58,11 @@ export function DropdownBox<T extends number>({
             Object.keys(e)
               .filter((key) => isNaN(Number(key)))
               .map((item) => (
-                <Combobox.Option value={item} key={item} selected={e[val as keyof typeof e] === item}>
+                <Combobox.Option
+                  value={item}
+                  key={item}
+                  selected={e[val as keyof typeof e] === item}
+                >
                   {t(`${label}.${item}`)}
                 </Combobox.Option>
               ))}

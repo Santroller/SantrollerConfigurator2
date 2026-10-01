@@ -38,7 +38,11 @@ function gpioAxis(output: proto.IOutput, center = 0, debounce?: number): proto.I
   };
 }
 
-function wiiButton(button: proto.WiiButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function wiiButton(
+  button: proto.WiiButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -50,7 +54,12 @@ function wiiButton(button: proto.WiiButtonType, deviceid: number, output: proto.
   };
 }
 
-function wiiAxis(axis: proto.WiiAxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
+function wiiAxis(
+  axis: proto.WiiAxisType,
+  deviceid: number,
+  output: proto.IOutput,
+  center = 0
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -65,7 +74,11 @@ function wiiAxis(axis: proto.WiiAxisType, deviceid: number, output: proto.IOutpu
   };
 }
 
-function ps2Button(button: proto.PS2ButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function ps2Button(
+  button: proto.PS2ButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -76,7 +89,11 @@ function ps2Button(button: proto.PS2ButtonType, deviceid: number, output: proto.
     },
   };
 }
-function ps2TriggerButton(button: proto.PS2ButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function ps2TriggerButton(
+  button: proto.PS2ButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -90,7 +107,12 @@ function ps2TriggerButton(button: proto.PS2ButtonType, deviceid: number, output:
   };
 }
 
-function ps2Axis(axis: proto.PS2AxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
+function ps2Axis(
+  axis: proto.PS2AxisType,
+  deviceid: number,
+  output: proto.IOutput,
+  center = 0
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -105,7 +127,11 @@ function ps2Axis(axis: proto.PS2AxisType, deviceid: number, output: proto.IOutpu
   };
 }
 
-function crkdNeckButton(button: proto.CrkdNeckButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function crkdNeckButton(
+  button: proto.CrkdNeckButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -117,7 +143,12 @@ function crkdNeckButton(button: proto.CrkdNeckButtonType, deviceid: number, outp
   };
 }
 
-function crkdDrumAxis(axis: proto.CrkdDrumAxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
+function crkdDrumAxis(
+  axis: proto.CrkdDrumAxisType,
+  deviceid: number,
+  output: proto.IOutput,
+  center = 0
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -132,7 +163,11 @@ function crkdDrumAxis(axis: proto.CrkdDrumAxisType, deviceid: number, output: pr
   };
 }
 
-function gh5NeckButton(button: proto.Gh5NeckButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function gh5NeckButton(
+  button: proto.Gh5NeckButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -144,7 +179,12 @@ function gh5NeckButton(button: proto.Gh5NeckButtonType, deviceid: number, output
   };
 }
 
-function midiNoteAxis(note: number, deviceid: number, output: proto.IOutput, channel = 10): proto.IMapping {
+function midiNoteAxis(
+  note: number,
+  deviceid: number,
+  output: proto.IOutput,
+  channel = 10
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -162,7 +202,12 @@ function midiNoteAxis(note: number, deviceid: number, output: proto.IOutput, cha
   };
 }
 
-function midiNoteButton(note: number, deviceid: number, output: proto.IOutput, channel = 10): proto.IMapping {
+function midiNoteButton(
+  note: number,
+  deviceid: number,
+  output: proto.IOutput,
+  channel = 10
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -177,7 +222,12 @@ function midiNoteButton(note: number, deviceid: number, output: proto.IOutput, c
   };
 }
 
-function midiCcAxis(cc: number, deviceid: number, output: proto.IOutput, channel = 1): proto.IMapping {
+function midiCcAxis(
+  cc: number,
+  deviceid: number,
+  output: proto.IOutput,
+  channel = 1
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -212,7 +262,11 @@ function midiPitchBendAxis(deviceid: number, output: proto.IOutput, channel = 1)
   };
 }
 
-function protarNeckButton(button: proto.ProGuitarNeckButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function protarNeckButton(
+  button: proto.ProGuitarNeckButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -224,7 +278,12 @@ function protarNeckButton(button: proto.ProGuitarNeckButtonType, deviceid: numbe
   };
 }
 
-function protarNeckAxis(axis: proto.ProGuitarNeckAxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
+function protarNeckAxis(
+  axis: proto.ProGuitarNeckAxisType,
+  deviceid: number,
+  output: proto.IOutput,
+  center = 0
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -239,7 +298,11 @@ function protarNeckAxis(axis: proto.ProGuitarNeckAxisType, deviceid: number, out
   };
 }
 
-function midiProGuitarButton(button: proto.ProGuitarMidiButtonType, deviceid: number, output: proto.IOutput): proto.IMapping {
+function midiProGuitarButton(
+  button: proto.ProGuitarMidiButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -253,7 +316,12 @@ function midiProGuitarButton(button: proto.ProGuitarMidiButtonType, deviceid: nu
   };
 }
 
-function midiProGuitarAxis(axis: proto.ProGuitarAxisType, deviceid: number, output: proto.IOutput, center = 0): proto.IMapping {
+function midiProGuitarAxis(
+  axis: proto.ProGuitarAxisType,
+  deviceid: number,
+  output: proto.IOutput,
+  center = 0
+): proto.IMapping {
   return {
     mapping: output,
     input: {
@@ -377,8 +445,12 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_Black1 }),
         gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_Black2 }),
         gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_Black3 }),
-        gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp }),
-        gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown }),
+        gpioButton({
+          ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp,
+        }),
+        gpioButton({
+          ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown,
+        }),
         gpioButton({ ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_GHTV }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
@@ -539,215 +611,643 @@ export function getWiiDefaults(
   // 1. Guitar Extension (or Guitar SubTypes if not specifically detected otherwise)
   if (
     isGuitarExt ||
-    (!isDrumExt && !isTaikoExt && !isDjExt && !isClassicExt && !isNunchuk && !isUDraw && !isDrawsome && (subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar))
+    (!isDrumExt &&
+      !isTaikoExt &&
+      !isDjExt &&
+      !isClassicExt &&
+      !isNunchuk &&
+      !isUDraw &&
+      !isDrawsome &&
+      (subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar))
   ) {
     if (subType === proto.SubType.RockBandGuitar) {
       return [
-        wiiAxis(proto.WiiAxisType.WiiAxisGuitarWhammy, deviceId, { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy }, 0),
-        wiiAxis(proto.WiiAxisType.WiiAxisGuitarJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-        wiiAxis(proto.WiiAxisType.WiiAxisGuitarJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        wiiButton(proto.WiiButtonType.WiiButtonGuitarPedal, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Pedal }),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisGuitarWhammy,
+          deviceId,
+          { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy },
+          0
+        ),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisGuitarJoystickX,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+          32767
+        ),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisGuitarJoystickY,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+          32767
+        ),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarGreen, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarRed, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarYellow, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarBlue, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarOrange, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapGreen, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapRed, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapYellow, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapBlue, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarTapOrange, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumUp, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumDown, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarMinus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarPlus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonGuitarPedal, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Pedal,
+        }),
       ];
     }
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisGuitarWhammy, deviceId, { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy }, 0),
-      wiiAxis(proto.WiiAxisType.WiiAxisGuitarJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisGuitarJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      wiiButton(proto.WiiButtonType.WiiButtonGuitarPedal, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Pedal }),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisGuitarWhammy,
+        deviceId,
+        { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy },
+        0
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisGuitarJoystickX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisGuitarJoystickY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarTapOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarStrumDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarMinus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarPlus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonGuitarPedal, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Pedal,
+      }),
     ];
   }
 
   // 2. Drum Extension (or Drum SubTypes)
-  if (isDrumExt || subType === proto.SubType.GuitarHeroDrums || subType === proto.SubType.RockBandDrums) {
+  if (
+    isDrumExt ||
+    subType === proto.SubType.GuitarHeroDrums ||
+    subType === proto.SubType.RockBandDrums
+  ) {
     if (subType === proto.SubType.RockBandDrums) {
       return [
-        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisDrumJoystickX,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+          32767
+        ),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisDrumJoystickY,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+          32767
+        ),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+          rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+          rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+          rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+          rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+          rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+          rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+          rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Guide,
+        }),
       ];
     }
     if (subType === proto.SubType.GuitarHeroDrums) {
       return [
-        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-        wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisDrumJoystickX,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+          32767
+        ),
+        wiiAxis(
+          proto.WiiAxisType.WiiAxisDrumJoystickY,
+          deviceId,
+          { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+          32767
+        ),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Guide,
+        }),
       ];
     }
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDrumJoystickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
-      wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDrumJoystickX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDrumJoystickY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_X,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDrumPlus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Guide,
+      }),
     ];
   }
 
   // 3. Taiko Extension (or Taiko SubType)
   if (isTaikoExt || subType === proto.SubType.Taiko) {
     return [
-      wiiButton(proto.WiiButtonType.WiiButtonTaTaConLeftDrumRim, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      wiiButton(proto.WiiButtonType.WiiButtonTaTaConLeftDrumCenter, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      wiiButton(proto.WiiButtonType.WiiButtonTaTaConRightDrumCenter, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      wiiButton(proto.WiiButtonType.WiiButtonTaTaConRightDrumRim, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      wiiButton(proto.WiiButtonType.WiiButtonTaTaConLeftDrumRim, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonTaTaConLeftDrumCenter, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonTaTaConRightDrumCenter, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonTaTaConRightDrumRim, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
     ];
   }
 
   // 4. DJ Hero Extension (or DJ Hero SubType)
   if (isDjExt || subType === proto.SubType.DjHeroTurntable) {
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisDjTurntableLeft, deviceId, { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_LeftVelocity }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDjTurntableRight, deviceId, { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_RightVelocity }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDjCrossfadeSlider, deviceId, { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_Crossfader }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDjEffectDial, deviceId, { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_EffectsKnob }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDjStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDjStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftGreen, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftGreen }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftRed, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftRed }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftBlue, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftBlue }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightGreen, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightGreen }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightRed, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightRed }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightBlue, deviceId, { djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightBlue }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroEuphoria, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      wiiButton(proto.WiiButtonType.WiiButtonDjHeroPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjTurntableLeft,
+        deviceId,
+        { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_LeftVelocity },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjTurntableRight,
+        deviceId,
+        { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_RightVelocity },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjCrossfadeSlider,
+        deviceId,
+        { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_Crossfader },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjEffectDial,
+        deviceId,
+        { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_EffectsKnob },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjStickX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDjStickY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftGreen, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftGreen,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftRed, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftRed,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftBlue, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftBlue,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightGreen, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightGreen,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightRed, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightRed,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroRightBlue, deviceId, {
+        djhButton: proto.DJHTurntableButtonType.DJHTurntable_RightBlue,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroEuphoria, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroMinus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonDjHeroPlus, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
     ];
   }
 
   // 5. Nunchuk
   if (isNunchuk) {
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiButton(proto.WiiButtonType.WiiButtonNunchukC, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      wiiButton(proto.WiiButtonType.WiiButtonNunchukZ, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukAccelerationZ, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukRotationPitch, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
-      wiiAxis(proto.WiiAxisType.WiiAxisNunchukRotationRoll, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukStickX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukStickY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiButton(proto.WiiButtonType.WiiButtonNunchukC, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonNunchukZ, deviceId, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+      }),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukAccelerationX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukAccelerationY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukAccelerationZ,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukRotationPitch,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+        0
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisNunchukRotationRoll,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
     ];
   }
 
   // 6. uDraw Tablet
   if (isUDraw) {
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisUDrawPenPressure, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
-      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenClick, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton2, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisUDrawPenX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisUDrawPenY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisUDrawPenPressure,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenClick, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton1, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonUDrawPenButton2, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_X,
+      }),
     ];
   }
 
   // 7. Drawsome Tablet
   if (isDrawsome) {
     return [
-      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      wiiAxis(proto.WiiAxisType.WiiAxisDrawsomePenPressure, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDrawsomePenX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDrawsomePenY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      wiiAxis(
+        proto.WiiAxisType.WiiAxisDrawsomePenPressure,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
     ];
   }
 
   // 8. Default / Classic Controller (Full Gamepad)
   return [
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicLeftStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicLeftStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicRightStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicRightStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicLeftTrigger, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
-    wiiAxis(proto.WiiAxisType.WiiAxisClassicRightTrigger, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicLeftStickX,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+      32767
+    ),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicLeftStickY,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+      32767
+    ),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicRightStickX,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX },
+      32767
+    ),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicRightStickY,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY },
+      32767
+    ),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicLeftTrigger,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+      0
+    ),
+    wiiAxis(
+      proto.WiiAxisType.WiiAxisClassicRightTrigger,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+      0
+    ),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_A,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_B,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_X,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicZl, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+      gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+      gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicMinus, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+    }),
+    wiiButton(proto.WiiButtonType.WiiButtonClassicHome, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Guide,
+    }),
   ];
 }
 
@@ -769,133 +1269,354 @@ export function getPs2Defaults(
   const isDualshock2 = cntType === proto.PS2ControllerType.PS2ControllerTypeDualshock2;
   const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
 
-  if (isGuitar || subType === proto.SubType.GuitarHeroGuitar || subType === proto.SubType.RockBandGuitar) {
+  if (
+    isGuitar ||
+    subType === proto.SubType.GuitarHeroGuitar ||
+    subType === proto.SubType.RockBandGuitar
+  ) {
     if (subType === proto.SubType.RockBandGuitar) {
       return [
-        ps2Axis(proto.PS2AxisType.PS2AxisGuitarWhammy, deviceId, { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy }, 0),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
-        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
+        ps2Axis(
+          proto.PS2AxisType.PS2AxisGuitarWhammy,
+          deviceId,
+          { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy },
+          0
+        ),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarGreen, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarRed, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarYellow, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarBlue, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, {
+          gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, {
+          rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+        }),
+        ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, {
+          rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+        }),
       ];
     }
     return [
-      ps2Axis(proto.PS2AxisType.PS2AxisGuitarWhammy, deviceId, { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy }, 0),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisGuitarWhammy,
+        deviceId,
+        { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy },
+        0
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStrumDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarDpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTilt, deviceId, {
+        ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonGuitarTapOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+      }),
     ];
   }
 
   if (isTaiko || subType === proto.SubType.Taiko) {
     return [
-      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoRimLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoCenterLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoCenterRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoRimRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoRimLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoCenterLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoCenterRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTaikoRimRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
     ];
   }
 
   if (isMouse) {
     return [
-      ps2Axis(proto.PS2AxisType.PS2AxisMouseX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      ps2Axis(proto.PS2AxisType.PS2AxisMouseY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      ps2Button(proto.PS2ButtonType.PS2ButtonMouseLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonMouseRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisMouseX,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisMouseY,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonMouseLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonMouseRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
     ];
   }
 
   if (isNegCon) {
     return [
-      ps2Axis(proto.PS2AxisType.PS2AxisNegConTwist, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      ps2Axis(proto.PS2AxisType.PS2AxisNegConI, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisNegConIi, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisNegConL, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
-      ps2Button(proto.PS2ButtonType.PS2ButtonNegConA, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonNegConB, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonNegConStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonNegConR, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisNegConTwist,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisNegConI,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisNegConIi,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisNegConL,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+        0
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConA, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConB, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonNegConR, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
     ];
   }
 
   if (isJogCon) {
     return [
-      ps2Axis(proto.PS2AxisType.PS2AxisJogConWheel, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonTriangle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisJogConWheel,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_X,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonTriangle, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
+      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+      }),
+      ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
     ];
   }
 
   if (isGunCon) {
     return [
-      ps2Axis(proto.PS2AxisType.PS2AxisGunConHSync, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-      ps2Axis(proto.PS2AxisType.PS2AxisGunConVSync, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisGunConHSync,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        32767
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisGunConVSync,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+        32767
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
     ];
   }
 
   const standardButtons: proto.IMapping[] = [
-    ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonTriangle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }),
-    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonCross, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_A,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonCircle, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_B,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonSquare, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_X,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonTriangle, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonL1, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonR1, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+    }),
+    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonL2, deviceId, {
+      gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+    }),
+    ps2TriggerButton(proto.PS2ButtonType.PS2ButtonR2, deviceId, {
+      gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+    }),
   ];
 
   if (isDigital) {
@@ -903,28 +1624,112 @@ export function getPs2Defaults(
   }
 
   const sticks: proto.IMapping[] = [
-    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisLeftStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisRightStickX, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX }, 32767),
-    ps2Axis(proto.PS2AxisType.PS2AxisRightStickY, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, 32767),
-    ps2Button(proto.PS2ButtonType.PS2ButtonL3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftThumbClick }),
-    ps2Button(proto.PS2ButtonType.PS2ButtonR3, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightThumbClick }),
+    ps2Axis(
+      proto.PS2AxisType.PS2AxisLeftStickX,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+      32767
+    ),
+    ps2Axis(
+      proto.PS2AxisType.PS2AxisLeftStickY,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
+      32767
+    ),
+    ps2Axis(
+      proto.PS2AxisType.PS2AxisRightStickX,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX },
+      32767
+    ),
+    ps2Axis(
+      proto.PS2AxisType.PS2AxisRightStickY,
+      deviceId,
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY },
+      32767
+    ),
+    ps2Button(proto.PS2ButtonType.PS2ButtonL3, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftThumbClick,
+    }),
+    ps2Button(proto.PS2ButtonType.PS2ButtonR3, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_RightThumbClick,
+    }),
   ];
 
   if (isDualshock2) {
     const pressureAxes: proto.IMapping[] = [
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Cross, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Circle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Square, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2Triangle, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2UpButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2DownButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2LeftButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2RightButton, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2L1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2R1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2L2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, 0),
-      ps2Axis(proto.PS2AxisType.PS2AxisDualshock2R2, deviceId, { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, 0),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2Cross,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2Circle,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_B },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2Square,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_X },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2Triangle,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_Y },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2UpButton,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2DownButton,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2LeftButton,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2RightButton,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2L1,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2R1,
+        deviceId,
+        { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2L2,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+        0
+      ),
+      ps2Axis(
+        proto.PS2AxisType.PS2AxisDualshock2R2,
+        deviceId,
+        { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
+        0
+      ),
     ];
     return [...sticks, ...standardButtons, ...pressureAxes];
   }
@@ -939,66 +1744,175 @@ export function getPs2Defaults(
 export function getCrkdNeckDefaults(subType: proto.SubType, deviceId: number): proto.IMapping[] {
   if (subType === proto.SubType.RockBandGuitar) {
     return [
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloGreen, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloRed, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloYellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloBlue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloOrange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
     ];
   }
 
   if (subType === proto.SubType.GuitarHeroGuitar) {
     return [
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdSoloOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
     ];
   }
 
   // Fallback to Gamepad
   return [
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdGreen, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_A,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdRed, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_B,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdYellow, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_X,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdBlue, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdOrange, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadUp, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadDown, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadLeft, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+    }),
+    crkdNeckButton(proto.CrkdNeckButtonType.CrkdDpadRight, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+    }),
   ];
 }
 
 export function getCrkdDrumDefaults(subType: proto.SubType, deviceId: number): proto.IMapping[] {
   if (subType === proto.SubType.RockBandDrums) {
     return [
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdRedPad, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdYellowPad, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdBluePad, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdGreenPad, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdYellowCymbal, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdBlueCymbal, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdGreenCymbal, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal }, 0),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdRedPad,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdYellowPad,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdBluePad,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdGreenPad,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdYellowCymbal,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdBlueCymbal,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdGreenCymbal,
+        deviceId,
+        { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal },
+        0
+      ),
       {
         mapping: { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal },
         input: { crkdDrum: { axis: proto.CrkdDrumAxisType.CrkdKick1, deviceid: deviceId } },
@@ -1012,15 +1926,60 @@ export function getCrkdDrumDefaults(subType: proto.SubType, deviceId: number): p
 
   if (subType === proto.SubType.GuitarHeroDrums) {
     return [
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdGreenPad, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdRedPad, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdYellowPad, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdBluePad, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdGreenCymbal, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdBlueCymbal, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdYellowCymbal, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdKick1, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }, 0),
-      crkdDrumAxis(proto.CrkdDrumAxisType.CrkdKick2, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }, 0),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdGreenPad,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdRedPad,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdYellowPad,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdBluePad,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdGreenCymbal,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdBlueCymbal,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdYellowCymbal,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdKick1,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal },
+        0
+      ),
+      crkdDrumAxis(
+        proto.CrkdDrumAxisType.CrkdKick2,
+        deviceId,
+        { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal },
+        0
+      ),
     ];
   }
 
@@ -1059,41 +2018,91 @@ export function getCrkdDrumDefaults(subType: proto.SubType, deviceId: number): p
 export function getGh5NeckDefaults(subType: proto.SubType, deviceId: number): proto.IMapping[] {
   if (subType === proto.SubType.RockBandGuitar) {
     return [
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapGreen, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapRed, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapYellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapBlue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapOrange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+      }),
     ];
   }
 
   if (subType === proto.SubType.GuitarHeroGuitar) {
     return [
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
-      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
+      }),
+      gh5NeckButton(proto.Gh5NeckButtonType.Gh5TapOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+      }),
     ];
   }
 
   // Fallback to Gamepad
   return [
-    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Green, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_A,
+    }),
+    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Red, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_B,
+    }),
+    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Yellow, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_X,
+    }),
+    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Blue, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+    }),
+    gh5NeckButton(proto.Gh5NeckButtonType.Gh5Orange, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    }),
   ];
 }
 
@@ -1103,62 +2112,144 @@ export function getGh5NeckDefaults(subType: proto.SubType, deviceId: number): pr
 export function getProtarNeckDefaults(subType: proto.SubType, deviceId: number): proto.IMapping[] {
   if (subType === proto.SubType.ProGuitarMustang || subType === proto.SubType.ProGuitarSquire) {
     return [
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckLowEFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFret }),
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckAFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_AFret }),
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckDFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_DFret }),
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckGFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_GFret }),
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckBFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_BFret }),
-      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckHighEFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFret }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Green }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Red }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Yellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Blue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Orange }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_SoloGreen }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_SoloRed }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_SoloYellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_SoloBlue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_SoloOrange }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckLowEFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFret,
+      }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckAFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_AFret,
+      }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckDFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_DFret,
+      }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckGFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_GFret,
+      }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckBFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_BFret,
+      }),
+      protarNeckAxis(proto.ProGuitarNeckAxisType.ProGuitarNeckHighEFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFret,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Green,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Red,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Yellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Blue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Orange,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloGreen,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloRed,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloYellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloBlue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloOrange,
+      }),
     ];
   }
 
   if (subType === proto.SubType.RockBandGuitar) {
     return [
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, {
+        rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+      }),
     ];
   }
 
   if (subType === proto.SubType.GuitarHeroGuitar) {
     return [
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue }),
-      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloGreen, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloRed, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloYellow, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloBlue, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue,
+      }),
+      protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckSoloOrange, deviceId, {
+        ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange,
+      }),
     ];
   }
 
   // Fallback to Gamepad
   return [
-    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckGreen, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_A,
+    }),
+    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckRed, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_B,
+    }),
+    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckYellow, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_X,
+    }),
+    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckBlue, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+    }),
+    protarNeckButton(proto.ProGuitarNeckButtonType.ProGuitarNeckOrange, deviceId, {
+      gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
+    }),
   ];
 }
 
@@ -1172,53 +2263,107 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
       midiNoteAxis(38, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad }),
       midiNoteAxis(40, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad }),
       // Yellow Pad (High Tom - Note 48, 50)
-      midiNoteAxis(48, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad }),
-      midiNoteAxis(50, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad }),
+      midiNoteAxis(48, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad,
+      }),
+      midiNoteAxis(50, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad,
+      }),
       // Yellow Cymbal (Hi-Hat - Note 46 Open, 42 Closed)
-      midiNoteAxis(46, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal }),
-      midiNoteAxis(42, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal }),
+      midiNoteAxis(46, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal,
+      }),
+      midiNoteAxis(42, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal,
+      }),
       // Blue Pad (Mid Tom - Note 45, 47)
       midiNoteAxis(45, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad }),
       midiNoteAxis(47, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad }),
       // Blue Cymbal (Ride Cymbal - Note 51, 59)
-      midiNoteAxis(51, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal }),
-      midiNoteAxis(59, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal }),
+      midiNoteAxis(51, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal,
+      }),
+      midiNoteAxis(59, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BlueCymbal,
+      }),
       // Green Pad (Floor Tom - Note 43, 41)
-      midiNoteAxis(43, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad }),
-      midiNoteAxis(41, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad }),
+      midiNoteAxis(43, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
+      }),
+      midiNoteAxis(41, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
+      }),
       // Green Cymbal (Crash Cymbal - Note 49, 57)
-      midiNoteAxis(49, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal }),
-      midiNoteAxis(57, deviceId, { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal }),
+      midiNoteAxis(49, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal,
+      }),
+      midiNoteAxis(57, deviceId, {
+        rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal,
+      }),
       // Kick 1 (Bass Drum - Note 36, 35)
-      midiNoteButton(36, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
-      midiNoteButton(35, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal }),
+      midiNoteButton(36, deviceId, {
+        rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal,
+      }),
+      midiNoteButton(35, deviceId, {
+        rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal,
+      }),
       // Kick 2 (Hi-Hat Pedal / Secondary Kick - Note 44)
-      midiNoteButton(44, deviceId, { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal }),
+      midiNoteButton(44, deviceId, {
+        rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal,
+      }),
     ];
   }
 
   if (subType === proto.SubType.GuitarHeroDrums) {
     return [
       // Red Pad (Snare - Note 38, Rimshot 40)
-      midiNoteAxis(38, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad }),
-      midiNoteAxis(40, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad }),
+      midiNoteAxis(38, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
+      }),
+      midiNoteAxis(40, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
+      }),
       // Yellow Cymbal (Hi-Hat - Note 46 Open, 42 Closed)
-      midiNoteAxis(46, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }),
-      midiNoteAxis(42, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad }),
+      midiNoteAxis(46, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+      }),
+      midiNoteAxis(42, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
+      }),
       // Blue Pad (Tom 1 / Mid Tom - Note 48, 50, 45)
-      midiNoteAxis(48, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }),
-      midiNoteAxis(50, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }),
-      midiNoteAxis(45, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad }),
+      midiNoteAxis(48, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+      }),
+      midiNoteAxis(50, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+      }),
+      midiNoteAxis(45, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
+      }),
       // Orange Cymbal (Crash / Ride - Note 49, 51, 57)
-      midiNoteAxis(49, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad }),
-      midiNoteAxis(51, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad }),
-      midiNoteAxis(57, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad }),
+      midiNoteAxis(49, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
+      }),
+      midiNoteAxis(51, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
+      }),
+      midiNoteAxis(57, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
+      }),
       // Green Pad (Floor Tom - Note 43, 41)
-      midiNoteAxis(43, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }),
-      midiNoteAxis(41, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad }),
+      midiNoteAxis(43, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+      }),
+      midiNoteAxis(41, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
+      }),
       // Kick Pedal (Bass Drum - Note 36, 35)
-      midiNoteAxis(36, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
-      midiNoteAxis(35, deviceId, { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal }),
+      midiNoteAxis(36, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
+      }),
+      midiNoteAxis(35, deviceId, {
+        ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
+      }),
     ];
   }
 
@@ -1228,11 +2373,15 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
       midiNoteButton(43, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
       midiNoteButton(42, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
       midiNoteButton(46, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
-      midiNoteButton(49, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
-      midiNoteButton(51, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+      midiNoteButton(49, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
+      midiNoteButton(51, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
+      }),
     ];
   }
-    
+
   if (subType === proto.SubType.ProKeys) {
     return [
       // 25 Keys starting from root MIDI note 48 (C3), Channel 1
@@ -1240,9 +2389,18 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
       // Pedal: CC 64 (Sustain) on Channel 1
       midiCcAxis(64, deviceId, { proKeyboardAxis: proto.ProKeyboardAxisType.ProKeyboardPedal }, 1),
       // Touch Strip: Pitch Bend on Channel 1
-      midiPitchBendAxis(deviceId, { proKeyboardAxis: proto.ProKeyboardAxisType.ProKeyboardTouchPad }, 1),
+      midiPitchBendAxis(
+        deviceId,
+        { proKeyboardAxis: proto.ProKeyboardAxisType.ProKeyboardTouchPad },
+        1
+      ),
       // Overdrive: Note 116 on Channel 1
-      midiNoteButton(116, deviceId, { proKeyboardButton: proto.ProKeyboardButtonType.ProKeyboardOverdrive }, 1),
+      midiNoteButton(
+        116,
+        deviceId,
+        { proKeyboardButton: proto.ProKeyboardButtonType.ProKeyboardOverdrive },
+        1
+      ),
       // Gamepad navigation buttons
       midiNoteButton(0, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }, 1),
       midiNoteButton(1, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }, 1),
@@ -1261,41 +2419,104 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
   if (subType === proto.SubType.ProGuitarMustang || subType === proto.SubType.ProGuitarSquire) {
     return [
       // Fret axes
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_LowEFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFret }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_AFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_AFret }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_DFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_DFret }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_GFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_GFret }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_BFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_BFret }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_HighEFret, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFret }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_LowEFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFret,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_AFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_AFret,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_DFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_DFret,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_GFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_GFret,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_BFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_BFret,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_HighEFret, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFret,
+      }),
       // Velocity axes
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_LowEFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFretVelocity }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_AFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_AFretVelocity }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_DFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_DFretVelocity }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_GFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_GFretVelocity }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_BFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_BFretVelocity }),
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_HighEFretVelocity, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFretVelocity }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_LowEFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_LowEFretVelocity,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_AFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_AFretVelocity,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_DFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_DFretVelocity,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_GFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_GFretVelocity,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_BFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_BFretVelocity,
+      }),
+      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_HighEFretVelocity, deviceId, {
+        proAxis: proto.ProGuitarAxisType.ProGuitar_HighEFretVelocity,
+      }),
       // Tilt
-      midiProGuitarAxis(proto.ProGuitarAxisType.ProGuitar_Tilt, deviceId, { proAxis: proto.ProGuitarAxisType.ProGuitar_Tilt }, 32767),
+      midiProGuitarAxis(
+        proto.ProGuitarAxisType.ProGuitar_Tilt,
+        deviceId,
+        { proAxis: proto.ProGuitarAxisType.ProGuitar_Tilt },
+        32767
+      ),
       // Pedal
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Pedal, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Pedal }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Pedal, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Pedal,
+      }),
       // 5-fret buttons
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Green, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Green }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Red, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Red }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Yellow, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Yellow }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Blue, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Blue }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Orange, deviceId, { proButton: proto.ProGuitarButtonType.ProGuitar_Orange }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Green, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Green,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Red, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Red,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Yellow, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Yellow,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Blue, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Blue,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Orange, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_Orange,
+      }),
       // Navigation / Gamepad buttons
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_A, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_A }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_B, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_B }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_X, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_X }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Y, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadUp, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadDown, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadLeft, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadRight, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Back, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Start, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
-      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Guide, deviceId, { gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_A, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_A,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_B, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_B,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_X, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_X,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Y, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Y,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_DpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Back, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Start, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Guide, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Guide,
+      }),
     ];
   }
 
@@ -1448,7 +2669,7 @@ export const USB_HOST_INPUT_SUBTYPES: proto.SubType[] = [
   proto.SubType.Dancepad,
   proto.SubType.Taiko,
   proto.SubType.KeyboardMouse,
-  proto.SubType.Midi
+  proto.SubType.Midi,
 ];
 
 const SUBTYPE_OUTPUT_KEYS: Partial<Record<keyof proto.IOutput, proto.SubType>> = (() => {
@@ -1513,9 +2734,7 @@ export function getDefaultUsbOutput(
   if (match) {
     return {
       isAnalog: isAxis,
-      output: isAxis
-        ? (match.input?.usbAxis?.axis ?? {})
-        : (match.input?.usbButton?.button ?? {}),
+      output: isAxis ? (match.input?.usbAxis?.axis ?? {}) : (match.input?.usbButton?.button ?? {}),
     };
   }
   return isAxis

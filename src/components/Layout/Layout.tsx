@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   IconAlertCircle,
   IconBuildingStore,
@@ -6,6 +7,7 @@ import {
   IconCopy,
   IconDeviceFloppy,
   IconDeviceGamepad3,
+  IconGuitarPick,
   IconMoon,
   IconPiano,
   IconPlus,
@@ -14,7 +16,6 @@ import {
   IconTag,
   IconTrash,
 } from '@tabler/icons-react';
-import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Link as RouterLink,
@@ -78,10 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
     setSaveStatus('saving');
     try {
-      await Promise.all([
-        commitConfig(),
-        new Promise((resolve) => setTimeout(resolve, 600)),
-      ]);
+      await Promise.all([commitConfig(), new Promise((resolve) => setTimeout(resolve, 600))]);
       setSaveStatus('saved');
       saveTimeoutRef.current = setTimeout(() => {
         setSaveStatus('idle');
@@ -168,7 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       ? URL.createObjectURL(
                           new Blob([new Uint8Array(toolInfo.logo)], { type: 'image/png' })
                         )
-                      : 'Icons/logoSide.png'
+                      : '/Icons/logoSide.png'
                   }
                   height={40}
                   fit="scale-down"
@@ -182,10 +180,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       saveStatus === 'saved'
                         ? 'teal'
                         : saveStatus === 'error'
-                        ? 'red'
-                        : saveStatus === 'saving'
-                        ? 'blue'
-                        : 'red'
+                          ? 'red'
+                          : saveStatus === 'saving'
+                            ? 'blue'
+                            : 'red'
                     }
                     loading={saveStatus === 'saving'}
                     loaderProps={{ type: 'dots' }}
@@ -209,17 +207,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {saveStatus === 'saving'
                       ? t('save.saving', 'Saving...')
                       : saveStatus === 'saved'
-                      ? t('save.saved', 'Saved!')
-                      : saveStatus === 'error'
-                      ? t('save.failed', 'Save failed')
-                      : t('save.saveChanges', 'Save changes')}
+                        ? t('save.saved', 'Saved!')
+                        : saveStatus === 'error'
+                          ? t('save.failed', 'Save failed')
+                          : t('save.saveChanges', 'Save changes')}
                   </Button>
                 )}
               </Flex>
             </Grid.Col>
             <Grid.Col span="auto">
               <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
-                <ActionIcon variant="filled" aria-label="Theme" onClick={toggleColorScheme}>
+                <ActionIcon variant="filled" aria-label="Theme" onClick={toggleColorScheme} />
+                <ActionIcon
+                  variant="filled"
+                  aria-label={t('layout.theme', 'Theme')}
+                  onClick={toggleColorScheme}
+                >
                   {colorScheme === 'dark' && <IconSun />}
                   {colorScheme === 'light' && <IconMoon />}
                   {colorScheme === 'auto' && <IconMoon />}
@@ -236,8 +239,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               pollInputs(false);
               nav('/');
             }}
-            label="Main"
+            label={t('nav.main', 'Main')}
             leftSection={<IconSettings size={16} stroke={1.5} />}
+          />
+          <NavLink
+            component={RouterNavLink}
+            to="/guides"
+            onClick={() => {
+              pollInputs(false);
+              nav('/guides');
+            }}
+            label={t('guides.navTitle', 'Build Guides & Docs')}
+            leftSection={<IconGuitarPick size={16} stroke={1.5} />}
           />
           {!connected && (
             <NavLink
@@ -246,7 +259,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               onClick={() => {
                 nav('/setup');
               }}
-              label="Setup a new device"
+              label={t('nav.setup', 'Setup a new device')}
               leftSection={<IconChevronRight size={16} stroke={1.5} />}
             />
           )}
@@ -261,7 +274,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     pollInputs(false);
                     nav('/devices');
                   }}
-                  label="Devices"
+                  label={t('nav.devices', 'Devices')}
                   leftSection={<IconSettings size={16} stroke={1.5} />}
                 />
               )}
@@ -274,7 +287,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     pollInputs(false);
                     nav('/labels');
                   }}
-                  label="Pin Labels"
+                  label={t('nav.pinLabels', 'Pin Labels')}
                   leftSection={<IconTag size={16} stroke={1.5} />}
                 />
               )}
@@ -287,14 +300,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     pollInputs(false);
                     nav('/debug');
                   }}
-                  label="Debug"
+                  label={t('nav.debug', 'Debug')}
                   leftSection={<IconPiano size={16} stroke={1.5} />}
                 />
               )}
               <NavLink
                 disabled={updating}
                 href="#profiles"
-                label="Profiles"
+                label={t('nav.profiles', 'Profiles')}
                 leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
                 defaultOpened
               >
@@ -304,10 +317,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
                   if (instanceCount <= 1) {
                     const label = (
-                      <Group gap="xs" justify="space-between" wrap="nowrap" style={{ width: '100%' }}>
+                      <Group
+                        gap="xs"
+                        justify="space-between"
+                        wrap="nowrap"
+                        style={{ width: '100%' }}
+                      >
                         <span>{x.opts.name}</span>
                         <Group gap={4} wrap="nowrap">
                           {instanceCount === 1 && <Badge>Active</Badge>}
+                          {instanceCount === 1 && <Badge>{t('state.active', 'Active')}</Badge>}
                           {!simpleMode && (
                             <>
                               <ActionIcon
@@ -351,9 +370,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         to="/profiles"
                         onClick={() => setActiveProfile(i.toString(), 0)}
                         active={
-                          profilePage != null &&
-                          activeProfile === i &&
-                          currentProfileInstance === 0
+                          profilePage != null && activeProfile === i && currentProfileInstance === 0
                         }
                         label={label}
                         leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
@@ -364,10 +381,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   // Profile is assigned multiple times (e.g. 2 gamepads and 2 drum kits) -> show each instance as a nav link item
                   return Array.from({ length: instanceCount }).map((_, instanceIdx) => {
                     const label = (
-                      <Group gap="xs" justify="space-between" wrap="nowrap" style={{ width: '100%' }}>
+                      <Group
+                        gap="xs"
+                        justify="space-between"
+                        wrap="nowrap"
+                        style={{ width: '100%' }}
+                      >
                         <span>{`${x.opts.name} (${instanceIdx + 1})`}</span>
                         <Group gap={4} wrap="nowrap">
                           <Badge>Active</Badge>
+                          <Badge>{t('state.active', 'Active')}</Badge>
                           {!simpleMode && (
                             <>
                               <ActionIcon
@@ -425,7 +448,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <NavLink
                     disabled={updating}
                     href="#add-profile"
-                    label="Add profile"
+                    label={t('nav.addProfile', 'Add profile')}
                     onClick={addProfile}
                     leftSection={<IconPlus size={16} stroke={1.5} />}
                   />
@@ -442,7 +465,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 pollInputs(false);
                 nav('/commercial-tool');
               }}
-              label="Commercial Tooling"
+              label={t('nav.commercial', 'Commercial Tooling')}
               leftSection={<IconBuildingStore size={16} stroke={1.5} />}
             />
           )}
