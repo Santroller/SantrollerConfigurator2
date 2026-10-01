@@ -8,28 +8,68 @@ import {
   Group,
   Image,
   Paper,
+  SegmentedControl,
   Stack,
   Table,
   Text,
   Title,
 } from '@mantine/core';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideList } from '@/guides/components/GuideList';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
-import { applyRecommendedPinout, RECOMMENDED_PICO_PINOUT } from '../guitarMappingUtils';
+import {
+  applyRecommendedPinout,
+  getGuitarFamily,
+  GuitarFamily,
+  RECOMMENDED_PICO_PINOUT_GH,
+  RECOMMENDED_PICO_PINOUT_RB,
+  setGuitarFamily,
+} from '../guitarMappingUtils';
 
 export function IntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
   const [applied, setApplied] = React.useState(false);
+  const [family, setFamilyState] = React.useState<GuitarFamily>(() =>
+    getGuitarFamily(useConfigStore.getState())
+  );
+
+  const handleFamilyChange = (val: GuitarFamily) => {
+    setFamilyState(val);
+    setGuitarFamily(val);
+  };
 
   const handleApplyRecommended = () => {
-    applyRecommendedPinout();
+    applyRecommendedPinout(family);
     setApplied(true);
     setTimeout(() => setApplied(false), 2500);
   };
 
+  const currentPinout = family === 'rb' ? RECOMMENDED_PICO_PINOUT_RB : RECOMMENDED_PICO_PINOUT_GH;
+
   const guideContent = (
     <Stack gap="md">
+      <Stack gap={4}>
+        <Text size="xs" fw={700} c="dimmed">
+          {t('guides.direct-pico-guitar.steps.intro.guitarFamilyLabel')}
+        </Text>
+        <SegmentedControl
+          size="sm"
+          value={family}
+          onChange={(v) => handleFamilyChange(v as GuitarFamily)}
+          data={[
+            {
+              label: t('guides.direct-pico-guitar.steps.intro.familyGh'),
+              value: 'gh',
+            },
+            {
+              label: t('guides.direct-pico-guitar.steps.intro.familyRb'),
+              value: 'rb',
+            },
+          ]}
+        />
+      </Stack>
+
       <Text size="sm">{t('guides.direct-pico-guitar.steps.intro.welcome')}</Text>
 
       <Image src="/guides/guitar/direct.jpg" radius="md" alt="Finished guitar rewire" />
@@ -67,8 +107,8 @@ export function IntroStep(props: GuideStepProps) {
             <Text fw={600} size="sm">
               {t('guides.direct-pico-guitar.steps.intro.standardPinout')}
             </Text>
-            <Badge color="gray" variant="light" size="xs">
-              {t('guides.direct-pico-guitar.steps.intro.recommended')}
+            <Badge color={family === 'rb' ? 'violet' : 'blue'} variant="light" size="xs">
+              {family === 'rb' ? 'Rock Band' : 'Guitar Hero'}
             </Badge>
           </Group>
 
@@ -103,7 +143,7 @@ export function IntroStep(props: GuideStepProps) {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {RECOMMENDED_PICO_PINOUT.map((item) => (
+          {currentPinout.map((item) => (
             <Table.Tr key={item.label}>
               <Table.Td>
                 <Group gap={6}>
@@ -141,8 +181,8 @@ export function IntroStep(props: GuideStepProps) {
   return (
     <StepWorkbench
       title={t('guides.direct-pico-guitar.steps.intro.title')}
-      badge={t('guides.direct-pico-guitar.steps.intro.badge')}
-      badgeColor="blue"
+      badge={family === 'rb' ? 'Rock Band' : t('guides.direct-pico-guitar.steps.intro.badge')}
+      badgeColor={family === 'rb' ? 'violet' : 'blue'}
       description={t('guides.direct-pico-guitar.steps.intro.description')}
       guideContent={guideContent}
       workbenchContent={workbenchContent}

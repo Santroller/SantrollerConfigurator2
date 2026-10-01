@@ -84,8 +84,12 @@ import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
 import {
   createDeviceInput,
+  createSlotInput,
   createStandaloneInput,
+  getHostSourceType,
   getInputDeviceId,
+  getProfileSlotLabel,
+  getProfileSlots,
   isAnalogInput,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
@@ -96,6 +100,7 @@ import {
   DeviceStatus,
   isDeviceAssigned,
   ps4Subtypes,
+  requiresAssignment,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
 import { ASCII_TO_HID } from '@/devices/keyboard';
@@ -1274,12 +1279,18 @@ function SantrollerLabel({
       </Text>
     );
   }
-  if (input.midi?.midiProGuitarAxis?.axis != null) {
+  if (input.midi?.midiNote) {
     return (
       <Text>
-        {t(`input.midiProGuitarAxis.${proto.ProGuitarAxisType[input.midi.midiProGuitarAxis.axis]}`)}
+        {t('input.midiNote', 'MIDI Note')}: {input.midi.midiNote.note}
       </Text>
     );
+  }
+  if (input.midi?.midiControlChange) {
+    return <Text>CC {input.midi.midiControlChange.cc}</Text>;
+  }
+  if (input.midi?.midiPitchBend) {
+    return <Text>{t('input.midiPitchBend', 'Pitch Bend')}</Text>;
   }
   return fallback ? <Text>{t(`outputs.${label}`)}</Text> : null;
 }
@@ -1328,7 +1339,7 @@ function SantrollerInput({
 }) {
   const deviceId = getInputDeviceId(input) ?? -1;
   const { t } = useTranslation();
-  const deviceStatus = useConfigStore.getState().deviceStatus;
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
   const detectPins = useConfigStore.getState().detectPins;
   const detected = useConfigStore.getState().detected;
   const detectedMapping = useConfigStore.getState().detectedMapping;
@@ -1336,7 +1347,7 @@ function SantrollerInput({
   const detectedActivation = useConfigStore.getState().detectedActivation;
   const detectedLed = useConfigStore.getState().detectedLed;
   const detecting = useConfigStore((state) => state.detecting);
-  const device = useConfigStore((state) => state.deviceStatus[deviceId]);
+  const deviceStatusForId = useConfigStore((state) => state.deviceStatus[deviceId]);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const currentProfile = useConfigStore((state) => state.currentProfile);
   const profile = useConfigStore((state) => state.config.profiles?.[currentProfile]);
@@ -1356,26 +1367,21 @@ function SantrollerInput({
     [profile?.assignments]
   );
 
-  const effectiveUsbType = useMemo(() => {
-    if (input.midi) {
-      return proto.SubType.Midi;
-    }
-    const currentOutput = input.usbAxis?.axis || input.usbButton?.button;
-    const inferred = getOutputSubType(currentOutput);
-    if (inferred != null) {
-      return inferred;
-    }
+  const profileSlots = useMemo(() => getProfileSlots(profile, t), [profile, t]);
+  const hasUnassignedDevice = useMemo(
+    () =>
+      Object.values(deviceStatus).some(
+        (status) => requiresAssignment(status.type) && !isDeviceAssigned(status.type, profile)
+      ),
+    [deviceStatus, profile]
+  );
+  const matchingSlot = useMemo(
+    () => profileSlots.find((s) => s.slotId === deviceId),
+    [profileSlots, deviceId]
+  );
+  const device = input.midi && matchingSlot ? undefined : deviceStatusForId;
 
-    const assigned = allAssignments.find((a) => a.usbType != null)?.usbType;
-    if (assigned != null) {
-      return assigned;
-    }
-
-    if (USB_HOST_SUBTYPES.includes(type)) {
-      return type;
-    }
-    return proto.SubType.Gamepad;
-  }, [input.usbAxis?.axis, input.usbButton?.button, allAssignments, type]);
+  const effectiveUsbType = input.midi ? proto.SubType.Midi : (matchingSlot?.item.usbType ?? type);
 
   const effectiveBtType = useMemo(() => {
     if (input.midi) {
@@ -1387,6 +1393,10 @@ function SantrollerInput({
       return inferred;
     }
 
+    if (matchingSlot?.item.bluetoothType != null) {
+      return matchingSlot.item.bluetoothType;
+    }
+
     const assigned = allAssignments.find((a) => a.bluetoothType != null)?.bluetoothType;
     if (assigned != null) {
       return assigned;
@@ -1396,7 +1406,7 @@ function SantrollerInput({
       return type;
     }
     return proto.SubType.Gamepad;
-  }, [input.btAxis?.axis, input.btButton?.button, allAssignments, type]);
+  }, [input.btAxis?.axis, input.btButton?.button, input.midi, matchingSlot, allAssignments, type]);
 
   if (simpleMode) {
     return <SantrollerLabel input={input} label="" fallback={false} />;
@@ -1425,19 +1435,45 @@ function SantrollerInput({
         {t('devices.held')}
       </Text>
     );
+  } else if (input.shifted) {
+    deviceValue = (
+      <Text fz="sm" span>
+        {t('devices.shifted')}
+      </Text>
+    );
   } else if (deviceId !== undefined && deviceId !== -1) {
-    const dev = deviceStatus[deviceId.toString()];
-    if (dev) {
+    if (matchingSlot) {
       deviceValue = (
         <Group gap="2">
           <Text fz="sm" span>
-            {t(`devices.${dev.type}`)}
-          </Text>
-          <Text fz="xs" span opacity="0.7">
-            ({DeviceStatus.label(dev)})
+            {matchingSlot.label}
           </Text>
         </Group>
       );
+    } else {
+      const dev = deviceStatus[deviceId.toString()];
+      if (dev) {
+        deviceValue = (
+          <Group gap="2">
+            <Text fz="sm" span>
+              {t(`devices.${dev.type}`)}
+            </Text>
+            <Text fz="xs" span opacity="0.7">
+              ({DeviceStatus.label(dev)})
+            </Text>
+          </Group>
+        );
+      } else {
+        const isSlotInput =
+          input.usbAxis || input.usbButton || input.btAxis || input.btButton || input.midi;
+        if (isSlotInput) {
+          deviceValue = (
+            <Text fz="sm" span>
+              {t('assignments.slot', 'Slot')} {deviceId}
+            </Text>
+          );
+        }
+      }
     }
   }
   if (
@@ -1474,6 +1510,17 @@ function SantrollerInput({
           store={deviceCombobox}
           onOptionSubmit={(val) => {
             deviceCombobox.closeDropdown();
+            if (val.startsWith('slot:')) {
+              const slotId = parseInt(val.slice(5), 10);
+              const slot = profileSlots.find((s) => s.slotId === slotId);
+              if (slot) {
+                const nextInput = createSlotInput(slot, { axis, button });
+                if (nextInput) {
+                  dispatch(nextInput);
+                }
+              }
+              return;
+            }
             if (isNumberLike(val)) {
               const deviceid = parseInt(val, 10);
               const targetDevice = deviceStatus[deviceid];
@@ -1512,30 +1559,49 @@ function SantrollerInput({
           <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
             <Combobox.Options>
               {Object.values(deviceStatus)
-                .filter((status) => isInputDeviceKind(status.type))
-                .map((item) => {
-                  const assigned = isDeviceAssigned(item.type, profile);
-                  return (
-                    <Combobox.Option value={item.id} key={item.id} disabled={!assigned}>
-                      <Group justify="space-between" wrap="nowrap" w="100%">
-                        <Group gap="2">
-                          <Text fz="sm" span>
-                            {t(`devices.${item.type}`)}
-                          </Text>
+                .filter(
+                  (status) => isInputDeviceKind(status.type) && !requiresAssignment(status.type)
+                )
+                .map((item) => (
+                  <Combobox.Option value={item.id} key={item.id}>
+                    <Group justify="space-between" wrap="nowrap" w="100%">
+                      <Group gap="2">
+                        <Text fz="sm" span>
+                          {t(`devices.${item.type}`)}
+                        </Text>
 
-                          <Text fz="xs" span opacity="0.7">
-                            ({DeviceStatus.label(item)})
-                          </Text>
-                        </Group>
-                        {!assigned && (
-                          <Badge size="xs" color="red" variant="light">
-                            {t('assignments.not_assigned')}
-                          </Badge>
-                        )}
+                        <Text fz="xs" span opacity="0.7">
+                          ({DeviceStatus.label(item)})
+                        </Text>
                       </Group>
-                    </Combobox.Option>
-                  );
-                })}
+                    </Group>
+                  </Combobox.Option>
+                ))}
+              {profileSlots.map((slot) => (
+                <Combobox.Option value={`slot:${slot.slotId}`} key={`slot:${slot.slotId}`}>
+                  <Group justify="space-between" wrap="nowrap" w="100%">
+                    <Text fz="sm" span>
+                      {slot.label}
+                    </Text>
+                  </Group>
+                </Combobox.Option>
+              ))}
+              {profileSlots.length === 0 &&
+                Object.values(deviceStatus).some((s) => requiresAssignment(s.type)) && (
+                  <Combobox.Option value="no_slots" disabled>
+                    <Group justify="space-between" wrap="nowrap" w="100%">
+                      <Text fz="sm" c="dimmed" span>
+                        {t(
+                          'assignments.no_slots_assigned',
+                          'No controller sources assigned in Profile'
+                        )}
+                      </Text>
+                      <Badge size="xs" color="red" variant="light">
+                        {t('assignments.not_assigned')}
+                      </Badge>
+                    </Group>
+                  </Combobox.Option>
+                )}
               <Combobox.Option value="gpio_analog">
                 <Group gap="2">
                   <Text fz="sm" span>
@@ -1558,6 +1624,7 @@ function SantrollerInput({
               </Combobox.Option>
               <Combobox.Option value="shortcut">{t('devices.shortcut')}</Combobox.Option>
               <Combobox.Option value="held">{t('devices.held')}</Combobox.Option>
+              <Combobox.Option value="shifted">{t('devices.shifted')}</Combobox.Option>
             </Combobox.Options>
           </Combobox.Dropdown>
         </Combobox>
@@ -1573,6 +1640,14 @@ function SantrollerInput({
         >
           {deviceValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
         </InputBase>
+      )}
+      {hasUnassignedDevice && (
+        <Text size="xs" c="dimmed" mt={4}>
+          {t(
+            'assignments.device_slot_hint',
+            "Connected controllers and adapters only appear here after you add a matching source in this profile's Connected Controller / Adapter assignments."
+          )}
+        </Text>
       )}
       <Space h="md" />
       {input.shortcut && (
@@ -1671,13 +1746,71 @@ function SantrollerInput({
           />
         </>
       )}
+      {input.shifted && (
+        <Stack gap="xs" mt="xs">
+          <Switch
+            label={t('shifted.invertShift')}
+            checked={input.shifted.invertShift ?? false}
+            onChange={(event) =>
+              dispatch({
+                shifted: {
+                  ...input.shifted!,
+                  invertShift: event.currentTarget.checked,
+                },
+              })
+            }
+          />
+          <Text size="xs" fw={700} c="dimmed">
+            {t('shifted.primaryInput')}
+          </Text>
+          <SantrollerInput
+            axis={!!axis}
+            button={!!button}
+            mode={mode}
+            legendMode={legendMode}
+            type={type}
+            input={input.shifted.input ?? {}}
+            dispatch={(changed) =>
+              dispatch({
+                shifted: {
+                  ...input.shifted!,
+                  input: changed,
+                },
+              })
+            }
+            mappingIdx={mappingIdx}
+          />
+          <Text size="xs" fw={700} c="dimmed">
+            {t('shifted.shiftInput')}
+          </Text>
+          <SantrollerInput
+            axis={!!axis}
+            button={!!button}
+            mode={mode}
+            legendMode={legendMode}
+            type={type}
+            input={input.shifted.shift ?? {}}
+            dispatch={(changed) =>
+              dispatch({
+                shifted: {
+                  ...input.shifted!,
+                  shift: changed,
+                },
+              })
+            }
+            mappingIdx={mappingIdx}
+          />
+        </Stack>
+      )}
       {input.cycle && (
         <>
           <SegmentedControl
-            data={device.device.cycle!.values!.map((x) => x.toString())}
-            value={device.device.cycle!.values![
-              deviceStatus[input.cycle.deviceid].cycleState
-            ].toString()}
+            data={device?.device.cycle?.values?.map((x) => x.toString()) ?? []}
+            value={
+              device?.device.cycle?.values?.[
+                deviceStatus[input.cycle.deviceid].cycleState
+              ]?.toString() ?? ''
+            }
           />
           <Switch
             label={t('cycle.forward_input')}
@@ -1779,24 +1912,49 @@ function SantrollerInput({
       )}
       {(device?.type === 'worldTourDrum' ||
         device?.type === 'bhDrum' ||
-        device?.type === 'midiSerial') && (
+        device?.type === 'midiSerial' ||
+        matchingSlot?.deviceKind === 'midi' ||
+        (input.midi &&
+          !device &&
+          !matchingSlot &&
+          !input.usbAxis &&
+          !input.usbButton &&
+          !input.btAxis &&
+          !input.btButton)) && (
         <DropdownOutputBox
           title="input"
           valMidi={input.midi ?? undefined}
-          label={`${device?.type}.inputs`}
+          label="outputs"
           midi
           legendMode={legendMode}
-          type={type}
+          type={proto.SubType.Midi}
           dispatch={(_) => {}}
           dispatch2={(_) => {}}
           dispatchMidi={(midi) =>
             dispatch({
-              midi: { ...midi!, deviceid: deviceId },
+              midi: {
+                ...midi!,
+                deviceid: deviceId,
+                ...(matchingSlot?.item.midiChannel != null && {
+                  midiNote: midi?.midiNote
+                    ? { ...midi.midiNote, channel: matchingSlot.item.midiChannel }
+                    : undefined,
+                  midiControlChange: midi?.midiControlChange
+                    ? { ...midi.midiControlChange, channel: matchingSlot.item.midiChannel }
+                    : undefined,
+                  midiPitchBend: midi?.midiPitchBend
+                    ? { ...midi.midiPitchBend, channel: matchingSlot.item.midiChannel }
+                    : undefined,
+                }),
+              },
             })
           }
         />
       )}
-      {(device?.type === 'wii' || input.wiiAxis || input.wiiButton) && (
+      {(device?.type === 'wii' ||
+        matchingSlot?.deviceKind === 'wii' ||
+        input.wiiAxis ||
+        input.wiiButton) && (
         <>
           <DropdownOutputBox
             title="input"
@@ -1833,7 +1991,10 @@ function SantrollerInput({
           />
         </>
       )}
-      {(device?.type === 'psx' || input.ps2Axis || input.ps2Button) && (
+      {(device?.type === 'psx' ||
+        matchingSlot?.deviceKind === 'psx' ||
+        input.ps2Axis ||
+        input.ps2Button) && (
         <>
           <DropdownOutputBox
             title="input"
@@ -1857,49 +2018,11 @@ function SantrollerInput({
           />
         </>
       )}
-      {(device?.type === 'usbHost' || input.usbAxis || input.usbButton) && (
+      {(device?.type === 'usbHost' ||
+        matchingSlot?.deviceKind === 'usbHost' ||
+        input.usbAxis ||
+        input.usbButton) && (
         <>
-          <DropdownBox
-            title="activation.usbType"
-            e={USB_HOST_INPUT_SUBTYPES_ENUM}
-            val={effectiveUsbType}
-            label="subType"
-            dispatch={(newType) => {
-              const { isAnalog: newAnalog, output } = getDefaultUsbOutput(
-                newType as proto.SubType,
-                !!axis
-              );
-              dispatch(
-                newType === proto.SubType.Midi
-                  ? {
-                      midi: {
-                        deviceid: deviceId,
-                        midiNote: {
-                          channel: 10,
-                          note: 1,
-                        },
-                      },
-                    }
-                  : newAnalog
-                    ? {
-                        usbAxis: {
-                          deviceid: (input.usbAxis?.deviceid ||
-                            input.usbButton?.deviceid ||
-                            deviceId)!,
-                          axis: output,
-                        },
-                      }
-                    : {
-                        usbButton: {
-                          deviceid: (input.usbAxis?.deviceid ||
-                            input.usbButton?.deviceid ||
-                            deviceId)!,
-                          button: output,
-                        },
-                      }
-              );
-            }}
-          />
           <Space h="md" />
           <OutputBox
             label="outputs"
@@ -1939,7 +2062,10 @@ function SantrollerInput({
           />
         </>
       )}
-      {(device?.type === 'bt' || input.btAxis || input.btButton) && (
+      {(device?.type === 'bt' ||
+        matchingSlot?.deviceKind === 'bt' ||
+        input.btAxis ||
+        input.btButton) && (
         <>
           <DropdownBox
             title="activation.bluetoothType"
@@ -2024,7 +2150,7 @@ function SantrollerInput({
             pin={input.matrix.pin}
             valid={Object.fromEntries(
               Object.entries(AllPinsNamed).filter(
-                (x) => device.device.matrix!.inPins! & (1 << parseInt(x[0], 10))
+                (x) => (device?.device.matrix?.inPins ?? 0) & (1 << parseInt(x[0], 10))
               )
             )}
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, pin } })}
@@ -2034,7 +2160,7 @@ function SantrollerInput({
             pin={input.matrix.outputPin}
             valid={Object.fromEntries(
               Object.entries(AllPinsNamed).filter(
-                (x) => device.device.matrix!.outPins! & (1 << parseInt(x[0], 10))
+                (x) => (device?.device.matrix?.outPins ?? 0) & (1 << parseInt(x[0], 10))
               )
             )}
             dispatch={(pin) => dispatch({ matrix: { ...input.matrix!, outputPin: pin } })}
@@ -2199,7 +2325,7 @@ function SantrollerInput({
 
               <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
                 <Combobox.Options>
-                  {[...Array(device.device.multiplexer?.sixteenChannel ? 16 : 8)].map((_, i) => (
+                  {[...Array(device?.device.multiplexer?.sixteenChannel ? 16 : 8)].map((_, i) => (
                     <Combobox.Option key={i} value={i.toString()}>
                       {t('multiplexer.channel', { channel: i + 1 })}
                     </Combobox.Option>
@@ -2249,18 +2375,20 @@ function SantrollerInput({
               })
             }
           />
-          <NumberInput
-            label={t('input.midiChannel', 'MIDI Channel')}
-            value={input.midi.midiNote.channel}
-            onChange={(val) =>
-              dispatch({
-                midi: {
-                  ...input.midi!,
-                  midiNote: { ...input.midi!.midiNote!, channel: Number(val) },
-                },
-              })
-            }
-          />
+          {matchingSlot?.item.midiChannel == null && (
+            <NumberInput
+              label={t('input.midiChannel', 'MIDI Channel')}
+              value={input.midi.midiNote.channel}
+              onChange={(val) =>
+                dispatch({
+                  midi: {
+                    ...input.midi!,
+                    midiNote: { ...input.midi!.midiNote!, channel: Number(val) },
+                  },
+                })
+              }
+            />
+          )}
         </>
       )}
       {input.midi?.midiControlChange && (
@@ -2277,21 +2405,23 @@ function SantrollerInput({
               })
             }
           />
-          <NumberInput
-            label={t('input.midiChannel')}
-            value={input.midi.midiControlChange.channel}
-            onChange={(val) =>
-              dispatch({
-                midi: {
-                  ...input.midi!,
-                  midiControlChange: { ...input.midi!.midiControlChange!, channel: Number(val) },
-                },
-              })
-            }
-          />
+          {matchingSlot?.item.midiChannel == null && (
+            <NumberInput
+              label={t('input.midiChannel')}
+              value={input.midi.midiControlChange.channel}
+              onChange={(val) =>
+                dispatch({
+                  midi: {
+                    ...input.midi!,
+                    midiControlChange: { ...input.midi!.midiControlChange!, channel: Number(val) },
+                  },
+                })
+              }
+            />
+          )}
         </>
       )}
-      {input.midi?.midiPitchBend && (
+      {input.midi?.midiPitchBend && matchingSlot?.item.midiChannel == null && (
         <>
           <NumberInput
             label={t('input.midiPitchBend')}
@@ -4359,7 +4489,7 @@ function AssignmentOption({ value }: { value: string }) {
     </Stack>
   );
 }
-function SantrollerAssignment({
+export function SantrollerAssignment({
   mapping,
   profileIdx,
   listIdx,
@@ -4839,30 +4969,7 @@ function SantrollerAssignment({
   );
 }
 
-export const getHostSourceType = (item: proto.IProfileAssignmentInfo): string | null => {
-  if (item.wiiExt != null) {
-    return 'wiiExt';
-  }
-  if (item.ps2Cnt != null) {
-    return 'ps2Cnt';
-  }
-  if (item.usbType != null) {
-    return 'usbType';
-  }
-  if (item.usbDevice != null) {
-    return 'usbDevice';
-  }
-  if (item.bluetoothType != null) {
-    return 'bluetoothType';
-  }
-  if (item.bluetoothDevice != null) {
-    return 'bluetoothDevice';
-  }
-  if (item.midiChannel != null) {
-    return 'midiChannel';
-  }
-  return null;
-};
+export { getHostSourceType };
 
 export function ControllerSourcesEditor({
   assignments,
@@ -4925,12 +5032,12 @@ export function ControllerSourcesEditor({
         </Text>
       </Card>
 
-      {hostIndices.map(({ item, idx, type: hType }, listSourceIdx) => (
+      {hostIndices.map(({ item, idx, type: hType }) => (
         <Card key={idx} padding="xs" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
           <Stack gap={4}>
             <Group justify="space-between" align="center">
               <Badge size="sm" variant="light" color="blue">
-                {t(`assignments.source.${hType}`)} #{listSourceIdx + 1}
+                {getProfileSlotLabel(item, idx, t)}
               </Badge>
               <ActionIcon
                 size="xs"
@@ -5154,12 +5261,6 @@ function SantrollerAssignmentList({
 
   const triggerIdx = assignments.findIndex((x) => OtherAssignmentTypes.some((y) => x[y] != null));
   const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
-
-  const isComplex =
-    assignments.filter((x) => DeviceProfileAssignmentTypes.some((y) => x[y] != null)).length > 1 ||
-    assignments.filter((x) => OtherAssignmentTypes.some((y) => x[y] != null)).length > 1;
-
-  const [advancedMode, setAdvancedMode] = useState(isComplex);
 
   const isActive = useConfigStore(
     (state) => state.activationListStatus[profileIdx]?.[listIdx]?.state ?? false
@@ -5578,141 +5679,168 @@ function SantrollerAssignmentList({
           </Alert>
         )}
 
-        {!advancedMode ? (
-          <Stack gap="sm">
-            <Stack gap={4}>
-              <Input.Wrapper
+        <Stack gap="sm">
+          <Stack gap={4}>
+            <Input.Wrapper
+              size="xs"
+              label={t('assignments.step1_title')}
+              description={t('assignments.step1_desc')}
+            >
+              <SegmentedControl
+                fullWidth
                 size="xs"
-                label={t('assignments.step1_title')}
-                description={t('assignments.step1_desc')}
-              >
-                <SegmentedControl
-                  fullWidth
+                value={currentEmulMode}
+                onChange={(val) => {
+                  switch (val) {
+                    case 'consoleType':
+                      updateEmulation({
+                        consoleType: {
+                          consoleType: null,
+                          forcedType: null,
+                          xinputOnWindows: emulationItem?.consoleType?.xinputOnWindows ?? true,
+                          ps4OrPs5Mode: emulationItem?.consoleType?.ps4OrPs5Mode ?? false,
+                        },
+                      });
+                      break;
+                    case 'bluetooth':
+                      updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
+                      break;
+                    case 'ps2Emulation':
+                      updateEmulation({ ps2Emulation: {} });
+                      break;
+                    case 'wiiEmulation':
+                      updateEmulation({ wiiEmulation: {} });
+                      break;
+                  }
+                }}
+                data={targetOptions}
+              />
+            </Input.Wrapper>
+            {currentEmulMode === 'consoleType' && (
+              <Stack gap={4} mt="xs">
+                <Select
                   size="xs"
-                  value={currentEmulMode}
+                  label={t('assignments.usb_mode.label')}
+                  value={currentUsbOption}
                   onChange={(val) => {
+                    const prevConsole = emulationItem?.consoleType;
                     switch (val) {
-                      case 'consoleType':
+                      case 'auto':
                         updateEmulation({
                           consoleType: {
                             consoleType: null,
                             forcedType: null,
-                            xinputOnWindows: emulationItem?.consoleType?.xinputOnWindows ?? true,
-                            ps4OrPs5Mode: emulationItem?.consoleType?.ps4OrPs5Mode ?? false,
+                            xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                            ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
                           },
                         });
                         break;
-                      case 'bluetooth':
-                        updateEmulation({ bluetooth: proto.BluetoothMode.BTStandard });
+                      case 'forced':
+                        updateEmulation({
+                          consoleType: {
+                            consoleType: null,
+                            forcedType: proto.ConsoleMode.ModeXbox360,
+                            xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                            ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
+                          },
+                        });
                         break;
-                      case 'ps2Emulation':
-                        updateEmulation({ ps2Emulation: {} });
-                        break;
-                      case 'wiiEmulation':
-                        updateEmulation({ wiiEmulation: {} });
+                      case 'specific':
+                        updateEmulation({
+                          consoleType: {
+                            consoleType: proto.ConsoleType.ConsolePC,
+                            forcedType: null,
+                            xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
+                            ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
+                          },
+                        });
                         break;
                     }
                   }}
-                  data={targetOptions}
+                  data={[
+                    { value: 'auto', label: t('assignments.usb_mode.auto') },
+                    { value: 'forced', label: t('assignments.usb_mode.forced') },
+                    { value: 'specific', label: t('assignments.usb_mode.specific') },
+                  ]}
                 />
-              </Input.Wrapper>
-              {currentEmulMode === 'consoleType' && (
-                <Stack gap={4} mt="xs">
-                  <Select
-                    size="xs"
-                    label={t('assignments.usb_mode.label')}
-                    value={currentUsbOption}
-                    onChange={(val) => {
-                      const prevConsole = emulationItem?.consoleType;
-                      switch (val) {
-                        case 'auto':
-                          updateEmulation({
-                            consoleType: {
-                              consoleType: null,
-                              forcedType: null,
-                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
-                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
-                            },
-                          });
-                          break;
-                        case 'forced':
-                          updateEmulation({
-                            consoleType: {
-                              consoleType: null,
-                              forcedType: proto.ConsoleMode.ModeXbox360,
-                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
-                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
-                            },
-                          });
-                          break;
-                        case 'specific':
-                          updateEmulation({
-                            consoleType: {
-                              consoleType: proto.ConsoleType.ConsolePC,
-                              forcedType: null,
-                              xinputOnWindows: prevConsole?.xinputOnWindows ?? true,
-                              ps4OrPs5Mode: prevConsole?.ps4OrPs5Mode ?? false,
-                            },
-                          });
-                          break;
-                      }
-                    }}
-                    data={[
-                      { value: 'auto', label: t('assignments.usb_mode.auto') },
-                      { value: 'forced', label: t('assignments.usb_mode.forced') },
-                      { value: 'specific', label: t('assignments.usb_mode.specific') },
-                    ]}
+                {currentUsbOption === 'forced' && (
+                  <DropdownBox
+                    title="activation.forcedType"
+                    e={proto.ConsoleMode}
+                    val={emulationItem?.consoleType?.forcedType ?? proto.ConsoleMode.ModeXbox360}
+                    label="consoleMode"
+                    dispatch={(forcedType) =>
+                      updateEmulation({
+                        consoleType: {
+                          ...emulationItem?.consoleType,
+                          consoleType: null,
+                          forcedType,
+                        },
+                      })
+                    }
                   />
-                  {currentUsbOption === 'forced' && (
-                    <DropdownBox
-                      title="activation.forcedType"
-                      e={proto.ConsoleMode}
-                      val={emulationItem?.consoleType?.forcedType ?? proto.ConsoleMode.ModeXbox360}
-                      label="consoleMode"
-                      dispatch={(forcedType) =>
-                        updateEmulation({
-                          consoleType: {
-                            ...emulationItem?.consoleType,
-                            consoleType: null,
-                            forcedType,
-                          },
-                        })
-                      }
-                    />
-                  )}
-                  {currentUsbOption === 'specific' && (
-                    <DropdownBox
-                      title="activation.consoleType"
-                      e={proto.ConsoleType}
-                      val={emulationItem?.consoleType?.consoleType ?? proto.ConsoleType.ConsolePC}
-                      label="consoleType"
-                      dispatch={(consoleType) =>
-                        updateEmulation({
-                          consoleType: {
-                            ...emulationItem?.consoleType,
-                            consoleType,
-                            forcedType: null,
-                          },
-                        })
-                      }
-                    />
-                  )}
-                  {currentUsbOption === 'auto' && (
-                    <>
+                )}
+                {currentUsbOption === 'specific' && (
+                  <DropdownBox
+                    title="activation.consoleType"
+                    e={proto.ConsoleType}
+                    val={emulationItem?.consoleType?.consoleType ?? proto.ConsoleType.ConsolePC}
+                    label="consoleType"
+                    dispatch={(consoleType) =>
+                      updateEmulation({
+                        consoleType: {
+                          ...emulationItem?.consoleType,
+                          consoleType,
+                          forcedType: null,
+                        },
+                      })
+                    }
+                  />
+                )}
+                {currentUsbOption === 'auto' && (
+                  <>
+                    <Input.Wrapper
+                      size="xs"
+                      label={t('main.xinput_on_windows.label')}
+                      description={t('main.xinput_on_windows.description')}
+                    >
+                      <SegmentedControl
+                        fullWidth
+                        size="xs"
+                        data={[
+                          { label: t('main.xinput_on_windows.XInput'), value: 'true' },
+                          { label: t('main.xinput_on_windows.HID'), value: 'false' },
+                        ]}
+                        value={
+                          (emulationItem?.consoleType?.xinputOnWindows ?? true) ? 'true' : 'false'
+                        }
+                        onChange={(val) =>
+                          updateEmulation({
+                            consoleType: {
+                              ...emulationItem?.consoleType,
+                              consoleType: null,
+                              forcedType: null,
+                              xinputOnWindows: val === 'true',
+                            },
+                          })
+                        }
+                      />
+                    </Input.Wrapper>
+                    {ps4Subtypes.includes(type) && (
                       <Input.Wrapper
                         size="xs"
-                        label={t('main.xinput_on_windows.label')}
-                        description={t('main.xinput_on_windows.description')}
+                        label={t('main.ps4EmulationMode.label')}
+                        description={t('main.ps4EmulationMode.description')}
                       >
                         <SegmentedControl
                           fullWidth
                           size="xs"
                           data={[
-                            { label: t('main.xinput_on_windows.XInput'), value: 'true' },
-                            { label: t('main.xinput_on_windows.HID'), value: 'false' },
+                            { label: t('main.ps4EmulationMode.PS3'), value: 'false' },
+                            { label: t('main.ps4EmulationMode.PS4'), value: 'true' },
                           ]}
                           value={
-                            (emulationItem?.consoleType?.xinputOnWindows ?? true) ? 'true' : 'false'
+                            (emulationItem?.consoleType?.ps4OrPs5Mode ?? false) ? 'true' : 'false'
                           }
                           onChange={(val) =>
                             updateEmulation({
@@ -5720,258 +5848,154 @@ function SantrollerAssignmentList({
                                 ...emulationItem?.consoleType,
                                 consoleType: null,
                                 forcedType: null,
-                                xinputOnWindows: val === 'true',
+                                ps4OrPs5Mode: val === 'true',
                               },
                             })
                           }
                         />
                       </Input.Wrapper>
-                      {ps4Subtypes.includes(type) && (
-                        <Input.Wrapper
-                          size="xs"
-                          label={t('main.ps4EmulationMode.label')}
-                          description={t('main.ps4EmulationMode.description')}
-                        >
-                          <SegmentedControl
-                            fullWidth
-                            size="xs"
-                            data={[
-                              { label: t('main.ps4EmulationMode.PS3'), value: 'false' },
-                              { label: t('main.ps4EmulationMode.PS4'), value: 'true' },
-                            ]}
-                            value={
-                              (emulationItem?.consoleType?.ps4OrPs5Mode ?? false) ? 'true' : 'false'
-                            }
-                            onChange={(val) =>
-                              updateEmulation({
-                                consoleType: {
-                                  ...emulationItem?.consoleType,
-                                  consoleType: null,
-                                  forcedType: null,
-                                  ps4OrPs5Mode: val === 'true',
-                                },
-                              })
-                            }
-                          />
-                        </Input.Wrapper>
-                      )}
-                    </>
-                  )}
-                </Stack>
-              )}
-              {currentEmulMode === 'bluetooth' && (
-                <DropdownBox
-                  title="activation.bluetooth"
-                  e={proto.BluetoothMode}
-                  val={emulationItem?.bluetooth ?? proto.BluetoothMode.BTStandard}
-                  label="bluetooth"
-                  dispatch={(bluetooth) => updateEmulation({ bluetooth })}
-                />
-              )}
-            </Stack>
-
-            <Divider my={2} />
-
-            <ControllerSourcesEditor
-              assignments={assignments}
-              onAddSource={addHostSource}
-              onRemoveSource={removeHostSource}
-              onUpdateSource={updateHostSource}
-              hasUsbHost={hasUsbHost}
-              hasBluetooth={hasBluetooth}
-              hasMidi={hasMidi}
-              hasWii={hasWii}
-              hasPsx={hasPsx}
-            />
-
-            <Divider my={2} />
-
-            <Stack gap={4}>
-              <Text size="sm" fw={600}>
-                {t('assignments.step3_title')}
-              </Text>
-              <Select
-                size="xs"
-                value={currentTrigger}
-                onChange={(val) => {
-                  switch (val) {
-                    case 'always':
-                      updateTrigger(null);
-                      break;
-                    case 'input':
-                      updateTrigger({ input: { input: {} } });
-                      break;
-                    case 'inputAnyTime':
-                      updateTrigger({ inputAnyTime: { input: {} } });
-                      break;
-                  }
-                }}
-                data={[
-                  { value: 'always', label: t('assignments.trigger.always') },
-                  { value: 'input', label: t('assignments.trigger.boot') },
-                  { value: 'inputAnyTime', label: t('assignments.trigger.anytime') },
-                ]}
+                    )}
+                  </>
+                )}
+              </Stack>
+            )}
+            {currentEmulMode === 'bluetooth' && (
+              <DropdownBox
+                title="activation.bluetooth"
+                e={proto.BluetoothMode}
+                val={emulationItem?.bluetooth ?? proto.BluetoothMode.BTStandard}
+                label="bluetooth"
+                dispatch={(bluetooth) => updateEmulation({ bluetooth })}
               />
-              {currentTrigger === 'input' && (
-                <Stack gap={4}>
-                  <SantrollerInput
-                    axis={false}
-                    button
-                    type={type}
+            )}
+          </Stack>
+
+          <Divider my={2} />
+
+          <ControllerSourcesEditor
+            assignments={assignments}
+            onAddSource={addHostSource}
+            onRemoveSource={removeHostSource}
+            onUpdateSource={updateHostSource}
+            hasUsbHost={hasUsbHost}
+            hasBluetooth={hasBluetooth}
+            hasMidi={hasMidi}
+            hasWii={hasWii}
+            hasPsx={hasPsx}
+          />
+
+          <Divider my={2} />
+
+          <Stack gap={4}>
+            <Text size="sm" fw={600}>
+              {t('assignments.step3_title')}
+            </Text>
+            <Select
+              size="xs"
+              value={currentTrigger}
+              onChange={(val) => {
+                switch (val) {
+                  case 'always':
+                    updateTrigger(null);
+                    break;
+                  case 'input':
+                    updateTrigger({ input: { input: {} } });
+                    break;
+                  case 'inputAnyTime':
+                    updateTrigger({ inputAnyTime: { input: {} } });
+                    break;
+                }
+              }}
+              data={[
+                { value: 'always', label: t('assignments.trigger.always') },
+                { value: 'input', label: t('assignments.trigger.boot') },
+                { value: 'inputAnyTime', label: t('assignments.trigger.anytime') },
+              ]}
+            />
+            {currentTrigger === 'input' && (
+              <Stack gap={4}>
+                <SantrollerInput
+                  axis={false}
+                  button
+                  type={type}
+                  activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                  mode={mode}
+                  legendMode={legendMode}
+                  input={triggerItem?.input?.input ?? {}}
+                  dispatch={(input) =>
+                    updateTrigger({ input: { ...(triggerItem?.input ?? {}), input } })
+                  }
+                />
+                {triggerAnalog ? (
+                  <ActivationTrigger
+                    input={triggerItem?.input ?? { input: {} }}
+                    profileIdx={profileIdx}
+                    listIdx={listIdx}
                     activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
-                    mode={mode}
-                    legendMode={legendMode}
-                    input={triggerItem?.input?.input ?? {}}
-                    dispatch={(input) =>
-                      updateTrigger({ input: { ...(triggerItem?.input ?? {}), input } })
-                    }
+                    dispatch={(input) => updateTrigger({ input })}
                   />
-                  {triggerAnalog ? (
-                    <ActivationTrigger
-                      input={triggerItem?.input ?? { input: {} }}
-                      profileIdx={profileIdx}
-                      listIdx={listIdx}
-                      activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
-                      dispatch={(input) => updateTrigger({ input })}
-                    />
-                  ) : (
-                    <Switch
-                      size="xs"
-                      label={t('calibration.inverted')}
-                      checked={!!triggerItem?.input?.inverted}
-                      onChange={(evt) =>
-                        updateTrigger({
-                          input: {
-                            ...(triggerItem?.input ?? {}),
-                            input: triggerItem?.input?.input ?? {},
-                            inverted: evt.currentTarget.checked,
-                          },
-                        })
-                      }
-                    />
-                  )}
-                </Stack>
-              )}
-              {currentTrigger === 'inputAnyTime' && (
-                <Stack gap={4}>
-                  <SantrollerInput
-                    axis={false}
-                    button
-                    type={type}
-                    activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
-                    mode={mode}
-                    legendMode={legendMode}
-                    input={triggerItem?.inputAnyTime?.input ?? {}}
-                    dispatch={(input) =>
+                ) : (
+                  <Switch
+                    size="xs"
+                    label={t('calibration.inverted')}
+                    checked={!!triggerItem?.input?.inverted}
+                    onChange={(evt) =>
                       updateTrigger({
-                        inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input },
+                        input: {
+                          ...(triggerItem?.input ?? {}),
+                          input: triggerItem?.input?.input ?? {},
+                          inverted: evt.currentTarget.checked,
+                        },
                       })
                     }
                   />
-                  {triggerAnalog ? (
-                    <ActivationTrigger
-                      input={triggerItem?.inputAnyTime ?? { input: {} }}
-                      profileIdx={profileIdx}
-                      listIdx={listIdx}
-                      activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
-                      dispatch={(inputAnyTime) => updateTrigger({ inputAnyTime })}
-                    />
-                  ) : (
-                    <Switch
-                      size="xs"
-                      label={t('calibration.inverted')}
-                      checked={!!triggerItem?.inputAnyTime?.inverted}
-                      onChange={(evt) =>
-                        updateTrigger({
-                          inputAnyTime: {
-                            ...(triggerItem?.inputAnyTime ?? {}),
-                            input: triggerItem?.inputAnyTime?.input ?? {},
-                            inverted: evt.currentTarget.checked,
-                          },
-                        })
-                      }
-                    />
-                  )}
-                </Stack>
-              )}
-            </Stack>
+                )}
+              </Stack>
+            )}
+            {currentTrigger === 'inputAnyTime' && (
+              <Stack gap={4}>
+                <SantrollerInput
+                  axis={false}
+                  button
+                  type={type}
+                  activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                  mode={mode}
+                  legendMode={legendMode}
+                  input={triggerItem?.inputAnyTime?.input ?? {}}
+                  dispatch={(input) =>
+                    updateTrigger({
+                      inputAnyTime: { ...(triggerItem?.inputAnyTime ?? {}), input },
+                    })
+                  }
+                />
+                {triggerAnalog ? (
+                  <ActivationTrigger
+                    input={triggerItem?.inputAnyTime ?? { input: {} }}
+                    profileIdx={profileIdx}
+                    listIdx={listIdx}
+                    activationIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                    dispatch={(inputAnyTime) => updateTrigger({ inputAnyTime })}
+                  />
+                ) : (
+                  <Switch
+                    size="xs"
+                    label={t('calibration.inverted')}
+                    checked={!!triggerItem?.inputAnyTime?.inverted}
+                    onChange={(evt) =>
+                      updateTrigger({
+                        inputAnyTime: {
+                          ...(triggerItem?.inputAnyTime ?? {}),
+                          input: triggerItem?.inputAnyTime?.input ?? {},
+                          inverted: evt.currentTarget.checked,
+                        },
+                      })
+                    }
+                  />
+                )}
+              </Stack>
+            )}
           </Stack>
-        ) : (
-          <Stack gap="xs">
-            <Button
-              size="xs"
-              variant="light"
-              onClick={() =>
-                dispatch({
-                  ...mapping,
-                  assignments: [
-                    ...(mapping.assignments ?? []),
-                    {
-                      consoleType: {
-                        consoleType: null,
-                        forcedType: null,
-                        xinputOnWindows: true,
-                        ps4OrPs5Mode: false,
-                      },
-                    },
-                  ],
-                })
-              }
-            >
-              {t('assignments.match')}
-            </Button>
-            {mapping.assignments?.map((assignment, assignmentIdx) => (
-              <SantrollerAssignment
-                key={assignmentIdx}
-                activationIdx={assignmentIdx}
-                listIdx={listIdx}
-                mapping={assignment}
-                legendMode={legendMode}
-                profileIdx={profileIdx}
-                type={type}
-                mode={mode}
-                dispatch={(val) =>
-                  dispatch({
-                    ...mapping,
-                    assignments: [
-                      ...mapping.assignments!.map((cAssignment, cAssignmentIdx) =>
-                        cAssignmentIdx === assignmentIdx ? val : cAssignment
-                      ),
-                    ],
-                  })
-                }
-                deleteAssignment={() =>
-                  dispatch({
-                    ...mapping,
-                    assignments: [
-                      ...mapping.assignments!.filter(
-                        (_, cAssignmentIdx) => cAssignmentIdx !== assignmentIdx
-                      ),
-                    ],
-                  })
-                }
-                copyAssignment={() =>
-                  dispatch({
-                    ...mapping,
-                    assignments: [...mapping.assignments!, { ...assignment }],
-                  })
-                }
-              />
-            ))}
-          </Stack>
-        )}
-
-        <Divider my="sm" />
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            {t('assignments.advanced_toggle')}
-          </Text>
-          <Switch
-            size="xs"
-            checked={advancedMode}
-            onChange={(e) => setAdvancedMode(e.currentTarget.checked)}
-          />
-        </Group>
+        </Stack>
       </Card>
     </>
   );
@@ -6205,13 +6229,14 @@ function BlankProfileWizard({
       newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
     } else {
       hostAssignments.forEach((item) => {
+        const slotId = finalAssignments.indexOf(item);
         if (item.wiiExt != null) {
           const wiiDev = Object.values(deviceStatus).find((d) => d.type === 'wii');
           newMappings.push(
             ...getDefaultMappings(
               'wii',
               deviceToEmulate,
-              wiiDev ? parseInt(wiiDev.id, 10) : 0,
+              slotId !== -1 ? slotId : wiiDev ? parseInt(wiiDev.id, 10) : 0,
               wiiDev ? { ...wiiDev, wiiExtType: item.wiiExt } : { wiiExtType: item.wiiExt }
             )
           );
@@ -6221,7 +6246,7 @@ function BlankProfileWizard({
             ...getDefaultMappings(
               'psx',
               deviceToEmulate,
-              psxDev ? parseInt(psxDev.id, 10) : 0,
+              slotId !== -1 ? slotId : psxDev ? parseInt(psxDev.id, 10) : 0,
               psxDev ? { ...psxDev, ps2CntType: item.ps2Cnt } : { ps2CntType: item.ps2Cnt }
             )
           );
@@ -6233,7 +6258,7 @@ function BlankProfileWizard({
             ...getDefaultMappings(
               midiDev ? midiDev.type : 'midiSerial',
               deviceToEmulate,
-              midiDev ? parseInt(midiDev.id, 10) : 0,
+              slotId !== -1 ? slotId : midiDev ? parseInt(midiDev.id, 10) : 0,
               midiDev
             )
           );
@@ -6241,13 +6266,23 @@ function BlankProfileWizard({
           const usbDev = Object.values(deviceStatus).find((d) => d.type === 'usbHost');
           const hostType = item.usbType ?? deviceToEmulate;
           newMappings.push(
-            ...getDefaultMappings('usbHost', hostType, usbDev ? parseInt(usbDev.id, 10) : 0, usbDev)
+            ...getDefaultMappings(
+              'usbHost',
+              hostType,
+              slotId !== -1 ? slotId : usbDev ? parseInt(usbDev.id, 10) : 0,
+              usbDev
+            )
           );
         } else if (item.bluetoothType != null || item.bluetoothDevice != null) {
           const btDev = Object.values(deviceStatus).find((d) => d.type === 'bt');
           const hostType = item.bluetoothType ?? deviceToEmulate;
           newMappings.push(
-            ...getDefaultMappings('bt', hostType, btDev ? parseInt(btDev.id, 10) : 0, btDev)
+            ...getDefaultMappings(
+              'bt',
+              hostType,
+              slotId !== -1 ? slotId : btDev ? parseInt(btDev.id, 10) : 0,
+              btDev
+            )
           );
         }
       });

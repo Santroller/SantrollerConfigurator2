@@ -19,7 +19,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './vitest.setup.mjs',
   },
   server: {
     host: "0.0.0.0"

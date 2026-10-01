@@ -13,7 +13,11 @@ import {
   getDeviceStatusLabel,
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
-import { inputUsesDevice } from '@/components/Inputs/inputRegistry';
+import {
+  getProfileSlots,
+  inputUsesDevice,
+  withSlotMidiChannel,
+} from '@/components/Inputs/inputRegistry';
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
@@ -263,6 +267,7 @@ export function requiresAssignment(deviceType: string): boolean {
   return (
     deviceType === 'bt' ||
     deviceType === 'usbHost' ||
+    deviceType === 'psx' ||
     deviceType === 'midiSerial' ||
     deviceType === 'bhDrum' ||
     deviceType === 'worldTourDrum'
@@ -285,6 +290,9 @@ export function isDeviceAssigned(deviceType: string, profile?: proto.IProfile | 
     return allAssignments.some(
       (x) => x.usbType != null || x.usbDevice != null || x.midiChannel != null
     );
+  }
+  if (deviceType === 'psx') {
+    return allAssignments.some((x) => x.ps2Cnt != null);
   }
   if (deviceType === 'midiSerial' || deviceType === 'bhDrum' || deviceType === 'worldTourDrum') {
     return allAssignments.some((x) => x.midiChannel != null);
@@ -1016,10 +1024,25 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (device && requiresAssignment(device.type) && !isDeviceAssigned(device.type, profile)) {
           return;
         }
+        let targetDeviceId = device ? parseInt(device.id, 10) : undefined;
+        if (device && requiresAssignment(device.type) && profile?.assignments) {
+          const allSlots = getProfileSlots(profile);
+          const matchingSlot = allSlots.find(
+            (s) =>
+              s.deviceKind === device.type ||
+              (s.deviceKind === 'midi' &&
+                (device.type === 'midiSerial' ||
+                  device.type === 'bhDrum' ||
+                  device.type === 'worldTourDrum'))
+          );
+          if (matchingSlot) {
+            targetDeviceId = matchingSlot.slotId;
+          }
+        }
         const defaults = getDefaultMappings(
           type,
           profile.opts.deviceToEmulate,
-          device ? parseInt(device.id, 10) : undefined,
+          targetDeviceId,
           device
         );
         profile.mappings!.push(...defaults);
@@ -1593,20 +1616,36 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.profiles = state.mappingStatus.map((x, i) => {
         const profile = config.profiles![i];
         const isPs4Subtype = ps4Subtypes.includes(profile.opts.deviceToEmulate);
+        const midiChannels = new Map(
+          getProfileSlots(profile)
+            .filter((slot) => slot.item.midiChannel != null)
+            .map((slot) => [slot.slotId, slot.item.midiChannel!])
+        );
         const assignments = profile.assignments?.map((list) => ({
           ...list,
           assignments: list.assignments?.map((assignment) => {
-            if (assignment.consoleType) {
-              return {
-                ...assignment,
-                consoleType: {
-                  ...assignment.consoleType,
-                  xinputOnWindows: assignment.consoleType.xinputOnWindows ?? true,
-                  ps4OrPs5Mode: !isPs4Subtype || !!assignment.consoleType.ps4OrPs5Mode,
-                },
-              };
-            }
-            return assignment;
+            return {
+              ...assignment,
+              consoleType: assignment.consoleType
+                ? {
+                    ...assignment.consoleType,
+                    xinputOnWindows: assignment.consoleType.xinputOnWindows ?? true,
+                    ps4OrPs5Mode: !isPs4Subtype || !!assignment.consoleType.ps4OrPs5Mode,
+                  }
+                : undefined,
+              input: assignment.input?.input
+                ? {
+                    ...assignment.input,
+                    input: withSlotMidiChannel(assignment.input.input, midiChannels),
+                  }
+                : assignment.input,
+              inputAnyTime: assignment.inputAnyTime?.input
+                ? {
+                    ...assignment.inputAnyTime,
+                    input: withSlotMidiChannel(assignment.inputAnyTime.input, midiChannels),
+                  }
+                : assignment.inputAnyTime,
+            };
           }),
         }));
         const firstConsoleType = assignments
@@ -1628,7 +1667,22 @@ export const useConfigStore = create<ConfigState & Actions>()(
             ps4OrPs5Mode,
           },
           assignments,
-          mappings: Object.values(x).map((x) => x.mapping),
+          mappings: Object.values(x).map(({ mapping }) => ({
+            ...mapping,
+            input: mapping.input ? withSlotMidiChannel(mapping.input, midiChannels) : mapping.input,
+          })),
+          leds: profile.leds?.map((led) => ({
+            ...led,
+            mapping: {
+              ...led.mapping,
+              inputMapping: led.mapping.inputMapping
+                ? {
+                    ...led.mapping.inputMapping,
+                    input: withSlotMidiChannel(led.mapping.inputMapping.input, midiChannels),
+                  }
+                : led.mapping.inputMapping,
+            },
+          })),
         };
       });
       config.guiConfig = Object.values(state.guiDevices);

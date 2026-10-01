@@ -16,7 +16,14 @@ import {
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
-import { getTargetAnalogValue, GUITAR_TARGETS, isTargetPressed } from '../guitarMappingUtils';
+import {
+  getGuitarFamily,
+  getTargetAnalogValue,
+  GUITAR_TARGETS,
+  isGh5NeckConfigured,
+  isTargetPressed,
+} from '../guitarMappingUtils';
+import { SliderBarVisualizer, SoloFretsVisualizer } from './02_FretsStep';
 
 export function ReviewStep(props: GuideStepProps) {
   const { t } = useTranslation();
@@ -42,6 +49,12 @@ export function ReviewStep(props: GuideStepProps) {
   const tiltPressed = useConfigStore((s) => isTargetPressed(s, GUITAR_TARGETS.TILT));
 
   const whammyVal = useConfigStore((s) => getTargetAnalogValue(s, GUITAR_TARGETS.WHAMMY));
+  const pickupVal = useConfigStore((s) => getTargetAnalogValue(s, GUITAR_TARGETS.PICKUP_SELECTOR));
+  const family = getGuitarFamily(useConfigStore.getState());
+
+  const isGh5Active = useConfigStore((s) => isGh5NeckConfigured(s));
+  const [fretMode] = React.useState(() => localStorage.getItem('santroller_guitar_fret_mode'));
+  const showSlider = isGh5Active || fretMode === 'gh5';
 
   const handleSave = async () => {
     setSaving(true);
@@ -132,6 +145,8 @@ export function ReviewStep(props: GuideStepProps) {
           </Group>
         </Stack>
       </Paper>
+      {family === 'rb' && <SoloFretsVisualizer />}
+      {family === 'gh' && showSlider && <SliderBarVisualizer />}
 
       {/* Strum & Navigation */}
       <SimpleGrid cols={2} spacing="xs">
@@ -187,6 +202,23 @@ export function ReviewStep(props: GuideStepProps) {
           />
         </Stack>
       </Paper>
+
+      {/* Rock Band 5-Way Pickup Selector */}
+      {family === 'rb' && (
+        <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-body)">
+          <Stack gap={4}>
+            <Group justify="space-between">
+              <Text size="xs" fw={600} c="dimmed">
+                {t('guides.direct-pico-guitar.steps.review.pickupHeader')}
+              </Text>
+              <Text size="xs" fw={700}>
+                {pickupVal} / 65535
+              </Text>
+            </Group>
+            <Progress value={(pickupVal / 65535) * 100} color="orange" size="md" radius="xl" />
+          </Stack>
+        </Paper>
+      )}
     </Stack>
   );
 
