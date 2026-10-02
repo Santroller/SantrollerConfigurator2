@@ -92,6 +92,8 @@ import {
   getProfileSlots,
   isAnalogInput,
   isDrumInput,
+  isSelectablePS2Axis,
+  isSelectableWiiAxis,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
@@ -791,6 +793,7 @@ function DropdownOutputBox<
   T4 extends StandardEnum<unknown>,
 >({
   e,
+  filterFirstEnum,
   e2,
   e3,
   e4,
@@ -815,6 +818,7 @@ function DropdownOutputBox<
   dispatchExtra,
 }: {
   e?: T;
+  filterFirstEnum?: (key: string, selected?: string) => boolean;
   e2?: T2;
   e3?: T3;
   e4?: T4;
@@ -968,6 +972,7 @@ function DropdownOutputBox<
           {e &&
             Object.keys(e)
               .filter((key) => isNaN(Number(key)))
+              .filter((key) => !filterFirstEnum || filterFirstEnum(key, v))
               .map((item) => (
                 <Combobox.Option value={item} key={item} selected={item === v}>
                   {t(
@@ -1976,6 +1981,7 @@ function SantrollerInput({
           <DropdownOutputBox
             title="input"
             e={proto.WiiAxisType}
+            filterFirstEnum={isSelectableWiiAxis}
             e2={proto.WiiButtonType}
             legendMode={legendMode}
             type={type}
@@ -2016,6 +2022,7 @@ function SantrollerInput({
           <DropdownOutputBox
             title="input"
             e={proto.PS2AxisType}
+            filterFirstEnum={isSelectablePS2Axis}
             e2={proto.PS2ButtonType}
             val={input.ps2Axis?.axis}
             val2={input.ps2Button?.button}
@@ -2720,6 +2727,18 @@ function SantrollerMapping({
             max={mapping.max!}
             deadzone={mapping.deadzone!}
             zeroBased={drum}
+          />
+        )}
+        {button && (
+          <StateSlider
+            mappingIdx={mappingIdx}
+            profileIdx={profileIdx}
+            center={0}
+            min={0}
+            max={65535}
+            deadzone={0}
+            raw
+            zeroBased={!!mapping.input?.midi}
           />
         )}
         {!simpleMode && (

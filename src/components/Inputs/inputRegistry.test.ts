@@ -5,8 +5,29 @@ import {
   getProfileSlotLabel,
   getProfileSlots,
   isDrumInput,
+  isSelectablePS2Axis,
+  isSelectableWiiAxis,
   withSlotMidiChannel,
 } from './inputRegistry';
+
+describe('PS2 axis choices', () => {
+  it('hides pressure axes for new mappings but keeps an existing selection', () => {
+    const pressure = 'PS2AxisDualshock2Cross';
+    expect(isSelectablePS2Axis(pressure)).toBe(false);
+    expect(isSelectablePS2Axis(pressure, pressure)).toBe(true);
+    expect(isSelectablePS2Axis('PS2AxisLeftStickX')).toBe(true);
+  });
+});
+
+describe('Wii axis choices', () => {
+  it('hides Classic trigger axes for new mappings but keeps existing selections', () => {
+    for (const trigger of ['WiiAxisClassicLeftTrigger', 'WiiAxisClassicRightTrigger']) {
+      expect(isSelectableWiiAxis(trigger)).toBe(false);
+      expect(isSelectableWiiAxis(trigger, trigger)).toBe(true);
+    }
+    expect(isSelectableWiiAxis('WiiAxisClassicLeftStickX')).toBe(true);
+  });
+});
 
 describe('isDrumInput', () => {
   it('treats MIDI channel 10 as percussion', () => {

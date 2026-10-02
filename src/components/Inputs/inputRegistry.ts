@@ -2,6 +2,17 @@ import { proto } from '@/components/SettingsContext/config';
 
 export type InputKind = keyof proto.IInput;
 
+export function isSelectablePS2Axis(key: string, selected?: string): boolean {
+  return !key.startsWith('PS2AxisDualshock2') || key === selected;
+}
+
+export function isSelectableWiiAxis(key: string, selected?: string): boolean {
+  return (
+    (key !== 'WiiAxisClassicLeftTrigger' && key !== 'WiiAxisClassicRightTrigger') ||
+    key === selected
+  );
+}
+
 export type SelectedInput = {
   [Kind in InputKind]: {
     kind: Kind;
