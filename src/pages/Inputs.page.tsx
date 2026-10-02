@@ -1396,7 +1396,7 @@ function SantrollerInput({
     () => profileSlots.find((s) => s.slotId === deviceId),
     [profileSlots, deviceId]
   );
-  const device = input.midi && matchingSlot ? undefined : deviceStatusForId;
+  const device = matchingSlot ? undefined : deviceStatusForId;
 
   const effectiveUsbType = input.midi ? proto.SubType.Midi : (matchingSlot?.item.usbType ?? type);
 

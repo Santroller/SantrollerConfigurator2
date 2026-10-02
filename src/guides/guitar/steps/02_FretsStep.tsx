@@ -289,7 +289,7 @@ export function FretsStep(props: GuideStepProps) {
         <Stack gap="md">
           <Text size="sm">{t('guides.direct-pico-guitar.steps.frets.intro')}</Text>
 
-          <Image src="/guides/guitar/x360-wt.jpg" radius="md" alt="Fret PCB traces" />
+          <Image src="/guides/guitar/xplorer.png" radius="md" alt="Fret PCB traces" />
           <Text size="xs" c="dimmed" ta="center">
             {t('guides.direct-pico-guitar.steps.frets.pcbCaption')}
           </Text>

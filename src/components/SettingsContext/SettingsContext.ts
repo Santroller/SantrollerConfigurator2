@@ -1222,7 +1222,6 @@ export const useConfigStore = create<ConfigState & Actions>()(
           });
         }
         if (deviceEvent.axis && get().polling) {
-                console.log(deviceEvent.axis);
           set((state) => {
             if (state.mappingStatus.length) {
               const mappings = state.mappingStatus[state.currentProfile ?? 0];
