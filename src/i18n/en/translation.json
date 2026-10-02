@@ -187,7 +187,11 @@
   },
   "encoder": {
     "deltaRate": "Sampling Rate (ms)",
-    "positionScale": "Position scale (per step)"
+    "positionScale": "Position scale (per step)",
+    "inputs": {
+      "EncoderDelta": "Movement (delta)",
+      "EncoderPosition": "Position"
+    }
   },
   "axis": {
     "calibration": "Axis Calibration",
