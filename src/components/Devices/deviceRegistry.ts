@@ -64,6 +64,10 @@ const deviceRegistry: DeviceDefinitions = {
     create: () => ({ uart: uart(31250) }),
     pins: ({ uart }) => [uart.tx, uart.rx],
   },
+  infiniumFader: {
+    create: () => ({ uart: uart(31250) }),
+    pins: ({ uart }) => [uart.tx, uart.rx],
+  },
   usbHost: {
     create: () => ({
       firstPin: -1,

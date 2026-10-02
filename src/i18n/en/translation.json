@@ -19,6 +19,7 @@
     "multiplexer": "74HC Style Multiplexer",
     "psx": "PS1/PS2 Controller",
     "midiSerial": "MIDI Serial (DIN)",
+    "infiniumFader": "Infinium Fader",
     "snes": "NES/SNES Controller",
     "joybus": "N64 / Gamecube Controller",
     "mpr121": "MPR121",
@@ -681,7 +682,8 @@
     "desc": "Are you sure you wish to load defaults?",
     "confirm": "Load defaults",
     "cancel": "Cancel",
-    "for": "Load defaults for: {{device}} ({{status}})"
+    "for": "Load defaults for: {{device}} ({{status}})",
+    "for_slot": "Load defaults for: {{slot}}"
   },
   "clear_all_button": "Clear All",
   "clear_all_dialog": {
@@ -1839,7 +1841,7 @@
     "dj-turntable": {
       "title": "DJ Hero Turntable Controller",
       "subtitle": "Optical Encoder Platter & Crossfader Conversion",
-      "description": "Rewire any DJ Hero turntable to a Raspberry Pi Pico for low-latency scratch vinyl and crossfader controls in DJ Hero and Clone Hero.",
+      "description": "Rewire any DJ Hero turntable to a Raspberry Pi Pico for low-latency scratch vinyl and crossfader controls in DJ Hero.",
       "badge": "Optical Scratching",
       "estimatedTime": "45 - 60 mins",
       "steps": {
@@ -1848,7 +1850,7 @@
           "title": "1. Supplies & Pinout Plan",
           "badge": "Optical Encoder + Pots",
           "description": "Understand the turntable platter optical sensor, crossfader pot, and face buttons.",
-          "intro": "Convert an original DJ Hero Turntable controller (Xbox 360, PS3, or Wii) into a low-latency USB scratch controller for DJ Hero, Clone Hero, or community rhythm games.",
+          "intro": "Convert an original DJ Hero Turntable controller (Xbox 360, PS3, or Wii) into a low-latency USB scratch controller for DJ Hero.",
           "suppliesTitle": "Supplies Required",
           "supplies": [
             "Raspberry Pi Pico 1 or Pico 2",

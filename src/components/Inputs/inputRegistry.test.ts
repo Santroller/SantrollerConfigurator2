@@ -191,11 +191,7 @@ describe('MIDI slots', () => {
   });
 
   it('keeps legacy profiles on firmware trigger indices', () => {
-    const assignments = [
-      { copilotProfile: 5 },
-      { input: { input: {} } },
-      { usbType: proto.SubType.Gamepad },
-    ];
+    const assignments = [{}, { input: { input: {} } }, { usbType: proto.SubType.Gamepad }];
     expect(getAssignmentTriggerIds(assignments)).toEqual([0, 0, 0]);
     const legacyProfile = {
       ...profile,

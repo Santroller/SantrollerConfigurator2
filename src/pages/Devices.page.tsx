@@ -725,6 +725,37 @@ function MidiSerialDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+function InfiniumFaderDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.infiniumFader) {
+    throw new Error('device null!');
+  }
+  const infiniumFader = device.infiniumFader;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.infiniumFader"
+      image="covers/devices/midiSerial.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <UARTDevice
+        device={infiniumFader.uart}
+        dispatch={(val) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              infiniumFader: { ...infiniumFader, uart: { ...val, baudrate: 31250 } },
+            },
+            id
+          )
+        }
+      />
+    </DeviceCard>
+  );
+}
 function CrkdNeckDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -2092,6 +2123,7 @@ const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>>
   gh5Neck: GH5NeckDevice,
   djhTurntable: DJHeroTurntableDevice,
   midiSerial: MidiSerialDevice,
+  infiniumFader: InfiniumFaderDevice,
   crkdNeck: CrkdNeckDevice,
   crkdDrum: CrkdDrumDevice,
   protarNeck: ProtarNeckDevice,

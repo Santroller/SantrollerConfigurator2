@@ -70,7 +70,7 @@ import {
   USB_HOST_INPUT_SUBTYPES,
   USB_HOST_SUBTYPES,
 } from '@/components/Defaults/defaultMappings';
-import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import { PinBox } from '@/components/Devices/Pins';
 import {
   getLabel,
@@ -98,6 +98,7 @@ import {
   isSelectablePS2Axis,
   isSelectableWiiAxis,
   midiInputSourceType,
+  ProfileSlot,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
@@ -6647,10 +6648,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     LegendMode[(localStorage.getItem('legendMode') ?? 'Xbox') as keyof typeof LegendMode]
   );
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
-  const [defaultTarget, setDefaultTarget] = useState<DeviceStatus | undefined>(undefined);
+  const [defaultTarget, setDefaultTarget] = useState<DeviceStatus | ProfileSlot | undefined>(
+    undefined
+  );
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
+  const profileSlots = useMemo(() => getProfileSlots(profile, t), [profile, t]);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
@@ -7294,31 +7298,57 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   >
                     Load {t(`subType.${proto.SubType[profile.opts.deviceToEmulate]}`)} defaults
                   </Button>
+                  {profileSlots.map((slot) => {
+                    const deviceKind = slot.deviceKind === 'midi' ? 'midiSerial' : slot.deviceKind;
+                    if (!hasDefaultMappings(deviceKind) && !hasDefaultMappings(slot.deviceKind)) {
+                      return null;
+                    }
+                    return (
+                      <Button
+                        value={slot.key}
+                        key={slot.key}
+                        onClick={() => {
+                          setDefaultTarget(slot);
+                          open();
+                        }}
+                      >
+                        {t('defaults_dialog.for_slot', { slot: slot.label })}
+                      </Button>
+                    );
+                  })}
                   {Object.values(deviceStatus)
-                    .filter(hasDefaults)
-                    .map((item) => {
-                      const assigned = isDeviceAssigned(item.type, profile);
-                      return (
-                        <Button
-                          value={item.id}
-                          key={item.id}
-                          disabled={!assigned}
-                          title={!assigned ? t('assignments.device_not_assigned') : undefined}
-                          onClick={() => {
-                            if (!assigned) {
-                              return;
-                            }
-                            setDefaultTarget(item);
-                            open();
-                          }}
-                        >
-                          {t(`defaults_dialog.for`, {
-                            device: t(`devices.${item.type}`),
-                            status: DeviceStatus.label(item),
-                          })}
-                        </Button>
-                      );
-                    })}
+                    .filter((item) => hasDefaults(item) && requiresAssignment(item.type))
+                    .filter((item) => !isDeviceAssigned(item.type, profile))
+                    .map((item) => (
+                      <Button
+                        value={item.id}
+                        key={`unassigned-${item.id}`}
+                        disabled
+                        title={t('assignments.device_not_assigned')}
+                      >
+                        {t('defaults_dialog.for', {
+                          device: t(`devices.${item.type}`),
+                          status: DeviceStatus.label(item),
+                        })}
+                      </Button>
+                    ))}
+                  {Object.values(deviceStatus)
+                    .filter((item) => hasDefaults(item) && !requiresAssignment(item.type))
+                    .map((item) => (
+                      <Button
+                        value={item.id}
+                        key={`nonslot-${item.id}`}
+                        onClick={() => {
+                          setDefaultTarget(item);
+                          open();
+                        }}
+                      >
+                        {t('defaults_dialog.for', {
+                          device: t(`devices.${item.type}`),
+                          status: DeviceStatus.label(item),
+                        })}
+                      </Button>
+                    ))}
                   <Button variant="filled" onClick={open2}>
                     {t('clear_all_button')}
                   </Button>

@@ -17,6 +17,7 @@ import {
   getProfileSlotKey,
   getProfileSlots,
   inputUsesDevice,
+  ProfileSlot,
   withSlotMidiChannel,
 } from '@/components/Inputs/inputRegistry';
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
@@ -389,7 +390,7 @@ export interface Actions {
   exportConfig: () => void;
   loadConfig: (file: File | null) => void;
   pollInputs: (poll: boolean) => void;
-  loadDefaults: (device: DeviceStatus | undefined) => void;
+  loadDefaults: (device: DeviceStatus | ProfileSlot | undefined) => void;
   clearConsole: () => void;
   clearMidi: () => void;
   buildUf2: (pico2: boolean) => void;
@@ -1012,33 +1013,50 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    loadDefaults: (device: DeviceStatus | undefined) => {
+    loadDefaults: (device: DeviceStatus | ProfileSlot | undefined) => {
       set((state) => {
-        const type = device?.type ?? 'gpio';
         const profile = state.config.profiles![state.currentProfile];
-        if (device && requiresAssignment(device.type) && !isDeviceAssigned(device.type, profile)) {
-          return;
-        }
-        let targetDeviceId = device ? parseInt(device.id, 10) : undefined;
-        if (device && requiresAssignment(device.type) && profile?.assignments) {
-          const allSlots = getProfileSlots(profile);
-          const matchingSlot = allSlots.find(
-            (s) =>
-              s.deviceKind === device.type ||
-              (s.deviceKind === 'midi' &&
-                (device.type === 'midiSerial' ||
-                  device.type === 'bhDrum' ||
-                  device.type === 'worldTourDrum'))
+        let type = 'gpio';
+        let targetDeviceId: number | undefined = undefined;
+        let deviceStatusObj: DeviceStatus | undefined = undefined;
+
+        if (device && 'slotId' in device && 'deviceKind' in device) {
+          const slot = device as ProfileSlot;
+          targetDeviceId = slot.slotId;
+          type = slot.deviceKind === 'midi' ? 'midiSerial' : slot.deviceKind;
+          deviceStatusObj = Object.values(state.deviceStatus).find(
+            (d) =>
+              d.type === type ||
+              (type === 'midiSerial' &&
+                (d.type === 'midiSerial' || d.type === 'bhDrum' || d.type === 'worldTourDrum'))
           );
-          if (matchingSlot) {
-            targetDeviceId = matchingSlot.slotId;
+        } else if (device && 'type' in device) {
+          const devStatus = device as DeviceStatus;
+          type = devStatus.type;
+          if (requiresAssignment(type) && !isDeviceAssigned(type, profile)) {
+            return;
           }
+          targetDeviceId = parseInt(devStatus.id, 10);
+          if (requiresAssignment(type) && profile?.assignments) {
+            const allSlots = getProfileSlots(profile);
+            const matchingSlot = allSlots.find(
+              (s) =>
+                s.deviceKind === type ||
+                (s.deviceKind === 'midi' &&
+                  (type === 'midiSerial' || type === 'bhDrum' || type === 'worldTourDrum'))
+            );
+            if (matchingSlot) {
+              targetDeviceId = matchingSlot.slotId;
+            }
+          }
+          deviceStatusObj = devStatus;
         }
+
         const defaults = getDefaultMappings(
           type,
           profile.opts.deviceToEmulate,
           targetDeviceId,
-          device
+          deviceStatusObj
         );
         profile.mappings!.push(...defaults);
         state.config = {

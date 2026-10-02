@@ -51,6 +51,7 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   mouseButton: {},
   mpr121: { usesDevice: hasDevice((input) => input.mpr121) },
   ads1115: { isAnalog: () => true, usesDevice: hasDevice((input) => input.ads1115) },
+  infiniumFader: { isAnalog: () => true, usesDevice: hasDevice((input) => input.infiniumFader) },
   wiiAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.wiiAxis) },
   wiiButton: { usesDevice: hasDevice((input) => input.wiiButton) },
   crkd: { usesDevice: hasDevice((input) => input.crkd) },
@@ -183,6 +184,11 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
         deviceid,
         sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
       },
+    }),
+  },
+  infiniumFader: {
+    create: (deviceid) => ({
+      infiniumFader: { deviceid },
     }),
   },
   crkdDrum: {
@@ -323,7 +329,7 @@ export function getAssignmentTriggerIds(assignments: proto.IProfileAssignmentInf
       item.wiiEmulation != null ||
       getHostSourceType(item) != null ||
       hasInputTrigger;
-    if (item.copilotProfile == null && hasTrigger) {
+    if (hasTrigger) {
       triggerId += 1;
     }
     return currentId;
