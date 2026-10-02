@@ -559,6 +559,22 @@
       "description": "You can use different addresses to read inputs from multiple peripherals at once."
     }
   },
+  "peripherals": {
+    "not_found": "Peripheral device not found",
+    "title": "Peripheral (0x{{address}})",
+    "download_uf2": "Download Peripheral UF2",
+    "updating_title": "Updating Firmware",
+    "updating_notice": "Updating peripheral coprocessor firmware over I2C DMA ({{percent}}%)... Peripheral inputs are temporarily disabled.",
+    "rebooting_title": "Rebooting Peripheral",
+    "rebooting_notice": "Finalizing firmware update and rebooting peripheral coprocessor... Please wait.",
+    "uf2_modal_title": "Download Peripheral Firmware (UF2)",
+    "sda_pin": "SDA Pin",
+    "scl_pin": "SCL Pin",
+    "id_pin": "ID Selection Pin",
+    "target_board": "Target Board",
+    "download_confirm": "Download UF2",
+    "empty": "No sub-devices configured on this peripheral coprocessor yet. Click + to add a device."
+  },
   "multiplexer": {
     "device": "Multiplexer Device",
     "channel": "Channel {{channel}}",

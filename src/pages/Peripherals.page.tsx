@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   ActionIcon,
   Affix,
+  Alert,
   Button,
   Combobox,
   Flex,
@@ -12,6 +13,7 @@ import {
   Menu,
   Modal,
   NumberInput,
+  Progress,
   Select,
   SimpleGrid,
   Space,
@@ -66,17 +68,17 @@ export function PeripheralsPage() {
     return <Loader />;
   }
 
-  if (!status || !status.device || !status.device.peripheral) {
+  if ((!status || !status.device || !status.device.peripheral) && !status?.rebooting) {
     return (
       <Layout>
         <RequireDevice>
-          <Title order={2}>{t('peripherals.not_found', 'Peripheral device not found')}</Title>
+          <Title order={2}>{t('peripherals.not_found')}</Title>
         </RequireDevice>
       </Layout>
     );
   }
 
-  const peripheral = status.device.peripheral;
+  const peripheral = status?.device?.peripheral;
 
   const addSubDevice = (type: DeviceKind) => {
     addDevice(type, id);
@@ -129,8 +131,8 @@ export function PeripheralsPage() {
       <RequireDevice>
         <Group justify="space-between" mb="md">
           <Title order={2}>
-            {t('peripherals.title', 'Peripheral (0x{{address}})', {
-              address: peripheral.address.toString(16),
+            {t('peripherals.title', {
+              address: peripheral?.address != null ? peripheral.address.toString(16) : '??',
             })}
           </Title>
           <Button
@@ -138,9 +140,38 @@ export function PeripheralsPage() {
             variant="light"
             onClick={openUf2}
           >
-            {t('peripherals.download_uf2', 'Download Peripheral UF2')}
+            {t('peripherals.download_uf2')}
           </Button>
         </Group>
+
+        {status.updating && (
+          <Alert
+            variant="light"
+            color="blue"
+            title={t('peripherals.updating_title')}
+            icon={<Loader size="sm" />}
+            mb="md"
+          >
+            <Stack gap="xs">
+              <Text size="sm">
+                {t('peripherals.updating_notice', { percent: status.updateProgress ?? 0 })}
+              </Text>
+              <Progress value={status.updateProgress ?? 0} animated size="lg" radius="xl" color="blue" />
+            </Stack>
+          </Alert>
+        )}
+
+        {status.rebooting && (
+          <Alert
+            variant="light"
+            color="yellow"
+            title={t('peripherals.rebooting_title')}
+            icon={<Loader size="sm" />}
+            mb="md"
+          >
+            {t('peripherals.rebooting_notice')}
+          </Alert>
+        )}
 
         <Modal opened={opened} onClose={close} title={t('add_device_dialog.title')} centered>
           <Combobox
@@ -183,33 +214,33 @@ export function PeripheralsPage() {
         <Modal
           opened={uf2Opened}
           onClose={closeUf2}
-          title={t('peripherals.uf2_modal_title', 'Download Peripheral Firmware (UF2)')}
+          title={t('peripherals.uf2_modal_title')}
           centered
         >
           <Stack gap="md">
             <NumberInput
-              label={t('peripherals.sda_pin', 'SDA Pin')}
+              label={t('peripherals.sda_pin')}
               value={sdaPin}
               onChange={(val) => setSdaPin(Number(val))}
               min={0}
               max={29}
             />
             <NumberInput
-              label={t('peripherals.scl_pin', 'SCL Pin')}
+              label={t('peripherals.scl_pin')}
               value={sclPin}
               onChange={(val) => setSclPin(Number(val))}
               min={0}
               max={29}
             />
             <NumberInput
-              label={t('peripherals.id_pin', 'ID Selection Pin')}
+              label={t('peripherals.id_pin')}
               value={idPin}
               onChange={(val) => setIdPin(Number(val))}
               min={0}
               max={29}
             />
             <Select
-              label={t('peripherals.target_board', 'Target Board')}
+              label={t('peripherals.target_board')}
               value={pico2 ? 'pico2' : 'pico1'}
               onChange={(val) => setPico2(val === 'pico2')}
               data={[
@@ -219,7 +250,7 @@ export function PeripheralsPage() {
             />
             <Flex justify="flex-end">
               <Button onClick={handleDownloadUf2} color="blue" leftSection={<IconDownload size={16} />}>
-                {t('peripherals.download_confirm', 'Download UF2')}
+                {t('peripherals.download_confirm')}
               </Button>
             </Flex>
           </Stack>
@@ -227,10 +258,7 @@ export function PeripheralsPage() {
 
         {subDevices.length === 0 ? (
           <Text c="dimmed">
-            {t(
-              'peripherals.empty',
-              'No sub-devices configured on this peripheral coprocessor yet. Click + to add a device.'
-            )}
+            {t('peripherals.empty')}
           </Text>
         ) : (
           <SimpleGrid cols={3}>

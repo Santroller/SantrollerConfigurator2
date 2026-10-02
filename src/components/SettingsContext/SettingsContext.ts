@@ -248,6 +248,9 @@ export class DeviceStatus {
   cycleState: number;
   toggleState: boolean;
   connected: boolean = false;
+  updating?: boolean = false;
+  updateProgress?: number = 0;
+  rebooting?: boolean = false;
   device: proto.IDevice;
   parentId?: string;
   wiiExtType: proto.WiiExtType;
@@ -376,6 +379,7 @@ export interface Actions {
   deleteDevice: (id: string) => void;
   connect: () => void;
   firmwareUpdate: () => void;
+  peripheralFirmwareUpdate: (deviceId: number, file: File) => Promise<void>;
   login: () => void;
   disconnect: () => void;
   reconnect: (device: HIDDevice) => void;
@@ -1226,6 +1230,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.device!.id in state.deviceStatus) {
               state.deviceStatus[deviceEvent.device!.id].connected = deviceEvent.device!.connected;
+              if (deviceEvent.device!.updating !== undefined) {
+                state.deviceStatus[deviceEvent.device!.id].updating = !!deviceEvent.device!.updating;
+              }
+              if (deviceEvent.device!.progress !== undefined && deviceEvent.device!.progress !== null) {
+                state.deviceStatus[deviceEvent.device!.id].updateProgress = deviceEvent.device!.progress;
+              }
+              if (deviceEvent.device!.rebooting !== undefined && deviceEvent.device!.rebooting !== null) {
+                state.deviceStatus[deviceEvent.device!.id].rebooting = !!deviceEvent.device!.rebooting;
+              }
             }
           });
         }
@@ -1964,6 +1977,145 @@ export const useConfigStore = create<ConfigState & Actions>()(
         return;
       }
       state.disconnect();
+    },
+    peripheralFirmwareUpdate: async (deviceId: number, file: File) => {
+      const state = get();
+      if (!state.hidDevice) {
+        console.error('Cannot update peripheral firmware without a connected HID device');
+        return;
+      }
+      const hidDevice = state.hidDevice;
+      set((state) => {
+        state.updatePercentage = 1;
+        state.updating = true;
+        state.waitingForReload = false;
+        if (state.keepaliveTimeout) {
+          clearInterval(state.keepaliveTimeout);
+          state.keepaliveTimeout = undefined;
+        }
+      });
+      while (get().sendingKeepAlive) {
+        await delay(KEEPALIVE_INTERVAL_MS);
+      }
+      try {
+        const updateFile = new Uint8Array(await file.arrayBuffer());
+        const fastFirmwareUploadReports = findFastFirmwareUploadReports(hidDevice);
+        const firmwareInfo = proto.FirmwareUpdate.create({
+          chunkOffset: 0,
+          chunkSize: FIRMWARE_UPLOAD_CHUNK_SIZE,
+          firmwareSize: updateFile.length,
+          offset: 0,
+          deviceId,
+        });
+        const firmwareInfoReport = new Uint8Array(63);
+
+        const uploadLegacy = async () => {
+          firmwareInfo.chunkSize = LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE;
+          const uploadReport = new Uint8Array(LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE + 1);
+          uploadReport[0] = proto.ReportId.ReportIdUploadFirmware;
+          for (let i = 0; i < updateFile.length; i += LEGACY_FIRMWARE_BLOCK_SIZE) {
+            firmwareInfo.chunkOffset = 0;
+            firmwareInfo.offset = i;
+            firmwareInfoReport.fill(0);
+            firmwareInfoReport.set(
+              proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
+            );
+            await hidDevice.sendFeatureReport(
+              proto.ReportId.ReportIdUpdateFirmware,
+              firmwareInfoReport
+            );
+            for (
+              let j = 0;
+              j < LEGACY_FIRMWARE_BLOCK_SIZE && i + j < updateFile.length;
+              j += LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE
+            ) {
+              uploadReport.fill(0, 1);
+              uploadReport.set(
+                updateFile.subarray(i + j, i + j + LEGACY_FIRMWARE_UPLOAD_CHUNK_SIZE),
+                1
+              );
+              await hidDevice.sendFeatureReport(
+                proto.ReportId.ReportIdUploadFirmware,
+                uploadReport
+              );
+            }
+            set((old) => ({
+              ...old,
+              updatePercentage:
+                1 +
+                (Math.min(i + LEGACY_FIRMWARE_BLOCK_SIZE, updateFile.length) / updateFile.length) *
+                  99,
+            }));
+          }
+        };
+
+        const uploadFast = async (sendChunk: (chunk: BufferSource) => Promise<void>) => {
+          firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
+          firmwareInfo.chunkOffset = 0;
+          firmwareInfo.offset = 0;
+          firmwareInfoReport.fill(0);
+          firmwareInfoReport.set(
+            proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
+          );
+          await hidDevice.sendFeatureReport(
+            proto.ReportId.ReportIdUpdateFirmware,
+            firmwareInfoReport
+          );
+
+          const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
+          let offset = 0;
+          while (offset < updateFile.length) {
+            const blockOffset = offset % FIRMWARE_BLOCK_SIZE;
+            const chunkSize = Math.min(
+              FIRMWARE_UPLOAD_CHUNK_SIZE,
+              FIRMWARE_BLOCK_SIZE - blockOffset,
+              updateFile.length - offset
+            );
+            uploadReport.fill(0);
+            uploadReport.set(updateFile.subarray(offset, offset + chunkSize));
+            await sendChunk(uploadReport);
+            offset += chunkSize;
+            if (offset % FIRMWARE_BLOCK_SIZE === 0 || offset === updateFile.length) {
+              set((old) => ({
+                ...old,
+                updatePercentage: 1 + (offset / updateFile.length) * 99,
+              }));
+            }
+          }
+        };
+
+        if (
+          fastFirmwareUploadReports.featureReport &&
+          reportByteLength(fastFirmwareUploadReports.featureReport) === FIRMWARE_UPLOAD_CHUNK_SIZE
+        ) {
+          await uploadFast((chunk) =>
+            hidDevice.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, chunk)
+          );
+        } else if (fastFirmwareUploadReports.outputReport) {
+          try {
+            await uploadFast((chunk) =>
+              hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, chunk)
+            );
+          } catch (e) {
+            await uploadLegacy();
+          }
+        } else {
+          await uploadLegacy();
+        }
+      } catch (e) {
+        console.error('Failed to update peripheral firmware', e);
+      } finally {
+        const current = get();
+        const timeout =
+          current.hidDevice?.opened && !current.keepaliveTimeout
+            ? setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS)
+            : current.keepaliveTimeout;
+        set((state) => {
+          state.updatePercentage = 0;
+          state.updating = false;
+          state.keepaliveTimeout = timeout;
+        });
+      }
     },
     connect: async () => {
       if (!navigator.hid) {
