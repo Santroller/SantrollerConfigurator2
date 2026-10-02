@@ -5,6 +5,7 @@ import {
   IconCheck,
   IconChevronRight,
   IconCopy,
+  IconCpu,
   IconDeviceFloppy,
   IconDeviceGamepad3,
   IconGuitarPick,
@@ -17,9 +18,11 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import {
   Link as RouterLink,
   NavLink as RouterNavLink,
+  useLocation,
   useMatch,
   useNavigate,
 } from 'react-router-dom';
@@ -61,9 +64,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const configModified = useConfigStore((state) => state.configModified && state.connected);
   const nav = useNavigate();
+  const location = useLocation();
   const profilePage = useMatch('/profiles');
   const seller = useConfigStore((state) => state.seller);
   const commitConfig = useConfigStore((state) => state.commitConfig);
+  const peripheralDevices = useConfigStore(
+    useShallow((state) =>
+      Object.values(state.deviceStatus).filter((status) => status.device?.peripheral != null)
+    )
+  );
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [profileToDelete, setProfileToDelete] = useState<number | null>(null);
@@ -276,6 +285,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   label={t('nav.devices', 'Devices')}
                   leftSection={<IconSettings size={16} stroke={1.5} />}
                 />
+              )}
+              {!simpleMode && peripheralDevices.length > 0 && (
+                <NavLink
+                  disabled={updating}
+                  href="#peripherals"
+                  label={t('nav.peripherals', 'Peripherals')}
+                  leftSection={<IconCpu size={16} stroke={1.5} />}
+                  defaultOpened
+                >
+                  {peripheralDevices.map((pStatus) => {
+                    const addrHex = (pStatus.device.peripheral?.address || 0x75).toString(16);
+                    const currentParamId = new URLSearchParams(location.search).get('id');
+                    const isActive =
+                      location.pathname === '/peripherals' &&
+                      (currentParamId === pStatus.id || (!currentParamId && pStatus.id === '0'));
+                    return (
+                      <NavLink
+                        disabled={updating}
+                        key={`peripheral-${pStatus.id}`}
+                        component={RouterLink}
+                        to={`/peripherals?id=${pStatus.id}`}
+                        active={isActive}
+                        label={`Peripheral (0x${addrHex})`}
+                        leftSection={<IconCpu size={16} stroke={1.5} />}
+                      />
+                    );
+                  })}
+                </NavLink>
               )}
               {!simpleMode && (
                 <NavLink

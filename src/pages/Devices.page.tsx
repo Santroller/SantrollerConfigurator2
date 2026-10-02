@@ -2112,7 +2112,7 @@ function BluetoothDevice({ id }: { id: string }) {
   );
 }
 
-const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>> = {
+export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: string }>> = {
   wii: WiiExtensionDevice,
   bhDrum: BandHeroDrumDevice,
   worldTourDrum: WorldTourDrumDevice,
@@ -2162,7 +2162,7 @@ export function DevicesPage() {
       (state) =>
         Object.fromEntries(
           Object.values(state.deviceStatus)
-            .filter((x) => x.type)
+            .filter((x) => x.type && !x.parentId)
             .map((x) => [x.id, x.type])
         ) as Record<string, DeviceKind>
     )

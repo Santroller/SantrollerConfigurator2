@@ -169,10 +169,11 @@ export class ActivationListStatus {
 }
 export class DeviceStatus {
   [immerable] = true;
-  constructor(id: string, type: DeviceType, device: proto.IDevice) {
+  constructor(id: string, type: DeviceType, device: proto.IDevice, parentId?: string) {
     this.id = id;
     this.type = type;
     this.device = device;
+    this.parentId = parentId;
     this.wiiExtType = proto.WiiExtType.WiiNoExtension;
     this.usbDevices = {};
     this.btDevices = {};
@@ -248,6 +249,7 @@ export class DeviceStatus {
   toggleState: boolean;
   connected: boolean = false;
   device: proto.IDevice;
+  parentId?: string;
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
@@ -379,7 +381,7 @@ export interface Actions {
   reconnect: (device: HIDDevice) => void;
   bootloader: () => void;
   deleteAllDevices: () => void;
-  addDevice: (type: string) => void;
+  addDevice: (type: string, parentId?: string) => void;
   onReport: (evt: HIDInputReportEvent) => void;
   setActiveProfile: (id: string | null, instance?: number) => void;
   sendKeepAlive: () => void;
@@ -433,16 +435,20 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
       });
     });
   });
-  const deviceStatus = Object.fromEntries(
-    config.devices!.map((x, _) => [
-      x.deviceid,
-      new DeviceStatus(
-        x.deviceid.toString(),
-        Object.keys(x).find((x) => x !== 'deviceid')! as DeviceType,
-        x
-      ),
-    ])
-  );
+  const deviceStatus: Record<string, DeviceStatus> = {};
+  for (const x of config.devices || []) {
+    const parentIdStr = x.deviceid.toString();
+    const typeName = Object.keys(x).find((k) => k !== 'deviceid')! as DeviceType;
+    deviceStatus[parentIdStr] = new DeviceStatus(parentIdStr, typeName, x);
+
+    if (x.peripheral?.devices?.length) {
+      for (const sub of x.peripheral.devices) {
+        const subIdStr = sub.deviceid.toString();
+        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid')! as DeviceType;
+        deviceStatus[subIdStr] = new DeviceStatus(subIdStr, subTypeName, sub, parentIdStr);
+      }
+    }
+  }
   const mappingStatus = config.profiles!.map((profile) =>
     Object.fromEntries(profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)]))
   );
@@ -532,11 +538,11 @@ export const initialConfig = InitState(
   })
 );
 
-function createDefault(type: string, id: string) {
+function createDefault(type: string, id: string, parentId?: string) {
   if (!isDeviceKind(type)) {
     throw new Error(`Unknown device type: ${type}`);
   }
-  return new DeviceStatus(id, type, createDeviceConfig(type, parseInt(id, 10)));
+  return new DeviceStatus(id, type as DeviceType, createDeviceConfig(type, parseInt(id, 10)), parentId);
 }
 const magic = 0xd2f1e365;
 function fixInput(mapping: proto.IMapping) {
@@ -1092,6 +1098,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
           return;
         }
         delete state.deviceStatus[id];
+        for (const k of Object.keys(state.deviceStatus)) {
+          if (state.deviceStatus[k].parentId === id) {
+            delete state.deviceStatus[k];
+          }
+        }
         state.mappingStatus = state.mappingStatus.map((x) =>
           Object.fromEntries(
             Object.entries(x).filter(([_, x]) => !inputUsesDevice(x.mapping.input, idNum))
@@ -1115,7 +1126,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    addDevice: (type: string) => {
+    addDevice: (type: string, parentId?: string) => {
       set((state) => {
         let id = '0';
         if (Object.keys(state.deviceStatus).length) {
@@ -1123,7 +1134,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             Math.max(...Object.values(state.deviceStatus).map((x) => x.device.deviceid)) + 1
           ).toString();
         }
-        state.deviceStatus[id] = createDefault(type, id);
+        state.deviceStatus[id] = createDefault(type, id, parentId);
       });
       get().saveConfig();
     },
@@ -1617,7 +1628,18 @@ export const useConfigStore = create<ConfigState & Actions>()(
       const state = get();
       const config = { ...state.config };
       config.syncCalibrations = state.syncInputs;
-      config.devices = Object.values(state.deviceStatus).map((x) => x.device);
+      config.devices = Object.values(state.deviceStatus)
+        .filter((x) => !x.parentId)
+        .map((x) => {
+          const dev = proto.Device.create(x.device);
+          if (dev.peripheral) {
+            const subDevices = Object.values(state.deviceStatus)
+              .filter((sub) => sub.parentId === x.id)
+              .map((sub) => sub.device);
+            dev.peripheral.devices = subDevices as proto.Device[];
+          }
+          return dev;
+        });
       // If we are using any of the tap frets then we need slider mappings, otherwise we don't
       // If a subtype supports PS3 mappings, then allow setting the option, otherwise force ps4 mode
       config.profiles = state.mappingStatus.map((x, i) => {

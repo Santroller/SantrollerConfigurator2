@@ -88,6 +88,10 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   },
   protarNeckButton: { usesDevice: hasDevice((input) => input.protarNeckButton) },
   vtechExpander: { usesDevice: hasDevice((input) => input.vtechExpander) },
+  peripheral: {
+    isAnalog: (input) => !!input.peripheral?.analog,
+    usesDevice: hasDevice((input) => input.peripheral),
+  },
   matrix: { usesDevice: hasDevice((input) => input.matrix) },
   switchNetwork: { usesDevice: hasDevice((input) => input.switchNetwork) },
   shortcut: {
@@ -189,6 +193,11 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   infiniumFader: {
     create: (deviceid) => ({
       infiniumFader: { deviceid },
+    }),
+  },
+  peripheral: {
+    create: (deviceid, { axis }) => ({
+      peripheral: { pin: -1, pinMode: proto.PinMode.PullUp, analog: axis, deviceid },
     }),
   },
   crkdDrum: {

@@ -150,7 +150,7 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ dataPin }) => [dataPin],
   },
   peripheral: {
-    create: () => ({ i2c: i2c(400000), address: 0x45 }),
+    create: () => ({ i2c: i2c(400000), address: 0x75 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
     detail: ({ address }) => `0x${address.toString(16)}`,
   },

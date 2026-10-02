@@ -8,6 +8,7 @@ import { GuidePage } from './pages/Guide.page';
 import { GuideCatalogPage } from './pages/GuideCatalog.page';
 import { InputsPage } from './pages/Inputs.page';
 import { LabelsPage } from './pages/Labels.page';
+import { PeripheralsPage } from './pages/Peripherals.page';
 import { SetupPage } from './pages/Setup.page';
 
 const router = createBrowserRouter([
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
   {
     path: '/devices',
     element: <DevicesPage />,
+  },
+  {
+    path: '/peripherals',
+    element: <PeripheralsPage />,
   },
   {
     path: '/profiles',
