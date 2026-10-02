@@ -1,5 +1,4 @@
 import { TFunction } from 'i18next';
-
 import { DeviceStatus, proto } from '../SettingsContext/SettingsContext';
 import { hasDefaultMappings, isLedDeviceKind } from './deviceRegistry';
 

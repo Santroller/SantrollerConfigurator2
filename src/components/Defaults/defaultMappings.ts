@@ -614,6 +614,23 @@ export function getWiiDefaults(
     ext === proto.WiiExtType.WiiClassicController ||
     ext === proto.WiiExtType.WiiClassicControllerPro;
 
+  if (subType === proto.SubType.Dancepad && isClassicExt) {
+    return [
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      wiiButton(proto.WiiButtonType.WiiButtonClassicDPadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+    ];
+  }
+
   // 1. Guitar Extension (or Guitar SubTypes if not specifically detected otherwise)
   if (
     isGuitarExt ||
@@ -1274,6 +1291,23 @@ export function getPs2Defaults(
   const isGunCon = cntType === proto.PS2ControllerType.PS2ControllerTypeGunCon;
   const isDualshock2 = cntType === proto.PS2ControllerType.PS2ControllerTypeDualshock2;
   const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
+
+  if (subType === proto.SubType.Dancepad) {
+    return [
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadUp, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadDown, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadLeft, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonDpadRight, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight,
+      }),
+    ];
+  }
 
   if (
     isGuitar ||
