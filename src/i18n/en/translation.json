@@ -758,7 +758,7 @@
     "step1_title": "1. Target Connection",
     "step1_desc": "How this Santroller device connects to the console or PC",
     "step2_title": "2. Connected Controller / Adapter (Optional)",
-    "step2_desc": "Buttons and sensors wired directly to board pins are enabled automatically. Only add a source here if connecting an external controller or adapter (Wii, PS2, USB, Bluetooth, or MIDI).",
+    "step2_desc": "Buttons and sensors wired directly to board pins are enabled automatically. Only add a source here if connecting an external controller or adapter (Wii, PS2, USB, Bluetooth, or MIDI). Slot numbers are scoped by source type and shared across alternative activation lists.",
     "step3_title": "3. Activation Trigger",
     "step3_desc": "Optional condition for when to activate this profile",
     "emulation_mode": {
@@ -919,7 +919,9 @@
     "ModePs4": "PlayStation 4",
     "ModePs5": "PlayStation 5",
     "ModeSwitch": "Switch / Switch 2",
-    "ModeGuitarHeroArcade": "Guitar Hero Arcade"
+    "ModeGuitarHeroArcade": "Guitar Hero Arcade",
+    "ModeSpice2x": "Spice2x (DanceCon)",
+    "ModePdLoader": "PD-Loader (Project Diva)"
   },
   "legendMode": {
     "label": "Legend mode",
@@ -1040,6 +1042,7 @@
     "Midi": "Midi device"
   },
   "outputs": {
+    "projectDivaTouch": "Slider touch {{index}}",
     "Generic": {
       "Gamepad_DpadUp": "D-pad Up",
       "Gamepad_DpadDown": "D-pad Down",

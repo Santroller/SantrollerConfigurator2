@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
 import {
   createSlotInput,
+  getAssignmentSlotIds,
+  getAssignmentTriggerIds,
+  getProfileSlotForInput,
+  getProfileSlotKey,
   getProfileSlotLabel,
   getProfileSlots,
   isDrumInput,
@@ -43,6 +47,7 @@ describe('MIDI slots', () => {
       name: 'Test',
       faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
       deviceToEmulate: proto.SubType.Gamepad,
+      deviceSlotIdVersion: 1,
     },
     assignments: [
       {
@@ -57,9 +62,13 @@ describe('MIDI slots', () => {
 
   it('uses the assignment index as the slot and its MIDI channel for new inputs', () => {
     const slots = getProfileSlots(profile);
-    expect(slots.map((slot) => slot.slotId)).toEqual([1, 2]);
+    expect(slots.map((slot) => slot.slotId)).toEqual([1, 1]);
     expect(createSlotInput(slots[0], { axis: false, button: true })).toEqual({
-      midi: { deviceid: 1, midiNote: { note: 1, channel: 4 } },
+      midi: {
+        deviceid: 1,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+        midiNote: { note: 1, channel: 4 },
+      },
     });
   });
 
@@ -103,24 +112,199 @@ describe('MIDI slots', () => {
     ).toBe('Slot 2: USB Host (Guitar Hero Guitar)');
   });
 
+  it('starts each source kind at one and coalesces matching slots across alternatives', () => {
+    const typedProfile: proto.IProfile = {
+      ...profile,
+      assignments: [
+        {
+          assignments: [{ consoleType: { consoleType: null } }, { usbType: proto.SubType.Gamepad }],
+        },
+        {
+          assignments: [
+            { consoleType: { consoleType: null } },
+            { usbDevice: { vid: 1, pid: 2 } },
+            { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+          ],
+        },
+      ],
+    };
+    const slots = getProfileSlots(typedProfile);
+
+    expect(slots.map((slot) => slot.key)).toEqual(['usbHost:1', 'psx:1']);
+    expect(
+      getProfileSlotForInput(
+        {
+          usbButton: {
+            deviceid: 1,
+            button: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+          },
+        },
+        slots
+      )?.deviceKind
+    ).toBe('usbHost');
+    expect(
+      getProfileSlotForInput(
+        {
+          ps2Button: {
+            deviceid: 1,
+            button: proto.PS2ButtonType.PS2ButtonCross,
+          },
+        },
+        slots
+      )?.deviceKind
+    ).toBe('psx');
+  });
+
+  it('resolves MIDI inputs to the explicitly selected typed slot', () => {
+    const typedProfile: proto.IProfile = {
+      ...profile,
+      assignments: [
+        { assignments: [{ midiChannel: 4 }] },
+        { assignments: [{ usbType: proto.SubType.Gamepad }] },
+      ],
+    };
+    const slots = getProfileSlots(typedProfile);
+
+    expect(slots.map((slot) => slot.key)).toEqual(['midi:1', 'usbHost:1']);
+    expect(
+      getProfileSlotForInput(
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_USB,
+          },
+        },
+        slots
+      )?.deviceKind
+    ).toBe('usbHost');
+    expect(
+      getProfileSlotForInput(
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+          },
+        },
+        slots
+      )?.deviceKind
+    ).toBe('midi');
+  });
+
+  it('keeps legacy profiles on firmware trigger indices', () => {
+    const assignments = [
+      { copilotProfile: 5 },
+      { input: { input: {} } },
+      { usbType: proto.SubType.Gamepad },
+    ];
+    expect(getAssignmentTriggerIds(assignments)).toEqual([0, 0, 0]);
+    const legacyProfile = {
+      ...profile,
+      opts: { ...profile.opts, deviceSlotIdVersion: undefined },
+      assignments: [{ assignments }],
+    };
+    expect(getProfileSlots(legacyProfile)[0].slotId).toBe(0);
+  });
+
+  it('counts slots by source kind within each alternative list', () => {
+    const assignments = [
+      { consoleType: { consoleType: null } },
+      { usbType: proto.SubType.Gamepad },
+      { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar },
+      { usbDevice: { vid: 1, pid: 2 } },
+    ];
+
+    expect(getAssignmentSlotIds(assignments)).toEqual([0, 1, 1, 2]);
+    expect(getAssignmentSlotIds(assignments.slice(0, 3))).toEqual([0, 1, 1]);
+  });
+
   it('updates existing MIDI input channels from the slot without changing other inputs', () => {
-    const channels = new Map([[1, 7]]);
+    const channels = new Map([[getProfileSlotKey('midi', 1), 7]]);
     const input: proto.IInput = {
       shortcut: {
         inputs: [
-          { midi: { deviceid: 1, midiNote: { note: 60, channel: 4 } } },
-          { midi: { deviceid: 1, midiControlChange: { cc: 2, channel: 4 } } },
-          { midi: { deviceid: 1, midiPitchBend: { channel: 4 } } },
+          {
+            midi: {
+              deviceid: 1,
+              sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+              midiNote: { note: 60, channel: 4 },
+            },
+          },
+          {
+            midi: {
+              deviceid: 1,
+              sourceType: proto.MidiInputSourceType.MidiInputSourceType_USB,
+              midiNote: { note: 61, channel: 4 },
+            },
+          },
+          {
+            midi: {
+              deviceid: 1,
+              sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+              midiControlChange: { cc: 2, channel: 4 },
+            },
+          },
+          {
+            midi: {
+              deviceid: 1,
+              sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+              midiPitchBend: { channel: 4 },
+            },
+          },
           { gpio: { pin: 2, pinMode: proto.PinMode.PullUp, analog: false } },
         ],
       },
     };
-    expect(withSlotMidiChannel(input, channels).shortcut?.inputs).toEqual([
-      { midi: { deviceid: 1, midiNote: { note: 60, channel: 7 } } },
-      { midi: { deviceid: 1, midiControlChange: { cc: 2, channel: 7 } } },
-      { midi: { deviceid: 1, midiPitchBend: { channel: 7 } } },
-      { gpio: { pin: 2, pinMode: proto.PinMode.PullUp, analog: false } },
-    ]);
+    expect(withSlotMidiChannel(input, channels, getProfileSlots(profile)).shortcut?.inputs).toEqual(
+      [
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+            midiNote: { note: 60, channel: 7 },
+          },
+        },
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_USB,
+            midiNote: { note: 61, channel: 4 },
+          },
+        },
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+            midiControlChange: { cc: 2, channel: 7 },
+          },
+        },
+        {
+          midi: {
+            deviceid: 1,
+            sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+            midiPitchBend: { channel: 7 },
+          },
+        },
+        { gpio: { pin: 2, pinMode: proto.PinMode.PullUp, analog: false } },
+      ]
+    );
     expect(input.shortcut?.inputs?.[0].midi?.midiNote?.channel).toBe(4);
+  });
+
+  it('does not apply a MIDI channel when a legacy input has an ambiguous typed slot', () => {
+    const profileWithCollidingSlots: proto.IProfile = {
+      ...profile,
+      assignments: [
+        { assignments: [{ midiChannel: 4 }] },
+        { assignments: [{ usbType: proto.SubType.Gamepad }] },
+      ],
+    };
+    const input: proto.IInput = {
+      midi: { deviceid: 0, midiNote: { note: 60, channel: 4 } },
+    };
+    const channels = new Map([[getProfileSlotKey('midi', 0), 7]]);
+
+    expect(withSlotMidiChannel(input, channels, getProfileSlots(profileWithCollidingSlots))).toBe(
+      input
+    );
   });
 });

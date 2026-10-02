@@ -190,6 +190,7 @@ function midiNoteAxis(
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiNote: {
           note,
           channel,
@@ -213,6 +214,7 @@ function midiNoteButton(
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiNote: {
           note,
           channel,
@@ -233,6 +235,7 @@ function midiCcAxis(
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiControlChange: {
           cc,
           channel,
@@ -251,6 +254,7 @@ function midiPitchBendAxis(deviceid: number, output: proto.IOutput, channel = 1)
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiPitchBend: {
           channel,
         },
@@ -308,6 +312,7 @@ function midiProGuitarButton(
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiProGuitarButton: {
           button,
         },
@@ -327,6 +332,7 @@ function midiProGuitarAxis(
     input: {
       midi: {
         deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
         midiProGuitarAxis: {
           axis,
         },

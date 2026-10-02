@@ -14,6 +14,7 @@ import {
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
 import {
+  getProfileSlotKey,
   getProfileSlots,
   inputUsesDevice,
   withSlotMidiChannel,
@@ -1301,6 +1302,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               opts: {
                 faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
                 deviceToEmulate: proto.SubType.Gamepad,
+                deviceSlotIdVersion: 1,
                 name: 'Device',
                 uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
               },
@@ -1603,10 +1605,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
       config.profiles = state.mappingStatus.map((x, i) => {
         const profile = config.profiles![i];
         const isPs4Subtype = ps4Subtypes.includes(profile.opts.deviceToEmulate);
+        const profileSlots = getProfileSlots(profile);
         const midiChannels = new Map(
-          getProfileSlots(profile)
-            .filter((slot) => slot.item.midiChannel != null)
-            .map((slot) => [slot.slotId, slot.item.midiChannel!])
+          profileSlots.flatMap((slot) =>
+            slot.deviceKind === 'midi' && slot.midiChannel != null
+              ? [[getProfileSlotKey(slot.deviceKind, slot.slotId), slot.midiChannel] as const]
+              : []
+          )
         );
         const assignments = profile.assignments?.map((list) => ({
           ...list,
@@ -1623,13 +1628,17 @@ export const useConfigStore = create<ConfigState & Actions>()(
               input: assignment.input?.input
                 ? {
                     ...assignment.input,
-                    input: withSlotMidiChannel(assignment.input.input, midiChannels),
+                    input: withSlotMidiChannel(assignment.input.input, midiChannels, profileSlots),
                   }
                 : assignment.input,
               inputAnyTime: assignment.inputAnyTime?.input
                 ? {
                     ...assignment.inputAnyTime,
-                    input: withSlotMidiChannel(assignment.inputAnyTime.input, midiChannels),
+                    input: withSlotMidiChannel(
+                      assignment.inputAnyTime.input,
+                      midiChannels,
+                      profileSlots
+                    ),
                   }
                 : assignment.inputAnyTime,
             };
@@ -1656,7 +1665,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
           assignments,
           mappings: Object.values(x).map(({ mapping }) => ({
             ...mapping,
-            input: mapping.input ? withSlotMidiChannel(mapping.input, midiChannels) : mapping.input,
+            input: mapping.input
+              ? withSlotMidiChannel(mapping.input, midiChannels, profileSlots)
+              : mapping.input,
           })),
           leds: profile.leds?.map((led) => ({
             ...led,
@@ -1665,7 +1676,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
               inputMapping: led.mapping.inputMapping
                 ? {
                     ...led.mapping.inputMapping,
-                    input: withSlotMidiChannel(led.mapping.inputMapping.input, midiChannels),
+                    input: withSlotMidiChannel(
+                      led.mapping.inputMapping.input,
+                      midiChannels,
+                      profileSlots
+                    ),
                   }
                 : led.mapping.inputMapping,
             },

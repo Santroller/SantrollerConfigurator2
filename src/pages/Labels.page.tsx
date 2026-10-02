@@ -28,7 +28,8 @@ import { DeviceStatus, proto, useConfigStore } from '../components/SettingsConte
 import '@/i18n/config';
 
 import { useTranslation } from 'react-i18next';
-import { isLed, PinBox } from '@/components/Devices/Pins';
+import { PinBox } from '@/components/Devices/Pins';
+import { isLed } from '@/components/Devices/pinUtils';
 import { getLabelKind, LabelKind } from '@/components/Labels/labelRegistry';
 import { AllPinsNamed } from '@/devices/pico/pins';
 

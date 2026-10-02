@@ -159,13 +159,31 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
     }),
   },
   bhDrum: {
-    create: (deviceid) => ({ midi: { midiNote: { note: 1, channel: 10 }, deviceid } }),
+    create: (deviceid) => ({
+      midi: {
+        midiNote: { note: 1, channel: 10 },
+        deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+      },
+    }),
   },
   worldTourDrum: {
-    create: (deviceid) => ({ midi: { midiNote: { note: 1, channel: 10 }, deviceid } }),
+    create: (deviceid) => ({
+      midi: {
+        midiNote: { note: 1, channel: 10 },
+        deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+      },
+    }),
   },
   midiSerial: {
-    create: (deviceid) => ({ midi: { midiNote: { note: 1, channel: 10 }, deviceid } }),
+    create: (deviceid) => ({
+      midi: {
+        midiNote: { note: 1, channel: 10 },
+        deviceid,
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+      },
+    }),
   },
   crkdDrum: {
     create: (deviceid) => ({
@@ -278,6 +296,63 @@ export const getHostSourceType = (item: proto.IProfileAssignmentInfo): string | 
   return null;
 };
 
+export type ProfileSlot = {
+  slotId: number;
+  item: proto.IProfileAssignmentInfo;
+  items: proto.IProfileAssignmentInfo[];
+  deviceKind: string;
+  key: string;
+  label: string;
+  midiChannel?: number;
+};
+
+export function getProfileSlotKey(deviceKind: string, slotId: number) {
+  return `${deviceKind}:${slotId}`;
+}
+
+export function getAssignmentTriggerIds(assignments: proto.IProfileAssignmentInfo[] = []) {
+  let triggerId = 0;
+  return assignments.map((item) => {
+    const currentId = triggerId;
+    const hasInputTrigger =
+      !!getSelectedInput(item.input?.input) || !!getSelectedInput(item.inputAnyTime?.input);
+    const hasTrigger =
+      item.consoleType != null ||
+      item.bluetooth != null ||
+      item.ps2Emulation != null ||
+      item.wiiEmulation != null ||
+      getHostSourceType(item) != null ||
+      hasInputTrigger;
+    if (item.copilotProfile == null && hasTrigger) {
+      triggerId += 1;
+    }
+    return currentId;
+  });
+}
+
+export function getAssignmentSlotIds(assignments: proto.IProfileAssignmentInfo[] = []) {
+  const counts = new Map<string, number>();
+  return assignments.map((item) => {
+    const source = getHostSourceType(item);
+    if (!source) {
+      return 0;
+    }
+    const deviceKind =
+      source === 'midiChannel'
+        ? 'midi'
+        : source === 'wiiExt'
+          ? 'wii'
+          : source === 'ps2Cnt'
+            ? 'psx'
+            : source.startsWith('bluetooth')
+              ? 'bt'
+              : 'usbHost';
+    const slotId = (counts.get(deviceKind) ?? 0) + 1;
+    counts.set(deviceKind, slotId);
+    return slotId;
+  });
+}
+
 export function getProfileSlotLabel(
   item: proto.IProfileAssignmentInfo,
   slotId: number,
@@ -310,11 +385,18 @@ export function getProfileSlotLabel(
 }
 
 export function getProfileSlots(profile?: proto.IProfile, t?: (key: string) => string) {
-  return (profile?.assignments ?? []).flatMap((rule) =>
-    (rule.assignments ?? []).flatMap((item, slotId) => {
+  const slots = new Map<string, ProfileSlot>();
+  for (const rule of profile?.assignments ?? []) {
+    const assignments = rule.assignments ?? [];
+    const slotIds =
+      (profile?.opts?.deviceSlotIdVersion ?? 0) >= 1
+        ? getAssignmentSlotIds(assignments)
+        : getAssignmentTriggerIds(assignments);
+    for (const [assignmentIndex, item] of assignments.entries()) {
+      const slotId = slotIds[assignmentIndex];
       const source = getHostSourceType(item);
       if (!source) {
-        return [];
+        continue;
       }
       const deviceKind =
         source === 'midiChannel'
@@ -326,39 +408,157 @@ export function getProfileSlots(profile?: proto.IProfile, t?: (key: string) => s
               : source.startsWith('bluetooth')
                 ? 'bt'
                 : 'usbHost';
-      return [
-        {
+      const key = getProfileSlotKey(deviceKind, slotId);
+      const existing = slots.get(key);
+      if (existing) {
+        existing.items.push(item);
+        const labels = new Set(existing.label.split(' / '));
+        labels.add(getProfileSlotLabel(item, slotId, t));
+        existing.label = [...labels].join(' / ');
+      } else {
+        slots.set(key, {
           slotId,
           item,
+          items: [item],
           deviceKind,
+          key,
           label: getProfileSlotLabel(item, slotId, t),
-        },
-      ];
-    })
-  );
+        });
+      }
+    }
+  }
+  return [...slots.values()].map((slot) => {
+    const channels = new Set(
+      slot.items.flatMap((item) => (item.midiChannel == null ? [] : [item.midiChannel]))
+    );
+    return {
+      ...slot,
+      midiChannel: channels.size === 1 ? [...channels][0] : undefined,
+    };
+  });
 }
 
-export function createSlotInput(
-  slot: ReturnType<typeof getProfileSlots>[number],
-  capabilities: InputCapabilities
-) {
-  if (slot.item.midiChannel != null) {
+export function createSlotInput(slot: ProfileSlot, capabilities: InputCapabilities) {
+  if (slot.deviceKind === 'midi') {
     return {
       midi: {
         deviceid: slot.slotId,
-        midiNote: { note: 1, channel: slot.item.midiChannel },
+        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+        midiNote: { note: 1, channel: slot.midiChannel ?? 10 },
       },
     };
   }
   return createDeviceInput(slot.deviceKind, slot.slotId, capabilities);
 }
 
+export function getProfileSlotForInput(input: proto.IInput, slots: ProfileSlot[]) {
+  const deviceId = getInputDeviceId(input);
+  if (deviceId == null) {
+    return undefined;
+  }
+
+  let deviceKind: string | undefined;
+  if (input.wiiAxis || input.wiiButton) {
+    deviceKind = 'wii';
+  } else if (input.ps2Axis || input.ps2Button) {
+    deviceKind = 'psx';
+  } else if (input.usbAxis || input.usbButton) {
+    deviceKind = 'usbHost';
+  } else if (input.btAxis || input.btButton) {
+    deviceKind = 'bt';
+  } else if (input.midi) {
+    switch (input.midi.sourceType) {
+      case proto.MidiInputSourceType.MidiInputSourceType_MIDI:
+        deviceKind = 'midi';
+        break;
+      case proto.MidiInputSourceType.MidiInputSourceType_Auto:
+        return undefined;
+      case proto.MidiInputSourceType.MidiInputSourceType_USB:
+        deviceKind = 'usbHost';
+        break;
+      case proto.MidiInputSourceType.MidiInputSourceType_Bluetooth:
+        deviceKind = 'bt';
+        break;
+      case proto.MidiInputSourceType.MidiInputSourceType_Wii:
+        deviceKind = 'wii';
+        break;
+      default: {
+        const candidates = slots.filter(
+          (slot) =>
+            slot.slotId === deviceId && ['midi', 'usbHost', 'bt', 'wii'].includes(slot.deviceKind)
+        );
+        if (candidates.length === 1) {
+          return candidates[0];
+        }
+      }
+    }
+  }
+
+  if (!deviceKind) {
+    return undefined;
+  }
+  return slots.find((slot) => slot.key === getProfileSlotKey(deviceKind, deviceId));
+}
+
+export function midiInputSourceType(deviceKind?: string) {
+  switch (deviceKind) {
+    case 'usbHost':
+      return proto.MidiInputSourceType.MidiInputSourceType_USB;
+    case 'bt':
+      return proto.MidiInputSourceType.MidiInputSourceType_Bluetooth;
+    case 'wii':
+      return proto.MidiInputSourceType.MidiInputSourceType_Wii;
+    case 'midi':
+      return proto.MidiInputSourceType.MidiInputSourceType_MIDI;
+    default:
+      return proto.MidiInputSourceType.MidiInputSourceType_Auto;
+  }
+}
+
+function midiSourceDeviceKind(sourceType?: proto.MidiInputSourceType | null): string | undefined {
+  switch (sourceType) {
+    case proto.MidiInputSourceType.MidiInputSourceType_USB:
+      return 'usbHost';
+    case proto.MidiInputSourceType.MidiInputSourceType_Bluetooth:
+      return 'bt';
+    case proto.MidiInputSourceType.MidiInputSourceType_Wii:
+      return 'wii';
+    case proto.MidiInputSourceType.MidiInputSourceType_MIDI:
+      return 'midi';
+    case proto.MidiInputSourceType.MidiInputSourceType_Auto:
+      return undefined;
+    default:
+      return sourceType == null ? 'midi' : undefined;
+  }
+}
+
 export function withSlotMidiChannel(
   input: proto.IInput,
-  channels: Map<number, number>
+  channels: Map<string, number>,
+  slots: ProfileSlot[] = []
 ): proto.IInput {
   if (input.midi) {
-    const channel = channels.get(input.midi.deviceid ?? -1);
+    const midiDeviceId = input.midi.deviceid;
+    let deviceKind = midiSourceDeviceKind(input.midi.sourceType);
+    if (input.midi.sourceType == null) {
+      const candidates = new Set(
+        slots
+          .filter(
+            (slot) =>
+              slot.slotId === midiDeviceId &&
+              ['midi', 'usbHost', 'bt', 'wii'].includes(slot.deviceKind)
+          )
+          .map((slot) => slot.deviceKind)
+      );
+      if (candidates.size !== 1) {
+        return input;
+      }
+      deviceKind = [...candidates][0];
+    }
+    if (!deviceKind) {
+      return input;
+    }
+    const channel = channels.get(getProfileSlotKey(deviceKind, input.midi.deviceid ?? -1));
     if (channel == null) {
       return input;
     }
@@ -380,14 +580,14 @@ export function withSlotMidiChannel(
       ...input,
       shortcut: {
         ...input.shortcut,
-        inputs: input.shortcut.inputs.map((x) => withSlotMidiChannel(x, channels)),
+        inputs: input.shortcut.inputs.map((x) => withSlotMidiChannel(x, channels, slots)),
       },
     };
   }
   if (input.held?.input) {
     return {
       ...input,
-      held: { ...input.held, input: withSlotMidiChannel(input.held.input, channels) },
+      held: { ...input.held, input: withSlotMidiChannel(input.held.input, channels, slots) },
     };
   }
   if (input.shifted) {
@@ -395,8 +595,12 @@ export function withSlotMidiChannel(
       ...input,
       shifted: {
         ...input.shifted,
-        input: input.shifted.input ? withSlotMidiChannel(input.shifted.input, channels) : undefined,
-        shift: input.shifted.shift ? withSlotMidiChannel(input.shifted.shift, channels) : undefined,
+        input: input.shifted.input
+          ? withSlotMidiChannel(input.shifted.input, channels, slots)
+          : undefined,
+        shift: input.shifted.shift
+          ? withSlotMidiChannel(input.shifted.shift, channels, slots)
+          : undefined,
       },
     };
   }
@@ -405,9 +609,11 @@ export function withSlotMidiChannel(
       ...input,
       cycle: {
         ...input.cycle,
-        input: input.cycle.input ? withSlotMidiChannel(input.cycle.input, channels) : undefined,
+        input: input.cycle.input
+          ? withSlotMidiChannel(input.cycle.input, channels, slots)
+          : undefined,
         inputReverse: input.cycle.inputReverse
-          ? withSlotMidiChannel(input.cycle.inputReverse, channels)
+          ? withSlotMidiChannel(input.cycle.inputReverse, channels, slots)
           : undefined,
       },
     };
@@ -415,7 +621,10 @@ export function withSlotMidiChannel(
   if (input.toggle?.input) {
     return {
       ...input,
-      toggle: { ...input.toggle, input: withSlotMidiChannel(input.toggle.input, channels) },
+      toggle: {
+        ...input.toggle,
+        input: withSlotMidiChannel(input.toggle.input, channels, slots),
+      },
     };
   }
   return input;

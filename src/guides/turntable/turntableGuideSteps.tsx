@@ -16,10 +16,10 @@ import {
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
-import { GuideDefinition, GuideStepProps } from '../types';
+import { GuideStepProps } from '../types';
 
 // Step 1: Supplies & Intro
-function TurntableIntroStep(props: GuideStepProps) {
+export function TurntableIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
 
   const guideContent = (
@@ -134,7 +134,7 @@ function TurntableIntroStep(props: GuideStepProps) {
 }
 
 // Step 2: Wiring
-function TurntableWiringStep(props: GuideStepProps) {
+export function TurntableWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
 
   const guideContent = (
@@ -203,7 +203,7 @@ function TurntableWiringStep(props: GuideStepProps) {
 }
 
 // Step 3: Review & Save
-function TurntableReviewStep(props: GuideStepProps) {
+export function TurntableReviewStep(props: GuideStepProps) {
   const { t } = useTranslation();
   const commitConfig = useConfigStore((state) => state.commitConfig);
   const connected = useConfigStore((state) => state.connected);
@@ -280,41 +280,3 @@ function TurntableReviewStep(props: GuideStepProps) {
     />
   );
 }
-
-export const DJ_TURNTABLE_GUIDE: GuideDefinition = {
-  id: 'dj-turntable',
-  title: 'DJ Hero Turntable Controller',
-  subtitle: 'Optical Encoder Platter & Crossfader Conversion',
-  description:
-    'Rewire any DJ Hero turntable to a Raspberry Pi Pico for low-latency scratch vinyl and crossfader controls in DJ Hero and Clone Hero.',
-  category: 'turntable',
-  difficulty: 'intermediate',
-  estimatedTime: '45 - 60 mins',
-  badge: 'Optical Scratching',
-  supplies: ['Raspberry Pi Pico 1 or 2', 'DJ Hero Turntable', 'Soldering Iron & Wire'],
-  steps: [
-    {
-      id: 'tt-intro',
-      title: 'Supplies & Architecture',
-      shortTitle: 'Supplies',
-      description: 'Understanding the platter encoder, crossfader, and face buttons.',
-      render: TurntableIntroStep,
-    },
-    {
-      id: 'tt-wiring',
-      title: 'Platter & Crossfader Wiring',
-      shortTitle: 'Wiring',
-      description: 'Connect I2C platter lines, GP26 crossfader, and button inputs.',
-      badge: 'I2C & ADC',
-      render: TurntableWiringStep,
-    },
-    {
-      id: 'tt-test',
-      title: 'Live Test & Save',
-      shortTitle: 'Test & Save',
-      description: 'Verify scratch direction and save configuration to Pico flash.',
-      badge: 'Save to Pico',
-      render: TurntableReviewStep,
-    },
-  ],
-};

@@ -71,6 +71,7 @@ import {
   USB_HOST_SUBTYPES,
 } from '@/components/Defaults/defaultMappings';
 import { isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import { PinBox } from '@/components/Devices/Pins';
 import {
   getLabel,
   getMatrixLabel,
@@ -78,22 +79,25 @@ import {
   getSwitchNetworkLabel,
   hasDefaults,
   isLed,
-  PinBox,
-} from '@/components/Devices/Pins';
+} from '@/components/Devices/pinUtils';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
 import {
   createDeviceInput,
   createSlotInput,
   createStandaloneInput,
+  getAssignmentSlotIds,
+  getAssignmentTriggerIds,
   getHostSourceType,
   getInputDeviceId,
+  getProfileSlotForInput,
   getProfileSlotLabel,
   getProfileSlots,
   isAnalogInput,
   isDrumInput,
   isSelectablePS2Axis,
   isSelectableWiiAxis,
+  midiInputSourceType,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
@@ -453,6 +457,7 @@ function OutputBox({
       );
     case proto.SubType.Gamepad:
     case proto.SubType.Dancepad:
+    case proto.SubType.Taiko:
     case proto.SubType.StageKit:
       return (
         <DropdownOutputBox
@@ -674,6 +679,39 @@ function OutputBox({
           dispatchMidi={dispatchMidi}
         />
       );
+    case proto.SubType.ProjectDiva:
+      return (
+        <DropdownOutputBox
+          label={label}
+          title={title}
+          type={type}
+          mode={mode}
+          legendMode={legendMode}
+          midi={midi}
+          valMidi={valMidi}
+          e={proto.ProjectDivaAxisType}
+          e2={proto.GamepadAxisType}
+          e3={proto.GamepadButtonType}
+          val={mapping?.divaAxis ?? undefined}
+          val2={mapping?.gamepadAxis ?? undefined}
+          val3={mapping?.gamepadButton ?? undefined}
+          dispatch={(axis) => dispatch({ divaAxis: axis }, true, true)}
+          dispatch2={gamepadAxisCallback}
+          dispatch3={gamepadButtonCallback}
+          extraOptions={Array.from({ length: 32 }, (_, index) => ({
+            value: `divaTouch:${index + 1}`,
+            label: t('outputs.projectDivaTouch', { index: index + 1 }),
+          }))}
+          valExtra={mapping?.divaTouch ? `divaTouch:${mapping.divaTouch}` : undefined}
+          dispatchExtra={(value) => {
+            const index = Number(value.slice('divaTouch:'.length));
+            if (Number.isInteger(index) && index >= 1 && index <= 32) {
+              dispatch({ divaTouch: index }, false, false);
+            }
+          }}
+          dispatchMidi={dispatchMidi}
+        />
+      );
     case proto.SubType.ProKeys:
       return (
         <DropdownOutputBox
@@ -726,8 +764,6 @@ function OutputBox({
           dispatchMidi={dispatchMidi}
         />
       );
-    case proto.SubType.Taiko:
-      break;
     case proto.SubType.KeyboardMouse:
       return (
         <TextInput
@@ -866,11 +902,13 @@ function DropdownOutputBox<
         rightSectionPointerEvents="none"
         onClick={() => inputCombobox.toggleDropdown()}
       >
-        {extraLabel || valMidi
-          ? t(`input.${v}`)
-          : t(
-              `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
-            )}
+        {extraLabel
+          ? extraLabel
+          : valMidi
+            ? t(`input.${v}`)
+            : t(
+                `${label}.${FixLabel(mode ?? proto.FaceButtonMappingMode.LegendBased, type, v, legendMode)}`
+              )}
       </InputBase>
     ) : (
       <InputBase
@@ -1398,8 +1436,8 @@ function SantrollerInput({
     [deviceStatus, profile]
   );
   const matchingSlot = useMemo(
-    () => profileSlots.find((s) => s.slotId === deviceId),
-    [profileSlots, deviceId]
+    () => getProfileSlotForInput(input, profileSlots),
+    [profileSlots, input]
   );
   const device = matchingSlot ? undefined : deviceStatusForId;
 
@@ -1533,8 +1571,7 @@ function SantrollerInput({
           onOptionSubmit={(val) => {
             deviceCombobox.closeDropdown();
             if (val.startsWith('slot:')) {
-              const slotId = parseInt(val.slice(5), 10);
-              const slot = profileSlots.find((s) => s.slotId === slotId);
+              const slot = profileSlots.find((s) => s.key === val.slice(5));
               if (slot) {
                 const nextInput = createSlotInput(slot, { axis, button });
                 if (nextInput) {
@@ -1600,7 +1637,7 @@ function SantrollerInput({
                   </Combobox.Option>
                 ))}
               {profileSlots.map((slot) => (
-                <Combobox.Option value={`slot:${slot.slotId}`} key={`slot:${slot.slotId}`}>
+                <Combobox.Option value={`slot:${slot.key}`} key={`slot:${slot.key}`}>
                   <Group justify="space-between" wrap="nowrap" w="100%">
                     <Text fz="sm" span>
                       {slot.label}
@@ -1957,15 +1994,16 @@ function SantrollerInput({
               midi: {
                 ...midi!,
                 deviceid: deviceId,
-                ...(matchingSlot?.item.midiChannel != null && {
+                sourceType: midiInputSourceType(matchingSlot?.deviceKind),
+                ...(matchingSlot?.midiChannel != null && {
                   midiNote: midi?.midiNote
-                    ? { ...midi.midiNote, channel: matchingSlot.item.midiChannel }
+                    ? { ...midi.midiNote, channel: matchingSlot.midiChannel }
                     : undefined,
                   midiControlChange: midi?.midiControlChange
-                    ? { ...midi.midiControlChange, channel: matchingSlot.item.midiChannel }
+                    ? { ...midi.midiControlChange, channel: matchingSlot.midiChannel }
                     : undefined,
                   midiPitchBend: midi?.midiPitchBend
-                    ? { ...midi.midiPitchBend, channel: matchingSlot.item.midiChannel }
+                    ? { ...midi.midiPitchBend, channel: matchingSlot.midiChannel }
                     : undefined,
                 }),
               },
@@ -2008,7 +2046,11 @@ function SantrollerInput({
             }
             dispatchMidi={(midi) =>
               dispatch({
-                midi: { ...midi!, deviceid: deviceId },
+                midi: {
+                  ...midi!,
+                  deviceid: deviceId,
+                  sourceType: midiInputSourceType(matchingSlot?.deviceKind),
+                },
               })
             }
           />
@@ -2075,7 +2117,11 @@ function SantrollerInput({
             }
             dispatchMidi={(midi) =>
               dispatch({
-                midi: { ...midi!, deviceid: deviceId },
+                midi: {
+                  ...midi!,
+                  deviceid: deviceId,
+                  sourceType: midiInputSourceType(matchingSlot?.deviceKind),
+                },
               })
             }
             midi
@@ -2142,7 +2188,11 @@ function SantrollerInput({
             }
             dispatchMidi={(midi) =>
               dispatch({
-                midi: { ...midi!, deviceid: deviceId },
+                midi: {
+                  ...midi!,
+                  deviceid: deviceId,
+                  sourceType: midiInputSourceType(matchingSlot?.deviceKind),
+                },
               })
             }
             midi
@@ -2399,7 +2449,7 @@ function SantrollerInput({
               })
             }
           />
-          {matchingSlot?.item.midiChannel == null && (
+          {matchingSlot?.midiChannel == null && (
             <NumberInput
               label={t('input.midiChannel', 'MIDI Channel')}
               value={input.midi.midiNote.channel}
@@ -2429,7 +2479,7 @@ function SantrollerInput({
               })
             }
           />
-          {matchingSlot?.item.midiChannel == null && (
+          {matchingSlot?.midiChannel == null && (
             <NumberInput
               label={t('input.midiChannel')}
               value={input.midi.midiControlChange.channel}
@@ -2445,7 +2495,7 @@ function SantrollerInput({
           )}
         </>
       )}
-      {input.midi?.midiPitchBend && matchingSlot?.item.midiChannel == null && (
+      {input.midi?.midiPitchBend && matchingSlot?.midiChannel == null && (
         <>
           <NumberInput
             label={t('input.midiPitchBend')}
@@ -5011,10 +5061,9 @@ export function SantrollerAssignment({
   );
 }
 
-export { getHostSourceType };
-
 export function ControllerSourcesEditor({
   assignments,
+  perKindSlotIds,
   onAddSource,
   onRemoveSource,
   onUpdateSource,
@@ -5025,6 +5074,7 @@ export function ControllerSourcesEditor({
   hasPsx,
 }: {
   assignments: proto.IProfileAssignmentInfo[];
+  perKindSlotIds: boolean;
   onAddSource: (type: string) => void;
   onRemoveSource: (idx: number) => void;
   onUpdateSource: (idx: number, updated: proto.IProfileAssignmentInfo) => void;
@@ -5036,13 +5086,22 @@ export function ControllerSourcesEditor({
 }) {
   const { t } = useTranslation();
   const hostIndices = useMemo(() => {
+    const slotIds = perKindSlotIds
+      ? getAssignmentSlotIds(assignments)
+      : getAssignmentTriggerIds(assignments);
     return assignments
-      .map((item, idx) => ({ item, idx, type: getHostSourceType(item) }))
+      .map((item, idx) => ({ item, idx, slotId: slotIds[idx], type: getHostSourceType(item) }))
       .filter(
-        (x): x is { item: proto.IProfileAssignmentInfo; idx: number; type: string } =>
-          x.type !== null
+        (
+          x
+        ): x is {
+          item: proto.IProfileAssignmentInfo;
+          idx: number;
+          slotId: number;
+          type: string;
+        } => x.type !== null
       );
-  }, [assignments]);
+  }, [assignments, perKindSlotIds]);
 
   return (
     <Stack gap="xs">
@@ -5074,12 +5133,12 @@ export function ControllerSourcesEditor({
         </Text>
       </Card>
 
-      {hostIndices.map(({ item, idx, type: hType }) => (
+      {hostIndices.map(({ item, idx, slotId, type: hType }) => (
         <Card key={idx} padding="xs" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
           <Stack gap={4}>
             <Group justify="space-between" align="center">
               <Badge size="sm" variant="light" color="blue">
-                {getProfileSlotLabel(item, idx, t)}
+                {getProfileSlotLabel(item, slotId, t)}
               </Badge>
               <ActionIcon
                 size="xs"
@@ -5291,6 +5350,9 @@ function SantrollerAssignmentList({
     DeviceProfileAssignmentTypes.some((y) => x[y] != null)
   );
   const emulationItem = emulationIdx !== -1 ? assignments[emulationIdx] : undefined;
+  const deviceSlotIdVersion = useConfigStore(
+    (state) => state.config.profiles?.[profileIdx]?.opts?.deviceSlotIdVersion ?? 0
+  );
 
   const hostIndices = useMemo(() => {
     return assignments
@@ -5916,6 +5978,7 @@ function SantrollerAssignmentList({
 
           <ControllerSourcesEditor
             assignments={assignments}
+            perKindSlotIds={deviceSlotIdVersion >= 1}
             onAddSource={addHostSource}
             onRemoveSource={removeHostSource}
             onUpdateSource={updateHostSource}
@@ -6270,8 +6333,9 @@ function BlankProfileWizard({
     if (hostAssignments.length === 0) {
       newMappings.push(...getDefaultMappings('gpio', deviceToEmulate));
     } else {
-      hostAssignments.forEach((item) => {
-        const slotId = finalAssignments.indexOf(item);
+      const hostSlotIds = getAssignmentSlotIds(hostAssignments);
+      hostAssignments.forEach((item, idx) => {
+        const slotId = hostSlotIds[idx];
         if (item.wiiExt != null) {
           const wiiDev = Object.values(deviceStatus).find((d) => d.type === 'wii');
           newMappings.push(
@@ -6338,6 +6402,7 @@ function BlankProfileWizard({
         ...profile,
         opts: {
           ...profile.opts,
+          deviceSlotIdVersion: 1,
           name,
           deviceToEmulate,
         },
@@ -6491,6 +6556,7 @@ function BlankProfileWizard({
         {/* Step 2: Controller Sources */}
         <ControllerSourcesEditor
           assignments={hostAssignments}
+          perKindSlotIds
           onAddSource={addHostSource}
           onRemoveSource={removeHostSource}
           onUpdateSource={updateHostSource}
