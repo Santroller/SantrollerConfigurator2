@@ -186,7 +186,8 @@
     "addButton": "Add button"
   },
   "encoder": {
-    "deltaRate": "Sampling Rate (ms)"
+    "deltaRate": "Sampling Rate (ms)",
+    "positionScale": "Position scale (per step)"
   },
   "axis": {
     "calibration": "Axis Calibration",

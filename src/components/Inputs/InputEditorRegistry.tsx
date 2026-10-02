@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
+import { NumberInput, Stack } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { DropdownBox } from './DropdownBox';
 import { getSelectedInput, InputKind } from './inputRegistry';
@@ -36,15 +38,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
       dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
     />
   ),
-  encoder: ({ input, dispatch }) => (
-    <DropdownBox
-      title="input.title"
-      e={proto.EncoderInputType}
-      val={input.encoder!.type}
-      label="encoder.inputs"
-      dispatch={(type) => dispatch({ encoder: { ...input.encoder!, type } })}
-    />
-  ),
+  encoder: ({ input, dispatch }) => <EncoderInputEditor input={input} dispatch={dispatch} />,
   accelerometer: ({ input, dispatch }) => (
     <DropdownBox
       title="input.title"
@@ -77,6 +71,36 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
     />
   ),
 };
+
+function EncoderInputEditor({ input, dispatch }: InputEditorProps) {
+  const { t } = useTranslation();
+  const encoder = input.encoder!;
+  return (
+    <Stack gap="xs">
+      <DropdownBox
+        title="input.title"
+        e={proto.EncoderInputType}
+        val={encoder.type}
+        label="encoder.inputs"
+        dispatch={(type) => dispatch({ encoder: { ...encoder, type } })}
+      />
+      {encoder.type === proto.EncoderInputType.EncoderPosition && (
+        <NumberInput
+          label={t('encoder.positionScale', 'Position scale (per step)')}
+          min={1}
+          max={65535}
+          allowDecimal={false}
+          value={encoder.positionScale || 1}
+          onChange={(value) => {
+            if (typeof value === 'number' && value >= 1 && value <= 65535) {
+              dispatch({ encoder: { ...encoder, positionScale: value } });
+            }
+          }}
+        />
+      )}
+    </Stack>
+  );
+}
 
 export function RegisteredInputEditor(props: InputEditorProps) {
   const kind = getSelectedInput(props.input)?.kind;
