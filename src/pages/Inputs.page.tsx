@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -1315,6 +1315,19 @@ function SantrollerLabel({
       return <Text>{labelsText}</Text>;
     }
   }
+  if (input.peripheral) {
+    const labelsText = getLabel(
+      t,
+      Object.values(guiDevices),
+      [],
+      input.peripheral.pin,
+      true,
+      false
+    );
+    if (labelsText || !fallback) {
+      return <Text>{labelsText}</Text>;
+    }
+  }
   if (input.protarNeckButton?.button != null) {
     return (
       <Text>
@@ -1484,6 +1497,21 @@ function SantrollerInput({
         </Text>
       </Group>
     );
+  } else if (input.peripheral) {
+    const dev = deviceStatus[input.peripheral.deviceid?.toString() ?? ''];
+    const addr = dev?.device.peripheral?.address
+      ? `0x${dev.device.peripheral.address.toString(16)}`
+      : '0x75';
+    deviceValue = (
+      <Group gap="2">
+        <Text fz="sm" span>
+          {t('devices.gpio')}
+        </Text>
+        <Text fz="xs" span opacity="0.7">
+          {t(input.peripheral.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')} (Peripheral {addr})
+        </Text>
+      </Group>
+    );
   } else if (input.shortcut) {
     deviceValue = (
       <Text fz="sm" span>
@@ -1514,13 +1542,17 @@ function SantrollerInput({
     } else {
       const dev = deviceStatus[deviceId.toString()];
       if (dev) {
+        const parent = dev.parentId ? deviceStatus[dev.parentId] : undefined;
+        const parentAddr = parent?.device.peripheral?.address
+          ? `0x${parent.device.peripheral.address.toString(16)}`
+          : undefined;
         deviceValue = (
           <Group gap="2">
             <Text fz="sm" span>
               {t(`devices.${dev.type}`)}
             </Text>
             <Text fz="xs" span opacity="0.7">
-              ({DeviceStatus.label(dev)})
+              ({DeviceStatus.label(dev)}){parentAddr && ` (Peripheral ${parentAddr})`}
             </Text>
           </Group>
         );
@@ -1542,27 +1574,39 @@ function SantrollerInput({
     detectedMapping === mappingIdx &&
     (innerIdx === null || detectedInnerMapping === innerIdx) &&
     detected !== -1 &&
-    input.gpio
+    (input.gpio || input.peripheral)
   ) {
-    dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    if (input.gpio) {
+      dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    } else if (input.peripheral) {
+      dispatch({ peripheral: { ...input.peripheral!, pin: detected } });
+    }
   }
   if (
     detectedActivation !== undefined &&
     detectedActivation === activationIdx &&
     (innerIdx === null || detectedInnerMapping === innerIdx) &&
     detected !== -1 &&
-    input.gpio
+    (input.gpio || input.peripheral)
   ) {
-    dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    if (input.gpio) {
+      dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    } else if (input.peripheral) {
+      dispatch({ peripheral: { ...input.peripheral!, pin: detected } });
+    }
   }
   if (
     detectedLed !== undefined &&
     detectedLed === ledIdx &&
     detected !== -1 &&
     (innerIdx === null || detectedInnerMapping === innerIdx) &&
-    input.gpio
+    (input.gpio || input.peripheral)
   ) {
-    dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    if (input.gpio) {
+      dispatch({ gpio: { ...input.gpio!, pin: detected } });
+    } else if (input.peripheral) {
+      dispatch({ peripheral: { ...input.peripheral!, pin: detected } });
+    }
   }
   return (
     <>
@@ -1571,6 +1615,20 @@ function SantrollerInput({
           store={deviceCombobox}
           onOptionSubmit={(val) => {
             deviceCombobox.closeDropdown();
+            if (val.startsWith('peripheral_digital:')) {
+              const deviceid = parseInt(val.slice('peripheral_digital:'.length), 10);
+              dispatch({
+                peripheral: { pin: -1, pinMode: proto.PinMode.PullUp, analog: false, deviceid },
+              });
+              return;
+            }
+            if (val.startsWith('peripheral_analog:')) {
+              const deviceid = parseInt(val.slice('peripheral_analog:'.length), 10);
+              dispatch({
+                peripheral: { pin: -1, pinMode: proto.PinMode.Floating, analog: true, deviceid },
+              });
+              return;
+            }
             if (val.startsWith('slot:')) {
               const slot = profileSlots.find((s) => s.key === val.slice(5));
               if (slot) {
@@ -1620,23 +1678,63 @@ function SantrollerInput({
             <Combobox.Options>
               {Object.values(deviceStatus)
                 .filter(
-                  (status) => isInputDeviceKind(status.type) && !requiresAssignment(status.type)
+                  (status) =>
+                    status.type !== 'peripheral' &&
+                    isInputDeviceKind(status.type) &&
+                    !requiresAssignment(status.type)
                 )
-                .map((item) => (
-                  <Combobox.Option value={item.id} key={item.id}>
-                    <Group justify="space-between" wrap="nowrap" w="100%">
-                      <Group gap="2">
-                        <Text fz="sm" span>
-                          {t(`devices.${item.type}`)}
-                        </Text>
+                .map((item) => {
+                  const parent = item.parentId ? deviceStatus[item.parentId] : undefined;
+                  const parentAddr = parent?.device.peripheral?.address
+                    ? `0x${parent.device.peripheral.address.toString(16)}`
+                    : undefined;
+                  return (
+                    <Combobox.Option value={item.id} key={item.id}>
+                      <Group justify="space-between" wrap="nowrap" w="100%">
+                        <Group gap="2">
+                          <Text fz="sm" span>
+                            {t(`devices.${item.type}`)}
+                          </Text>
 
-                        <Text fz="xs" span opacity="0.7">
-                          ({DeviceStatus.label(item)})
-                        </Text>
+                          <Text fz="xs" span opacity="0.7">
+                            ({DeviceStatus.label(item)}){parentAddr && ` (Peripheral ${parentAddr})`}
+                          </Text>
+                        </Group>
                       </Group>
-                    </Group>
-                  </Combobox.Option>
-                ))}
+                    </Combobox.Option>
+                  );
+                })}
+              {Object.values(deviceStatus)
+                .filter((status) => status.type === 'peripheral')
+                .map((item) => {
+                  const addr = item.device.peripheral?.address
+                    ? `0x${item.device.peripheral.address.toString(16)}`
+                    : '0x75';
+                  return (
+                    <Fragment key={item.id}>
+                      <Combobox.Option value={`peripheral_analog:${item.id}`}>
+                        <Group gap="2">
+                          <Text fz="sm" span>
+                            {t('devices.gpio')}
+                          </Text>
+                          <Text fz="xs" span opacity="0.7">
+                            {t('devices.gpio_analog')} (Peripheral {addr})
+                          </Text>
+                        </Group>
+                      </Combobox.Option>
+                      <Combobox.Option value={`peripheral_digital:${item.id}`}>
+                        <Group gap="2">
+                          <Text fz="sm" span>
+                            {t('devices.gpio')}
+                          </Text>
+                          <Text fz="xs" span opacity="0.7">
+                            {t('devices.gpio_digital')} (Peripheral {addr})
+                          </Text>
+                        </Group>
+                      </Combobox.Option>
+                    </Fragment>
+                  );
+                })}
               {profileSlots.map((slot) => (
                 <Combobox.Option value={`slot:${slot.key}`} key={`slot:${slot.key}`}>
                   <Group justify="space-between" wrap="nowrap" w="100%">
@@ -2303,6 +2401,43 @@ function SantrollerInput({
                 ledIdx,
                 innerIdx,
                 input.gpio!.analog
+                  ? proto.PinDetectType.DetectAnalog
+                  : proto.PinDetectType.DetectDigital
+              );
+            }}
+            disabled={detecting}
+          >
+            {t('pin_detect')}
+          </Button>
+        </>
+      )}
+      {input.peripheral && (
+        <>
+          <Group grow>
+            <PinBox
+              label="pin_label"
+              valid={input.peripheral.analog ? AnalogPinsNamed : AllPinsNamed}
+              pin={input.peripheral.pin}
+              dispatch={(pin) => dispatch({ peripheral: { ...input.peripheral!, pin } })}
+              deviceId={input.peripheral.deviceid?.toString()}
+            />
+            <DropdownBox
+              title="gpio.mode.label"
+              e={proto.PinMode}
+              val={input.peripheral?.pinMode}
+              label="gpio.mode"
+              dispatch={(pinMode) => dispatch({ peripheral: { ...input.peripheral!, pinMode } })}
+            />
+          </Group>
+          <Button
+            w="100%"
+            onClick={() => {
+              detectPins(
+                activationIdx,
+                mappingIdx,
+                ledIdx,
+                innerIdx,
+                input.peripheral!.analog
                   ? proto.PinDetectType.DetectAnalog
                   : proto.PinDetectType.DetectDigital
               );

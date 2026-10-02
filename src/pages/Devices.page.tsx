@@ -41,7 +41,7 @@ import { t, TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
-import { PinBox } from '@/components/Devices/Pins';
+import { DeviceContext, PinBox } from '@/components/Devices/Pins';
 import {
   AllPinsNamed,
   AnalogPinsNamed,
@@ -2229,7 +2229,11 @@ export function DevicesPage() {
           <SimpleGrid cols={3}>
             {Object.entries(config).map(([id, type]) => {
               const DeviceEditor = deviceEditors[type];
-              return <DeviceEditor id={id} key={id} />;
+              return (
+                <DeviceContext.Provider value={id} key={id}>
+                  <DeviceEditor id={id} />
+                </DeviceContext.Provider>
+              );
             })}
           </SimpleGrid>
           <Affix position={{ bottom: 40, right: 40 }}>

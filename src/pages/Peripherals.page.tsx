@@ -28,6 +28,7 @@ import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
 import { deviceEditors } from '@/pages/Devices.page';
+import { DeviceContext } from '@/components/Devices/Pins';
 import { buildUf2FromConfig, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { proto } from '@/components/SettingsContext/config';
 
@@ -236,7 +237,11 @@ export function PeripheralsPage() {
             {subDevices.map((subStatus) => {
               const DeviceEditor = deviceEditors[subStatus.type];
               if (!DeviceEditor) return null;
-              return <DeviceEditor id={subStatus.id} key={subStatus.id} />;
+              return (
+                <DeviceContext.Provider value={subStatus.id} key={subStatus.id}>
+                  <DeviceEditor id={subStatus.id} />
+                </DeviceContext.Provider>
+              );
             })}
           </SimpleGrid>
         )}

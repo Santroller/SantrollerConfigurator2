@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import { Combobox, Group, Input, InputBase, Text, useCombobox } from '@mantine/core';
 
 import '@/i18n/config';
@@ -6,23 +7,35 @@ import { useTranslation } from 'react-i18next';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
 import { getLabel } from './pinUtils';
 
+export const DeviceContext = createContext<string | undefined>(undefined);
+
 export function PinBox({
   pin,
   valid,
   error,
   label,
   dispatch,
+  deviceId,
 }: {
   pin: number;
   valid: { [pin: number]: { label: string; channel?: string; pin: number } };
   error?: string;
   label: string;
   dispatch?: (pin: number) => void;
+  deviceId?: string;
 }) {
   const { t } = useTranslation();
+  const contextDeviceId = useContext(DeviceContext);
+  const effectiveDeviceId = deviceId ?? contextDeviceId;
+
   const guiDevices = useConfigStore((state) => state.guiDevices);
   const devices = useConfigStore((state) => state.deviceStatus);
-  const labelsText = getLabel(t, Object.values(guiDevices), [], pin, false);
+
+  const currentDevice = effectiveDeviceId ? devices[effectiveDeviceId] : undefined;
+  const parentId = currentDevice?.parentId;
+
+  const relevantDevices = Object.values(devices).filter((d) => d.parentId === parentId);
+  const labelsText = getLabel(t, Object.values(guiDevices), relevantDevices, pin, false);
   const combobox = useCombobox({
     onDropdownOpen: () => combobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
@@ -99,7 +112,7 @@ export function PinBox({
                     {getLabel(
                       t,
                       Object.values(guiDevices),
-                      pin === item[1].pin ? [] : Object.values(devices),
+                      pin === item[1].pin ? [] : relevantDevices,
                       item[1].pin,
                       false
                     )}
