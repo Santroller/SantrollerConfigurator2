@@ -1131,6 +1131,40 @@ function Max1704XDevice({ id }: { id: string }) {
   );
 }
 
+function XboxOneAuthDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.xboxOneAuth) {
+    throw new Error('device null!');
+  }
+  const xboxOneAuth = device.xboxOneAuth;
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.xboxOneAuth"
+      image="covers/devices/xboxOneAuth.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <I2CDevice
+        device={xboxOneAuth.i2c}
+        dispatch={(val) =>
+          updateDevice({ deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, i2c: val } }, id)
+        }
+      />
+      <PinBox
+        label="xboxOneAuth.reset.pin"
+        pin={xboxOneAuth.resetPin ?? -1}
+        valid={AllPinsNamed}
+        dispatch={(pin) =>
+          updateDevice({ deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, resetPin: pin } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
+
 function PSXDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -2128,6 +2162,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   worldTourDrum: WorldTourDrumDevice,
   accelerometer: AccelerometerDevice,
   max1704x: Max1704XDevice,
+  xboxOneAuth: XboxOneAuthDevice,
   mpr121: MPR121Device,
   crazyGuitarNeck: CrazyGuitarNeckDevice,
   gh5Neck: GH5NeckDevice,

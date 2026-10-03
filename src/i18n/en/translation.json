@@ -16,6 +16,7 @@
     "worldTourDrum": "World Tour Drum Body",
     "usbHost": "USB Host",
     "max1704x": "MAX1704X",
+    "xboxOneAuth": "Xbox One Auth Chip",
     "multiplexer": "74HC Style Multiplexer",
     "psx": "PS1/PS2 Controller",
     "midiSerial": "MIDI Serial (DIN)",
@@ -641,6 +642,11 @@
       "PatternFade": "Breathing"
     },
     "set_off": "Set off colour"
+  },
+  "xboxOneAuth": {
+    "reset": {
+      "pin": "Reset (optional)"
+    }
   },
   "psx": {
     "data": {

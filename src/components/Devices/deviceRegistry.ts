@@ -34,6 +34,10 @@ const deviceRegistry: DeviceDefinitions = {
     create: () => ({ i2c: i2c(400000) }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
+  xboxOneAuth: {
+    create: () => ({ i2c: i2c(400000), resetPin: -1 }),
+    pins: ({ i2c, resetPin }) => [i2c.sda, i2c.scl, ...(resetPin != null && resetPin >= 0 ? [resetPin] : [])],
+  },
   mpr121: {
     create: () => ({ i2c: i2c(400000), touchpadCount: 0, ddrPins: 0, enablePins: 0 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
@@ -213,7 +217,7 @@ const deviceRegistry: DeviceDefinitions = {
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
 
-const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'ws2812', 'apa102', 'stp16cpc', 'dmx']);
+const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'xboxOneAuth', 'ws2812', 'apa102', 'stp16cpc', 'dmx']);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'crkdDrum',
