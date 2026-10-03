@@ -540,6 +540,9 @@
     "data_pin": "Data Pin"
   },
   "usb": {
+    "feather": {
+      "enable5v": "Enable 5V on Adafruit Feather with USB Host"
+    },
     "dp": {
       "label": "D+ Pin"
     },

@@ -1612,6 +1612,16 @@ function USBHostDevice({ id }: { id: string }) {
         label="usb.selector.label"
         description="usb.selector.description"
       />
+      <Switch
+        label="usb.feather.enable5v"
+        checked={usbHost.enable5v}
+        onChange={(e) =>
+          updateDevice(
+            { deviceid: parseInt(id, 10), usbHost: { ...usbHost, enable5v: e.target.checked } },
+            id
+          )
+        }
+      />
     </DeviceCard>
   );
 }
