@@ -18,7 +18,6 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useShallow } from 'zustand/react/shallow';
 import {
   Link as RouterLink,
   NavLink as RouterNavLink,
@@ -26,6 +25,7 @@ import {
   useMatch,
   useNavigate,
 } from 'react-router-dom';
+import { useShallow } from 'zustand/react/shallow';
 import {
   ActionIcon,
   AppShell,

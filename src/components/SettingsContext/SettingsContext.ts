@@ -546,7 +546,12 @@ function createDefault(type: string, id: string, parentId?: string) {
   if (!isDeviceKind(type)) {
     throw new Error(`Unknown device type: ${type}`);
   }
-  return new DeviceStatus(id, type as DeviceType, createDeviceConfig(type, parseInt(id, 10)), parentId);
+  return new DeviceStatus(
+    id,
+    type as DeviceType,
+    createDeviceConfig(type, parseInt(id, 10)),
+    parentId
+  );
 }
 const magic = 0xd2f1e365;
 function fixInput(mapping: proto.IMapping) {
@@ -1231,13 +1236,22 @@ export const useConfigStore = create<ConfigState & Actions>()(
             if (deviceEvent.device!.id in state.deviceStatus) {
               state.deviceStatus[deviceEvent.device!.id].connected = deviceEvent.device!.connected;
               if (deviceEvent.device!.updating !== undefined) {
-                state.deviceStatus[deviceEvent.device!.id].updating = !!deviceEvent.device!.updating;
+                state.deviceStatus[deviceEvent.device!.id].updating =
+                  !!deviceEvent.device!.updating;
               }
-              if (deviceEvent.device!.progress !== undefined && deviceEvent.device!.progress !== null) {
-                state.deviceStatus[deviceEvent.device!.id].updateProgress = deviceEvent.device!.progress;
+              if (
+                deviceEvent.device!.progress !== undefined &&
+                deviceEvent.device!.progress !== null
+              ) {
+                state.deviceStatus[deviceEvent.device!.id].updateProgress =
+                  deviceEvent.device!.progress;
               }
-              if (deviceEvent.device!.rebooting !== undefined && deviceEvent.device!.rebooting !== null) {
-                state.deviceStatus[deviceEvent.device!.id].rebooting = !!deviceEvent.device!.rebooting;
+              if (
+                deviceEvent.device!.rebooting !== undefined &&
+                deviceEvent.device!.rebooting !== null
+              ) {
+                state.deviceStatus[deviceEvent.device!.id].rebooting =
+                  !!deviceEvent.device!.rebooting;
               }
             }
           });

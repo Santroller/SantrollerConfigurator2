@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { IconDownload, IconPlus, IconTrash } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { useShallow } from 'zustand/react/shallow';
 import {
   ActionIcon,
   Affix,
@@ -23,16 +26,13 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
-import { IconDownload, IconPlus, IconTrash } from '@tabler/icons-react';
-import { useTranslation } from 'react-i18next';
-import { useShallow } from 'zustand/react/shallow';
+import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
+import { DeviceContext } from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
-import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
-import { deviceEditors } from '@/pages/Devices.page';
-import { DeviceContext } from '@/components/Devices/Pins';
-import { buildUf2FromConfig, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { proto } from '@/components/SettingsContext/config';
+import { buildUf2FromConfig, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { deviceEditors } from '@/pages/Devices.page';
 
 const subDeviceKinds = deviceKinds.filter((k) => k !== 'peripheral');
 
@@ -52,9 +52,7 @@ export function PeripheralsPage() {
   const addDevice = useConfigStore((state) => state.addDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const subDevices = useConfigStore(
-    useShallow((state) =>
-      Object.values(state.deviceStatus).filter((x) => x.parentId === id)
-    )
+    useShallow((state) => Object.values(state.deviceStatus).filter((x) => x.parentId === id))
   );
 
   const [sdaPin, setSdaPin] = useState<number>(status?.device?.peripheral?.i2c?.sda ?? 0);
@@ -99,7 +97,7 @@ export function PeripheralsPage() {
           scl: sclPin,
           clock: 400000,
         },
-        idPin: idPin,
+        idPin,
       },
     });
     const aux = proto.AuxConfigBlock.create({});
@@ -135,11 +133,7 @@ export function PeripheralsPage() {
               address: peripheral?.address != null ? peripheral.address.toString(16) : '??',
             })}
           </Title>
-          <Button
-            leftSection={<IconDownload size={16} />}
-            variant="light"
-            onClick={openUf2}
-          >
+          <Button leftSection={<IconDownload size={16} />} variant="light" onClick={openUf2}>
             {t('peripherals.download_uf2')}
           </Button>
         </Group>
@@ -156,7 +150,13 @@ export function PeripheralsPage() {
               <Text size="sm">
                 {t('peripherals.updating_notice', { percent: status.updateProgress ?? 0 })}
               </Text>
-              <Progress value={status.updateProgress ?? 0} animated size="lg" radius="xl" color="blue" />
+              <Progress
+                value={status.updateProgress ?? 0}
+                animated
+                size="lg"
+                radius="xl"
+                color="blue"
+              />
             </Stack>
           </Alert>
         )}
@@ -249,7 +249,11 @@ export function PeripheralsPage() {
               ]}
             />
             <Flex justify="flex-end">
-              <Button onClick={handleDownloadUf2} color="blue" leftSection={<IconDownload size={16} />}>
+              <Button
+                onClick={handleDownloadUf2}
+                color="blue"
+                leftSection={<IconDownload size={16} />}
+              >
                 {t('peripherals.download_confirm')}
               </Button>
             </Flex>
@@ -257,14 +261,14 @@ export function PeripheralsPage() {
         </Modal>
 
         {subDevices.length === 0 ? (
-          <Text c="dimmed">
-            {t('peripherals.empty')}
-          </Text>
+          <Text c="dimmed">{t('peripherals.empty')}</Text>
         ) : (
           <SimpleGrid cols={3}>
             {subDevices.map((subStatus) => {
               const DeviceEditor = deviceEditors[subStatus.type];
-              if (!DeviceEditor) return null;
+              if (!DeviceEditor) {
+                return null;
+              }
               return (
                 <DeviceContext.Provider value={subStatus.id} key={subStatus.id}>
                   <DeviceEditor id={subStatus.id} />

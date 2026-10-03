@@ -1508,7 +1508,8 @@ function SantrollerInput({
           {t('devices.gpio')}
         </Text>
         <Text fz="xs" span opacity="0.7">
-          {t(input.peripheral.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')} (Peripheral {addr})
+          {t(input.peripheral.analog ? 'devices.gpio_analog' : 'devices.gpio_digital')} (Peripheral{' '}
+          {addr})
         </Text>
       </Group>
     );
@@ -1697,7 +1698,8 @@ function SantrollerInput({
                           </Text>
 
                           <Text fz="xs" span opacity="0.7">
-                            ({DeviceStatus.label(item)}){parentAddr && ` (Peripheral ${parentAddr})`}
+                            ({DeviceStatus.label(item)})
+                            {parentAddr && ` (Peripheral ${parentAddr})`}
                           </Text>
                         </Group>
                       </Group>
