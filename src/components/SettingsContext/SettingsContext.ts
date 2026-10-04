@@ -1458,7 +1458,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }
       set((state) => {
         state.keepaliveTimeout = undefined;
-        state.connected = true;
+        state.connected = state.waitingForReload;
         state.hung = false;
         state.updating = false;
         state.hidDevice = undefined;

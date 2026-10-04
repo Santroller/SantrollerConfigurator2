@@ -217,7 +217,7 @@ const deviceRegistry: DeviceDefinitions = {
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
 
-const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'xboxOneAuth', 'ws2812', 'apa102', 'stp16cpc', 'dmx']);
+const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'xboxOneAuth', 'ws2812', 'apa102', 'stp16cpc', 'dmx', 'psxEmulation', 'wiiEmulation']);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'crkdDrum',
