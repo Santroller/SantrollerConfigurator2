@@ -390,6 +390,26 @@ function WiiExtensionDevice({ id }: { id: string }) {
           updateDevice({ deviceid: parseInt(id, 10), wii: { ...wii, i2c: val } }, id)
         }
       />
+      <NumberInput
+        label={t('wii.turntablePollInterval.label')}
+        description={t('wii.turntablePollInterval.description')}
+        min={0}
+        step={1}
+        allowDecimal={false}
+        value={wii.turntablePollIntervalMs ?? 0}
+        onChange={(value) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              wii: {
+                ...wii,
+                turntablePollIntervalMs: typeof value === 'number' && value > 0 ? value : undefined,
+              },
+            },
+            id
+          )
+        }
+      />
     </DeviceCard>
   );
 }

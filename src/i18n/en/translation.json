@@ -417,6 +417,10 @@
     }
   },
   "wii": {
+    "turntablePollInterval": {
+      "label": "DJ Hero turntable poll interval (ms)",
+      "description": "Minimum interval between input polls for a detected DJ Hero turntable. Set to 0 to use the normal polling rate."
+    },
     "extensions": {
       "WiiClassicController": "Classic Controller",
       "WiiClassicControllerPro": "Classic Controller Pro",
