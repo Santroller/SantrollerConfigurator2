@@ -74,6 +74,18 @@ function wiiAxis(
   };
 }
 
+function wiiTriggerButton(
+  button: proto.WiiButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
+  return {
+    ...wiiButton(button, deviceid, output),
+    min: 0,
+    max: 65535,
+  };
+}
+
 function ps2Button(
   button: proto.PS2ButtonType,
   deviceid: number,
@@ -1214,18 +1226,6 @@ export function getWiiDefaults(
       { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY },
       32767
     ),
-    wiiAxis(
-      proto.WiiAxisType.WiiAxisClassicLeftTrigger,
-      deviceId,
-      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
-      0
-    ),
-    wiiAxis(
-      proto.WiiAxisType.WiiAxisClassicRightTrigger,
-      deviceId,
-      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
-      0
-    ),
     wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
       gamepadButton: proto.GamepadButtonType.Gamepad_A,
     }),
@@ -1256,10 +1256,10 @@ export function getWiiDefaults(
     wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
       gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
     }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+    wiiTriggerButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
       gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
     }),
-    wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+    wiiTriggerButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
       gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
     }),
     wiiButton(proto.WiiButtonType.WiiButtonClassicPlus, deviceId, {
