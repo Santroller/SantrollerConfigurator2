@@ -65,7 +65,6 @@ import {
 import { useDisclosure, useTimeout } from '@mantine/hooks';
 import {
   getDefaultMappings,
-  getDefaultUsbOutput,
   getOutputSubType,
   USB_HOST_INPUT_SUBTYPES,
   USB_HOST_SUBTYPES,
@@ -1380,9 +1379,6 @@ function createBiEnum<T extends number>(map: Record<string, T>): StandardEnum<T>
 const USB_HOST_SUBTYPES_ENUM = createBiEnum(
   Object.fromEntries(USB_HOST_SUBTYPES.map((st) => [proto.SubType[st], st]))
 );
-const USB_HOST_INPUT_SUBTYPES_ENUM = createBiEnum(
-  Object.fromEntries(USB_HOST_INPUT_SUBTYPES.map((st) => [proto.SubType[st], st]))
-);
 
 function SantrollerInput({
   input,
@@ -2238,33 +2234,6 @@ function SantrollerInput({
         input.btAxis ||
         input.btButton) && (
         <>
-          <DropdownBox
-            title="activation.bluetoothType"
-            e={USB_HOST_INPUT_SUBTYPES_ENUM}
-            val={effectiveBtType}
-            label="subType"
-            dispatch={(newType) => {
-              const { isAnalog: newAnalog, output } = getDefaultUsbOutput(
-                newType as proto.SubType,
-                !!axis
-              );
-              dispatch(
-                newAnalog
-                  ? {
-                      btAxis: {
-                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
-                        axis: output,
-                      },
-                    }
-                  : {
-                      btButton: {
-                        deviceid: (input.btAxis?.deviceid || input.btButton?.deviceid || deviceId)!,
-                        button: output,
-                      },
-                    }
-              );
-            }}
-          />
           <Space h="md" />
           <OutputBox
             label="outputs"
