@@ -791,7 +791,7 @@
     "step2_title": "2. Connected Controller / Adapter (Optional)",
     "step2_desc": "Buttons and sensors wired directly to board pins are enabled automatically. Only add a source here if connecting an external controller or adapter (Wii, PS2, USB, Bluetooth, or MIDI). Slot numbers are scoped by source type and shared across alternative activation lists.",
     "step3_title": "3. Activation Trigger",
-    "step3_desc": "Optional condition for when to activate this profile",
+    "step3_desc": "Optional button trigger for this profile. Any connected-controller requirements still apply.",
     "emulation_mode": {
       "usb": "USB",
       "bluetooth": "Bluetooth",
@@ -819,7 +819,7 @@
     },
     "trigger": {
       "label": "Activation Condition",
-      "always": "Always Active (Default)",
+      "always": "No Extra Button Trigger (Default)",
       "boot": "Hold Button at Startup",
       "anytime": "Press Button Anytime"
     },
