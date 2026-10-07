@@ -1403,6 +1403,79 @@ export function getPs2Defaults(
   const isGunCon = cntType === proto.PS2ControllerType.PS2ControllerTypeGunCon;
   const isDualshock2 = cntType === proto.PS2ControllerType.PS2ControllerTypeDualshock2;
   const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
+  const isPopn = cntType === proto.PS2ControllerType.PS2ControllerTypePopNMusic;
+
+  if (isPopn || subType === proto.SubType.PopNMusic) {
+    // Left to right, matching PCSX2's PadPopn. Pop'n pads hold dpad left, right and down, so those are never mapped.
+    // On gamepads L2 and R2 are triggers, so those buttons go to the stick clicks instead.
+    const buttons: [proto.PS2ButtonType, proto.PS2ButtonType, proto.GamepadButtonType][] = [
+      [
+        proto.PS2ButtonType.PS2ButtonPopN1,
+        proto.PS2ButtonType.PS2ButtonTriangle,
+        proto.GamepadButtonType.Gamepad_Y,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN2,
+        proto.PS2ButtonType.PS2ButtonCircle,
+        proto.GamepadButtonType.Gamepad_B,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN3,
+        proto.PS2ButtonType.PS2ButtonR1,
+        proto.GamepadButtonType.Gamepad_RightShoulder,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN4,
+        proto.PS2ButtonType.PS2ButtonCross,
+        proto.GamepadButtonType.Gamepad_A,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN5,
+        proto.PS2ButtonType.PS2ButtonL1,
+        proto.GamepadButtonType.Gamepad_LeftShoulder,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN6,
+        proto.PS2ButtonType.PS2ButtonSquare,
+        proto.GamepadButtonType.Gamepad_X,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN7,
+        proto.PS2ButtonType.PS2ButtonR2,
+        proto.GamepadButtonType.Gamepad_LeftThumbClick,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN8,
+        proto.PS2ButtonType.PS2ButtonDpadUp,
+        proto.GamepadButtonType.Gamepad_DpadUp,
+      ],
+      [
+        proto.PS2ButtonType.PS2ButtonPopN9,
+        proto.PS2ButtonType.PS2ButtonL2,
+        proto.GamepadButtonType.Gamepad_RightThumbClick,
+      ],
+    ];
+    return [
+      ...buttons.map(([popnInput, psInput, gamepadButton], index) =>
+        ps2Button(
+          isPopn ? popnInput : psInput,
+          deviceId,
+          subType === proto.SubType.PopNMusic
+            ? {
+                popnButton: (proto.PopNMusicButtonType.PopNMusic_Button1 +
+                  index) as proto.PopNMusicButtonType,
+              }
+            : { gamepadButton }
+        )
+      ),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+    ];
+  }
 
   if (subType === proto.SubType.Dancepad) {
     return [

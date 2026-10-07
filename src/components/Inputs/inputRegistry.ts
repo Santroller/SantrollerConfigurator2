@@ -6,6 +6,101 @@ export function isSelectablePS2Axis(key: string, selected?: string): boolean {
   return !key.startsWith('PS2AxisDualshock2') || key === selected;
 }
 
+const PS2_STANDARD_BUTTONS = [
+  'PS2ButtonSelect',
+  'PS2ButtonL3',
+  'PS2ButtonR3',
+  'PS2ButtonStart',
+  'PS2ButtonDpadUp',
+  'PS2ButtonDpadRight',
+  'PS2ButtonDpadDown',
+  'PS2ButtonDpadLeft',
+  'PS2ButtonL2',
+  'PS2ButtonR2',
+  'PS2ButtonL1',
+  'PS2ButtonR1',
+  'PS2ButtonTriangle',
+  'PS2ButtonCircle',
+  'PS2ButtonCross',
+  'PS2ButtonSquare',
+];
+const PS2_STICK_AXES = [
+  'PS2AxisLeftStickX',
+  'PS2AxisLeftStickY',
+  'PS2AxisRightStickX',
+  'PS2AxisRightStickY',
+];
+
+// Which PS2 inputs the firmware can actually read for each controller type
+function ps2InputsForType(type: proto.PS2ControllerType): { axes: string[]; buttons: string[] } {
+  const T = proto.PS2ControllerType;
+  const prefixed = (e: object, prefix: string) =>
+    Object.keys(e).filter((key) => isNaN(Number(key)) && key.startsWith(prefix));
+  switch (type) {
+    case T.PS2ControllerTypeDualshock2:
+      return {
+        axes: [...PS2_STICK_AXES, ...prefixed(proto.PS2AxisType, 'PS2AxisDualshock2')],
+        buttons: PS2_STANDARD_BUTTONS,
+      };
+    case T.PS2ControllerTypeDualshock:
+    case T.PS2ControllerTypeFlightStick:
+      return { axes: PS2_STICK_AXES, buttons: PS2_STANDARD_BUTTONS };
+    case T.PS2ControllerTypeDigital:
+      return {
+        axes: [],
+        buttons: PS2_STANDARD_BUTTONS.filter((b) => b !== 'PS2ButtonL3' && b !== 'PS2ButtonR3'),
+      };
+    case T.PS2ControllerTypePopNMusic:
+      return {
+        axes: [],
+        buttons: [
+          ...prefixed(proto.PS2ButtonType, 'PS2ButtonPopN'),
+          'PS2ButtonSelect',
+          'PS2ButtonStart',
+        ],
+      };
+    case T.PS2ControllerTypeGuitar:
+      return {
+        axes: ['PS2AxisGuitarWhammy'],
+        buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonGuitar'),
+      };
+    case T.PS2ControllerTypeNegCon:
+      return {
+        axes: prefixed(proto.PS2AxisType, 'PS2AxisNegCon'),
+        buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonNegCon'),
+      };
+    case T.PS2ControllerTypeJogCon:
+      return { axes: ['PS2AxisJogConWheel'], buttons: PS2_STANDARD_BUTTONS };
+    case T.PS2ControllerTypeGunCon:
+      return { axes: prefixed(proto.PS2AxisType, 'PS2AxisGunCon'), buttons: PS2_STANDARD_BUTTONS };
+    case T.PS2ControllerTypeMouse:
+      return {
+        axes: prefixed(proto.PS2AxisType, 'PS2AxisMouse'),
+        buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonMouse'),
+      };
+    case T.PS2ControllerTypeTaiko:
+      return { axes: [], buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonTaiko') };
+    default:
+      return { axes: Object.keys(proto.PS2AxisType), buttons: Object.keys(proto.PS2ButtonType) };
+  }
+}
+
+// Filters for the PS2 input dropdowns. With no known controller type everything is offered.
+// The currently selected input always stays visible so existing mappings can still be shown.
+export function getPS2InputFilters(types: proto.PS2ControllerType[]) {
+  const known = types.filter((type) => type !== proto.PS2ControllerType.PS2ControllerTypeUnknown);
+  if (!known.length) {
+    return { axis: isSelectablePS2Axis, button: () => true };
+  }
+  const axes = new Set(known.flatMap((type) => ps2InputsForType(type).axes));
+  const buttons = new Set(known.flatMap((type) => ps2InputsForType(type).buttons));
+  return {
+    axis: (key: string, selected?: string) =>
+      key === selected || (axes.has(key) && isSelectablePS2Axis(key, selected)),
+    button: (key: string, selected?: string) => key === selected || buttons.has(key),
+  };
+}
+
 export function isSelectableWiiAxis(key: string, selected?: string): boolean {
   return (
     (key !== 'WiiAxisClassicLeftTrigger' && key !== 'WiiAxisClassicRightTrigger') ||

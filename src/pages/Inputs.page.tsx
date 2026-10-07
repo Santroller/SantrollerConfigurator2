@@ -94,7 +94,7 @@ import {
   getProfileSlots,
   isAnalogInput,
   isDrumInput,
-  isSelectablePS2Axis,
+  getPS2InputFilters,
   isSelectableWiiAxis,
   midiInputSourceType,
   ProfileSlot,
@@ -679,6 +679,28 @@ function OutputBox({
           dispatchMidi={dispatchMidi}
         />
       );
+    case proto.SubType.PopNMusic:
+      return (
+        <DropdownOutputBox
+          label={label}
+          title={title}
+          type={type}
+          mode={mode}
+          legendMode={legendMode}
+          midi={midi}
+          valMidi={valMidi}
+          e={proto.PopNMusicButtonType}
+          e2={proto.GamepadAxisType}
+          e3={proto.GamepadButtonType}
+          val={mapping?.popnButton ?? undefined}
+          val2={mapping?.gamepadAxis ?? undefined}
+          val3={mapping?.gamepadButton ?? undefined}
+          dispatch={(button) => dispatch({ popnButton: button }, false, false)}
+          dispatch2={gamepadAxisCallback}
+          dispatch3={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
+        />
+      );
     case proto.SubType.ProjectDiva:
       return (
         <DropdownOutputBox
@@ -830,6 +852,7 @@ function DropdownOutputBox<
 >({
   e,
   filterFirstEnum,
+  filterSecondEnum,
   e2,
   e3,
   e4,
@@ -855,6 +878,7 @@ function DropdownOutputBox<
 }: {
   e?: T;
   filterFirstEnum?: (key: string, selected?: string) => boolean;
+  filterSecondEnum?: (key: string, selected?: string) => boolean;
   e2?: T2;
   e3?: T3;
   e4?: T4;
@@ -1021,6 +1045,7 @@ function DropdownOutputBox<
           {e2 &&
             Object.keys(e2)
               .filter((key) => isNaN(Number(key)))
+              .filter((key) => !filterSecondEnum || filterSecondEnum(key, v))
               .map((item) => (
                 <Combobox.Option value={item} key={item} selected={item === v}>
                   {t(
@@ -1450,6 +1475,15 @@ function SantrollerInput({
     [profileSlots, input]
   );
   const device = matchingSlot ? undefined : deviceStatusForId;
+  // Prefer the controller types the slot is assigned to, fall back to whatever is plugged in
+  const ps2InputFilters = useMemo(() => {
+    const slotTypes = (matchingSlot?.items ?? [])
+      .map((item) => item.ps2Cnt)
+      .filter((cnt): cnt is proto.PS2ControllerType => cnt != null);
+    return getPS2InputFilters(
+      slotTypes.length ? slotTypes : device?.ps2CntType != null ? [device.ps2CntType] : []
+    );
+  }, [matchingSlot, device?.ps2CntType]);
 
   const effectiveUsbType = input.midi ? proto.SubType.Midi : (matchingSlot?.item.usbType ?? type);
 
@@ -2161,8 +2195,9 @@ function SantrollerInput({
           <DropdownOutputBox
             title="input"
             e={proto.PS2AxisType}
-            filterFirstEnum={isSelectablePS2Axis}
+            filterFirstEnum={ps2InputFilters.axis}
             e2={proto.PS2ButtonType}
+            filterSecondEnum={ps2InputFilters.button}
             val={input.ps2Axis?.axis}
             val2={input.ps2Button?.button}
             label="inputs"
@@ -2717,6 +2752,7 @@ function SantrollerMapping({
     (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
     (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
     proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+    proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
     proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1] ||
     (mapping.mapping.keycode != null
       ? hidReverse[mapping.mapping.keycode]
@@ -3579,6 +3615,7 @@ function SantrollerLed({
           (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
           (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
           proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+          proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
           proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
 
         const fixedLabel = FixLabel(mode, type, label, legendMode);
@@ -3678,6 +3715,7 @@ function SantrollerLed({
       (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
       (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
       proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
+      proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
       proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
     const fixedLabel = FixLabel(mode, type, label, legendMode);
     if (fixedLabel) {

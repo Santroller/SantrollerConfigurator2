@@ -8,6 +8,7 @@ import {
   getProfileSlotKey,
   getProfileSlotLabel,
   getProfileSlots,
+  getPS2InputFilters,
   isDrumInput,
   isSelectablePS2Axis,
   isSelectableWiiAxis,
@@ -20,6 +21,45 @@ describe('PS2 axis choices', () => {
     expect(isSelectablePS2Axis(pressure)).toBe(false);
     expect(isSelectablePS2Axis(pressure, pressure)).toBe(true);
     expect(isSelectablePS2Axis('PS2AxisLeftStickX')).toBe(true);
+  });
+});
+
+describe('PS2 input choices by controller type', () => {
+  it('offers everything when the controller type is unknown', () => {
+    const filters = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypeUnknown]);
+    expect(filters.button('PS2ButtonGuitarGreen')).toBe(true);
+    expect(filters.button('PS2ButtonPopN1')).toBe(true);
+    expect(filters.axis('PS2AxisLeftStickX')).toBe(true);
+    expect(filters.axis('PS2AxisDualshock2Cross')).toBe(false);
+  });
+
+  it("only offers the pop'n buttons plus select and start for pop'n pads", () => {
+    const filters = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypePopNMusic]);
+    expect(filters.button('PS2ButtonPopN9')).toBe(true);
+    expect(filters.button('PS2ButtonStart')).toBe(true);
+    expect(filters.button('PS2ButtonTriangle')).toBe(false);
+    expect(filters.button('PS2ButtonDpadLeft')).toBe(false);
+    expect(filters.button('PS2ButtonGuitarGreen')).toBe(false);
+    expect(filters.axis('PS2AxisLeftStickX')).toBe(false);
+  });
+
+  it('keeps an existing selection even when it does not fit the controller', () => {
+    const filters = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypePopNMusic]);
+    expect(filters.button('PS2ButtonTriangle', 'PS2ButtonTriangle')).toBe(true);
+  });
+
+  it('combines the inputs of every controller type a slot accepts', () => {
+    const filters = getPS2InputFilters([
+      proto.PS2ControllerType.PS2ControllerTypeGuitar,
+      proto.PS2ControllerType.PS2ControllerTypeDualshock2,
+    ]);
+    expect(filters.button('PS2ButtonGuitarGreen')).toBe(true);
+    expect(filters.button('PS2ButtonCross')).toBe(true);
+    expect(filters.axis('PS2AxisGuitarWhammy')).toBe(true);
+    expect(filters.axis('PS2AxisLeftStickX')).toBe(true);
+    // pressure axes stay hidden for new mappings even on a DS2
+    expect(filters.axis('PS2AxisDualshock2Cross')).toBe(false);
+    expect(filters.button('PS2ButtonMouseLeft')).toBe(false);
   });
 });
 
