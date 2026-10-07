@@ -5,6 +5,7 @@ export interface DeviceStatusLike {
   type?: string;
   wiiExtType?: proto.WiiExtType;
   ps2CntType?: proto.PS2ControllerType;
+  device?: proto.IDevice;
 }
 
 // Helper builders for consistent mapping objects
@@ -2443,7 +2444,130 @@ export function getGh5NeckDefaults(subType: proto.SubType, deviceId: number): pr
 }
 
 // ---------------------------------------------------------------------------
-// 5.5. Protar Neck Defaults (`protarNeck`)
+// 5.4. DJ Hero Turntable Platter Defaults (`djhTurntable`)
+// ---------------------------------------------------------------------------
+export function getDjhPlatterDefaults(
+  subType: proto.SubType,
+  deviceId: number,
+  deviceStatus?: DeviceStatusLike
+): proto.IMapping[] {
+  if (subType !== proto.SubType.DjHeroTurntable) {
+    return [];
+  }
+  const T = proto.DJHTurntableButtonType;
+  const left = deviceStatus?.device?.djhTurntable?.left ?? true;
+  const platter = (type: proto.DJHeroPlatterInputType) => ({
+    djhPlatter: { type, deviceid: deviceId },
+  });
+  return [
+    {
+      mapping: {
+        djhAxis: left
+          ? proto.DJHTurntableAxisType.DJHTurntable_LeftVelocity
+          : proto.DJHTurntableAxisType.DJHTurntable_RightVelocity,
+      },
+      input: platter(proto.DJHeroPlatterInputType.DJHeroPlatterVelocity),
+      min: 0,
+      max: 65535,
+      center: 32768,
+    },
+    {
+      mapping: { djhButton: left ? T.DJHTurntable_LeftGreen : T.DJHTurntable_RightGreen },
+      input: platter(proto.DJHeroPlatterInputType.DJHeroPlatterGreen),
+    },
+    {
+      mapping: { djhButton: left ? T.DJHTurntable_LeftRed : T.DJHTurntable_RightRed },
+      input: platter(proto.DJHeroPlatterInputType.DJHeroPlatterRed),
+    },
+    {
+      mapping: { djhButton: left ? T.DJHTurntable_LeftBlue : T.DJHTurntable_RightBlue },
+      input: platter(proto.DJHeroPlatterInputType.DJHeroPlatterBlue),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// 5.5. Crazy Guitar Neck Defaults (`crazyGuitarNeck`)
+// ---------------------------------------------------------------------------
+const CRAZY_NECK_FRETS = [
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckGreen,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckRed,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckYellow,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckBlue,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckOrange,
+];
+const CRAZY_NECK_SOLO_FRETS = [
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckSoloGreen,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckSoloRed,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckSoloYellow,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckSoloBlue,
+  proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckSoloOrange,
+];
+
+function crazyNeckButton(
+  button: proto.CrazyGuitarNeckButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
+  return { mapping: output, input: { crazyGuitarNeck: { button, deviceid } } };
+}
+
+export function getCrazyGuitarNeckDefaults(
+  subType: proto.SubType,
+  deviceId: number
+): proto.IMapping[] {
+  if (subType === proto.SubType.RockBandGuitar) {
+    const frets = [
+      proto.RockBandGuitarButtonType.RockBandGuitar_Green,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Red,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Yellow,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Blue,
+      proto.RockBandGuitarButtonType.RockBandGuitar_Orange,
+    ];
+    const soloFrets = [
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue,
+      proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange,
+    ];
+    return [
+      ...CRAZY_NECK_FRETS.map((b, i) => crazyNeckButton(b, deviceId, { rbButton: frets[i] })),
+      ...CRAZY_NECK_SOLO_FRETS.map((b, i) =>
+        crazyNeckButton(b, deviceId, { rbButton: soloFrets[i] })
+      ),
+    ];
+  }
+
+  if (subType === proto.SubType.GuitarHeroGuitar) {
+    // Guitar Hero has no solo frets, so they play as normal frets
+    const frets = [
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue,
+      proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange,
+    ];
+    return [...CRAZY_NECK_FRETS, ...CRAZY_NECK_SOLO_FRETS].map((b, i) =>
+      crazyNeckButton(b, deviceId, { ghButton: frets[i % 5] })
+    );
+  }
+
+  // Fallback to Gamepad, laid out like the GH5 neck's fallback
+  const buttons = [
+    proto.GamepadButtonType.Gamepad_A,
+    proto.GamepadButtonType.Gamepad_B,
+    proto.GamepadButtonType.Gamepad_X,
+    proto.GamepadButtonType.Gamepad_Y,
+    proto.GamepadButtonType.Gamepad_LeftShoulder,
+  ];
+  return CRAZY_NECK_FRETS.map((b, i) =>
+    crazyNeckButton(b, deviceId, { gamepadButton: buttons[i] })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 5.6. Protar Neck Defaults (`protarNeck`)
 // ---------------------------------------------------------------------------
 export function getProtarNeckDefaults(subType: proto.SubType, deviceId: number): proto.IMapping[] {
   if (subType === proto.SubType.ProGuitarMustang || subType === proto.SubType.ProGuitarSquire) {
@@ -2955,6 +3079,10 @@ export function getDefaultMappings(
       return getCrkdDrumDefaults(subType, deviceId);
     case 'gh5Neck':
       return getGh5NeckDefaults(subType, deviceId);
+    case 'crazyGuitarNeck':
+      return getCrazyGuitarNeckDefaults(subType, deviceId);
+    case 'djhTurntable':
+      return getDjhPlatterDefaults(subType, deviceId, deviceStatus);
     case 'protarNeck':
       return getProtarNeckDefaults(subType, deviceId);
     case 'midiSerial':

@@ -38,6 +38,24 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
       dispatch={(button) => dispatch({ gh5Neck: { ...input.gh5Neck!, button } })}
     />
   ),
+  crazyGuitarNeck: ({ input, dispatch }) => (
+    <DropdownBox
+      title="input.title"
+      e={proto.CrazyGuitarNeckButtonType}
+      val={input.crazyGuitarNeck!.button}
+      label="inputs"
+      dispatch={(button) => dispatch({ crazyGuitarNeck: { ...input.crazyGuitarNeck!, button } })}
+    />
+  ),
+  djhPlatter: ({ input, dispatch }) => (
+    <DropdownBox
+      title="input.title"
+      e={proto.DJHeroPlatterInputType}
+      val={input.djhPlatter!.type}
+      label="inputs"
+      dispatch={(type) => dispatch({ djhPlatter: { ...input.djhPlatter!, type } })}
+    />
+  ),
   encoder: ({ input, dispatch }) => <EncoderInputEditor input={input} dispatch={dispatch} />,
   accelerometer: ({ input, dispatch }) => (
     <DropdownBox

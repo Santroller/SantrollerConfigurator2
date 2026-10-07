@@ -400,7 +400,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
       <NumberInput
         label={t('wii.turntablePollInterval.label')}
         description={t('wii.turntablePollInterval.description')}
-        min={0}
+        min={1}
         step={1}
         allowDecimal={false}
         value={wii.turntablePollIntervalMs ?? DEFAULT_TURNTABLE_POLL_INTERVAL_MS}
@@ -411,7 +411,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
               wii: {
                 ...wii,
                 turntablePollIntervalMs:
-                  typeof value === 'number' && value >= 0 ? value : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
+                  typeof value === 'number' && value >= 1 ? value : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
               },
             },
             id
@@ -616,6 +616,8 @@ function DJHeroTurntableDevice({ id }: { id: string }) {
     throw new Error('device null!');
   }
   const djhTurntable = device.djhTurntable;
+  const update = (changes: Partial<proto.IDJHeroTurntableDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), djhTurntable: { ...djhTurntable, ...changes } }, id);
   return (
     <DeviceCard
       connected={status.connected}
@@ -623,13 +625,27 @@ function DJHeroTurntableDevice({ id }: { id: string }) {
       image="covers/devices/djhTurntable.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <I2CDevice
-        device={djhTurntable.i2c}
-        dispatch={(val) =>
-          updateDevice(
-            { deviceid: parseInt(id, 10), djhTurntable: { ...djhTurntable, i2c: val } },
-            id
-          )
+      <I2CDevice device={djhTurntable.i2c} dispatch={(val) => update({ i2c: val })} />
+      <SegmentedControl
+        data={[
+          { label: t('djhTurntable.left'), value: 'left' },
+          { label: t('djhTurntable.right'), value: 'right' },
+        ]}
+        value={djhTurntable.left ? 'left' : 'right'}
+        onChange={(val) => update({ left: val === 'left' })}
+      />
+      <NumberInput
+        label={t('djhTurntable.pollInterval.label')}
+        description={t('djhTurntable.pollInterval.description')}
+        min={1}
+        step={1}
+        allowDecimal={false}
+        value={djhTurntable.pollIntervalMs ?? DEFAULT_TURNTABLE_POLL_INTERVAL_MS}
+        onChange={(value) =>
+          update({
+            pollIntervalMs:
+              typeof value === 'number' && value >= 1 ? value : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
+          })
         }
       />
     </DeviceCard>
@@ -1315,6 +1331,21 @@ function MultiplexerDevice({ id }: { id: string }) {
         }
         label="multiplexer.selector.label"
         description="multiplexer.selector.description"
+      />
+      <Switch
+        mt="md"
+        label={t('multiplexer.slow.label')}
+        description={t('multiplexer.slow.description')}
+        checked={!!multiplexer.slow}
+        onChange={(event) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              multiplexer: { ...multiplexer, slow: event.currentTarget.checked },
+            },
+            id
+          )
+        }
       />
       <PinBox
         label="multiplexer.input.label"

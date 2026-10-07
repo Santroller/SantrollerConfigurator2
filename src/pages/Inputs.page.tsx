@@ -69,8 +69,8 @@ import {
   USB_HOST_INPUT_SUBTYPES,
   USB_HOST_SUBTYPES,
 } from '@/components/Defaults/defaultMappings';
-import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import { presetsFor } from '@/components/Defaults/mappingPresets';
+import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/deviceRegistry';
 import { PinBox } from '@/components/Devices/Pins';
 import {
   getLabel,
@@ -93,9 +93,9 @@ import {
   getProfileSlotForInput,
   getProfileSlotLabel,
   getProfileSlots,
+  getPS2InputFilters,
   isAnalogInput,
   isDrumInput,
-  getPS2InputFilters,
   isSelectableWiiAxis,
   midiInputSourceType,
   ProfileSlot,
@@ -111,7 +111,13 @@ import {
   requiresAssignment,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
-import { ASCII_TO_HID, CODE_TO_HID, hidKeyName } from '@/devices/keyboard';
+import {
+  ASCII_TO_HID,
+  CODE_TO_HID,
+  hidKeyName,
+  MEDIA_KEYS,
+  mediaKeyName,
+} from '@/devices/keyboard';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
 
 const DRUM_HIT_DISPLAY_MS = 3000;
@@ -916,21 +922,78 @@ function OutputBox({
           dispatchMidi={dispatchMidi}
         />
       );
-    case proto.SubType.KeyboardMouse:
+    case proto.SubType.KeyboardMouse: {
+      const kind =
+        mapping?.mouseButton != null
+          ? `button:${mapping.mouseButton}`
+          : mapping?.mouseAxis != null
+            ? `axis:${mapping.mouseAxis}`
+            : mapping?.consumerKey != null
+              ? 'media'
+              : 'key';
       return (
-        <TextInput
-          label={t('keyboard.keycode')}
-          value={hidKeyName(mapping?.keycode ?? 0) ?? ''}
-          onChange={() => {}}
-          onKeyDown={(event) => {
-            const code = CODE_TO_HID[event.code] ?? ASCII_TO_HID[event.key]?.code;
-            if (code != null) {
-              event.preventDefault();
-              dispatch({ keycode: code }, true, false);
-            }
-          }}
-        />
+        <>
+          <Select
+            label={t('keyboard.output')}
+            allowDeselect={false}
+            data={[
+              { value: 'key', label: t('keyboard.key') },
+              { value: 'media', label: t('keyboard.media') },
+              ...Object.entries(proto.MouseButtonType)
+                .filter(([, v]) => typeof v === 'number')
+                .map(([name, v]) => ({ value: `button:${v}`, label: t(`keyboard.mouse.${name}`) })),
+              ...Object.entries(proto.MouseAxisType)
+                .filter(([, v]) => typeof v === 'number')
+                .map(([name, v]) => ({ value: `axis:${v}`, label: t(`keyboard.mouse.${name}`) })),
+            ]}
+            value={kind}
+            onChange={(value) => {
+              if (!value || value === kind) {
+                return;
+              }
+              const [type, id] = value.split(':');
+              if (type === 'button') {
+                dispatch({ mouseButton: parseInt(id, 10) }, false, false);
+              } else if (type === 'axis') {
+                dispatch({ mouseAxis: parseInt(id, 10) }, false, true);
+              } else if (type === 'media') {
+                dispatch({ consumerKey: MEDIA_KEYS.PlayPause }, true, false);
+              } else {
+                dispatch({ keycode: CODE_TO_HID.KeyA }, true, false);
+              }
+            }}
+          />
+          {kind === 'key' && (
+            <TextInput
+              label={t('keyboard.keycode')}
+              value={hidKeyName(mapping?.keycode ?? 0) ?? ''}
+              onChange={() => {}}
+              onKeyDown={(event) => {
+                const code = CODE_TO_HID[event.code] ?? ASCII_TO_HID[event.key]?.code;
+                if (code != null) {
+                  event.preventDefault();
+                  dispatch({ keycode: code }, true, false);
+                }
+              }}
+            />
+          )}
+          {kind === 'media' && (
+            <Select
+              label={t('keyboard.media')}
+              allowDeselect={false}
+              data={Object.values(MEDIA_KEYS).map((usage) => ({
+                value: `${usage}`,
+                label: mediaKeyName(usage) ?? `${usage}`,
+              }))}
+              value={`${mapping?.consumerKey ?? MEDIA_KEYS.PlayPause}`}
+              onChange={(value) =>
+                value && dispatch({ consumerKey: parseInt(value, 10) }, true, false)
+              }
+            />
+          )}
+        </>
       );
+    }
     case proto.SubType.Wheel:
       break;
     case proto.SubType.DisneyInfinity:
@@ -2892,11 +2955,15 @@ function SantrollerMapping({
       ? hidKeyName(mapping.mapping.keycode)
         ? `${hidKeyName(mapping.mapping.keycode)}`
         : `Key ${mapping.mapping.keycode}`
+      : undefined) ||
+    (mapping.mapping.consumerKey != null
+      ? (mediaKeyName(mapping.mapping.consumerKey) ?? `Media ${mapping.mapping.consumerKey}`)
       : undefined);
   const fixedLabel = FixLabel(mode, type, label || '', legendMode);
   const img = `Icons/Input/${FixIcon(mode, type, label || '', legendMode)}.png`;
   const button =
     mapping.mapping.keycode != null ||
+    mapping.mapping.consumerKey != null ||
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v != null);
   const axis =
     mapping.mapping.proKeySingle != null ||
@@ -3150,7 +3217,9 @@ function SantrollerMapping({
             decimalScale={1}
             step={0.1}
             min={0}
-            value={mapping.debounce100us != null ? mapping.debounce100us / 10 : (mapping.debounce ?? 0)}
+            value={
+              mapping.debounce100us != null ? mapping.debounce100us / 10 : (mapping.debounce ?? 0)
+            }
             onChange={(val) =>
               dispatch({
                 ...mapping,
@@ -3404,6 +3473,46 @@ function SantrollerMapping({
                 <Accordion.Panel>
                   {axis && !crkdDrum && (
                     <>
+                      {stick && (
+                        <>
+                          <Input.Wrapper
+                            label={t('axis.section.label')}
+                            description={t('axis.section.description')}
+                          >
+                            <SegmentedControl
+                              fullWidth
+                              data={[
+                                {
+                                  value: proto.AxisSection.AxisSectionFull.toString(),
+                                  label: t('axis.section.full'),
+                                },
+                                {
+                                  value: proto.AxisSection.AxisSectionPositive.toString(),
+                                  label: t('axis.section.positive'),
+                                },
+                                {
+                                  value: proto.AxisSection.AxisSectionNegative.toString(),
+                                  label: t('axis.section.negative'),
+                                },
+                              ]}
+                              value={(
+                                mapping.section ?? proto.AxisSection.AxisSectionFull
+                              ).toString()}
+                              onChange={(value) => {
+                                const section = parseInt(value, 10) as proto.AxisSection;
+                                dispatch({
+                                  ...mapping,
+                                  section:
+                                    section === proto.AxisSection.AxisSectionFull
+                                      ? undefined
+                                      : section,
+                                });
+                              }}
+                            />
+                          </Input.Wrapper>
+                          <Space h="md" />
+                        </>
+                      )}
                       <StateSlider
                         mappingIdx={mappingIdx}
                         profileIdx={profileIdx}
@@ -3414,7 +3523,7 @@ function SantrollerMapping({
                         raw
                         zeroBased={drum}
                       />
-                      {stick && (
+                      {stick && !mapping.section && (
                         <>
                           <Text size="sm" fw={700}>
                             Center
@@ -3550,7 +3659,8 @@ function SantrollerMapping({
                         />
                       </Group>
                       <Space h="md" />
-                      {mapping.mapping.rbAxis === proto.RockBandGuitarAxisType.RockBandGuitar_Pickup && (
+                      {mapping.mapping.rbAxis ===
+                        proto.RockBandGuitarAxisType.RockBandGuitar_Pickup && (
                         <PickupNotches
                           mapping={mapping}
                           mappingIdx={mappingIdx}
@@ -7284,7 +7394,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   updateProfile(
                     {
                       ...profile,
-                      opts: { ...profile.opts, fullRangeTurntableOnPc: event.currentTarget.checked },
+                      opts: {
+                        ...profile.opts,
+                        fullRangeTurntableOnPc: event.currentTarget.checked,
+                      },
                     },
                     profileIdx
                   )

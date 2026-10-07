@@ -163,6 +163,12 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   crkd: { usesDevice: hasDevice((input) => input.crkd) },
   crkdDrum: { isAnalog: () => true, usesDevice: hasDevice((input) => input.crkdDrum) },
   gh5Neck: { usesDevice: hasDevice((input) => input.gh5Neck) },
+  crazyGuitarNeck: { usesDevice: hasDevice((input) => input.crazyGuitarNeck) },
+  djhPlatter: {
+    isAnalog: (input) =>
+      input.djhPlatter?.type === proto.DJHeroPlatterInputType.DJHeroPlatterVelocity,
+    usesDevice: hasDevice((input) => input.djhPlatter),
+  },
   accelerometer: {
     isAnalog: () => true,
     usesDevice: hasDevice((input) => input.accelerometer),
@@ -314,6 +320,21 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   gh5Neck: {
     create: (deviceid) => ({
       gh5Neck: { button: proto.Gh5NeckButtonType.Gh5Green, deviceid },
+    }),
+  },
+  djhTurntable: {
+    create: (deviceid, { axis }) => ({
+      djhPlatter: {
+        type: axis
+          ? proto.DJHeroPlatterInputType.DJHeroPlatterVelocity
+          : proto.DJHeroPlatterInputType.DJHeroPlatterGreen,
+        deviceid,
+      },
+    }),
+  },
+  crazyGuitarNeck: {
+    create: (deviceid) => ({
+      crazyGuitarNeck: { button: proto.CrazyGuitarNeckButtonType.CrazyGuitarNeckGreen, deviceid },
     }),
   },
   usbHost: {

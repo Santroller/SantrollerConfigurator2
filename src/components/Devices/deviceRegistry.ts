@@ -61,7 +61,7 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   djhTurntable: {
-    create: () => ({ i2c: i2c(150000), left: false }),
+    create: () => ({ i2c: i2c(150000), left: true, pollIntervalMs: 5 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   bhDrum: {
@@ -249,6 +249,8 @@ const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'wii',
   'psx',
   'gh5Neck',
+  'crazyGuitarNeck',
+  'djhTurntable',
   'protarNeck',
   'midiSerial',
   'bhDrum',

@@ -140,3 +140,33 @@ const HID_TO_NAME: Record<number, string> = Object.fromEntries(
 export function hidKeyName(code: number): string | undefined {
   return HID_TO_NAME[code];
 }
+
+// Consumer page usages for media keys, sent as the consumerKey output
+export const MEDIA_KEYS: Record<string, number> = {
+  PlayPause: 0xcd,
+  Stop: 0xb7,
+  NextTrack: 0xb5,
+  PreviousTrack: 0xb6,
+  FastForward: 0xb3,
+  Rewind: 0xb4,
+  VolumeUp: 0xe9,
+  VolumeDown: 0xea,
+  Mute: 0xe2,
+  Eject: 0xb8,
+  BrowserHome: 0x223,
+  BrowserBack: 0x224,
+  BrowserForward: 0x225,
+  BrowserRefresh: 0x227,
+  BrowserSearch: 0x221,
+  Mail: 0x18a,
+  Calculator: 0x192,
+  MyComputer: 0x194,
+  BrightnessUp: 0x6f,
+  BrightnessDown: 0x70,
+};
+
+export function mediaKeyName(usage: number): string | undefined {
+  return Object.entries(MEDIA_KEYS)
+    .find(([, v]) => v === usage)?.[0]
+    .replace(/([a-z])([A-Z])/g, '$1 $2');
+}

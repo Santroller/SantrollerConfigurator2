@@ -62,7 +62,19 @@
     "connected_devices": "Connected Devices"
   },
   "keyboard": {
-    "keycode": "Keyboard key"
+    "keycode": "Keyboard key",
+    "output": "Output",
+    "key": "Keyboard key",
+    "media": "Media key",
+    "mouse": {
+      "Mouse_Left": "Mouse left button",
+      "Mouse_Middle": "Mouse middle button",
+      "Mouse_Right": "Mouse right button",
+      "Mouse_MoveX": "Mouse move X",
+      "Mouse_MoveY": "Mouse move Y",
+      "Mouse_ScrollX": "Mouse scroll horizontal",
+      "Mouse_ScrollY": "Mouse scroll vertical"
+    }
   },
   "common": {
     "copy": "Copy",
@@ -219,6 +231,13 @@
   },
   "axis": {
     "calibration": "Axis Calibration",
+    "section": {
+      "label": "Axis range",
+      "description": "Drive only one half of the axis with this input, so two inputs (like a pair of triggers) can share it. Calibrate min as the input's resting position and max as fully pressed.",
+      "full": "Full axis",
+      "positive": "Positive half",
+      "negative": "Negative half"
+    },
     "pressed": "Pressed Value",
     "released": "Released Value",
     "released_toggle": "Set released value"
@@ -269,6 +288,20 @@
     "Gh5TapYellow": "Yellow Tap Fret",
     "Gh5TapBlue": "Blue Tap Fret",
     "Gh5TapOrange": "Orange Tap Fret",
+    "CrazyGuitarNeckGreen": "Green Fret",
+    "CrazyGuitarNeckRed": "Red Fret",
+    "CrazyGuitarNeckYellow": "Yellow Fret",
+    "CrazyGuitarNeckBlue": "Blue Fret",
+    "CrazyGuitarNeckOrange": "Orange Fret",
+    "CrazyGuitarNeckSoloGreen": "Green Solo Fret",
+    "CrazyGuitarNeckSoloRed": "Red Solo Fret",
+    "CrazyGuitarNeckSoloYellow": "Yellow Solo Fret",
+    "CrazyGuitarNeckSoloBlue": "Blue Solo Fret",
+    "CrazyGuitarNeckSoloOrange": "Orange Solo Fret",
+    "DJHeroPlatterGreen": "Green Button",
+    "DJHeroPlatterRed": "Red Button",
+    "DJHeroPlatterBlue": "Blue Button",
+    "DJHeroPlatterVelocity": "Platter Velocity",
     "AccelerometerX": "X Axis",
     "AccelerometerY": "Y Axis",
     "AccelerometerZ": "Z Axis",
@@ -442,6 +475,14 @@
     "PS2AxisDualshock2L2": "L2 (Pressure)",
     "PS2AxisDualshock2R2": "R2 (Pressure)"
   },
+  "djhTurntable": {
+    "left": "Left platter",
+    "right": "Right platter",
+    "pollInterval": {
+      "label": "Poll interval (ms)",
+      "description": "Time between platter reads (defaults to 5). The platter reports how far it moved since the last read, so this sets the velocity range: reading too often shrinks the readings. Minimum 1."
+    }
+  },
   "accelerometer": {
     "inputs": {
       "AccelerometerX": "X Axis",
@@ -455,7 +496,7 @@
   "wii": {
     "turntablePollInterval": {
       "label": "DJ Hero turntable poll interval (ms)",
-      "description": "Minimum interval between input polls for a detected DJ Hero turntable (defaults to 5). Set to 0 to use the normal polling rate."
+      "description": "Time between reads of a detected DJ Hero turntable (defaults to 5). The table velocities are movement since the last read, so reading too often shrinks them. Minimum 1."
     },
     "extensions": {
       "WiiClassicController": "Classic Controller",
@@ -471,7 +512,10 @@
   "invalid_pin_message": "No pin selected",
   "pin": "GP{{pin}}",
   "pin_label": "Pin",
-  "debounce": { "label": "Debounce", "desc": "Expressed in milliseconds (0.1ms steps), use 0 to disable" },
+  "debounce": {
+    "label": "Debounce",
+    "desc": "Expressed in milliseconds (0.1ms steps), use 0 to disable"
+  },
   "crkd": {
     "debounce": { "label": "Debounce", "desc": "Debounce expressed in milliseonds" },
     "holdTick": {
@@ -635,6 +679,10 @@
   },
   "multiplexer": {
     "device": "Multiplexer Device",
+    "slow": {
+      "label": "Slow multiplexer (CD4051 / CD4067)",
+      "description": "CD40xx series multiplexers take longer to switch channels than 74HC parts, so wait for them to settle before reading. Slows down input polling."
+    },
     "channel": "Channel {{channel}}",
     "channel_label": "Channel",
     "input": {
