@@ -1002,6 +1002,20 @@ function OutputBox({
       return <></>;
   }
 }
+// The controller types RPCS3's USB passthrough knows about, matching the firmware
+const RPCS3_PASSTHROUGH_SUBTYPES: proto.SubType[] = [
+  proto.SubType.Gamepad,
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+  proto.SubType.RockBandDrums,
+  proto.SubType.LiveGuitar,
+  proto.SubType.DjHeroTurntable,
+  proto.SubType.StageKit,
+  proto.SubType.ProKeys,
+  proto.SubType.ProGuitarMustang,
+  proto.SubType.ProGuitarSquire,
+];
+
 function MappingBox({
   mapping,
   type,
@@ -7381,6 +7395,25 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   />
                 </>
               )}
+            </>
+          )}
+          {RPCS3_PASSTHROUGH_SUBTYPES.includes(profile.opts.deviceToEmulate) && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.ps3OnRpcs3.label')}
+                description={t('main.ps3OnRpcs3.description')}
+                checked={profile.opts.ps3OnRpcs3 ?? true}
+                onChange={(event) =>
+                  updateProfile(
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, ps3OnRpcs3: event.currentTarget.checked },
+                    },
+                    profileIdx
+                  )
+                }
+              />
             </>
           )}
           {profile.opts.deviceToEmulate === proto.SubType.DjHeroTurntable && (

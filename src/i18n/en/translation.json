@@ -151,6 +151,10 @@
       "label": "Dequeue interval (ms)",
       "description": "How long each queued state is held for. The game needs to run at {{fps}}+ fps to see every state."
     },
+    "ps3OnRpcs3": {
+      "label": "Use USB passthrough with RPCS3",
+      "description": "Switch to PS3 mode when RPCS3 detects the controller, so it can be used with RPCS3's USB passthrough. Turn this off to keep the controller in its PC mode while RPCS3 is running."
+    },
     "fullRangeTurntableOnPc": {
       "label": "Full range scratching on PC",
       "description": "Real Xbox 360 turntables only send a tiny range for scratching, which XInput's default deadzone hides on PC. When enabled, scratching uses the full range on PC, and stays accurate to a real turntable when plugged into an Xbox 360."

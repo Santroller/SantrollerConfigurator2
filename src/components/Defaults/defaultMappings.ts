@@ -97,6 +97,41 @@ function wiiStickToDpad(
   };
 }
 
+// A Wii button driving an axis: held is a full press, released is the axis rest
+function wiiButtonAxis(
+  button: proto.WiiButtonType,
+  deviceid: number,
+  output: proto.IOutput
+): proto.IMapping {
+  return {
+    ...wiiButton(button, deviceid, output),
+    pressed: 65535,
+    center: 0,
+  };
+}
+
+// Guitar Hero kits stream MIDI for every hit, so pads read their notes (with velocity) from the
+// Wii device instead of the digital buttons
+const WII_DRUM_NOTES = {
+  red: 38,
+  yellow: 46,
+  blue: 48,
+  orange: 49,
+  green: 45,
+  kick: 36,
+  hiHatPedal: 100,
+};
+
+function wiiDrumNote(note: number, deviceid: number, output: proto.IOutput): proto.IMapping {
+  return midiNoteAxis(
+    note,
+    deviceid,
+    output,
+    10,
+    proto.MidiInputSourceType.MidiInputSourceType_Wii
+  );
+}
+
 function wiiTriggerButton(
   button: proto.WiiButtonType,
   deviceid: number,
@@ -218,14 +253,15 @@ function midiNoteAxis(
   note: number,
   deviceid: number,
   output: proto.IOutput,
-  channel = 10
+  channel = 10,
+  sourceType = proto.MidiInputSourceType.MidiInputSourceType_MIDI
 ): proto.IMapping {
   return {
     mapping: output,
     input: {
       midi: {
         deviceid,
-        sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+        sourceType,
         midiNote: {
           note,
           channel,
@@ -235,6 +271,9 @@ function midiNoteAxis(
     min: 0,
     max: 65535,
     center: 0,
+    // a MIDI hit is a single event, so hold it (at its peak velocity) long enough for a game to see it
+    debounce: 30,
+    peakBased: true,
   };
 }
 
@@ -833,16 +872,16 @@ export function getWiiDefaults(
           { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
           32767
         ),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.red, deviceId, {
           rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.yellow, deviceId, {
           rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.blue, deviceId, {
           rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.green, deviceId, {
           rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
         }),
         wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
@@ -900,25 +939,25 @@ export function getWiiDefaults(
           { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
           32767
         ),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicA, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.green, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicB, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.red, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicY, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.yellow, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicX, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.blue, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.orange, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.kick, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
         }),
-        wiiButton(proto.WiiButtonType.WiiButtonClassicDPadDown, deviceId, {
+        wiiDrumNote(WII_DRUM_NOTES.hiHatPedal, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
         }),
         wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
@@ -996,10 +1035,10 @@ export function getWiiDefaults(
       wiiButton(proto.WiiButtonType.WiiButtonClassicZr, deviceId, {
         gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder,
       }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
+      wiiButtonAxis(proto.WiiButtonType.WiiButtonClassicLt, deviceId, {
         gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
       }),
-      wiiButton(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
+      wiiButtonAxis(proto.WiiButtonType.WiiButtonClassicRt, deviceId, {
         gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
       }),
       wiiButton(proto.WiiButtonType.WiiButtonDrumMinus, deviceId, {
@@ -1145,7 +1184,7 @@ export function getWiiDefaults(
       wiiButton(proto.WiiButtonType.WiiButtonNunchukC, deviceId, {
         gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder,
       }),
-      wiiButton(proto.WiiButtonType.WiiButtonNunchukZ, deviceId, {
+      wiiButtonAxis(proto.WiiButtonType.WiiButtonNunchukZ, deviceId, {
         gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
       }),
       wiiAxis(
