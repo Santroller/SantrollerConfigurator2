@@ -139,6 +139,10 @@
       "label": "Dequeue interval (ms)",
       "description": "How long each queued state is held for. The game needs to run at {{fps}}+ fps to see every state."
     },
+    "fullRangeTurntableOnPc": {
+      "label": "Full range scratching on PC",
+      "description": "Real Xbox 360 turntables only send a tiny range for scratching, which XInput's default deadzone hides on PC. When enabled, scratching uses the full range on PC, and stays accurate to a real turntable when plugged into an Xbox 360."
+    },
     "cymbalGlitchFix": {
       "label": "Apply the cymbal glitch fix",
       "description": "Rock band 3 had a bug where hitting two cymbals at the same time would cause one of the cymbals to be dropped. This mitigates that bug, but may not work as well on Rock Band 2. This setting only applies on PS3 and Xbox 360."
@@ -431,7 +435,7 @@
   "wii": {
     "turntablePollInterval": {
       "label": "DJ Hero turntable poll interval (ms)",
-      "description": "Minimum interval between input polls for a detected DJ Hero turntable. Set to 0 to use the normal polling rate."
+      "description": "Minimum interval between input polls for a detected DJ Hero turntable (defaults to 5). Set to 0 to use the normal polling rate."
     },
     "extensions": {
       "WiiClassicController": "Classic Controller",

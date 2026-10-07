@@ -74,6 +74,28 @@ function wiiAxis(
   };
 }
 
+function wiiStickToDpad(
+  axis: proto.WiiAxisType,
+  deviceid: number,
+  high: boolean,
+  button: proto.GamepadButtonType
+): proto.IMapping {
+  return {
+    mapping: { gamepadButton: button },
+    input: {
+      wiiAxis: {
+        axis,
+        deviceid,
+      },
+    },
+    trigger: high
+      ? proto.AnalogToDigitalTriggerType.JoyHigh
+      : proto.AnalogToDigitalTriggerType.JoyLow,
+    // halfway between centre and the end of the stick's travel
+    triggerValue: high ? 49152 : 16384,
+  };
+}
+
 function wiiTriggerButton(
   button: proto.WiiButtonType,
   deviceid: number,
@@ -1048,17 +1070,31 @@ export function getWiiDefaults(
         { djhAxis: proto.DJHTurntableAxisType.DJHTurntable_EffectsKnob },
         32767
       ),
-      wiiAxis(
-        proto.WiiAxisType.WiiAxisDjStickX,
-        deviceId,
-        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
-        32767
-      ),
-      wiiAxis(
+      // The stick goes to the d-pad: a turntable report has no stick fields, the table
+      // velocities sit where the left stick would be
+      wiiStickToDpad(
         proto.WiiAxisType.WiiAxisDjStickY,
         deviceId,
-        { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickY },
-        32767
+        true,
+        proto.GamepadButtonType.Gamepad_DpadUp
+      ),
+      wiiStickToDpad(
+        proto.WiiAxisType.WiiAxisDjStickY,
+        deviceId,
+        false,
+        proto.GamepadButtonType.Gamepad_DpadDown
+      ),
+      wiiStickToDpad(
+        proto.WiiAxisType.WiiAxisDjStickX,
+        deviceId,
+        false,
+        proto.GamepadButtonType.Gamepad_DpadLeft
+      ),
+      wiiStickToDpad(
+        proto.WiiAxisType.WiiAxisDjStickX,
+        deviceId,
+        true,
+        proto.GamepadButtonType.Gamepad_DpadRight
       ),
       wiiButton(proto.WiiButtonType.WiiButtonDjHeroLeftGreen, deviceId, {
         djhButton: proto.DJHTurntableButtonType.DJHTurntable_LeftGreen,

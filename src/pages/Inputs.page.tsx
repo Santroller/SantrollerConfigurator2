@@ -7069,6 +7069,25 @@ function Profile({ profileIdx }: { profileIdx: number }) {
               )}
             </>
           )}
+          {profile.opts.deviceToEmulate === proto.SubType.DjHeroTurntable && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.fullRangeTurntableOnPc.label')}
+                description={t('main.fullRangeTurntableOnPc.description')}
+                checked={!!profile.opts.fullRangeTurntableOnPc}
+                onChange={(event) =>
+                  updateProfile(
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, fullRangeTurntableOnPc: event.currentTarget.checked },
+                    },
+                    profileIdx
+                  )
+                }
+              />
+            </>
+          )}
           {profile.opts.deviceToEmulate === proto.SubType.RockBandDrums && (
             <>
               <Space h="md" />

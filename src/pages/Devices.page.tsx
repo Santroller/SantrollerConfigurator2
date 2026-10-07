@@ -61,6 +61,9 @@ import {
   UARTGroups,
 } from '@/devices/pico/pins';
 
+// matches the firmware default when the field is unset
+const DEFAULT_TURNTABLE_POLL_INTERVAL_MS = 5;
+
 function I2CDevice({
   device,
   dispatch,
@@ -400,14 +403,15 @@ function WiiExtensionDevice({ id }: { id: string }) {
         min={0}
         step={1}
         allowDecimal={false}
-        value={wii.turntablePollIntervalMs ?? 0}
+        value={wii.turntablePollIntervalMs ?? DEFAULT_TURNTABLE_POLL_INTERVAL_MS}
         onChange={(value) =>
           updateDevice(
             {
               deviceid: parseInt(id, 10),
               wii: {
                 ...wii,
-                turntablePollIntervalMs: typeof value === 'number' && value > 0 ? value : undefined,
+                turntablePollIntervalMs:
+                  typeof value === 'number' && value >= 0 ? value : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
               },
             },
             id

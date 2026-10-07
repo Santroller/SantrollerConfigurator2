@@ -43,7 +43,11 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   wii: {
-    create: () => ({ i2c: i2c(400000), mappingMode: proto.MappingMode.PerInput }),
+    create: () => ({
+      i2c: i2c(400000),
+      mappingMode: proto.MappingMode.PerInput,
+      turntablePollIntervalMs: 5,
+    }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
     formatStatus: (status, pins) =>
       `${status.wiiExtType !== proto.WiiExtType.WiiNoExtension ? i18next.t('connected', 'Connected') : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
