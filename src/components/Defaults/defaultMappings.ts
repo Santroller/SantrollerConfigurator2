@@ -1405,6 +1405,32 @@ export function getPs2Defaults(
   const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
   const isPopn = cntType === proto.PS2ControllerType.PS2ControllerTypePopNMusic;
 
+  if (subType === proto.SubType.BeatMania) {
+    // beatmania IIDX controllers are plain digital pads, https://github.com/PCSX2/pcsx2/issues/10176
+    const B = proto.BeatManiaButtonType;
+    const buttons: [proto.PS2ButtonType, proto.BeatManiaButtonType][] = [
+      [proto.PS2ButtonType.PS2ButtonSquare, B.BeatMania_Button1],
+      [proto.PS2ButtonType.PS2ButtonL1, B.BeatMania_Button2],
+      [proto.PS2ButtonType.PS2ButtonCross, B.BeatMania_Button3],
+      [proto.PS2ButtonType.PS2ButtonR1, B.BeatMania_Button4],
+      [proto.PS2ButtonType.PS2ButtonCircle, B.BeatMania_Button5],
+      [proto.PS2ButtonType.PS2ButtonL2, B.BeatMania_Button6],
+      [proto.PS2ButtonType.PS2ButtonDpadLeft, B.BeatMania_Button7],
+      [proto.PS2ButtonType.PS2ButtonDpadUp, B.BeatMania_ScratchClockwise],
+      [proto.PS2ButtonType.PS2ButtonDpadDown, B.BeatMania_ScratchCounterClockwise],
+      [proto.PS2ButtonType.PS2ButtonR2, B.BeatMania_Pedal],
+    ];
+    return [
+      ...buttons.map(([input, bmButton]) => ps2Button(input, deviceId, { bmButton })),
+      ps2Button(proto.PS2ButtonType.PS2ButtonSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(proto.PS2ButtonType.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+    ];
+  }
+
   if (isPopn || subType === proto.SubType.PopNMusic) {
     // Left to right, matching PCSX2's PadPopn. Pop'n pads hold dpad left, right and down, so those are never mapped.
     const G = proto.GamepadButtonType;

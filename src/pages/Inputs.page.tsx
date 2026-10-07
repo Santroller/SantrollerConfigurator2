@@ -679,6 +679,28 @@ function OutputBox({
           dispatchMidi={dispatchMidi}
         />
       );
+    case proto.SubType.BeatMania:
+      return (
+        <DropdownOutputBox
+          label={label}
+          title={title}
+          type={type}
+          mode={mode}
+          legendMode={legendMode}
+          midi={midi}
+          valMidi={valMidi}
+          e={proto.BeatManiaButtonType}
+          e2={proto.GamepadAxisType}
+          e3={proto.GamepadButtonType}
+          val={mapping?.bmButton ?? undefined}
+          val2={mapping?.gamepadAxis ?? undefined}
+          val3={mapping?.gamepadButton ?? undefined}
+          dispatch={(button) => dispatch({ bmButton: button }, false, false)}
+          dispatch2={gamepadAxisCallback}
+          dispatch3={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
+        />
+      );
     case proto.SubType.PopNMusic:
       return (
         <DropdownOutputBox
@@ -2753,6 +2775,7 @@ function SantrollerMapping({
     (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
     proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
     proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
+    proto.BeatManiaButtonType[mapping.mapping.bmButton ?? -1] ||
     proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1] ||
     (mapping.mapping.keycode != null
       ? hidReverse[mapping.mapping.keycode]
@@ -3616,6 +3639,7 @@ function SantrollerLed({
           (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
           proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
           proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
+          proto.BeatManiaButtonType[mapping.mapping.bmButton ?? -1] ||
           proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
 
         const fixedLabel = FixLabel(mode, type, label, legendMode);
@@ -3716,6 +3740,7 @@ function SantrollerLed({
       (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
       proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
       proto.PopNMusicButtonType[mapping.mapping.popnButton ?? -1] ||
+      proto.BeatManiaButtonType[mapping.mapping.bmButton ?? -1] ||
       proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1];
     const fixedLabel = FixLabel(mode, type, label, legendMode);
     if (fixedLabel) {
