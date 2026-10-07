@@ -2134,7 +2134,7 @@ function BluetoothDevice({ id }: { id: string }) {
   return (
     <DeviceCard
       connected={status.connected}
-      title="devices.bluetooth"
+      title="devices.bt"
       image="covers/devices/bluetooth.png"
       deleteDevice={() => deleteDevice(id)}
     >
