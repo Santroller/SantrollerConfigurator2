@@ -183,7 +183,7 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi, le, oe }) => [spi.mosi, spi.miso, spi.sck, le, oe],
     formatStatus: (_, pins) => pins,
   },
-  bt: { create: () => ({}) },
+  bt: { create: () => ({}), pins: ({ syncPin }) => (syncPin != null && syncPin >= 0 ? [syncPin] : []) },
   protarNeck: {
     create: () => ({ spi: spi(100000), attPin: -1 }),
     pins: ({ spi, attPin }) => [spi.mosi, spi.miso, spi.sck, attPin],
@@ -213,11 +213,31 @@ const deviceRegistry: DeviceDefinitions = {
   },
   toggle: { create: () => ({}) },
   dmx: { create: () => ({ pin: -1, channelCount: 1 }) },
+  xbox360Rf: {
+    create: () => ({
+      type: proto.Xbox360RfModuleType.Xbox360RfFat,
+      dataPin: -1,
+      clockPin: -1,
+      syncPin: -1,
+    }),
+    pins: ({ dataPin, clockPin, syncPin }) => [dataPin, clockPin, syncPin ?? -1],
+    formatStatus: (_, pins) => pins,
+  },
 };
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
 
-const nonInputDeviceKinds = new Set<DeviceKind>(['debug', 'xboxOneAuth', 'ws2812', 'apa102', 'stp16cpc', 'dmx', 'psxEmulation', 'wiiEmulation']);
+const nonInputDeviceKinds = new Set<DeviceKind>([
+  'debug',
+  'xboxOneAuth',
+  'ws2812',
+  'apa102',
+  'stp16cpc',
+  'dmx',
+  'psxEmulation',
+  'wiiEmulation',
+  'xbox360Rf',
+]);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'crkdDrum',

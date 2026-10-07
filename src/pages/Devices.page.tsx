@@ -33,11 +33,15 @@ import {
 import { useDisclosure, useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
-import { proto, useConfigStore } from '../components/SettingsContext/SettingsContext';
+import {
+  proto,
+  usbDeviceKey,
+  useConfigStore,
+} from '../components/SettingsContext/SettingsContext';
 
 import '@/i18n/config';
 
-import { t, TFunction } from 'i18next';
+import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { DeviceKind, deviceKinds, isDeviceKind } from '@/components/Devices/deviceRegistry';
@@ -1592,6 +1596,64 @@ function DMXDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+const xbox360RfTypes = [
+  { label: 'xbox360Rf.type.fat', value: proto.Xbox360RfModuleType.Xbox360RfFat.toString() },
+  { label: 'xbox360Rf.type.slim', value: proto.Xbox360RfModuleType.Xbox360RfSlim.toString() },
+];
+function Xbox360RfDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const scanning = useConfigStore((state) => state.scanningBluetooth);
+  const sync = useConfigStore((state) => state.scanBluetooth);
+  const device = status.device;
+  if (!device.xbox360Rf) {
+    throw new Error('device null!');
+  }
+  const rf = device.xbox360Rf;
+  const update = (changes: Partial<proto.IXbox360RfDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), xbox360Rf: { ...rf, ...changes } }, id);
+  return (
+    <DeviceCard
+      title="devices.xbox360Rf"
+      image="covers/devices/xbox360Rf.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('xbox360Rf.description')}
+      </Text>
+      <LabeledSegmentedControl
+        label="xbox360Rf.type.label"
+        description="xbox360Rf.type.description"
+        data={xbox360RfTypes}
+        value={rf.type.toString()}
+        dispatch={(value) => update({ type: parseInt(value, 10) })}
+      />
+      <PinBox
+        label="xbox360Rf.data_pin"
+        pin={rf.dataPin}
+        valid={AllPinsNamed}
+        dispatch={(dataPin) => update({ dataPin })}
+      />
+      <PinBox
+        label="xbox360Rf.clock_pin"
+        pin={rf.clockPin}
+        valid={AllPinsNamed}
+        dispatch={(clockPin) => update({ clockPin })}
+      />
+      <PinBox
+        label="xbox360Rf.sync_pin"
+        pin={rf.syncPin ?? -1}
+        valid={AllPinsNamed}
+        dispatch={(syncPin) => update({ syncPin })}
+      />
+      <Button mt="md" size="xs" loading={scanning} disabled={scanning} onClick={sync}>
+        {t('xbox360Rf.sync')}
+      </Button>
+    </DeviceCard>
+  );
+}
 const usbHostValidPins = Object.fromEntries(
   Object.entries(AllPinsNamed).filter(([pin, _]) => AllPinsNamed[(Number(pin) + 1).toString()])
 );
@@ -1599,17 +1661,6 @@ const usbHostData = [
   { label: 'usb.selector.dpFirst', value: 'false' },
   { label: 'usb.selector.dmFirst', value: 'true' },
 ];
-function getName(x: string, t: TFunction) {
-  const match = x.match(/X360 Wireless (.+)/);
-  if (match) {
-    const subtype = parseInt(match[1], 10);
-    if (isNaN(subtype)) {
-      return `Xbox 360 Wireless ${match[1]}`;
-    }
-    return `Xbox 360 Wireless ${t(`subType.${proto.SubType[subtype]}`)}`;
-  }
-  return x;
-}
 function USBHostDevice({ id }: { id: string }) {
   const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
@@ -1620,6 +1671,7 @@ function USBHostDevice({ id }: { id: string }) {
     throw new Error('device null!');
   }
   const usbHost = device.usbHost;
+  const usbDevices = Object.values(status.usbDevices);
   return (
     <DeviceCard
       connected={Object.values(status.usbDevices).length !== 0}
@@ -1627,20 +1679,42 @@ function USBHostDevice({ id }: { id: string }) {
       image="covers/devices/usbHost.png"
       deleteDevice={() => deleteDevice(id)}
     >
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>{t('devices.connected_devices', 'Connected Devices')}</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {Object.values(status.usbDevices).map((x) => (
-            <Table.Tr key={x.port * 127 + x.interface}>
-              <Table.Td>{getName(x.name, t)}</Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+      {usbDevices.length > 0 && (
+        <>
+          <Title order={5} mb="xs">
+            {t('devices.connected_devices', 'Connected Devices')}
+          </Title>
+          <Table mb="md">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t('devices.usb_device_name')}</Table.Th>
+                <Table.Th>{t('devices.usb_device_type')}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {usbDevices.map((x) => {
+                const subtypeName = proto.SubType[x.subtype];
+                const hasControllerType =
+                  x.subtype !== proto.SubType.Unknown && subtypeName !== undefined;
+                return (
+                  <Table.Tr key={usbDeviceKey(x)}>
+                    <Table.Td>{x.name}</Table.Td>
+                    <Table.Td>
+                      {!hasControllerType ? (
+                        '-'
+                      ) : (
+                        <Badge size="xs" variant="outline">
+                          {t(`subType.${subtypeName}`, subtypeName)}
+                        </Badge>
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </>
+      )}
       <PinBox
         label={usbHost.dmFirst ? 'usb.dm.label' : 'usb.dp.label'}
         pin={usbHost.firstPin}
@@ -1667,7 +1741,8 @@ function USBHostDevice({ id }: { id: string }) {
         description="usb.selector.description"
       />
       <Switch
-        label="usb.feather.enable5v"
+        label={t('usb.hostPower.label')}
+        description={t('usb.hostPower.description')}
         checked={usbHost.enable5v}
         onChange={(e) =>
           updateDevice(
@@ -2049,10 +2124,12 @@ function BluetoothDevice({ id }: { id: string }) {
   const removeBluetoothPairing = useConfigStore((state) => state.removeBluetoothPairing);
   const scanningBluetooth = useConfigStore((state) => state.scanningBluetooth);
   const scanBluetooth = useConfigStore((state) => state.scanBluetooth);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
   const device = status.device;
   if (!device.bt) {
     throw new Error('device null!');
   }
+  const bt = device.bt;
   const hasConnectedDevices = status.btDevices && Object.values(status.btDevices).length > 0;
   return (
     <DeviceCard
@@ -2061,6 +2138,12 @@ function BluetoothDevice({ id }: { id: string }) {
       image="covers/devices/bluetooth.png"
       deleteDevice={() => deleteDevice(id)}
     >
+      <PinBox
+        label="devices.bluetooth_sync_pin"
+        pin={bt.syncPin ?? -1}
+        valid={AllPinsNamed}
+        dispatch={(syncPin) => updateDevice({ deviceid: parseInt(id, 10), bt: { ...bt, syncPin } }, id)}
+      />
       {hasConnectedDevices && (
         <>
           <Title order={5} mb="xs">
@@ -2214,6 +2297,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   cycle: CycleDevice,
   toggle: ToggleDevice,
   dmx: DMXDevice,
+  xbox360Rf: Xbox360RfDevice,
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState<DeviceKind>(deviceKinds[0]);

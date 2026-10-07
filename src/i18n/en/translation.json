@@ -7,6 +7,7 @@
     "switchNetwork": "Switch Network",
     "toggle": "Toggle Input",
     "dmx": "DMX",
+    "xbox360Rf": "Xbox 360 RF Module",
     "stp16cpc": "STP16CPC LED Driver",
     "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
@@ -52,7 +53,10 @@
     "bluetooth_device_name": "Name",
     "bluetooth_device_mac": "MAC Address",
     "bluetooth_device_type": "Controller Type",
+    "usb_device_name": "Name",
+    "usb_device_type": "Controller Type",
     "bluetooth_device_mode": "Mode",
+    "bluetooth_sync_pin": "Pairing Button Pin (optional)",
     "bluetooth_scan": "Pair New Device",
     "bluetooth_scanning": "Scanning (10s)...",
     "connected_devices": "Connected Devices"
@@ -552,9 +556,23 @@
   "joybus": {
     "data_pin": "Data Pin"
   },
+  "xbox360Rf": {
+    "description": "Sets up an Xbox 360 RF module (the console's wireless receiver board) and lets you sync controllers to it. Wire its USB lines to a USB Host device to receive the controller inputs.",
+    "type": {
+      "label": "Module Type",
+      "description": "The original (fat) console module, or the 360 Slim module",
+      "fat": "Original",
+      "slim": "Slim"
+    },
+    "data_pin": "Data Pin",
+    "clock_pin": "Clock Pin",
+    "sync_pin": "Sync Button Pin (optional)",
+    "sync": "Sync Controller"
+  },
   "usb": {
-    "feather": {
-      "enable5v": "Enable 5V on Adafruit Feather with USB Host"
+    "hostPower": {
+      "label": "USB Host 5V Power",
+      "description": "For Adafruit Feather boards with USB Host. Supplies 5V to connected USB devices."
     },
     "dp": {
       "label": "D+ Pin"

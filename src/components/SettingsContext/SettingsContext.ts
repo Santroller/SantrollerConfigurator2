@@ -24,6 +24,12 @@ import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegi
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
+// sourceId is unique per interface (including virtual wireless controller slots), older
+// firmware doesn't send it so fall back to port / interface
+export function usbDeviceKey(event: proto.IUsbDeviceHotplugEvent): number {
+  return event.sourceId ?? event.port! * 256 + event.interface!;
+}
+
 export * from './config.js';
 const HID_RESPONSE_TIMEOUT_MS = 3_000;
 const KEEPALIVE_INTERVAL_MS = 10;
@@ -1200,7 +1206,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (deviceEvent.usb) {
           set((state) => {
             if (deviceEvent.usb!.id in state.deviceStatus) {
-              const id = deviceEvent.usb!.port! * 127 + deviceEvent.usb!.interface!;
+              const id = usbDeviceKey(deviceEvent.usb!);
               if (deviceEvent.usb!.connected) {
                 state.deviceStatus[deviceEvent.usb!.id].usbDevices[id] = deviceEvent.usb!;
               } else {
