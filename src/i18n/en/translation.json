@@ -127,6 +127,14 @@
       "label": "Icons to show",
       "description": "Pick the icons to show below. This adjusts the icons and names shown in the UI, such as using A or B instead of Cross and Circle"
     },
+    "queueInputs": {
+      "label": "Queue fret and strum inputs",
+      "description": "Inputs are read as fast as possible and every fret / strum change is queued, then sent one at a time so the game sees every change, even ones faster than its frame rate. Adds latency while the queue drains."
+    },
+    "dequeueInterval": {
+      "label": "Dequeue interval (ms)",
+      "description": "How long each queued state is held for. The game needs to run at {{fps}}+ fps to see every state."
+    },
     "cymbalGlitchFix": {
       "label": "Apply the cymbal glitch fix",
       "description": "Rock band 3 had a bug where hitting two cymbals at the same time would cause one of the cymbals to be dropped. This mitigates that bug, but may not work as well on Rock Band 2. This setting only applies on PS3 and Xbox 360."
@@ -435,7 +443,7 @@
   "invalid_pin_message": "No pin selected",
   "pin": "GP{{pin}}",
   "pin_label": "Pin",
-  "debounce": { "label": "Debounce", "desc": "Expressed in milliseonds, use 0 to disable" },
+  "debounce": { "label": "Debounce", "desc": "Expressed in milliseconds (0.1ms steps), use 0 to disable" },
   "crkd": {
     "debounce": { "label": "Debounce", "desc": "Debounce expressed in milliseonds" },
     "holdTick": {

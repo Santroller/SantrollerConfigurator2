@@ -2763,10 +2763,11 @@ function SantrollerMapping({
     (state) => !!state.mappingStatus[profileIdx]?.[mappingIdx]?.state
   );
   if (drum && crkdDrum) {
-    if (mapping.debounce) {
+    if (mapping.debounce || mapping.debounce100us) {
       dispatch({
         ...mapping,
         debounce: 0,
+        debounce100us: undefined,
       });
     }
     if (mapping.min !== 0) {
@@ -2961,7 +2962,9 @@ function SantrollerMapping({
                   ...mapping,
                   input,
                   pressed: isAnalog(input) ? undefined : (mapping.pressed ?? 65535),
-                  debounce: drum ? (mapping.debounce ?? 30) : undefined,
+                  debounce:
+                    drum && mapping.debounce100us == null ? (mapping.debounce ?? 30) : undefined,
+                  debounce100us: drum ? mapping.debounce100us : undefined,
                   peakBased: drum ? true : undefined,
                 });
               }}
@@ -2974,8 +2977,17 @@ function SantrollerMapping({
           <NumberInput
             label={t('debounce.label')}
             description={t('debounce.desc')}
-            value={mapping.debounce ?? 0}
-            onChange={(val) => dispatch({ ...mapping, debounce: Number(val) })}
+            decimalScale={1}
+            step={0.1}
+            min={0}
+            value={mapping.debounce100us != null ? mapping.debounce100us / 10 : (mapping.debounce ?? 0)}
+            onChange={(val) =>
+              dispatch({
+                ...mapping,
+                debounce: undefined,
+                debounce100us: Math.round(Number(val) * 10),
+              })
+            }
           />
         )}
         {drum && crkdDrum && (
@@ -7009,6 +7021,54 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       />
       {!simpleMode && (
         <>
+          {(profile.opts.deviceToEmulate === proto.SubType.GuitarHeroGuitar ||
+            profile.opts.deviceToEmulate === proto.SubType.RockBandGuitar ||
+            profile.opts.deviceToEmulate === proto.SubType.LiveGuitar) && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.queueInputs.label')}
+                description={t('main.queueInputs.description')}
+                checked={!!profile.opts.queueInputs}
+                onChange={(event) =>
+                  updateProfile(
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, queueInputs: event.currentTarget.checked },
+                    },
+                    profileIdx
+                  )
+                }
+              />
+              {profile.opts.queueInputs && (
+                <>
+                  <Space h="md" />
+                  <NumberInput
+                    label={t('main.dequeueInterval.label')}
+                    description={t('main.dequeueInterval.description', {
+                      fps: Math.floor(10000 / Math.max(profile.opts.dequeueInterval100us ?? 10, 1)),
+                    })}
+                    decimalScale={1}
+                    step={0.1}
+                    min={0.1}
+                    value={(profile.opts.dequeueInterval100us ?? 10) / 10}
+                    onChange={(val) =>
+                      updateProfile(
+                        {
+                          ...profile,
+                          opts: {
+                            ...profile.opts,
+                            dequeueInterval100us: Math.max(1, Math.round(Number(val) * 10)),
+                          },
+                        },
+                        profileIdx
+                      )
+                    }
+                  />
+                </>
+              )}
+            </>
+          )}
           {profile.opts.deviceToEmulate === proto.SubType.RockBandDrums && (
             <>
               <Space h="md" />
