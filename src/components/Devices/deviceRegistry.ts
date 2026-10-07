@@ -36,7 +36,11 @@ const deviceRegistry: DeviceDefinitions = {
   },
   xboxOneAuth: {
     create: () => ({ i2c: i2c(400000), resetPin: -1 }),
-    pins: ({ i2c, resetPin }) => [i2c.sda, i2c.scl, ...(resetPin != null && resetPin >= 0 ? [resetPin] : [])],
+    pins: ({ i2c, resetPin }) => [
+      i2c.sda,
+      i2c.scl,
+      ...(resetPin != null && resetPin >= 0 ? [resetPin] : []),
+    ],
   },
   mpr121: {
     create: () => ({ i2c: i2c(400000), touchpadCount: 0, ddrPins: 0, enablePins: 0 }),
@@ -187,7 +191,10 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi, le, oe }) => [spi.mosi, spi.miso, spi.sck, le, oe],
     formatStatus: (_, pins) => pins,
   },
-  bt: { create: () => ({}), pins: ({ syncPin }) => (syncPin != null && syncPin >= 0 ? [syncPin] : []) },
+  bt: {
+    create: () => ({}),
+    pins: ({ syncPin }) => (syncPin != null && syncPin >= 0 ? [syncPin] : []),
+  },
   protarNeck: {
     create: () => ({ spi: spi(100000), attPin: -1 }),
     pins: ({ spi, attPin }) => [spi.mosi, spi.miso, spi.sck, attPin],
@@ -227,6 +234,29 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ dataPin, clockPin, syncPin }) => [dataPin, clockPin, syncPin ?? -1],
     formatStatus: (_, pins) => pins,
   },
+  adcBattery: {
+    // GP29 reads VSYS through the Pico's divide by 3, and 3.3V to 4.2V covers a single LiPo cell
+    create: () => ({ pin: 29, dividerX1000: 3000, emptyMv: 3300, fullMv: 4200 }),
+    pins: ({ pin }) => [pin],
+    formatStatus: (_, pins) => pins,
+  },
+  powerManagement: {
+    // Nothing is driven until a pin is picked
+    create: () => ({
+      heartbeatPin: -1,
+      heartbeatPeriodMs: 10000,
+      heartbeatPulseMs: 100,
+      heartbeatTimeoutMs: 60000,
+      inactivityPin: -1,
+      inactivityTimeoutMs: 300000,
+      inactivityPulseCount: 0,
+      inactivityPulsePeriodMs: 1000,
+      inactivityPulseMs: 200,
+    }),
+    pins: ({ heartbeatPin, inactivityPin }) =>
+      [heartbeatPin ?? -1, inactivityPin ?? -1].filter((pin) => pin >= 0),
+    formatStatus: (_, pins) => pins,
+  },
 };
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
@@ -241,6 +271,9 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'psxEmulation',
   'wiiEmulation',
   'xbox360Rf',
+  'powerManagement',
+  'adcBattery',
+  'max1704x',
 ]);
 const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([

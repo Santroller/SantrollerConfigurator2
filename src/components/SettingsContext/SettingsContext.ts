@@ -258,6 +258,8 @@ export class DeviceStatus {
   updating?: boolean = false;
   updateProgress?: number = 0;
   rebooting?: boolean = false;
+  // Battery devices: the battery percentage, once they have read it
+  battery?: number;
   device: proto.IDevice;
   parentId?: string;
   wiiExtType: proto.WiiExtType;
@@ -1255,6 +1257,12 @@ export const useConfigStore = create<ConfigState & Actions>()(
               ) {
                 state.deviceStatus[deviceEvent.device!.id].updateProgress =
                   deviceEvent.device!.progress;
+              }
+              if (
+                deviceEvent.device!.battery !== undefined &&
+                deviceEvent.device!.battery !== null
+              ) {
+                state.deviceStatus[deviceEvent.device!.id].battery = deviceEvent.device!.battery;
               }
               if (
                 deviceEvent.device!.rebooting !== undefined &&

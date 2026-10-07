@@ -8,6 +8,12 @@
     "toggle": "Toggle Input",
     "dmx": "DMX",
     "xbox360Rf": "Xbox 360 RF Module",
+    "adcBattery": "Battery Voltage (ADC pin)",
+    "bluetooth_timeout": {
+      "label": "Turn Bluetooth off after (seconds)",
+      "description": "When this controller is used over Bluetooth, turn Bluetooth off once no buttons have been pressed for this long. The next press turns it back on and reconnects. Use 0 to keep it on."
+    },
+    "powerManagement": "Battery Power Management",
     "stp16cpc": "STP16CPC LED Driver",
     "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
@@ -119,6 +125,25 @@
   },
   "main": {
     "settings": "Settings",
+    "inactivity": {
+      "led_timeout": {
+        "label": "Turn LEDs off after (seconds)",
+        "description": "Turn the LEDs off once no buttons have been pressed for this long, and back on with the next press. Use 0 to keep them on. Applies to the whole controller."
+      },
+      "wake_pin": "Wake button pin (for sleep)",
+      "sleep_timeout": {
+        "label": "Sleep after (seconds)",
+        "description": "Go to sleep once no buttons have been pressed for this long, while not plugged into USB. Press the wake button to wake back up. Use 0 to never sleep."
+      },
+      "wake_active_high": {
+        "label": "Wake button is active high",
+        "description": "Turn this on if the wake button connects its pin to 3.3V rather than ground."
+      }
+    },
+    "disconnectBluetoothOnSuspend": {
+      "label": "Disconnect Bluetooth controllers when the PC sleeps",
+      "description": "When this profile's USB connection goes to sleep, disconnect the Bluetooth controllers using it so they turn off instead of running their batteries down. Turning a controller back on still wakes the PC."
+    },
     "invert_y_hid": {
       "label": "Invert Y Axis for HID mode",
       "description": "Invert the Y Axis when in HID mode, as some apps expect it to be inverted."
@@ -143,6 +168,10 @@
       "label": "Icons to show",
       "description": "Pick the icons to show below. This adjusts the icons and names shown in the UI, such as using A or B instead of Cross and Circle"
     },
+    "combinedStrumDebounce": {
+      "label": "Combined strum debounce",
+      "description": "Strum up and down share one debounce window, so a strum is ignored while the other direction is still held or debouncing. Stops a bouncy strum switch registering a strum in the wrong direction. While this is on, changing one strum's debounce changes them all."
+    },
     "queueInputs": {
       "label": "Queue fret and strum inputs",
       "description": "Inputs are read as fast as possible and every fret / strum change is queued, then sent one at a time so the game sees every change, even ones faster than its frame rate. Adds latency while the queue drains."
@@ -150,6 +179,10 @@
     "dequeueInterval": {
       "label": "Dequeue interval (ms)",
       "description": "How long each queued state is held for. The game needs to run at {{fps}}+ fps to see every state."
+    },
+    "selectToDpadLeft": {
+      "label": "Map Select to D-pad Left on Xbox One/Series and PS4/5",
+      "description": "Send Select as D-pad Left instead when plugged into an Xbox One/Series or PS4/5. Rock Band 4 and Fortnite Festival can use D-pad Left to activate star power, which can work better than Select."
     },
     "ps3OnRpcs3": {
       "label": "Use USB passthrough with RPCS3",
@@ -477,7 +510,11 @@
     "PS2AxisDualshock2L1": "L1 (Pressure)",
     "PS2AxisDualshock2R1": "R1 (Pressure)",
     "PS2AxisDualshock2L2": "L2 (Pressure)",
-    "PS2AxisDualshock2R2": "R2 (Pressure)"
+    "PS2AxisDualshock2R2": "R2 (Pressure)",
+    "kind_output": "Output",
+    "kind_action": "Action",
+    "action": "Action",
+    "action_hold_hint": "Actions default to a held input, so they need holding down for a moment and a stray press does nothing."
   },
   "djhTurntable": {
     "left": "Left platter",
@@ -628,6 +665,39 @@
   "joybus": {
     "data_pin": "Data Pin"
   },
+  "battery": {
+    "level": "Battery: {{level}}%",
+    "description": "Estimates the battery level from its voltage, and reports it over Bluetooth. For a battery level that accounts for how the voltage drops under load, use a MAX1704X fuel gauge instead.",
+    "pin": "Pin",
+    "pin_description": "GP29 reads VSYS on a Pico through its built in divider. On a Pico W, GP29 can only be read while Bluetooth is set up, as it is shared with the wireless chip.",
+    "divider": "Voltage divider",
+    "divider_description": "How much the battery voltage is divided down before the pin. GP29's VSYS divider is 3.",
+    "empty": "Empty voltage",
+    "full": "Full voltage",
+    "full_description": "The level goes in a straight line between these. 3300 to 4200 mV suits a single LiPo cell."
+  },
+  "powerManagement": {
+    "description": "Controls a battery module (eg a TP4056 charger with a boost converter) based on how long it has been since the last button press.",
+    "pin": "Pin",
+    "invert": "Active low",
+    "pulse_length": "Pulse length",
+    "heartbeat": {
+      "title": "Keep alive",
+      "description": "Pulses a pin while the controller is in use, drawing a little extra current every so often so power banks that turn off under a light load stay on.",
+      "period": "Time between pulses",
+      "timeout": "Stop after no input for",
+      "timeout_description": "Use 0 to always pulse"
+    },
+    "inactivity": {
+      "title": "Turn off",
+      "description": "Drives a pin once the controller hasn't been used for a while, to turn the module off. Either hold it on (eg for a MOSFET), or pulse it to press the module's power button.",
+      "timeout": "After no input for",
+      "not_on_usb": "Only when not plugged into USB",
+      "pulse_count": "Number of pulses",
+      "pulse_count_description": "Use 0 to hold the pin on instead, eg 2 for modules that need a double press to turn off",
+      "pulse_period": "Time between pulses"
+    }
+  },
   "xbox360Rf": {
     "description": "Sets up an Xbox 360 RF module (the console's wireless receiver board) and lets you sync controllers to it. Wire its USB lines to a USB Host device to receive the controller inputs.",
     "type": {
@@ -738,7 +808,15 @@
     "type": {
       "input": "Input Based",
       "pattern": "Pattern based",
-      "static": "Static"
+      "static": "Static",
+      "euphoria": "DJ Hero Euphoria",
+      "player": "Player Number",
+      "playstation": "PlayStation Lightbar",
+      "rumble": "Rumble",
+      "stageKit": "Stage Kit",
+      "gameFeedback": "Game Feedback (YARG)",
+      "status": "Controller Status",
+      "keyboard": "Keyboard Lock Light"
     },
     "speed": "Speed",
     "brightness": "Brightness",
@@ -747,7 +825,90 @@
       "PatternRainbow": "Rainbow",
       "PatternFade": "Breathing"
     },
-    "set_off": "Set off colour"
+    "set_off": "Set off colour",
+    "mpr121_pin": "MPR121 pin",
+    "mpr121_pin_description": "Electrodes 4 to 11 can drive an LED. Touch sensing stops before the first electrode used this way, so wire touch inputs to the lower electrodes.",
+    "mpr121_electrode": "Electrode {{pin}}",
+    "playerId": "Player number",
+    "rumble": {
+      "label": "Rumble motor",
+      "RumbleLeft": "Left (large) motor",
+      "RumbleRight": "Right (small) motor"
+    },
+    "stageKit": {
+      "label": "Stage Kit light",
+      "StageKitFog": "Fog",
+      "StageKitStrobe": "Strobe",
+      "StageKitBlue": "Blue LEDs",
+      "StageKitGreen": "Green LEDs",
+      "StageKitYellow": "Yellow LEDs",
+      "StageKitRed": "Red LEDs",
+      "StageKitRGBY": "All colours",
+      "index_mapping_mode": {
+        "label": "How the stage kit LEDs map to these LEDs",
+        "StageKitIndexSequential": "One stage kit LED per LED",
+        "StageKitIndexIntensity": "Brightness from how many are on"
+      }
+    },
+    "stagekit": {
+      "index_label": "Stage kit LEDs"
+    },
+    "keyboard": {
+      "label": "Lock light",
+      "KeyboardLedNumLock": "Num Lock",
+      "KeyboardLedCapsLock": "Caps Lock",
+      "KeyboardLedScrollLock": "Scroll Lock"
+    },
+    "gameFeedback": {
+      "label": "What to show",
+      "FeedbackStarPowerGauge": "Star power gauge (while not active)",
+      "FeedbackStarPowerActive": "Star power gauge (while active)",
+      "FeedbackMultiplier": "Multiplier",
+      "FeedbackSolo": "Solo section",
+      "FeedbackNoteMiss": "Note missed",
+      "FeedbackNoteHit": "Note hit",
+      "multiplier": "Light up at multiplier",
+      "multiplier_description": "On while the multiplier is at least this, so a row of LEDs set to 1, 2, 3 and 4 fills up as the multiplier rises",
+      "note": "Note",
+      "notes": {
+        "open": "Open",
+        "green": "Green",
+        "red": "Red",
+        "yellow": "Yellow",
+        "blue": "Blue",
+        "orange": "Orange",
+        "black1": "Black 1",
+        "black2": "Black 2",
+        "black3": "Black 3",
+        "white1": "White 1",
+        "white2": "White 2",
+        "white3": "White 3",
+        "kick": "Kick",
+        "redPad": "Red pad",
+        "yellowPad": "Yellow pad",
+        "bluePad": "Blue pad",
+        "greenPad": "Green pad",
+        "yellowCymbal": "Yellow cymbal",
+        "blueCymbal": "Blue cymbal",
+        "greenCymbal": "Green cymbal",
+        "orangeCymbal": "Orange cymbal",
+        "leftScratch": "Left scratch",
+        "leftGreen": "Left green",
+        "leftRed": "Left red",
+        "leftBlue": "Left blue",
+        "rightScratch": "Right scratch",
+        "rightGreen": "Right green",
+        "rightRed": "Right red",
+        "rightBlue": "Right blue"
+      }
+    },
+    "status": {
+      "label": "Status to show",
+      "StatusBluetoothConnected": "Bluetooth connected",
+      "StatusAuthenticated": "Console authentication complete (Xbox 360 / Xbox One)",
+      "StatusConsoleMode": "Console mode",
+      "mode": "On while in mode"
+    }
   },
   "xboxOneAuth": {
     "reset": {
@@ -1390,7 +1551,9 @@
     "ProKeyboard_Key": "Single Key",
     "ProKeyboardPedal": "Pedal",
     "ProKeyboardTouchPad": "Touch Strip",
-    "ProKeyboardOverdrive": "Overdrive"
+    "ProKeyboardOverdrive": "Overdrive",
+    "ActionRestartDeviceStack": "Restart USB / Bluetooth",
+    "ActionBootloader": "Enter Bootloader"
   },
   "save": {
     "saveChanges": "Save changes",

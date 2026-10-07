@@ -81,6 +81,7 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
+import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
 import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
 import {
   createDeviceInput,
@@ -1016,6 +1017,35 @@ const RPCS3_PASSTHROUGH_SUBTYPES: proto.SubType[] = [
   proto.SubType.ProGuitarSquire,
 ];
 
+// How long an action's input has to be held by default, so a stray press can't trigger it
+const ACTION_HOLD_MS: Record<proto.ActionType, number> = {
+  [proto.ActionType.ActionRestartDeviceStack]: 1000,
+  [proto.ActionType.ActionBootloader]: 3000,
+};
+
+function actionInput(mapping: proto.IMapping, action: proto.ActionType): proto.IInput {
+  const held = mapping.input.held;
+  if (!held) {
+    return { held: { input: mapping.input, time: ACTION_HOLD_MS[action] } };
+  }
+  // Follow the new action's default, unless the time was changed by hand
+  const previous = mapping.mapping.action;
+  if (previous != null && held.time === ACTION_HOLD_MS[previous]) {
+    return { held: { ...held, time: ACTION_HOLD_MS[action] } };
+  }
+  return mapping.input;
+}
+
+// Undo the hold actionInput added, unless the time was changed by hand
+function outputInput(mapping: proto.IMapping): proto.IInput {
+  const held = mapping.input.held;
+  const action = mapping.mapping.action;
+  if (held?.input && action != null && held.time === ACTION_HOLD_MS[action]) {
+    return held.input;
+  }
+  return mapping.input;
+}
+
 function MappingBox({
   mapping,
   type,
@@ -1029,28 +1059,73 @@ function MappingBox({
   legendMode: LegendMode;
   dispatch: (mapping: proto.IMapping) => void;
 }) {
+  const { t } = useTranslation();
   const outputCombobox = useCombobox({
     onDropdownClose: () => outputCombobox.resetSelectedOption(),
   });
+  const isAction = mapping.mapping.action != null;
+  const setAction = (action: proto.ActionType) =>
+    dispatch({
+      ...mapping,
+      input: actionInput(mapping, action),
+      mapping: { action },
+    });
   return (
-    <OutputBox
-      label="outputs"
-      title="output"
-      mapping={mapping.mapping}
-      type={type}
-      mode={mode}
-      legendMode={legendMode}
-      dispatch={(m, trigger, _) =>
-        dispatch({
-          center: trigger ? 0 : 32767,
-          min: 0,
-          max: 65535,
-          ...mapping,
-          pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-          mapping: m,
-        })
-      }
-    />
+    <Stack gap="xs">
+      <SegmentedControl
+        fullWidth
+        data={[
+          { value: 'output', label: t('inputs.kind_output', 'Output') },
+          { value: 'action', label: t('inputs.kind_action', 'Action') },
+        ]}
+        value={isAction ? 'action' : 'output'}
+        onChange={(value) => {
+          if (value === 'action') {
+            setAction(proto.ActionType.ActionBootloader);
+          } else {
+            dispatch({ ...mapping, input: outputInput(mapping), mapping: {} });
+          }
+        }}
+      />
+      {isAction ? (
+        <>
+          <Select
+            label={t('inputs.action', 'Action')}
+            allowDeselect={false}
+            data={Object.entries(proto.ActionType)
+              .filter(([, v]) => typeof v === 'number')
+              .map(([name, v]) => ({ value: `${v}`, label: t(`outputs.${name}`, name) }))}
+            value={`${mapping.mapping.action}`}
+            onChange={(value) => value && setAction(parseInt(value, 10))}
+          />
+          <Text size="xs" c="dimmed">
+            {t(
+              'inputs.action_hold_hint',
+              'Actions default to a held input, so they need holding down for a moment and a stray press does nothing.'
+            )}
+          </Text>
+        </>
+      ) : (
+        <OutputBox
+          label="outputs"
+          title="output"
+          mapping={mapping.mapping}
+          type={type}
+          mode={mode}
+          legendMode={legendMode}
+          dispatch={(m, trigger, _) =>
+            dispatch({
+              center: trigger ? 0 : 32767,
+              min: 0,
+              max: 65535,
+              ...mapping,
+              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
+              mapping: m,
+            })
+          }
+        />
+      )}
+    </Stack>
   );
 }
 function DropdownOutputBox<
@@ -2911,6 +2986,41 @@ const crkdDrumMappings: Record<proto.CrkdDrumAxisType, keyof proto.ICrkdCalibrat
   [proto.CrkdDrumAxisType.CrkdKick1]: 'kick1',
   [proto.CrkdDrumAxisType.CrkdKick2]: 'kick2',
 };
+// Strum outputs, matching how the firmware picks out strums for combined strum debounce
+function isStrumOutput(output: proto.IOutput, subtype: proto.SubType) {
+  if (
+    subtype !== proto.SubType.GuitarHeroGuitar &&
+    subtype !== proto.SubType.RockBandGuitar &&
+    subtype !== proto.SubType.LiveGuitar
+  ) {
+    return false;
+  }
+  return (
+    output.gamepadButton === proto.GamepadButtonType.Gamepad_DpadUp ||
+    output.gamepadButton === proto.GamepadButtonType.Gamepad_DpadDown ||
+    (subtype === proto.SubType.LiveGuitar &&
+      (output.ghlButton === proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp ||
+        output.ghlButton === proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown))
+  );
+}
+
+// Gives every strum mapping in the profile the same debounce, for combined strum debounce
+function withStrumDebounce(profile: proto.IProfile, debounce100us: number): proto.IProfile {
+  const subtype = profile.opts.deviceToEmulate;
+  return {
+    ...profile,
+    mappings: profile.mappings?.map((mapping) =>
+      isStrumOutput(mapping.mapping, subtype)
+        ? { ...mapping, debounce: undefined, debounce100us }
+        : mapping
+    ),
+  };
+}
+
+function mappingDebounce100us(mapping: proto.IMapping) {
+  return mapping.debounce100us ?? (mapping.debounce ?? 0) * 10;
+}
+
 function SantrollerMapping({
   mapping,
   type,
@@ -2937,6 +3047,10 @@ function SantrollerMapping({
   });
 
   const simpleMode = useConfigStore((state) => state.simpleMode);
+  const profile = useConfigStore((state) => state.config.profiles?.[profileIdx]);
+  const updateProfile = useConfigStore((state) => state.updateProfile);
+  const combinedStrum =
+    !!profile?.opts.combinedStrumDebounce && isStrumOutput(mapping.mapping, type);
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition: isSorting ? transition : '',
@@ -2972,12 +3086,14 @@ function SantrollerMapping({
       : undefined) ||
     (mapping.mapping.consumerKey != null
       ? (mediaKeyName(mapping.mapping.consumerKey) ?? `Media ${mapping.mapping.consumerKey}`)
-      : undefined);
+      : undefined) ||
+    proto.ActionType[mapping.mapping.action ?? -1];
   const fixedLabel = FixLabel(mode, type, label || '', legendMode);
   const img = `Icons/Input/${FixIcon(mode, type, label || '', legendMode)}.png`;
   const button =
     mapping.mapping.keycode != null ||
     mapping.mapping.consumerKey != null ||
+    mapping.mapping.action != null ||
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v != null);
   const axis =
     mapping.mapping.proKeySingle != null ||
@@ -3234,13 +3350,14 @@ function SantrollerMapping({
             value={
               mapping.debounce100us != null ? mapping.debounce100us / 10 : (mapping.debounce ?? 0)
             }
-            onChange={(val) =>
-              dispatch({
-                ...mapping,
-                debounce: undefined,
-                debounce100us: Math.round(Number(val) * 10),
-              })
-            }
+            onChange={(val) => {
+              const debounce100us = Math.round(Number(val) * 10);
+              if (combinedStrum && profile) {
+                updateProfile(withStrumDebounce(profile, debounce100us), profileIdx);
+                return;
+              }
+              dispatch({ ...mapping, debounce: undefined, debounce100us });
+            }}
           />
         )}
         {drum && crkdDrum && (
@@ -3804,6 +3921,93 @@ function SantrollerMapping({
   );
 }
 
+// Note numbering for the note hit LED, as the Santroller LED protocol numbers them
+function noteHitNames(type: proto.SubType): string[] | undefined {
+  switch (type) {
+    case proto.SubType.GuitarHeroGuitar:
+    case proto.SubType.RockBandGuitar:
+      return ['open', 'green', 'red', 'yellow', 'blue', 'orange'];
+    case proto.SubType.LiveGuitar:
+      return ['open', 'black1', 'black2', 'black3', 'white1', 'white2', 'white3'];
+    case proto.SubType.RockBandDrums:
+      return [
+        'kick',
+        'redPad',
+        'yellowPad',
+        'bluePad',
+        'greenPad',
+        'yellowCymbal',
+        'blueCymbal',
+        'greenCymbal',
+      ];
+    case proto.SubType.GuitarHeroDrums:
+      return ['kick', 'redPad', 'yellowCymbal', 'bluePad', 'orangeCymbal', 'greenPad'];
+    case proto.SubType.DjHeroTurntable:
+      return [
+        'leftScratch',
+        'leftGreen',
+        'leftRed',
+        'leftBlue',
+        'rightScratch',
+        'rightGreen',
+        'rightRed',
+        'rightBlue',
+      ];
+  }
+  return undefined;
+}
+
+function GameFeedbackLedEditor({
+  mapping,
+  type,
+  dispatch,
+}: {
+  mapping: proto.IGameFeedbackLedMapping;
+  type: proto.SubType;
+  dispatch: (mapping: proto.IGameFeedbackLedMapping) => void;
+}) {
+  const { t } = useTranslation();
+  const notes = noteHitNames(type);
+  return (
+    <>
+      <DropdownBox
+        title="leds.gameFeedback.label"
+        e={proto.GameFeedbackLedType}
+        val={mapping.type}
+        label="leds.gameFeedback"
+        dispatch={(feedbackType) => dispatch({ ...mapping, type: feedbackType, value: 1 })}
+      />
+      {mapping.type === proto.GameFeedbackLedType.FeedbackMultiplier && (
+        <NumberInput
+          mt="xs"
+          label={t('leds.gameFeedback.multiplier')}
+          description={t('leds.gameFeedback.multiplier_description')}
+          min={1}
+          max={255}
+          value={mapping.value ?? 1}
+          onChange={(val) => dispatch({ ...mapping, value: Number(val) || 1 })}
+        />
+      )}
+      {mapping.type === proto.GameFeedbackLedType.FeedbackNoteHit && (
+        <Select
+          mt="xs"
+          label={t('leds.gameFeedback.note')}
+          allowDeselect={false}
+          data={(notes ?? Array.from({ length: 8 }, (_, i) => `${i}`)).map((name, i) => ({
+            value: `${i}`,
+            label: notes ? t(`leds.gameFeedback.notes.${name}`) : name,
+          }))}
+          value={`${mapping.value ?? 0}`}
+          onChange={(val) => val != null && dispatch({ ...mapping, value: parseInt(val, 10) })}
+        />
+      )}
+    </>
+  );
+}
+
+// Electrodes the MPR121 can use as GPIO
+const MPR121_GPIO_PINS = [4, 5, 6, 7, 8, 9, 10, 11];
+
 function SantrollerLed({
   led,
   profileIdx,
@@ -3847,6 +4051,8 @@ function SantrollerLed({
     deviceId = led.device.stp16.deviceId;
   } else if (led.device.vtechExpander) {
     deviceId = led.device.vtechExpander.deviceId;
+  } else if (led.device.mpr121) {
+    deviceId = led.device.mpr121.deviceId;
   }
   const guiDevices = useConfigStore((state) => state.guiDevices);
   const simpleMode = useConfigStore((state) => state.simpleMode);
@@ -3960,6 +4166,12 @@ function SantrollerLed({
     mappingValue = t(`leds.type.rumble`);
   } else if (led.mapping.stageKitMapping) {
     mappingValue = t(`leds.type.stageKit`);
+  } else if (led.mapping.keyboardMapping) {
+    mappingValue = t(`leds.type.keyboard`);
+  } else if (led.mapping.gameFeedbackMapping) {
+    mappingValue = t(`leds.type.gameFeedback`);
+  } else if (led.mapping.statusMapping) {
+    mappingValue = t(`leds.type.status`);
   }
 
   const isLedActive = useConfigStore((state) => !!state.ledStatus[profileIdx]?.[ledIdx]?.state);
@@ -4138,6 +4350,17 @@ function SantrollerLed({
                           },
                         });
                         break;
+                      case 'mpr121':
+                        dispatch({
+                          ...led,
+                          device: {
+                            mpr121: {
+                              pin: MPR121_GPIO_PINS[0],
+                              deviceId: parseInt(val, 10),
+                            },
+                          },
+                        });
+                        break;
                     }
                     return;
                   }
@@ -4178,7 +4401,7 @@ function SantrollerLed({
                 <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
                   <Combobox.Options>
                     {Object.values(deviceStatus)
-                      .filter(isLed)
+                      .filter((item) => isLed(item) || item.type === 'mpr121')
                       .map((item) => (
                         <Combobox.Option value={item.id} key={item.id}>
                           <Group gap="2">
@@ -4286,7 +4509,7 @@ function SantrollerLed({
                       dispatch({
                         ...led,
                         mapping: {
-                          playerMapping: { playerId: 0 },
+                          playerMapping: { playerId: 1 },
                         },
                       });
                       break;
@@ -4315,6 +4538,36 @@ function SantrollerLed({
                             indexMappingMode:
                               proto.StageKitIndexMappingMode.StageKitIndexSequential,
                             type: proto.StageKitLedType.StageKitStrobe,
+                          },
+                        },
+                      });
+                      break;
+                    case 'keyboard':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          keyboardMapping: { type: proto.KeyboardLedType.KeyboardLedCapsLock },
+                        },
+                      });
+                      break;
+                    case 'gameFeedback':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          gameFeedbackMapping: {
+                            type: proto.GameFeedbackLedType.FeedbackStarPowerGauge,
+                            value: 1,
+                          },
+                        },
+                      });
+                      break;
+                    case 'status':
+                      dispatch({
+                        ...led,
+                        mapping: {
+                          statusMapping: {
+                            type: proto.StatusLedType.StatusBluetoothConnected,
+                            mode: proto.ConsoleMode.ModeHid,
                           },
                         },
                       });
@@ -4348,6 +4601,13 @@ function SantrollerLed({
                     </Combobox.Option>
                     <Combobox.Option value="rumble">{t('leds.type.rumble')}</Combobox.Option>
                     <Combobox.Option value="stageKit">{t('leds.type.stageKit')}</Combobox.Option>
+                    <Combobox.Option value="gameFeedback">
+                      {t('leds.type.gameFeedback')}
+                    </Combobox.Option>
+                    <Combobox.Option value="status">{t('leds.type.status')}</Combobox.Option>
+                    {type === proto.SubType.KeyboardMouse && (
+                      <Combobox.Option value="keyboard">{t('leds.type.keyboard')}</Combobox.Option>
+                    )}
                   </Combobox.Options>
                 </Combobox.Dropdown>
               </Combobox>
@@ -4372,6 +4632,25 @@ function SantrollerLed({
                 pin={led.device.gpio.pin}
                 dispatch={(pin) =>
                   dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })
+                }
+              />
+            )}
+            {led.device.mpr121 && (
+              <Select
+                label={t('leds.mpr121_pin')}
+                description={t('leds.mpr121_pin_description')}
+                allowDeselect={false}
+                data={MPR121_GPIO_PINS.map((pin) => ({
+                  value: `${pin}`,
+                  label: t('leds.mpr121_electrode', { pin }),
+                }))}
+                value={`${led.device.mpr121.pin}`}
+                onChange={(val) =>
+                  val != null &&
+                  dispatch({
+                    ...led,
+                    device: { mpr121: { ...led.device.mpr121!, pin: parseInt(val, 10) } },
+                  })
                 }
               />
             )}
@@ -4467,6 +4746,63 @@ function SantrollerLed({
                     })
                   }
                 />
+              </>
+            )}
+            {led.mapping.keyboardMapping && (
+              <DropdownBox
+                title="leds.keyboard.label"
+                e={proto.KeyboardLedType}
+                val={led.mapping.keyboardMapping.type}
+                label="leds.keyboard"
+                dispatch={(kbType) =>
+                  dispatch({ ...led, mapping: { keyboardMapping: { type: kbType } } })
+                }
+              />
+            )}
+            {led.mapping.gameFeedbackMapping && (
+              <GameFeedbackLedEditor
+                mapping={led.mapping.gameFeedbackMapping}
+                type={type}
+                dispatch={(gameFeedbackMapping) =>
+                  dispatch({ ...led, mapping: { gameFeedbackMapping } })
+                }
+              />
+            )}
+            {led.mapping.statusMapping && (
+              <>
+                <DropdownBox
+                  title="leds.status.label"
+                  e={proto.StatusLedType}
+                  val={led.mapping.statusMapping.type}
+                  label="leds.status"
+                  dispatch={(statusType) =>
+                    dispatch({
+                      ...led,
+                      mapping: {
+                        statusMapping: { ...led.mapping.statusMapping!, type: statusType },
+                      },
+                    })
+                  }
+                />
+                {led.mapping.statusMapping.type === proto.StatusLedType.StatusConsoleMode && (
+                  <>
+                    <Space h="xs" />
+                    <DropdownBox
+                      title="leds.status.mode"
+                      e={proto.ConsoleMode}
+                      val={led.mapping.statusMapping.mode ?? proto.ConsoleMode.ModeHid}
+                      label="consoleMode"
+                      dispatch={(consoleMode) =>
+                        dispatch({
+                          ...led,
+                          mapping: {
+                            statusMapping: { ...led.mapping.statusMapping!, mode: consoleMode },
+                          },
+                        })
+                      }
+                    />
+                  </>
+                )}
               </>
             )}
             {led.mapping.rumbleMapping && (
@@ -7347,12 +7683,58 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         checked={syncCalibrations}
         onChange={(event) => setSyncMode(event.currentTarget.checked)}
       />
+      <Space h="md" />
+      <InactivitySettings />
+      {hasBluetooth && (
+        <>
+          <Space h="md" />
+          <Switch
+            label={t('main.disconnectBluetoothOnSuspend.label')}
+            description={t('main.disconnectBluetoothOnSuspend.description')}
+            checked={!!profile.opts.disconnectBluetoothOnSuspend}
+            onChange={(event) =>
+              updateProfile(
+                {
+                  ...profile,
+                  opts: {
+                    ...profile.opts,
+                    disconnectBluetoothOnSuspend: event.currentTarget.checked,
+                  },
+                },
+                profileIdx
+              )
+            }
+          />
+        </>
+      )}
       {!simpleMode && (
         <>
           {(profile.opts.deviceToEmulate === proto.SubType.GuitarHeroGuitar ||
             profile.opts.deviceToEmulate === proto.SubType.RockBandGuitar ||
             profile.opts.deviceToEmulate === proto.SubType.LiveGuitar) && (
             <>
+              <Space h="md" />
+              <Switch
+                label={t('main.combinedStrumDebounce.label')}
+                description={t('main.combinedStrumDebounce.description')}
+                checked={!!profile.opts.combinedStrumDebounce}
+                onChange={(event) => {
+                  const updated = {
+                    ...profile,
+                    opts: { ...profile.opts, combinedStrumDebounce: event.currentTarget.checked },
+                  };
+                  // Start both strums off with the first strum's debounce
+                  const strum = profile.mappings?.find((m) =>
+                    isStrumOutput(m.mapping, profile.opts.deviceToEmulate)
+                  );
+                  updateProfile(
+                    event.currentTarget.checked && strum
+                      ? withStrumDebounce(updated, mappingDebounce100us(strum))
+                      : updated,
+                    profileIdx
+                  );
+                }}
+              />
               <Space h="md" />
               <Switch
                 label={t('main.queueInputs.label')}
@@ -7395,6 +7777,26 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   />
                 </>
               )}
+            </>
+          )}
+          {(profile.opts.deviceToEmulate === proto.SubType.GuitarHeroGuitar ||
+            profile.opts.deviceToEmulate === proto.SubType.RockBandGuitar) && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.selectToDpadLeft.label')}
+                description={t('main.selectToDpadLeft.description')}
+                checked={!!profile.opts.selectToDpadLeft}
+                onChange={(event) =>
+                  updateProfile(
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, selectToDpadLeft: event.currentTarget.checked },
+                    },
+                    profileIdx
+                  )
+                }
+              />
             </>
           )}
           {RPCS3_PASSTHROUGH_SUBTYPES.includes(profile.opts.deviceToEmulate) && (

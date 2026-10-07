@@ -2,6 +2,7 @@ import React from 'react';
 import { IconBulb, IconDeviceFloppy } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, Card, Group, Image, Paper, Stack, Table, Text, Title } from '@mantine/core';
+import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
@@ -208,6 +209,7 @@ export function LedReviewStep(props: GuideStepProps) {
 
       <Title order={4}>{t('guides.rgb-leds.steps.led-test.syncTitle')}</Title>
       <Text size="sm">{t('guides.rgb-leds.steps.led-test.syncText')}</Text>
+      <InactivitySettings ledOnly />
 
       <Button
         size="md"

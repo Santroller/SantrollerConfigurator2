@@ -19,6 +19,7 @@ import {
   Modal,
   MultiSelect,
   NumberInput,
+  Select,
   SegmentedControl,
   SimpleGrid,
   Space,
@@ -33,11 +34,7 @@ import {
 import { useDisclosure, useMounted } from '@mantine/hooks';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
-import {
-  proto,
-  usbDeviceKey,
-  useConfigStore,
-} from '../components/SettingsContext/SettingsContext';
+import { proto, usbDeviceKey, useConfigStore } from '../components/SettingsContext/SettingsContext';
 
 import '@/i18n/config';
 
@@ -411,7 +408,9 @@ function WiiExtensionDevice({ id }: { id: string }) {
               wii: {
                 ...wii,
                 turntablePollIntervalMs:
-                  typeof value === 'number' && value >= 1 ? value : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
+                  typeof value === 'number' && value >= 1
+                    ? value
+                    : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
               },
             },
             id
@@ -1171,6 +1170,84 @@ function Max1704XDevice({ id }: { id: string }) {
           updateDevice({ deviceid: parseInt(id, 10), max1704x: { ...max1704x, i2c: val } }, id)
         }
       />
+      <BatteryLevel level={status.battery} />
+    </DeviceCard>
+  );
+}
+
+function BatteryLevel({ level }: { level?: number }) {
+  const { t } = useTranslation();
+  if (level === undefined) {
+    return null;
+  }
+  return (
+    <Text size="sm" mt="md">
+      {t('battery.level', { level })}
+    </Text>
+  );
+}
+
+const ADC_BATTERY_PINS = [26, 27, 28, 29];
+
+function AdcBatteryDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.adcBattery) {
+    throw new Error('device null!');
+  }
+  const battery = device.adcBattery;
+  const update = (changes: Partial<proto.IAdcBatteryDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), adcBattery: { ...battery, ...changes } }, id);
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.adcBattery"
+      image="covers/devices/adcBattery.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('battery.description')}
+      </Text>
+      <Select
+        mt="xs"
+        label={t('battery.pin')}
+        description={t('battery.pin_description')}
+        allowDeselect={false}
+        data={ADC_BATTERY_PINS.map((pin) => ({ value: `${pin}`, label: t('pin', { pin }) }))}
+        value={`${battery.pin}`}
+        onChange={(val) => val != null && update({ pin: parseInt(val, 10) })}
+      />
+      <NumberInput
+        mt="xs"
+        label={t('battery.divider')}
+        description={t('battery.divider_description')}
+        decimalScale={3}
+        step={0.1}
+        min={1}
+        value={battery.dividerX1000 / 1000}
+        onChange={(val) => update({ dividerX1000: Math.round((Number(val) || 1) * 1000) })}
+      />
+      <NumberInput
+        mt="xs"
+        label={t('battery.empty')}
+        suffix=" mV"
+        min={0}
+        value={battery.emptyMv}
+        onChange={(val) => update({ emptyMv: Number(val) || 0 })}
+      />
+      <NumberInput
+        mt="xs"
+        label={t('battery.full')}
+        description={t('battery.full_description')}
+        suffix=" mV"
+        min={0}
+        value={battery.fullMv}
+        onChange={(val) => update({ fullMv: Number(val) || 0 })}
+      />
+      <BatteryLevel level={status.battery} />
     </DeviceCard>
   );
 }
@@ -1194,7 +1271,10 @@ function XboxOneAuthDevice({ id }: { id: string }) {
       <I2CDevice
         device={xboxOneAuth.i2c}
         dispatch={(val) =>
-          updateDevice({ deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, i2c: val } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, i2c: val } },
+            id
+          )
         }
       />
       <PinBox
@@ -1202,7 +1282,10 @@ function XboxOneAuthDevice({ id }: { id: string }) {
         pin={xboxOneAuth.resetPin ?? -1}
         valid={AllPinsNamed}
         dispatch={(pin) =>
-          updateDevice({ deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, resetPin: pin } }, id)
+          updateDevice(
+            { deviceid: parseInt(id, 10), xboxOneAuth: { ...xboxOneAuth, resetPin: pin } },
+            id
+          )
         }
       />
     </DeviceCard>
@@ -1686,6 +1769,118 @@ function Xbox360RfDevice({ id }: { id: string }) {
       <Button mt="md" size="xs" loading={scanning} disabled={scanning} onClick={sync}>
         {t('xbox360Rf.sync')}
       </Button>
+    </DeviceCard>
+  );
+}
+function PowerManagementDevice({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.powerManagement) {
+    throw new Error('device null!');
+  }
+  const power = device.powerManagement;
+  const update = (changes: Partial<proto.IPowerManagementDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), powerManagement: { ...power, ...changes } }, id);
+  const ms = (
+    key: keyof proto.IPowerManagementDevice,
+    label: string,
+    description?: string,
+    unit = 'ms'
+  ) => (
+    <NumberInput
+      mt="xs"
+      label={t(label)}
+      description={description && t(description)}
+      suffix={` ${unit}`}
+      min={0}
+      value={(power[key] as number | null | undefined) ?? 0}
+      onChange={(val) => update({ [key]: Number(val) || 0 })}
+    />
+  );
+  const heartbeat = (power.heartbeatPin ?? -1) >= 0;
+  const inactivity = (power.inactivityPin ?? -1) >= 0;
+  return (
+    <DeviceCard
+      title="devices.powerManagement"
+      image="covers/devices/powerManagement.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('powerManagement.description')}
+      </Text>
+      <Title order={5} mt="md">
+        {t('powerManagement.heartbeat.title')}
+      </Title>
+      <Text size="xs" c="dimmed">
+        {t('powerManagement.heartbeat.description')}
+      </Text>
+      <PinBox
+        label="powerManagement.pin"
+        pin={power.heartbeatPin ?? -1}
+        valid={AllPinsNamed}
+        dispatch={(heartbeatPin) => update({ heartbeatPin })}
+      />
+      {heartbeat && (
+        <>
+          <Switch
+            mt="xs"
+            label={t('powerManagement.invert')}
+            checked={!!power.heartbeatInvert}
+            onChange={(event) => update({ heartbeatInvert: event.currentTarget.checked })}
+          />
+          {ms('heartbeatPeriodMs', 'powerManagement.heartbeat.period')}
+          {ms('heartbeatPulseMs', 'powerManagement.pulse_length')}
+          {ms(
+            'heartbeatTimeoutMs',
+            'powerManagement.heartbeat.timeout',
+            'powerManagement.heartbeat.timeout_description'
+          )}
+        </>
+      )}
+      <Title order={5} mt="md">
+        {t('powerManagement.inactivity.title')}
+      </Title>
+      <Text size="xs" c="dimmed">
+        {t('powerManagement.inactivity.description')}
+      </Text>
+      <PinBox
+        label="powerManagement.pin"
+        pin={power.inactivityPin ?? -1}
+        valid={AllPinsNamed}
+        dispatch={(inactivityPin) => update({ inactivityPin })}
+      />
+      {inactivity && (
+        <>
+          <Switch
+            mt="xs"
+            label={t('powerManagement.invert')}
+            checked={!!power.inactivityInvert}
+            onChange={(event) => update({ inactivityInvert: event.currentTarget.checked })}
+          />
+          <Switch
+            mt="xs"
+            label={t('powerManagement.inactivity.not_on_usb')}
+            checked={!!power.inactivityNotOnUsb}
+            onChange={(event) => update({ inactivityNotOnUsb: event.currentTarget.checked })}
+          />
+          {ms('inactivityTimeoutMs', 'powerManagement.inactivity.timeout')}
+          {ms(
+            'inactivityPulseCount',
+            'powerManagement.inactivity.pulse_count',
+            'powerManagement.inactivity.pulse_count_description',
+            ''
+          )}
+          {(power.inactivityPulseCount ?? 0) > 0 && (
+            <>
+              {ms('inactivityPulsePeriodMs', 'powerManagement.inactivity.pulse_period')}
+              {ms('inactivityPulseMs', 'powerManagement.pulse_length')}
+            </>
+          )}
+        </>
+      )}
     </DeviceCard>
   );
 }
@@ -2177,7 +2372,24 @@ function BluetoothDevice({ id }: { id: string }) {
         label="devices.bluetooth_sync_pin"
         pin={bt.syncPin ?? -1}
         valid={AllPinsNamed}
-        dispatch={(syncPin) => updateDevice({ deviceid: parseInt(id, 10), bt: { ...bt, syncPin } }, id)}
+        dispatch={(syncPin) =>
+          updateDevice({ deviceid: parseInt(id, 10), bt: { ...bt, syncPin } }, id)
+        }
+      />
+      <NumberInput
+        mt="xs"
+        mb="md"
+        label={t('devices.bluetooth_timeout.label')}
+        description={t('devices.bluetooth_timeout.description')}
+        suffix=" s"
+        min={0}
+        value={bt.timeoutSec ?? 0}
+        onChange={(val) =>
+          updateDevice(
+            { deviceid: parseInt(id, 10), bt: { ...bt, timeoutSec: Number(val) || 0 } },
+            id
+          )
+        }
       />
       {hasConnectedDevices && (
         <>
@@ -2300,6 +2512,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   worldTourDrum: WorldTourDrumDevice,
   accelerometer: AccelerometerDevice,
   max1704x: Max1704XDevice,
+  adcBattery: AdcBatteryDevice,
   xboxOneAuth: XboxOneAuthDevice,
   mpr121: MPR121Device,
   crazyGuitarNeck: CrazyGuitarNeckDevice,
@@ -2333,6 +2546,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   toggle: ToggleDevice,
   dmx: DMXDevice,
   xbox360Rf: Xbox360RfDevice,
+  powerManagement: PowerManagementDevice,
 };
 export function DevicesPage() {
   const [deviceType, setDeviceType] = useState<DeviceKind>(deviceKinds[0]);
