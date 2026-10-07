@@ -43,6 +43,16 @@ describe('PS2 input choices by controller type', () => {
     expect(filters.axis('PS2AxisLeftStickX')).toBe(false);
   });
 
+  it('keeps GuitarFreaks and guitar hero guitar buttons apart', () => {
+    const gf = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypeGuitarFreaks]);
+    expect(gf.button('PS2ButtonGuitarFreaksPick')).toBe(true);
+    expect(gf.button('PS2ButtonGuitarGreen')).toBe(false);
+    expect(gf.button('PS2ButtonDpadLeft')).toBe(false);
+    const gh = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypeGuitar]);
+    expect(gh.button('PS2ButtonGuitarGreen')).toBe(true);
+    expect(gh.button('PS2ButtonGuitarFreaksPick')).toBe(false);
+  });
+
   it('keeps an existing selection even when it does not fit the controller', () => {
     const filters = getPS2InputFilters([proto.PS2ControllerType.PS2ControllerTypePopNMusic]);
     expect(filters.button('PS2ButtonTriangle', 'PS2ButtonTriangle')).toBe(true);

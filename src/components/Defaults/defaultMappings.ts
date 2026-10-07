@@ -1404,6 +1404,90 @@ export function getPs2Defaults(
   const isDualshock2 = cntType === proto.PS2ControllerType.PS2ControllerTypeDualshock2;
   const isDigital = cntType === proto.PS2ControllerType.PS2ControllerTypeDigital;
   const isPopn = cntType === proto.PS2ControllerType.PS2ControllerTypePopNMusic;
+  const isGuitarFreaks = cntType === proto.PS2ControllerType.PS2ControllerTypeGuitarFreaks;
+
+  if (isGuitarFreaks || subType === proto.SubType.GuitarFreaks) {
+    // GuitarFreaks has one pick, so both strums go to it. The firmware queues the pick so a quick
+    // re-strum still reaches the console as a separate pick.
+    // Its red, green and blue frets sit where a guitar hero guitar's green, red and yellow are.
+    const P = proto.PS2ButtonType;
+    const F = proto.GuitarFreaksButtonType;
+    const inputs: [proto.PS2ButtonType, proto.GuitarFreaksButtonType][] = isGuitarFreaks
+      ? [
+          [P.PS2ButtonGuitarFreaksRed, F.GuitarFreaks_Red],
+          [P.PS2ButtonGuitarFreaksGreen, F.GuitarFreaks_Green],
+          [P.PS2ButtonGuitarFreaksBlue, F.GuitarFreaks_Blue],
+          [P.PS2ButtonGuitarFreaksPick, F.GuitarFreaks_Strum],
+          [P.PS2ButtonGuitarFreaksTilt, F.GuitarFreaks_Tilt],
+        ]
+      : isGuitar
+        ? [
+            [P.PS2ButtonGuitarGreen, F.GuitarFreaks_Red],
+            [P.PS2ButtonGuitarRed, F.GuitarFreaks_Green],
+            [P.PS2ButtonGuitarYellow, F.GuitarFreaks_Blue],
+            [P.PS2ButtonGuitarStrumUp, F.GuitarFreaks_Strum],
+            [P.PS2ButtonGuitarStrumDown, F.GuitarFreaks_Strum],
+            [P.PS2ButtonGuitarTilt, F.GuitarFreaks_Tilt],
+          ]
+        : [
+            [P.PS2ButtonR2, F.GuitarFreaks_Red],
+            [P.PS2ButtonCircle, F.GuitarFreaks_Green],
+            [P.PS2ButtonTriangle, F.GuitarFreaks_Blue],
+            [P.PS2ButtonDpadUp, F.GuitarFreaks_Strum],
+            [P.PS2ButtonDpadDown, F.GuitarFreaks_Strum],
+            [P.PS2ButtonL2, F.GuitarFreaks_Tilt],
+          ];
+    const output = (button: proto.GuitarFreaksButtonType): proto.IOutput => {
+      if (subType === proto.SubType.GuitarFreaks) {
+        return { gfButton: button };
+      }
+      const gh = subType === proto.SubType.GuitarHeroGuitar;
+      const rb = subType === proto.SubType.RockBandGuitar;
+      switch (button) {
+        case F.GuitarFreaks_Red:
+          return gh
+            ? { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green }
+            : rb
+              ? { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green }
+              : { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger };
+        case F.GuitarFreaks_Green:
+          return gh
+            ? { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red }
+            : rb
+              ? { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red }
+              : { gamepadButton: proto.GamepadButtonType.Gamepad_B };
+        case F.GuitarFreaks_Blue:
+          return gh
+            ? { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow }
+            : rb
+              ? { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow }
+              : { gamepadButton: proto.GamepadButtonType.Gamepad_Y };
+        case F.GuitarFreaks_Tilt:
+          return gh
+            ? { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt }
+            : rb
+              ? { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt }
+              : { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger };
+        default:
+          return { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp };
+      }
+    };
+    return [
+      ...inputs.map(([input, button]) => {
+        const mapping = output(button);
+        return mapping.gamepadAxis != null
+          ? ps2TriggerButton(input, deviceId, mapping)
+          : ps2Button(input, deviceId, mapping);
+      }),
+      ps2Button(isGuitar ? P.PS2ButtonGuitarSelect : P.PS2ButtonSelect, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Back,
+      }),
+      ps2Button(isGuitar ? P.PS2ButtonGuitarStart : P.PS2ButtonStart, deviceId, {
+        gamepadButton: proto.GamepadButtonType.Gamepad_Start,
+      }),
+    ];
+  }
+
 
   if (subType === proto.SubType.BeatMania) {
     // beatmania IIDX controllers are plain digital pads, https://github.com/PCSX2/pcsx2/issues/10176

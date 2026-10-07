@@ -59,10 +59,21 @@ function ps2InputsForType(type: proto.PS2ControllerType): { axes: string[]; butt
           'PS2ButtonStart',
         ],
       };
+    case T.PS2ControllerTypeGuitarFreaks:
+      return {
+        axes: [],
+        buttons: [
+          ...prefixed(proto.PS2ButtonType, 'PS2ButtonGuitarFreaks'),
+          'PS2ButtonSelect',
+          'PS2ButtonStart',
+        ],
+      };
     case T.PS2ControllerTypeGuitar:
       return {
         axes: ['PS2AxisGuitarWhammy'],
-        buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonGuitar'),
+        buttons: prefixed(proto.PS2ButtonType, 'PS2ButtonGuitar').filter(
+          (key) => !key.startsWith('PS2ButtonGuitarFreaks')
+        ),
       };
     case T.PS2ControllerTypeNegCon:
       return {

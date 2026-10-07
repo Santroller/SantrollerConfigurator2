@@ -397,6 +397,11 @@
     "PS2ButtonPopN7": "Pop'n Button 7 (Green Right)",
     "PS2ButtonPopN8": "Pop'n Button 8 (Yellow Right)",
     "PS2ButtonPopN9": "Pop'n Button 9 (White Right)",
+    "PS2ButtonGuitarFreaksRed": "GuitarFreaks Red Fret",
+    "PS2ButtonGuitarFreaksGreen": "GuitarFreaks Green Fret",
+    "PS2ButtonGuitarFreaksBlue": "GuitarFreaks Blue Fret",
+    "PS2ButtonGuitarFreaksPick": "GuitarFreaks Pick",
+    "PS2ButtonGuitarFreaksTilt": "GuitarFreaks Tilt",
     "PS2ButtonTaikoRimRight": "Right Drum Rim",
     "PS2ButtonMouseLeft": "Left Click",
     "PS2ButtonMouseRight": "Right Click",
@@ -719,6 +724,7 @@
       "PS2ControllerTypeMouse": "Mouse",
       "PS2ControllerTypeTaiko": "Taiko Drum",
       "PS2ControllerTypePopNMusic": "Pop'n Music Controller",
+      "PS2ControllerTypeGuitarFreaks": "GuitarFreaks Guitar",
       "PS2ControllerTypeUnknown": "Disconnected"
     }
   },
@@ -910,6 +916,7 @@
     "PS2ControllerTypeMouse": "Mouse",
     "PS2ControllerTypeTaiko": "Taiko Drum",
     "PS2ControllerTypePopNMusic": "Pop'n Music Controller",
+    "PS2ControllerTypeGuitarFreaks": "GuitarFreaks Guitar",
     "PS2ControllerTypeUnknown": "Disconnected"
   },
   "bluetooth": {
@@ -1270,6 +1277,11 @@
     "BeatMania_ScratchClockwise": "Turntable Clockwise",
     "BeatMania_ScratchCounterClockwise": "Turntable Counterclockwise",
     "BeatMania_Pedal": "Foot Pedal",
+    "GuitarFreaks_Red": "Red Fret",
+    "GuitarFreaks_Green": "Green Fret",
+    "GuitarFreaks_Blue": "Blue Fret",
+    "GuitarFreaks_Tilt": "Tilt",
+    "GuitarFreaks_Strum": "Pick",
     "DJHTurntable_LeftBlue": "Left Turntable Blue",
     "DJHTurntable_LeftRed": "Left Turntable Red",
     "DJHTurntable_LeftGreen": "Left Turntable Green",
