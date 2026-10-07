@@ -180,6 +180,12 @@
     "enter_value_placeholder": "Enter value"
   },
   "pickup": {
+    "current": "Current position: {{notch}}",
+    "custom": {
+      "label": "Custom notch thresholds",
+      "description": "Real 5-way pickup switches aren't evenly spaced. Move the switch to each notch and set the thresholds between them. When off, the range is split into 5 equal parts."
+    },
+    "threshold": "{{from}} / {{to}} threshold",
     "notch": {
       "0": "Notch 1",
       "1": "Notch 2",
@@ -757,7 +763,17 @@
     "confirm": "Load defaults",
     "cancel": "Cancel",
     "for": "Load defaults for: {{device}} ({{status}})",
-    "for_slot": "Load defaults for: {{slot}}"
+    "for_slot": "Load defaults for: {{slot}}",
+    "preset": "Preset",
+    "preset_desc": "Load the defaults for another instrument, laid out for this device",
+    "preset_none": "Standard defaults",
+    "presets": {
+      "festival_guitar": "Fortnite Festival - Guitar (Lead)",
+      "festival_pro_guitar": "Fortnite Festival - Pro Guitar",
+      "festival_drums": "Fortnite Festival - Drums",
+      "festival_pro_drums": "Fortnite Festival - Pro Drums",
+      "ps2_guitar_on_ps3": "Guitar Hero guitar for PS2 games on PS3"
+    }
   },
   "clear_all_button": "Clear All",
   "clear_all_dialog": {

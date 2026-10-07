@@ -76,3 +76,67 @@ export const ASCII_TO_HID: Record<string, { modifier: number; code: number }> = 
   '0': { modifier: 0x00, code: 0x27 },
   ')': { modifier: 0x02, code: 0x27 },
 };
+
+// HID usage for each KeyboardEvent.code, which (unlike event.key) covers keys that don't
+// type a character and tells left / right modifiers apart
+export const CODE_TO_HID: Record<string, number> = {
+  ...Object.fromEntries(
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((c, i) => [`Key${c}`, 0x04 + i])
+  ),
+  ...Object.fromEntries('1234567890'.split('').map((c, i) => [`Digit${c}`, 0x1e + i])),
+  Enter: 0x28,
+  Escape: 0x29,
+  Backspace: 0x2a,
+  Tab: 0x2b,
+  Space: 0x2c,
+  Minus: 0x2d,
+  Equal: 0x2e,
+  BracketLeft: 0x2f,
+  BracketRight: 0x30,
+  Backslash: 0x31,
+  Semicolon: 0x33,
+  Quote: 0x34,
+  Backquote: 0x35,
+  Comma: 0x36,
+  Period: 0x37,
+  Slash: 0x38,
+  CapsLock: 0x39,
+  ...Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`F${i + 1}`, 0x3a + i])),
+  PrintScreen: 0x46,
+  ScrollLock: 0x47,
+  Pause: 0x48,
+  Insert: 0x49,
+  Home: 0x4a,
+  PageUp: 0x4b,
+  Delete: 0x4c,
+  End: 0x4d,
+  PageDown: 0x4e,
+  ArrowRight: 0x4f,
+  ArrowLeft: 0x50,
+  ArrowDown: 0x51,
+  ArrowUp: 0x52,
+  ControlLeft: 0xe0,
+  ShiftLeft: 0xe1,
+  AltLeft: 0xe2,
+  MetaLeft: 0xe3,
+  ControlRight: 0xe4,
+  ShiftRight: 0xe5,
+  AltRight: 0xe6,
+  MetaRight: 0xe7,
+};
+
+const HID_TO_NAME: Record<number, string> = Object.fromEntries(
+  Object.entries(CODE_TO_HID).map(([code, hid]) => [
+    hid,
+    code
+      .replace(/^Key/, '')
+      .replace(/^Digit/, '')
+      .replace(/^(Shift|Control|Alt|Meta)(Left|Right)$/, '$2 $1')
+      .replace(/^Arrow(.*)$/, '$1 Arrow')
+      .replace(/([a-z])([A-Z])/g, '$1 $2'),
+  ])
+);
+
+export function hidKeyName(code: number): string | undefined {
+  return HID_TO_NAME[code];
+}

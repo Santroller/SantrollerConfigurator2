@@ -7,6 +7,7 @@ import type {} from '@redux-devtools/extension';
 
 import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
 import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
+import { getPresetMappings, MAPPING_PRESETS } from '@/components/Defaults/mappingPresets';
 import {
   createDeviceConfig,
   getDevicePins,
@@ -402,7 +403,7 @@ export interface Actions {
   exportConfig: () => void;
   loadConfig: (file: File | null) => void;
   pollInputs: (poll: boolean) => void;
-  loadDefaults: (device: DeviceStatus | ProfileSlot | undefined) => void;
+  loadDefaults: (device: DeviceStatus | ProfileSlot | undefined, presetId?: string) => void;
   clearConsole: () => void;
   clearMidi: () => void;
   buildUf2: (pico2: boolean) => void;
@@ -1034,7 +1035,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
       });
       get().saveConfig();
     },
-    loadDefaults: (device: DeviceStatus | ProfileSlot | undefined) => {
+    loadDefaults: (device: DeviceStatus | ProfileSlot | undefined, presetId?: string) => {
       set((state) => {
         const profile = state.config.profiles![state.currentProfile];
         let type = 'gpio';
@@ -1073,12 +1074,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           deviceStatusObj = devStatus;
         }
 
-        const defaults = getDefaultMappings(
-          type,
-          profile.opts.deviceToEmulate,
-          targetDeviceId,
-          deviceStatusObj
-        );
+        const preset = MAPPING_PRESETS.find((p) => p.id === presetId);
+        const defaults = preset
+          ? getPresetMappings(preset, type, targetDeviceId, deviceStatusObj)
+          : getDefaultMappings(type, profile.opts.deviceToEmulate, targetDeviceId, deviceStatusObj);
         profile.mappings!.push(...defaults);
         state.config = {
           ...state.config,

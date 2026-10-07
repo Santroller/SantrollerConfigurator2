@@ -70,6 +70,7 @@ import {
   USB_HOST_SUBTYPES,
 } from '@/components/Defaults/defaultMappings';
 import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import { presetsFor } from '@/components/Defaults/mappingPresets';
 import { PinBox } from '@/components/Devices/Pins';
 import {
   getLabel,
@@ -110,10 +111,9 @@ import {
   requiresAssignment,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
-import { ASCII_TO_HID } from '@/devices/keyboard';
+import { ASCII_TO_HID, CODE_TO_HID, hidKeyName } from '@/devices/keyboard';
 import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
 
-const hidReverse = Object.fromEntries(Object.entries(ASCII_TO_HID).map(([k, v]) => [v.code, k]));
 const DRUM_HIT_DISPLAY_MS = 3000;
 function useDecayedValue(live: number, enabled?: boolean) {
   const [shown, setShown] = useState(0);
@@ -299,6 +299,92 @@ function StateSection({
   }
   return <Progress.Section value={(state / 65535) * 100} />;
 }
+// Upper bound of notches 1-4 when the range is split into 5 equal bands (matches the firmware)
+const EVEN_PICKUP_THRESHOLDS = [1, 2, 3, 4].map((i) => Math.floor((65536 * i) / 5) - 1);
+
+function pickupNotch(value: number, thresholds?: number[] | null): number {
+  if (!thresholds || thresholds.length !== 4) {
+    return Math.min(4, Math.floor((value * 5) / 65536));
+  }
+  const notch = thresholds.findIndex((threshold) => value <= threshold);
+  return notch === -1 ? 4 : notch;
+}
+
+function PickupNotches({
+  mapping,
+  mappingIdx,
+  profileIdx,
+  dispatch,
+}: {
+  mapping: proto.IMapping;
+  mappingIdx: number;
+  profileIdx: number;
+  dispatch: (mapping: proto.IMapping) => void;
+}) {
+  const { t } = useTranslation();
+  const current = useConfigStore(
+    (state) => state.mappingStatus[profileIdx]?.[mappingIdx]?.state ?? 0
+  );
+  const thresholds =
+    mapping.pickupThresholds && mapping.pickupThresholds.length === 4
+      ? mapping.pickupThresholds
+      : null;
+  const setThreshold = (idx: number, value: number) => {
+    const next = [...(thresholds ?? EVEN_PICKUP_THRESHOLDS)];
+    next[idx] = value;
+    dispatch({ ...mapping, pickupThresholds: next });
+  };
+  return (
+    <>
+      <Text size="sm" fw={700}>
+        {t('pickup.current', { notch: t(`pickup.notch.${pickupNotch(current, thresholds)}`) })}
+      </Text>
+      <Space h="xs" />
+      <Switch
+        label={t('pickup.custom.label')}
+        description={t('pickup.custom.description')}
+        checked={!!thresholds}
+        onChange={(event) =>
+          dispatch({
+            ...mapping,
+            pickupThresholds: event.currentTarget.checked ? [...EVEN_PICKUP_THRESHOLDS] : [],
+          })
+        }
+      />
+      {thresholds &&
+        thresholds.map((threshold, idx) => (
+          <div key={idx}>
+            <Space h="sm" />
+            <Text size="sm" fw={700}>
+              {t('pickup.threshold', {
+                from: t(`pickup.notch.${idx}`),
+                to: t(`pickup.notch.${idx + 1}`),
+              })}
+            </Text>
+            <Group>
+              <Slider
+                flex={1}
+                value={threshold}
+                min={0}
+                max={65535}
+                onChange={(val) => setThreshold(idx, val)}
+              />
+              <NumberInput
+                value={threshold}
+                min={0}
+                max={65535}
+                onChange={(e) => setThreshold(idx, parseInt(e.toString(), 10))}
+                w={100}
+              />
+              <Button onClick={() => setThreshold(idx, current)}>{t('pin_use_current')}</Button>
+            </Group>
+          </div>
+        ))}
+      <Space h="md" />
+    </>
+  );
+}
+
 function StateSlider({
   profileIdx,
   mappingIdx,
@@ -834,11 +920,13 @@ function OutputBox({
       return (
         <TextInput
           label={t('keyboard.keycode')}
-          value={hidReverse[mapping?.keycode ?? 0]}
+          value={hidKeyName(mapping?.keycode ?? 0) ?? ''}
+          onChange={() => {}}
           onKeyDown={(event) => {
-            const entry = ASCII_TO_HID[event.key];
-            if (entry) {
-              dispatch({ keycode: entry.code }, true, false);
+            const code = CODE_TO_HID[event.code] ?? ASCII_TO_HID[event.key]?.code;
+            if (code != null) {
+              event.preventDefault();
+              dispatch({ keycode: code }, true, false);
             }
           }}
         />
@@ -2801,8 +2889,8 @@ function SantrollerMapping({
     proto.GuitarFreaksButtonType[mapping.mapping.gfButton ?? -1] ||
     proto.ProKeyboardButtonType[mapping.mapping.proKeyboardButton ?? -1] ||
     (mapping.mapping.keycode != null
-      ? hidReverse[mapping.mapping.keycode]
-        ? `${hidReverse[mapping.mapping.keycode]}`
+      ? hidKeyName(mapping.mapping.keycode)
+        ? `${hidKeyName(mapping.mapping.keycode)}`
         : `Key ${mapping.mapping.keycode}`
       : undefined);
   const fixedLabel = FixLabel(mode, type, label || '', legendMode);
@@ -3462,6 +3550,14 @@ function SantrollerMapping({
                         />
                       </Group>
                       <Space h="md" />
+                      {mapping.mapping.rbAxis === proto.RockBandGuitarAxisType.RockBandGuitar_Pickup && (
+                        <PickupNotches
+                          mapping={mapping}
+                          mappingIdx={mappingIdx}
+                          profileIdx={profileIdx}
+                          dispatch={dispatch}
+                        />
+                      )}
                     </>
                   )}
                   {axis && crkdDrum && (
@@ -6857,6 +6953,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const [defaultTarget, setDefaultTarget] = useState<DeviceStatus | ProfileSlot | undefined>(
     undefined
   );
+  const [defaultPreset, setDefaultPreset] = useState<string>('');
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
@@ -6902,11 +6999,30 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Modal opened={opened} onClose={close} title={t('defaults_dialog.title')} centered>
         {t('defaults_dialog.desc')}
         <Space h="md" />
+        {presetsFor(profile.opts.deviceToEmulate).length > 0 && (
+          <>
+            <Select
+              label={t('defaults_dialog.preset')}
+              description={t('defaults_dialog.preset_desc')}
+              data={[
+                { value: '', label: t('defaults_dialog.preset_none') },
+                ...presetsFor(profile.opts.deviceToEmulate).map((preset) => ({
+                  value: preset.id,
+                  label: t(`defaults_dialog.presets.${preset.id}`),
+                })),
+              ]}
+              value={defaultPreset}
+              onChange={(value) => setDefaultPreset(value ?? '')}
+              allowDeselect={false}
+            />
+            <Space h="md" />
+          </>
+        )}
         <Flex justify="flex-end">
           <Group align="flex-end">
             <Button
               onClick={() => {
-                loadDefaults(defaultTarget);
+                loadDefaults(defaultTarget, defaultPreset || undefined);
                 close();
               }}
               color="red"

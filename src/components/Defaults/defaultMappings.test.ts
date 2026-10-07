@@ -3,16 +3,23 @@ import { proto } from '@/components/SettingsContext/config';
 import { getPs2Defaults, getWiiDefaults } from './defaultMappings';
 
 describe('Classic Controller trigger defaults', () => {
+  // The Pro's triggers are ZL / ZR (L / R are its shoulder buttons), the original's are L / R
   it.each([
-    proto.WiiExtType.WiiClassicController,
-    proto.WiiExtType.WiiClassicControllerPro,
-    undefined,
-  ])('uses one combined input per trigger for extension %s', (wiiExtType) => {
+    [proto.WiiExtType.WiiClassicController, false],
+    [proto.WiiExtType.WiiClassicControllerPro, true],
+    [undefined, false],
+  ])('uses one combined input per trigger for extension %s', (wiiExtType, pro) => {
     const mappings = getWiiDefaults(proto.SubType.Gamepad, 2, { wiiExtType });
 
     for (const [button, axis] of [
-      [proto.WiiButtonType.WiiButtonClassicLt, proto.GamepadAxisType.Gamepad_LeftTrigger],
-      [proto.WiiButtonType.WiiButtonClassicRt, proto.GamepadAxisType.Gamepad_RightTrigger],
+      [
+        pro ? proto.WiiButtonType.WiiButtonClassicZl : proto.WiiButtonType.WiiButtonClassicLt,
+        proto.GamepadAxisType.Gamepad_LeftTrigger,
+      ],
+      [
+        pro ? proto.WiiButtonType.WiiButtonClassicZr : proto.WiiButtonType.WiiButtonClassicRt,
+        proto.GamepadAxisType.Gamepad_RightTrigger,
+      ],
     ]) {
       const triggerMappings = mappings.filter((mapping) => mapping.mapping?.gamepadAxis === axis);
       expect(triggerMappings).toEqual([
