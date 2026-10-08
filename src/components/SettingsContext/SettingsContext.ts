@@ -1592,7 +1592,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           }),
           true
         );
-        get().saveConfig();
+        await get().saveConfig();
+        // The device reloads the new config in place and keeps polling the profile the tool last
+        // picked, which may not exist any more, so pick the current one again
+        await get().setActiveProfile(get().currentProfile.toString());
       } catch (e) {
         console.log(e);
       }
@@ -1628,7 +1631,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
         }),
         true
       );
-      get().saveConfig();
+      await get().saveConfig();
+      // The device reloads the new config in place and keeps polling the profile the tool last
+      // picked, which may not exist any more, so pick the current one again
+      await get().setActiveProfile(get().currentProfile.toString());
     },
     clearLegacyImportWarnings: () =>
       set((state) => {
