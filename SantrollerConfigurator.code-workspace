@@ -1,0 +1,35 @@
+{
+	"folders": [
+		// Firmware must be first: the Raspberry Pi Pico extension only looks at the first folder
+		{
+			"name": "Santroller (firmware)",
+			"path": "Santroller"
+		},
+		{
+			"name": "Configurator",
+			"path": "."
+		}
+	],
+	"settings": {
+		// Firmware is browsed/searched via its own folder, so hide the duplicate under the configurator root
+		"files.exclude": {
+			"Santroller": true
+		},
+		"search.exclude": {
+			"Santroller": true
+		},
+		"files.watcherExclude": {
+			"Santroller/**": true
+		},
+		"cmake.autoSelectActiveFolder": true
+	},
+	"extensions": {
+		"recommendations": [
+			"marus25.cortex-debug",
+			"ms-vscode.cpptools",
+			"ms-vscode.cpptools-extension-pack",
+			"ms-vscode.vscode-serial-monitor",
+			"raspberry-pi.raspberry-pi-pico"
+		]
+	}
+}
