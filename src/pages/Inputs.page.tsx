@@ -498,6 +498,7 @@ function OutputBox({
   label,
   midi,
   valMidi,
+  actions,
   dispatch,
   dispatchMidi,
 }: {
@@ -509,10 +510,18 @@ function OutputBox({
   label: string;
   midi?: boolean;
   valMidi?: proto.IMidiInput | undefined;
+  // Also offer actions (bootloader etc) alongside the outputs
+  actions?: boolean;
   dispatch: (mapping: proto.IOutput, trigger: boolean, analog: boolean) => void;
   dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
 }) {
   const { t } = useTranslation();
+  const actionProps = actions
+    ? {
+        valAction: mapping?.action ?? undefined,
+        dispatchAction: (action: proto.ActionType) => dispatch({ action }, false, false),
+      }
+    : {};
   const outputCombobox = useCombobox({
     onDropdownClose: () => outputCombobox.resetSelectedOption(),
   });
@@ -538,6 +547,7 @@ function OutputBox({
     case proto.SubType.Midi:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           mode={mode}
@@ -554,6 +564,7 @@ function OutputBox({
     case proto.SubType.StageKit:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           mode={mode}
@@ -573,6 +584,7 @@ function OutputBox({
     case proto.SubType.GuitarHeroGuitar:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.GuitarHeroGuitarAxisType}
@@ -605,6 +617,7 @@ function OutputBox({
     case proto.SubType.RockBandGuitar:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.RockBandGuitarAxisType}
@@ -639,6 +652,7 @@ function OutputBox({
     case proto.SubType.GuitarHeroDrums:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.GuitarHeroDrumsAxisType}
@@ -661,6 +675,7 @@ function OutputBox({
     case proto.SubType.RockBandDrums:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.RockBandDrumsAxisType}
@@ -686,6 +701,7 @@ function OutputBox({
     case proto.SubType.LiveGuitar:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.GuitarHeroLiveGuitarAxisType}
@@ -717,6 +733,7 @@ function OutputBox({
     case proto.SubType.DjHeroTurntable:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.DJHTurntableAxisType}
@@ -749,6 +766,7 @@ function OutputBox({
     case proto.SubType.ProGuitarSquire:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           e={proto.ProGuitarAxisType}
@@ -775,6 +793,7 @@ function OutputBox({
     case proto.SubType.GuitarFreaks:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           type={type}
@@ -797,6 +816,7 @@ function OutputBox({
     case proto.SubType.BeatMania:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           type={type}
@@ -819,6 +839,7 @@ function OutputBox({
     case proto.SubType.PopNMusic:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           type={type}
@@ -841,6 +862,7 @@ function OutputBox({
     case proto.SubType.ProjectDiva:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           type={type}
@@ -874,6 +896,7 @@ function OutputBox({
     case proto.SubType.ProKeys:
       return (
         <DropdownOutputBox
+          {...actionProps}
           label={label}
           title={title}
           extraOptions={
@@ -925,13 +948,15 @@ function OutputBox({
       );
     case proto.SubType.KeyboardMouse: {
       const kind =
-        mapping?.mouseButton != null
-          ? `button:${mapping.mouseButton}`
-          : mapping?.mouseAxis != null
-            ? `axis:${mapping.mouseAxis}`
-            : mapping?.consumerKey != null
-              ? 'media'
-              : 'key';
+        mapping?.action != null
+          ? `action:${mapping.action}`
+          : mapping?.mouseButton != null
+            ? `button:${mapping.mouseButton}`
+            : mapping?.mouseAxis != null
+              ? `axis:${mapping.mouseAxis}`
+              : mapping?.consumerKey != null
+                ? 'media'
+                : 'key';
       return (
         <>
           <Select
@@ -946,6 +971,14 @@ function OutputBox({
               ...Object.entries(proto.MouseAxisType)
                 .filter(([, v]) => typeof v === 'number')
                 .map(([name, v]) => ({ value: `axis:${v}`, label: t(`keyboard.mouse.${name}`) })),
+              ...(actions
+                ? Object.entries(proto.ActionType)
+                    .filter(([, v]) => typeof v === 'number')
+                    .map(([name, v]) => ({
+                      value: `action:${v}`,
+                      label: t(`outputs.${name}`, name),
+                    }))
+                : []),
             ]}
             value={kind}
             onChange={(value) => {
@@ -957,6 +990,8 @@ function OutputBox({
                 dispatch({ mouseButton: parseInt(id, 10) }, false, false);
               } else if (type === 'axis') {
                 dispatch({ mouseAxis: parseInt(id, 10) }, false, true);
+              } else if (type === 'action') {
+                dispatch({ action: parseInt(id, 10) }, false, false);
               } else if (type === 'media') {
                 dispatch({ consumerKey: MEDIA_KEYS.PlayPause }, true, false);
               } else {
@@ -1060,70 +1095,37 @@ function MappingBox({
   dispatch: (mapping: proto.IMapping) => void;
 }) {
   const { t } = useTranslation();
-  const outputCombobox = useCombobox({
-    onDropdownClose: () => outputCombobox.resetSelectedOption(),
-  });
-  const isAction = mapping.mapping.action != null;
-  const setAction = (action: proto.ActionType) =>
-    dispatch({
-      ...mapping,
-      input: actionInput(mapping, action),
-      mapping: { action },
-    });
   return (
     <Stack gap="xs">
-      <SegmentedControl
-        fullWidth
-        data={[
-          { value: 'output', label: t('inputs.kind_output', 'Output') },
-          { value: 'action', label: t('inputs.kind_action', 'Action') },
-        ]}
-        value={isAction ? 'action' : 'output'}
-        onChange={(value) => {
-          if (value === 'action') {
-            setAction(proto.ActionType.ActionBootloader);
-          } else {
-            dispatch({ ...mapping, input: outputInput(mapping), mapping: {} });
-          }
-        }}
+      <OutputBox
+        label="outputs"
+        title="output"
+        mapping={mapping.mapping}
+        type={type}
+        mode={mode}
+        legendMode={legendMode}
+        actions
+        dispatch={(m, trigger, _) =>
+          m.action != null
+            ? dispatch({ ...mapping, input: actionInput(mapping, m.action), mapping: m })
+            : dispatch({
+                center: trigger ? 0 : 32767,
+                min: 0,
+                max: 65535,
+                ...mapping,
+                input: outputInput(mapping),
+                pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
+                mapping: m,
+              })
+        }
       />
-      {isAction ? (
-        <>
-          <Select
-            label={t('inputs.action', 'Action')}
-            allowDeselect={false}
-            data={Object.entries(proto.ActionType)
-              .filter(([, v]) => typeof v === 'number')
-              .map(([name, v]) => ({ value: `${v}`, label: t(`outputs.${name}`, name) }))}
-            value={`${mapping.mapping.action}`}
-            onChange={(value) => value && setAction(parseInt(value, 10))}
-          />
-          <Text size="xs" c="dimmed">
-            {t(
-              'inputs.action_hold_hint',
-              'Actions default to a held input, so they need holding down for a moment and a stray press does nothing.'
-            )}
-          </Text>
-        </>
-      ) : (
-        <OutputBox
-          label="outputs"
-          title="output"
-          mapping={mapping.mapping}
-          type={type}
-          mode={mode}
-          legendMode={legendMode}
-          dispatch={(m, trigger, _) =>
-            dispatch({
-              center: trigger ? 0 : 32767,
-              min: 0,
-              max: 65535,
-              ...mapping,
-              pressed: isAnalog(mapping.input) ? undefined : (mapping.pressed ?? 65535),
-              mapping: m,
-            })
-          }
-        />
+      {mapping.mapping.action != null && (
+        <Text size="xs" c="dimmed">
+          {t(
+            'inputs.action_hold_hint',
+            'Actions default to a held input, so they need holding down for a moment and a stray press does nothing.'
+          )}
+        </Text>
       )}
     </Stack>
   );
@@ -1159,6 +1161,8 @@ function DropdownOutputBox<
   extraOptions,
   valExtra,
   dispatchExtra,
+  valAction,
+  dispatchAction,
 }: {
   e?: T;
   filterFirstEnum?: (key: string, selected?: string) => boolean;
@@ -1185,6 +1189,8 @@ function DropdownOutputBox<
   extraOptions?: { value: string; label: string }[];
   valExtra?: string;
   dispatchExtra?: (val: string) => void;
+  valAction?: proto.ActionType;
+  dispatchAction?: (action: proto.ActionType) => void;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -1192,12 +1198,22 @@ function DropdownOutputBox<
       inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   const v = (valExtra ||
+    (valAction != null && proto.ActionType[valAction]) ||
     (e && e[val as keyof T]) ||
     (e2 && e2[val2 as keyof T2]) ||
     (e3 && e3[val3 as keyof T3]) ||
     (e4 && e4[val4 as keyof T4]) ||
     (valMidi && Object.entries(valMidi).find((x) => x[0] !== 'deviceid' && x[1])?.[0])) as string;
-  const extraLabel = extraOptions?.find((x) => x.value === v)?.label;
+  const actionOptions = dispatchAction
+    ? Object.entries(proto.ActionType)
+        .filter(([, value]) => typeof value === 'number')
+        .map(([name, value]) => ({
+          value: name,
+          action: value as proto.ActionType,
+          label: t(`outputs.${name}`, name),
+        }))
+    : [];
+  const extraLabel = [...(extraOptions ?? []), ...actionOptions].find((x) => x.value === v)?.label;
   const titleLabel = title === 'input' ? t('input.title', 'Input') : t(title);
   const base =
     label === 'outputs' ? (
@@ -1237,6 +1253,10 @@ function DropdownOutputBox<
       onOptionSubmit={(val) => {
         if (extraOptions?.some((x) => x.value === val) && dispatchExtra) {
           dispatchExtra(val);
+        }
+        const action = actionOptions.find((x) => x.value === val);
+        if (action && dispatchAction) {
+          dispatchAction(action.action);
         }
         if (e && dispatch) {
           const button = e[val as keyof T];
@@ -1357,6 +1377,15 @@ function DropdownOutputBox<
                   )}
                 </Combobox.Option>
               ))}
+          {actionOptions.length > 0 && (
+            <Combobox.Group label={t('inputs.actions', 'Actions')}>
+              {actionOptions.map((item) => (
+                <Combobox.Option value={item.value} key={item.value} selected={item.value === v}>
+                  {item.label}
+                </Combobox.Option>
+              ))}
+            </Combobox.Group>
+          )}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
