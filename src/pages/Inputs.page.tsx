@@ -2143,7 +2143,7 @@ function SantrollerInput({
       {input.shortcut &&
         input.shortcut.inputs?.map((innerInput, idx) => (
           <div key={idx}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder w="380px" h="100%">
+            <Card shadow="sm" padding="lg" radius="md" withBorder w="380px" maw="100%" h="100%">
               <Card.Section h="20px">
                 <div style={{ position: 'absolute', top: 0, right: 0 }}>
                   <ActionIcon
@@ -3055,6 +3055,8 @@ function SantrollerMapping({
     transform: CSS.Translate.toString(transform),
     transition: isSorting ? transition : '',
     alignSelf: 'stretch',
+    // lets the card shrink to fit narrow (phone) screens
+    maxWidth: '100%',
   };
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
@@ -3170,7 +3172,7 @@ function SantrollerMapping({
           </Group>
         </Flex>
       </Modal>
-      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
+      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" maw="100%" h="100%">
         <Group justify="space-between" align="center" mb="xs">
           <Group gap="xs">
             {!simpleMode && (
@@ -4043,6 +4045,8 @@ function SantrollerLed({
     transform: CSS.Translate.toString(transform),
     transition: isSorting ? transition : '',
     alignSelf: 'stretch',
+    // lets the card shrink to fit narrow (phone) screens
+    maxWidth: '100%',
   };
   let deviceId = -1;
   if (led.device.rgb) {
@@ -4230,7 +4234,7 @@ function SantrollerLed({
           </Group>
         </Flex>
       </Modal>
-      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" h="100%">
+      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" maw="100%" h="100%">
         <Group justify="space-between" align="center" mb="xs">
           <Group gap="xs">
             {!simpleMode && (
@@ -6423,7 +6427,7 @@ function SantrollerAssignmentList({
           </Group>
         </Flex>
       </Modal>
-      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px">
+      <Card shadow="sm" padding="lg" radius="md" withBorder w="420px" maw="100%">
         <Group justify="space-between" align="center" mb="xs">
           <Group gap="xs">
             <Title order={4}>{t('assignments.rule_title', { num: listIdx + 1 })}</Title>
@@ -7871,7 +7875,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </Input.Wrapper>
           <Space h="md" />
 
-          <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+          <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false} layout="fixed">
             <Table.Thead>
               <Table.Tr>
                 <Table.Td>
@@ -8135,7 +8139,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                         strategy={rectSortingStrategy}
                       >
                         {profile.assignments?.map((mapping, mappingIdx) => (
-                          <Group key={mappingIdx} align="center" gap="md">
+                          <Group key={mappingIdx} align="center" gap="md" maw="100%">
                             {mappingIdx > 0 && (
                               <Badge size="lg" variant="filled" color="gray">
                                 {t('assignments.logic_or')}
@@ -8200,7 +8204,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Space h="md" />
       <Title order={3}>Inputs</Title>
       <Space h="md" />
-      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false} layout="fixed">
         <Table.Thead>
           {!simpleMode && (
             <Table.Tr>
@@ -8551,7 +8555,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
       <Space h="md" />
       <Title order={3}>{t('leds.label')}</Title>
       <Space h="md" />
-      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false}>
+      <Table stickyHeader stickyHeaderOffset={60} withRowBorders={false} layout="fixed">
         <Table.Thead>
           <Table.Tr>
             <Table.Td>

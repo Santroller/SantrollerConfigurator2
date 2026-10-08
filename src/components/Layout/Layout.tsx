@@ -47,7 +47,7 @@ import { useConfigStore } from '../SettingsContext/SettingsContext';
 export function Layout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close: closeNavbar }] = useDisclosure();
   const connected = useConfigStore((state) => state.connected);
   const hung = useConfigStore((state) => state.hung);
   const updating = useConfigStore((state) => state.updating);
@@ -111,6 +111,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       }
     }
   }, [configModified, saveStatus]);
+
+  // The navbar covers the page on small screens, so close it once something in it was picked.
+  // Picking a profile doesn't change the route, so that has to be watched too.
+  useEffect(() => {
+    closeNavbar();
+  }, [location.pathname, location.search, activeProfile, currentProfileInstance, closeNavbar]);
 
   useEffect(() => {
     return () => {

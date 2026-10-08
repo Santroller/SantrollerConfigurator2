@@ -2624,7 +2624,7 @@ export function DevicesPage() {
               </Group>
             </Flex>
           </Modal>
-          <SimpleGrid cols={3}>
+          <SimpleGrid cols={{ base: 1, sm: 3 }}>
             {Object.entries(config).map(([id, type]) => {
               const DeviceEditor = deviceEditors[type];
               return (

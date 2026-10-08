@@ -5,6 +5,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
 
+import { Reader } from 'protobufjs/minimal';
 import { decodeBlock, encodeBlock, UF2BlockData } from 'uf2';
 import { getDefaultMappings } from '@/components/Defaults/defaultMappings';
 import { getPresetMappings, MAPPING_PRESETS } from '@/components/Defaults/mappingPresets';
@@ -67,6 +68,26 @@ function delay(ms: number) {
 
 function receiveFeatureReport(device: HIDDevice, reportId: number) {
   return withHidTimeout(device.receiveFeatureReport(reportId), 'response');
+}
+
+// Feature reports can come back zero padded out to their declared size (depending on the platform and
+// transport), which plain protobuf decoding misreads. Zero is never a valid protobuf tag, so the message
+// ends at the first one.
+function withoutPadding(bytes: Uint8Array): Uint8Array {
+  const reader = Reader.create(bytes);
+  try {
+    while (reader.pos < reader.len) {
+      const fieldStart = reader.pos;
+      const tag = reader.uint32();
+      if (tag === 0) {
+        return bytes.subarray(0, fieldStart);
+      }
+      reader.skipType(tag & 7);
+    }
+  } catch {
+    // malformed, leave it for the decoder to report
+  }
+  return bytes;
 }
 
 function collectionHasFeatureReport(collection: HIDCollectionInfo, reportId: number): boolean {
@@ -2354,7 +2375,9 @@ async function fetchConfigData(device: HIDDevice, saved: boolean) {
     saved ? proto.ReportId.ReportIdConfigInfoSaved : proto.ReportId.ReportIdConfigInfo
   );
   const info = proto.ConfigInfo.decode(
-    new Uint8Array(infoData.buffer, infoData.byteOffset + 1, infoData.byteLength - 1)
+    withoutPadding(
+      new Uint8Array(infoData.buffer, infoData.byteOffset + 1, infoData.byteLength - 1)
+    )
   );
   if (info.magic >>> 0 !== magic) {
     console.log('magic didnt match!');
