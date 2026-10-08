@@ -22,6 +22,7 @@ import {
   withSlotMidiChannel,
 } from '@/components/Inputs/inputRegistry';
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
+import { importLegacyConfig } from '@/components/Legacy/importLegacyConfig';
 import { CRC32 } from '@/CRC32.js';
 import { proto } from './config.js';
 
@@ -359,6 +360,8 @@ export interface ConfigState {
   tlvEntries: proto.IBluetoothTlvEntry[];
   missingStaticFirmware: boolean;
   needsUf2Update: boolean;
+  // What couldn't be carried over when a Santroller 1 config was imported
+  legacyImportWarnings: string[];
   scanningBluetooth: boolean;
 }
 export interface Actions {
@@ -404,6 +407,8 @@ export interface Actions {
   buildConfig: () => { config: proto.IConfig; aux: proto.IAuxConfigBlock };
   exportConfig: () => void;
   loadConfig: (file: File | null) => void;
+  importLegacyConfig: (file: File | null) => void;
+  clearLegacyImportWarnings: () => void;
   pollInputs: (poll: boolean) => void;
   loadDefaults: (device: DeviceStatus | ProfileSlot | undefined, presetId?: string) => void;
   clearConsole: () => void;
@@ -535,6 +540,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     tlvEntries: aux.tlvEntries ?? [],
     missingStaticFirmware: false,
     needsUf2Update: false,
+    legacyImportWarnings: [],
     scanningBluetooth: false,
   };
 }
@@ -1591,6 +1597,43 @@ export const useConfigStore = create<ConfigState & Actions>()(
         console.log(e);
       }
     },
+    importLegacyConfig: async (file: File | null) => {
+      if (!file) {
+        return;
+      }
+      let result: ReturnType<typeof importLegacyConfig>;
+      try {
+        result = importLegacyConfig(
+          new Uint8Array(await file.arrayBuffer()),
+          file.name.replace(/\.[^.]*$/, '')
+        );
+      } catch (e) {
+        console.log(e);
+        set((state) => {
+          state.legacyImportWarnings = [
+            `This file couldn't be read as a Santroller 1 config: ${e}`,
+          ];
+        });
+        return;
+      }
+      clearInterval(get().keepaliveTimeout);
+      const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
+      set(
+        (old) => ({
+          ...old,
+          ...InitState(result.config, result.aux),
+          connected: true,
+          keepaliveTimeout: timeout,
+          legacyImportWarnings: result.warnings,
+        }),
+        true
+      );
+      get().saveConfig();
+    },
+    clearLegacyImportWarnings: () =>
+      set((state) => {
+        state.legacyImportWarnings = [];
+      }),
     buildUf2: (pico2: boolean) => {
       const { buffer, mainLen, auxLen } = get().buildConfigBuffer();
       buildUf2FromConfig(pico2, { buffer, mainLen, auxLen });
@@ -1734,9 +1777,15 @@ export const useConfigStore = create<ConfigState & Actions>()(
           .find((a) => a.consoleType)?.consoleType;
         const xinputOnWindows = firstConsoleType?.xinputOnWindows ?? true;
         const ps4OrPs5Mode = !isPs4Subtype || !!firstConsoleType?.ps4OrPs5Mode;
-        const supportsSlider =
-          Object.values(x).find((x) => x.mapping.mapping.ghAxis?.toString().includes('Tap')) !==
-          undefined;
+        // the firmware only turns the tap frets into a slider value when this is on
+        const supportsSlider = Object.values(x).some((x) => {
+          const button = x.mapping.mapping.ghButton;
+          return (
+            button != null &&
+            button >= proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen &&
+            button <= proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange
+          );
+        });
 
         return {
           ...profile,

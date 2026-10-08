@@ -7137,9 +7137,10 @@ function BlankProfileWizard({
           newMappings.push(
             ...getDefaultMappings(
               'usbHost',
-              hostType,
+              deviceToEmulate,
               slotId !== -1 ? slotId : usbDev ? parseInt(usbDev.id, 10) : 0,
-              usbDev
+              usbDev,
+              hostType
             )
           );
         } else if (item.bluetoothType != null || item.bluetoothDevice != null) {
@@ -7148,9 +7149,10 @@ function BlankProfileWizard({
           newMappings.push(
             ...getDefaultMappings(
               'bt',
-              hostType,
+              deviceToEmulate,
               slotId !== -1 ? slotId : btDev ? parseInt(btDev.id, 10) : 0,
-              btDev
+              btDev,
+              hostType
             )
           );
         }

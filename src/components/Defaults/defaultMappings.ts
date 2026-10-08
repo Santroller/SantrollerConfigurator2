@@ -2982,6 +2982,22 @@ export function getMidiDrumDefaults(subType: proto.SubType, deviceId: number): p
       midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_Orange, deviceId, {
         proButton: proto.ProGuitarButtonType.ProGuitar_Orange,
       }),
+      // Solo frets
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_SoloGreen, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloGreen,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_SoloRed, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloRed,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_SoloYellow, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloYellow,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_SoloBlue, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloBlue,
+      }),
+      midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_SoloOrange, deviceId, {
+        proButton: proto.ProGuitarButtonType.ProGuitar_SoloOrange,
+      }),
       // Navigation / Gamepad buttons
       midiProGuitarButton(proto.ProGuitarMidiButtonType.ProGuitarMidi_A, deviceId, {
         gamepadButton: proto.GamepadButtonType.Gamepad_A,
@@ -3038,64 +3054,185 @@ export const getMidiDefaults = getMidiDrumDefaults;
 // ---------------------------------------------------------------------------
 // 7. USB Host & Bluetooth Defaults (Pass-through based on SubType)
 // ---------------------------------------------------------------------------
-export function getUsbHostDefaults(subType: proto.SubType, deviceId = 0): proto.IMapping[] {
-  const gpio = getGpioDefaults(subType);
-  return gpio.map((m) => {
-    if (m.input?.gpio?.analog) {
-      return {
-        mapping: m.mapping,
-        input: {
-          usbAxis: {
-            deviceid: deviceId,
-            axis: m.mapping!,
-          },
-        },
-        min: m.min ?? 0,
-        max: m.max ?? 65535,
-        center: m.center ?? 0,
-        debounce: m.debounce,
-      };
+
+// What an instrument output does, so a host device's inputs can be sent to the equivalent
+// output when the profile emulates a different kind of instrument
+type OutputRole =
+  | 'green'
+  | 'red'
+  | 'yellow'
+  | 'blue'
+  | 'orange'
+  | 'soloGreen'
+  | 'soloRed'
+  | 'soloYellow'
+  | 'soloBlue'
+  | 'soloOrange'
+  | 'pedal'
+  | 'whammy'
+  | 'tilt'
+  | 'pickup';
+
+const GH_GUITAR_ROLES: Partial<Record<OutputRole, proto.IOutput>> = {
+  green: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Green },
+  red: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Red },
+  yellow: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Yellow },
+  blue: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Blue },
+  orange: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Orange },
+  // the tap frets are the closest thing GH has to the solo frets
+  soloGreen: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapGreen },
+  soloRed: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed },
+  soloYellow: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapYellow },
+  soloBlue: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapBlue },
+  soloOrange: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapOrange },
+  pedal: { ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_Pedal },
+  whammy: { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy },
+  tilt: { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt },
+};
+
+const RB_GUITAR_ROLES: Partial<Record<OutputRole, proto.IOutput>> = {
+  green: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Green },
+  red: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Red },
+  yellow: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Yellow },
+  blue: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Blue },
+  orange: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Orange },
+  soloGreen: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloGreen },
+  soloRed: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed },
+  soloYellow: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloYellow },
+  soloBlue: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue },
+  soloOrange: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloOrange },
+  pedal: { rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_Pedal },
+  whammy: { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Whammy },
+  tilt: { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt },
+  pickup: { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Pickup },
+};
+
+const PRO_GUITAR_ROLES: Partial<Record<OutputRole, proto.IOutput>> = {
+  green: { proButton: proto.ProGuitarButtonType.ProGuitar_Green },
+  red: { proButton: proto.ProGuitarButtonType.ProGuitar_Red },
+  yellow: { proButton: proto.ProGuitarButtonType.ProGuitar_Yellow },
+  blue: { proButton: proto.ProGuitarButtonType.ProGuitar_Blue },
+  orange: { proButton: proto.ProGuitarButtonType.ProGuitar_Orange },
+  soloGreen: { proButton: proto.ProGuitarButtonType.ProGuitar_SoloGreen },
+  soloRed: { proButton: proto.ProGuitarButtonType.ProGuitar_SoloRed },
+  soloYellow: { proButton: proto.ProGuitarButtonType.ProGuitar_SoloYellow },
+  soloBlue: { proButton: proto.ProGuitarButtonType.ProGuitar_SoloBlue },
+  soloOrange: { proButton: proto.ProGuitarButtonType.ProGuitar_SoloOrange },
+  pedal: { proButton: proto.ProGuitarButtonType.ProGuitar_Pedal },
+  tilt: { proAxis: proto.ProGuitarAxisType.ProGuitar_Tilt },
+};
+
+const GAMEPAD_ROLES: Partial<Record<OutputRole, proto.IOutput>> = {
+  green: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+  red: { gamepadButton: proto.GamepadButtonType.Gamepad_B },
+  yellow: { gamepadButton: proto.GamepadButtonType.Gamepad_Y },
+  blue: { gamepadButton: proto.GamepadButtonType.Gamepad_X },
+  orange: { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder },
+  soloGreen: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+  soloRed: { gamepadButton: proto.GamepadButtonType.Gamepad_B },
+  soloYellow: { gamepadButton: proto.GamepadButtonType.Gamepad_Y },
+  soloBlue: { gamepadButton: proto.GamepadButtonType.Gamepad_X },
+  soloOrange: { gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder },
+};
+
+function outputRoles(
+  subType: proto.SubType
+): Partial<Record<OutputRole, proto.IOutput>> | undefined {
+  switch (subType) {
+    case proto.SubType.GuitarHeroGuitar:
+      return GH_GUITAR_ROLES;
+    case proto.SubType.RockBandGuitar:
+    case proto.SubType.PowerGigGuitar:
+      return RB_GUITAR_ROLES;
+    case proto.SubType.ProGuitarMustang:
+    case proto.SubType.ProGuitarSquire:
+      return PRO_GUITAR_ROLES;
+    case proto.SubType.Gamepad:
+      return GAMEPAD_ROLES;
+    default:
+      return undefined;
+  }
+}
+
+function sameOutput(a: proto.IOutput, b: proto.IOutput): boolean {
+  const entries = (o: proto.IOutput) => Object.entries(o).filter(([, v]) => v != null);
+  const ea = entries(a);
+  const eb = entries(b);
+  return ea.length === eb.length && ea.every(([k, v]) => (b as Record<string, unknown>)[k] === v);
+}
+
+// Converts an output of the host device's type to the equivalent output of the emulated type.
+// Gamepad outputs work for every type, so they are kept as is. Returns undefined when the
+// emulated type has no equivalent, as the output would otherwise be written into the wrong report.
+export function convertHostOutput(
+  output: proto.IOutput,
+  hostType: proto.SubType,
+  emulatedType: proto.SubType
+): proto.IOutput | undefined {
+  if (hostType === emulatedType || output.gamepadButton != null || output.gamepadAxis != null) {
+    return output;
+  }
+  const hostRoles = outputRoles(hostType);
+  const emulatedRoles = outputRoles(emulatedType);
+  if (!hostRoles || !emulatedRoles) {
+    return undefined;
+  }
+  const role = (Object.keys(hostRoles) as OutputRole[]).find((r) =>
+    sameOutput(hostRoles[r]!, output)
+  );
+  return role ? emulatedRoles[role] : undefined;
+}
+
+// The input side always uses the host device's own outputs, as that is how the firmware
+// decodes the host device's report, while the mapping uses the emulated type's outputs.
+function getHostDefaults(
+  hostType: proto.SubType,
+  emulatedType: proto.SubType,
+  makeInput: (output: proto.IOutput, analog: boolean) => proto.IInput
+): proto.IMapping[] {
+  return getGpioDefaults(hostType).flatMap((m) => {
+    const mapping = convertHostOutput(m.mapping!, hostType, emulatedType);
+    if (!mapping) {
+      return [];
     }
-    return {
-      mapping: m.mapping,
-      input: {
-        usbButton: {
-          deviceid: deviceId,
-          button: m.mapping!,
+    if (m.input?.gpio?.analog) {
+      return [
+        {
+          mapping,
+          input: makeInput(m.mapping!, true),
+          min: m.min ?? 0,
+          max: m.max ?? 65535,
+          center: m.center ?? 0,
+          debounce: m.debounce,
         },
-      },
-    };
+      ];
+    }
+    return [{ mapping, input: makeInput(m.mapping!, false) }];
   });
 }
 
-export function getBluetoothDefaults(subType: proto.SubType, deviceId = 0): proto.IMapping[] {
-  const gpio = getGpioDefaults(subType);
-  return gpio.map((m) => {
-    if (m.input?.gpio?.analog) {
-      return {
-        mapping: m.mapping,
-        input: {
-          btAxis: {
-            deviceid: deviceId,
-            axis: m.mapping!,
-          },
-        },
-        min: m.min ?? 0,
-        max: m.max ?? 65535,
-        center: m.center ?? 0,
-        debounce: m.debounce,
-      };
-    }
-    return {
-      mapping: m.mapping,
-      input: {
-        btButton: {
-          deviceid: deviceId,
-          button: m.mapping!,
-        },
-      },
-    };
-  });
+export function getUsbHostDefaults(
+  subType: proto.SubType,
+  deviceId = 0,
+  emulatedType: proto.SubType = subType
+): proto.IMapping[] {
+  return getHostDefaults(subType, emulatedType, (output, analog) =>
+    analog
+      ? { usbAxis: { deviceid: deviceId, axis: output } }
+      : { usbButton: { deviceid: deviceId, button: output } }
+  );
+}
+
+export function getBluetoothDefaults(
+  subType: proto.SubType,
+  deviceId = 0,
+  emulatedType: proto.SubType = subType
+): proto.IMapping[] {
+  return getHostDefaults(subType, emulatedType, (output, analog) =>
+    analog
+      ? { btAxis: { deviceid: deviceId, axis: output } }
+      : { btButton: { deviceid: deviceId, button: output } }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -3105,7 +3242,9 @@ export function getDefaultMappings(
   deviceType: string,
   subType: proto.SubType,
   deviceId = 0,
-  deviceStatus?: DeviceStatusLike
+  deviceStatus?: DeviceStatusLike,
+  // the type of the USB / Bluetooth host device, when it isn't the type being emulated
+  hostType: proto.SubType = subType
 ): proto.IMapping[] {
   switch (deviceType) {
     case 'wii':
@@ -3129,9 +3268,9 @@ export function getDefaultMappings(
     case 'worldTourDrum':
       return getMidiDrumDefaults(subType, deviceId);
     case 'usbHost':
-      return getUsbHostDefaults(subType, deviceId);
+      return getUsbHostDefaults(hostType, deviceId, subType);
     case 'bt':
-      return getBluetoothDefaults(subType, deviceId);
+      return getBluetoothDefaults(hostType, deviceId, subType);
     case 'gpio':
     default:
       return getGpioDefaults(subType);

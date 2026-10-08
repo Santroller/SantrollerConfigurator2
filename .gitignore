@@ -133,6 +133,8 @@ dist
 .DS_Store
 src/components/SettingsContext/config.js
 src/components/SettingsContext/config.d.ts
+src/components/Legacy/legacy.js
+src/components/Legacy/legacy.d.ts
 public/santroller*.uf2
 public/santroller_ota_*.bin
 public/commit.hash

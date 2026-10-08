@@ -1,0 +1,1394 @@
+// Generated from the Santroller 1 configurator's protobuf-net contracts
+// (Configuration/Serialization), used to read old .picoconfig files.
+// protobuf-net treats a missing field as the C# default / initializer, so those are kept as defaults.
+syntax = "proto2";
+package legacy;
+
+enum AccelInputType {
+  option allow_alias = true;
+  AccelInputType_AccelX = 0;
+  AccelInputType_AccelY = 1;
+  AccelInputType_AccelZ = 2;
+  AccelInputType_Adc0 = 3;
+  AccelInputType_Adc1 = 4;
+  AccelInputType_Adc2 = 5;
+}
+
+enum AnalogToDigitalType {
+  option allow_alias = true;
+  AnalogToDigitalType_JoyLow = 0;
+  AnalogToDigitalType_JoyHigh = 1;
+  AnalogToDigitalType_Trigger = 2;
+  AnalogToDigitalType_Drum = 3;
+  AnalogToDigitalType_TriggerInverted = 4;
+}
+
+enum CrkdNeckInputType {
+  option allow_alias = true;
+  CrkdNeckInputType_Green = 0;
+  CrkdNeckInputType_Red = 1;
+  CrkdNeckInputType_Yellow = 2;
+  CrkdNeckInputType_Blue = 3;
+  CrkdNeckInputType_Orange = 4;
+  CrkdNeckInputType_DpadLeft = 5;
+  CrkdNeckInputType_DpadRight = 6;
+  CrkdNeckInputType_DpadUp = 7;
+  CrkdNeckInputType_DpadDown = 8;
+}
+
+enum DeviceControllerType {
+  option allow_alias = true;
+  DeviceControllerType_Gamepad = 1;
+  DeviceControllerType_DancePad = 2;
+  DeviceControllerType_GuitarHeroGuitar = 3;
+  DeviceControllerType_RockBandGuitar = 4;
+  DeviceControllerType_GuitarHeroDrums = 5;
+  DeviceControllerType_RockBandDrums = 6;
+  DeviceControllerType_LiveGuitar = 7;
+  DeviceControllerType_Turntable = 8;
+  DeviceControllerType_StageKit = 9;
+  DeviceControllerType_ProKeys = 16;
+  DeviceControllerType_ProGuitarMustang = 17;
+  DeviceControllerType_ProGuitarSquire = 18;
+  DeviceControllerType_KeyboardMouse = 19;
+  DeviceControllerType_Taiko = 24;
+}
+
+enum DevicePinMode {
+  option allow_alias = true;
+  DevicePinMode_PullUp = 0;
+  DevicePinMode_Floating = 1;
+  DevicePinMode_PullDown = 2;
+  DevicePinMode_BusKeep = 3;
+  DevicePinMode_Analog = 4;
+  DevicePinMode_Output = 5;
+  DevicePinMode_Skip = 6;
+}
+
+enum DigitalToAnalogType {
+  option allow_alias = true;
+  DigitalToAnalogType_Normal = 0;
+  DigitalToAnalogType_Tilt = 1;
+  DigitalToAnalogType_TapBar = 2;
+  DigitalToAnalogType_Pickup = 3;
+  DigitalToAnalogType_Trigger = 4;
+}
+
+enum DjAxisType {
+  option allow_alias = true;
+  DjAxisType_EffectsKnob = 0;
+  DjAxisType_Crossfader = 1;
+  DjAxisType_LeftTableVelocity = 2;
+  DjAxisType_RightTableVelocity = 3;
+}
+
+enum DjInputType {
+  option allow_alias = true;
+  DjInputType_LeftTurntable = 0;
+  DjInputType_RightTurntable = 1;
+  DjInputType_LeftGreen = 2;
+  DjInputType_LeftRed = 3;
+  DjInputType_LeftBlue = 4;
+  DjInputType_RightGreen = 5;
+  DjInputType_RightRed = 6;
+  DjInputType_RightBlue = 7;
+}
+
+enum DrumAxisType {
+  option allow_alias = true;
+  DrumAxisType_Green = 0;
+  DrumAxisType_Red = 1;
+  DrumAxisType_Yellow = 2;
+  DrumAxisType_Blue = 3;
+  DrumAxisType_Orange = 4;
+  DrumAxisType_GreenCymbal = 5;
+  DrumAxisType_YellowCymbal = 6;
+  DrumAxisType_BlueCymbal = 7;
+  DrumAxisType_Kick = 8;
+  DrumAxisType_Kick2 = 9;
+}
+
+enum EmulationModeType {
+  option allow_alias = true;
+  EmulationModeType_Xbox360 = 0;
+  EmulationModeType_XboxOne = 1;
+  EmulationModeType_Wii = 2;
+  EmulationModeType_Ps3 = 3;
+  EmulationModeType_Ps4Or5 = 4;
+  EmulationModeType_Switch = 5;
+  EmulationModeType_Xbox = 6;
+  EmulationModeType_Fnf = 7;
+  EmulationModeType_FnfHid = 8;
+  EmulationModeType_FnfLayer = 9;
+  EmulationModeType_FnfIos = 10;
+  EmulationModeType_Ps2OnPs3 = 11;
+  EmulationModeType_Arcade = 12;
+}
+
+enum EmulationType {
+  option allow_alias = true;
+  EmulationType_Controller = 0;
+  EmulationType_KeyboardMouse = 1;
+  EmulationType_FortniteFestival = 2;
+  EmulationType_Bluetooth = 3;
+  EmulationType_BluetoothKeyboardMouse = 4;
+}
+
+enum Gh5NeckInputType {
+  option allow_alias = true;
+  Gh5NeckInputType_Green = 0;
+  Gh5NeckInputType_Red = 1;
+  Gh5NeckInputType_Yellow = 2;
+  Gh5NeckInputType_Blue = 3;
+  Gh5NeckInputType_Orange = 4;
+  Gh5NeckInputType_TapGreen = 5;
+  Gh5NeckInputType_TapRed = 6;
+  Gh5NeckInputType_TapYellow = 7;
+  Gh5NeckInputType_TapBlue = 8;
+  Gh5NeckInputType_TapOrange = 9;
+  Gh5NeckInputType_TapAll = 10;
+  Gh5NeckInputType_TapBar = 11;
+}
+
+enum GhWtInputType {
+  option allow_alias = true;
+  GhWtInputType_TapGreen = 0;
+  GhWtInputType_TapRed = 1;
+  GhWtInputType_TapYellow = 2;
+  GhWtInputType_TapBlue = 3;
+  GhWtInputType_TapOrange = 4;
+  GhWtInputType_TapAll = 5;
+  GhWtInputType_TapBar = 6;
+}
+
+enum GuitarAxisType {
+  option allow_alias = true;
+  GuitarAxisType_Whammy = 0;
+  GuitarAxisType_Pickup = 1;
+  GuitarAxisType_Slider = 2;
+  GuitarAxisType_Tilt = 3;
+}
+
+enum InstrumentButtonType {
+  option allow_alias = true;
+  InstrumentButtonType_Green = 0;
+  InstrumentButtonType_Red = 1;
+  InstrumentButtonType_Yellow = 2;
+  InstrumentButtonType_Blue = 3;
+  InstrumentButtonType_Orange = 4;
+  InstrumentButtonType_SoloGreen = 5;
+  InstrumentButtonType_SoloRed = 6;
+  InstrumentButtonType_SoloYellow = 7;
+  InstrumentButtonType_SoloBlue = 8;
+  InstrumentButtonType_SoloOrange = 9;
+  InstrumentButtonType_Black1 = 10;
+  InstrumentButtonType_Black2 = 11;
+  InstrumentButtonType_Black3 = 12;
+  InstrumentButtonType_White1 = 13;
+  InstrumentButtonType_White2 = 14;
+  InstrumentButtonType_White3 = 15;
+  InstrumentButtonType_StrumUp = 16;
+  InstrumentButtonType_StrumDown = 17;
+  InstrumentButtonType_SliderToFrets = 18;
+  InstrumentButtonType_Slider = 19;
+}
+
+enum LedCommandType {
+  option allow_alias = true;
+  LedCommandType_KeyboardNumLock = 0;
+  LedCommandType_KeyboardCapsLock = 1;
+  LedCommandType_KeyboardScrollLock = 2;
+  LedCommandType_Auth = 3;
+  LedCommandType_Player = 4;
+  LedCommandType_Combo = 5;
+  LedCommandType_NoteHit = 6;
+  LedCommandType_NoteMiss = 7;
+  LedCommandType_StarPowerInactive = 8;
+  LedCommandType_StarPowerActive = 9;
+  LedCommandType_DjEuphoria = 10;
+  LedCommandType_StageKitLed = 11;
+  LedCommandType_Ps4LightBar = 12;
+  LedCommandType_BluetoothConnected = 13;
+  LedCommandType_Mode = 14;
+  LedCommandType_AlwaysOn = 15;
+}
+
+enum LedType {
+  option allow_alias = true;
+  LedType_None = 0;
+  LedType_Apa102Rgb = 1;
+  LedType_Apa102Rbg = 2;
+  LedType_Apa102Grb = 3;
+  LedType_Apa102Gbr = 4;
+  LedType_Apa102Brg = 5;
+  LedType_Apa102Bgr = 6;
+  LedType_Stp16Cpc26 = 7;
+  LedType_Ws2812Rgb = 8;
+  LedType_Ws2812Rbg = 9;
+  LedType_Ws2812Grb = 10;
+  LedType_Ws2812Gbr = 11;
+  LedType_Ws2812Brg = 12;
+  LedType_Ws2812Bgr = 13;
+  LedType_Ws2812Rgbw = 14;
+  LedType_Ws2812Rbgw = 15;
+  LedType_Ws2812Grbw = 16;
+  LedType_Ws2812Gbrw = 17;
+  LedType_Ws2812Brgw = 18;
+  LedType_Ws2812Bgrw = 19;
+}
+
+enum MidiType {
+  option allow_alias = true;
+  MidiType_Note = 0;
+  MidiType_PitchWheel = 1;
+  MidiType_ModWheel = 2;
+  MidiType_SustainPedal = 3;
+}
+
+enum MouseAxisType {
+  option allow_alias = true;
+  MouseAxisType_X = 0;
+  MouseAxisType_Y = 1;
+  MouseAxisType_ScrollY = 2;
+  MouseAxisType_ScrollX = 3;
+}
+
+enum MouseButtonType {
+  option allow_alias = true;
+  MouseButtonType_Left = 0;
+  MouseButtonType_Right = 1;
+  MouseButtonType_Middle = 2;
+}
+
+enum MouseMovementType {
+  option allow_alias = true;
+  MouseMovementType_Absolute = 0;
+  MouseMovementType_Relative = 1;
+}
+
+enum MultiplexerType {
+  option allow_alias = true;
+  MultiplexerType_EightChannel = 0;
+  MultiplexerType_SixteenChannel = 1;
+  MultiplexerType_EightChannelSlow = 2;
+  MultiplexerType_SixteenChannelSlow = 3;
+}
+
+enum ProGuitarType {
+  option allow_alias = true;
+  ProGuitarType_LowEFret = 0;
+  ProGuitarType_AFret = 1;
+  ProGuitarType_DFret = 2;
+  ProGuitarType_GFret = 3;
+  ProGuitarType_BFret = 4;
+  ProGuitarType_HighEFret = 5;
+  ProGuitarType_LowEFretVelocity = 6;
+  ProGuitarType_AFretVelocity = 7;
+  ProGuitarType_DFretVelocity = 8;
+  ProGuitarType_GFretVelocity = 9;
+  ProGuitarType_BFretVelocity = 10;
+  ProGuitarType_HighEFretVelocity = 11;
+}
+
+enum ProKeyType {
+  option allow_alias = true;
+  ProKeyType_Key1 = 0;
+  ProKeyType_Key2 = 1;
+  ProKeyType_Key3 = 2;
+  ProKeyType_Key4 = 3;
+  ProKeyType_Key5 = 4;
+  ProKeyType_Key6 = 5;
+  ProKeyType_Key7 = 6;
+  ProKeyType_Key8 = 7;
+  ProKeyType_Key9 = 8;
+  ProKeyType_Key10 = 9;
+  ProKeyType_Key11 = 10;
+  ProKeyType_Key12 = 11;
+  ProKeyType_Key13 = 12;
+  ProKeyType_Key14 = 13;
+  ProKeyType_Key15 = 14;
+  ProKeyType_Key16 = 15;
+  ProKeyType_Key17 = 16;
+  ProKeyType_Key18 = 17;
+  ProKeyType_Key19 = 18;
+  ProKeyType_Key20 = 19;
+  ProKeyType_Key21 = 20;
+  ProKeyType_Key22 = 21;
+  ProKeyType_Key23 = 22;
+  ProKeyType_Key24 = 23;
+  ProKeyType_Key25 = 24;
+  ProKeyType_Overdrive = 25;
+  ProKeyType_PedalDigital = 26;
+  ProKeyType_TouchPad = 27;
+  ProKeyType_PedalAnalog = 28;
+}
+
+enum Ps2InputType {
+  option allow_alias = true;
+  Ps2InputType_GunConHSync = 0;
+  Ps2InputType_GunConVSync = 1;
+  Ps2InputType_MouseX = 2;
+  Ps2InputType_MouseY = 3;
+  Ps2InputType_NegConTwist = 4;
+  Ps2InputType_NegConI = 5;
+  Ps2InputType_NegConIi = 6;
+  Ps2InputType_NegConL = 7;
+  Ps2InputType_JogConWheel = 8;
+  Ps2InputType_GuitarWhammy = 9;
+  Ps2InputType_GuitarTapBar = 10;
+  Ps2InputType_LeftStickX = 11;
+  Ps2InputType_LeftStickY = 12;
+  Ps2InputType_RightStickX = 13;
+  Ps2InputType_RightStickY = 14;
+  Ps2InputType_Dualshock2L1 = 15;
+  Ps2InputType_Dualshock2R1 = 16;
+  Ps2InputType_Dualshock2RightButton = 17;
+  Ps2InputType_Dualshock2LeftButton = 18;
+  Ps2InputType_Dualshock2UpButton = 19;
+  Ps2InputType_Dualshock2DownButton = 20;
+  Ps2InputType_Dualshock2Triangle = 21;
+  Ps2InputType_Dualshock2Circle = 22;
+  Ps2InputType_Dualshock2Cross = 23;
+  Ps2InputType_Dualshock2Square = 24;
+  Ps2InputType_Dualshock2L2 = 25;
+  Ps2InputType_Dualshock2R2 = 26;
+  Ps2InputType_MouseLeft = 27;
+  Ps2InputType_MouseRight = 28;
+  Ps2InputType_NegConA = 29;
+  Ps2InputType_NegConB = 30;
+  Ps2InputType_NegConStart = 31;
+  Ps2InputType_NegConR = 32;
+  Ps2InputType_GuitarGreen = 33;
+  Ps2InputType_GuitarRed = 34;
+  Ps2InputType_GuitarYellow = 35;
+  Ps2InputType_GuitarBlue = 36;
+  Ps2InputType_GuitarOrange = 37;
+  Ps2InputType_GuitarStrumUp = 38;
+  Ps2InputType_GuitarStrumDown = 39;
+  Ps2InputType_GuitarSelect = 40;
+  Ps2InputType_GuitarStart = 41;
+  Ps2InputType_GuitarTilt = 42;
+  Ps2InputType_GuitarTapAll = 43;
+  Ps2InputType_GuitarTapGreen = 44;
+  Ps2InputType_GuitarTapRed = 45;
+  Ps2InputType_GuitarTapYellow = 46;
+  Ps2InputType_GuitarTapBlue = 47;
+  Ps2InputType_GuitarTapOrange = 48;
+  Ps2InputType_Select = 49;
+  Ps2InputType_L3 = 50;
+  Ps2InputType_R3 = 51;
+  Ps2InputType_Start = 52;
+  Ps2InputType_DpadUp = 53;
+  Ps2InputType_DpadRight = 54;
+  Ps2InputType_DpadDown = 55;
+  Ps2InputType_DpadLeft = 56;
+  Ps2InputType_L2 = 57;
+  Ps2InputType_R2 = 58;
+  Ps2InputType_L1 = 59;
+  Ps2InputType_R1 = 60;
+  Ps2InputType_Triangle = 61;
+  Ps2InputType_Circle = 62;
+  Ps2InputType_Cross = 63;
+  Ps2InputType_Square = 64;
+  Ps2InputType_JoystickToDpad = 65;
+  Ps2InputType_TaikoRimLeft = 66;
+  Ps2InputType_TaikoRimRight = 67;
+  Ps2InputType_TaikoCenterLeft = 68;
+  Ps2InputType_TaikoCenterRight = 69;
+}
+
+enum Ps3AxisType {
+  option allow_alias = true;
+  Ps3AxisType_PressureDpadUp = 0;
+  Ps3AxisType_PressureDpadRight = 1;
+  Ps3AxisType_PressureDpadLeft = 2;
+  Ps3AxisType_PressureDpadDown = 3;
+  Ps3AxisType_PressureL1 = 4;
+  Ps3AxisType_PressureR1 = 5;
+  Ps3AxisType_PressureTriangle = 6;
+  Ps3AxisType_PressureCircle = 7;
+  Ps3AxisType_PressureCross = 8;
+  Ps3AxisType_PressureSquare = 9;
+}
+
+enum RolloverMode {
+  option allow_alias = true;
+  RolloverMode_Nkro = 0;
+  RolloverMode_SixKro = 1;
+}
+
+enum RumbleMotorType {
+  option allow_alias = true;
+  RumbleMotorType_Left = 0;
+  RumbleMotorType_Right = 1;
+}
+
+enum SectionType {
+  option allow_alias = true;
+  SectionType_Normal = 0;
+  SectionType_BottomHalf = 1;
+  SectionType_TopHalf = 2;
+}
+
+enum StandardAxisType {
+  option allow_alias = true;
+  StandardAxisType_LeftStickX = 0;
+  StandardAxisType_LeftStickY = 1;
+  StandardAxisType_RightStickX = 2;
+  StandardAxisType_RightStickY = 3;
+  StandardAxisType_LeftTrigger = 4;
+  StandardAxisType_RightTrigger = 5;
+}
+
+enum StandardButtonType {
+  option allow_alias = true;
+  StandardButtonType_A = 0;
+  StandardButtonType_B = 1;
+  StandardButtonType_X = 2;
+  StandardButtonType_Y = 3;
+  StandardButtonType_LeftShoulder = 4;
+  StandardButtonType_RightShoulder = 5;
+  StandardButtonType_DpadUp = 6;
+  StandardButtonType_DpadDown = 7;
+  StandardButtonType_DpadLeft = 8;
+  StandardButtonType_DpadRight = 9;
+  StandardButtonType_Start = 10;
+  StandardButtonType_Back = 11;
+  StandardButtonType_Guide = 12;
+  StandardButtonType_Capture = 13;
+  StandardButtonType_LeftThumbClick = 14;
+  StandardButtonType_RightThumbClick = 15;
+}
+
+enum UsbHostInputType {
+  option allow_alias = true;
+  UsbHostInputType_X = 0;
+  UsbHostInputType_A = 1;
+  UsbHostInputType_B = 2;
+  UsbHostInputType_Y = 3;
+  UsbHostInputType_LeftShoulder = 4;
+  UsbHostInputType_RightShoulder = 5;
+  UsbHostInputType_Kick1 = 6;
+  UsbHostInputType_Kick2 = 7;
+  UsbHostInputType_Back = 8;
+  UsbHostInputType_Start = 9;
+  UsbHostInputType_LeftThumbClick = 10;
+  UsbHostInputType_RightThumbClick = 11;
+  UsbHostInputType_Guide = 12;
+  UsbHostInputType_Capture = 13;
+  UsbHostInputType_LeftBlue = 14;
+  UsbHostInputType_LeftRed = 15;
+  UsbHostInputType_LeftGreen = 16;
+  UsbHostInputType_RightBlue = 17;
+  UsbHostInputType_RightRed = 18;
+  UsbHostInputType_RightGreen = 19;
+  UsbHostInputType_SoloGreen = 20;
+  UsbHostInputType_SoloRed = 21;
+  UsbHostInputType_SoloYellow = 22;
+  UsbHostInputType_SoloBlue = 23;
+  UsbHostInputType_SoloOrange = 24;
+  UsbHostInputType_Green = 25;
+  UsbHostInputType_Red = 26;
+  UsbHostInputType_Yellow = 27;
+  UsbHostInputType_Blue = 28;
+  UsbHostInputType_Orange = 29;
+  UsbHostInputType_DpadUp = 30;
+  UsbHostInputType_DpadDown = 31;
+  UsbHostInputType_DpadLeft = 32;
+  UsbHostInputType_DpadRight = 33;
+  UsbHostInputType_LeftTrigger = 34;
+  UsbHostInputType_RightTrigger = 35;
+  UsbHostInputType_LeftStickX = 36;
+  UsbHostInputType_LeftStickY = 37;
+  UsbHostInputType_RightStickX = 38;
+  UsbHostInputType_RightStickY = 39;
+  UsbHostInputType_PressureDpadUp = 40;
+  UsbHostInputType_PressureDpadRight = 41;
+  UsbHostInputType_PressureDpadLeft = 42;
+  UsbHostInputType_PressureDpadDown = 43;
+  UsbHostInputType_PressureL1 = 44;
+  UsbHostInputType_PressureR1 = 45;
+  UsbHostInputType_PressureTriangle = 46;
+  UsbHostInputType_PressureCircle = 47;
+  UsbHostInputType_PressureCross = 48;
+  UsbHostInputType_PressureSquare = 49;
+  UsbHostInputType_RedVelocity = 50;
+  UsbHostInputType_YellowVelocity = 51;
+  UsbHostInputType_BlueVelocity = 52;
+  UsbHostInputType_GreenVelocity = 53;
+  UsbHostInputType_OrangeVelocity = 54;
+  UsbHostInputType_BlueCymbalVelocity = 55;
+  UsbHostInputType_YellowCymbalVelocity = 56;
+  UsbHostInputType_GreenCymbalVelocity = 57;
+  UsbHostInputType_KickVelocity = 58;
+  UsbHostInputType_Whammy = 59;
+  UsbHostInputType_Tilt = 60;
+  UsbHostInputType_Pickup = 61;
+  UsbHostInputType_Slider = 62;
+  UsbHostInputType_LeftTableVelocity = 63;
+  UsbHostInputType_RightTableVelocity = 64;
+  UsbHostInputType_EffectsKnob = 65;
+  UsbHostInputType_Crossfader = 66;
+  UsbHostInputType_AccelX = 67;
+  UsbHostInputType_AccelZ = 68;
+  UsbHostInputType_AccelY = 69;
+  UsbHostInputType_Gyro = 70;
+  UsbHostInputType_GenericButton1 = 71;
+  UsbHostInputType_GenericButton2 = 72;
+  UsbHostInputType_GenericButton3 = 73;
+  UsbHostInputType_GenericButton4 = 74;
+  UsbHostInputType_GenericButton5 = 75;
+  UsbHostInputType_GenericButton6 = 76;
+  UsbHostInputType_GenericButton7 = 77;
+  UsbHostInputType_GenericButton8 = 78;
+  UsbHostInputType_GenericButton9 = 79;
+  UsbHostInputType_GenericButton10 = 80;
+  UsbHostInputType_GenericButton11 = 81;
+  UsbHostInputType_GenericButton12 = 82;
+  UsbHostInputType_GenericButton13 = 83;
+  UsbHostInputType_GenericButton14 = 84;
+  UsbHostInputType_GenericButton15 = 85;
+  UsbHostInputType_GenericButton16 = 86;
+  UsbHostInputType_GenericAxisX = 87;
+  UsbHostInputType_GenericAxisY = 88;
+  UsbHostInputType_GenericAxisZ = 89;
+  UsbHostInputType_GenericAxisRx = 90;
+  UsbHostInputType_GenericAxisRy = 91;
+  UsbHostInputType_GenericAxisRz = 92;
+  UsbHostInputType_GenericAxisSlider = 93;
+  UsbHostInputType_KeyboardInput = 94;
+  UsbHostInputType_MouseAxis = 95;
+  UsbHostInputType_MouseButton = 96;
+  UsbHostInputType_ProKey = 97;
+  UsbHostInputType_YellowCymbal = 98;
+  UsbHostInputType_BlueCymbal = 99;
+  UsbHostInputType_GreenCymbal = 100;
+  UsbHostInputType_LowEFret = 101;
+  UsbHostInputType_AFret = 102;
+  UsbHostInputType_DFret = 103;
+  UsbHostInputType_GFret = 104;
+  UsbHostInputType_BFret = 105;
+  UsbHostInputType_HighEFret = 106;
+  UsbHostInputType_LowEFretVelocity = 107;
+  UsbHostInputType_AFretVelocity = 108;
+  UsbHostInputType_DFretVelocity = 109;
+  UsbHostInputType_GFretVelocity = 110;
+  UsbHostInputType_BFretVelocity = 111;
+  UsbHostInputType_HighEFretVelocity = 112;
+}
+
+enum WiiInputType {
+  option allow_alias = true;
+  WiiInputType_ClassicLeftStickX = 0;
+  WiiInputType_ClassicLeftStickY = 1;
+  WiiInputType_ClassicRightStickX = 2;
+  WiiInputType_ClassicRightStickY = 3;
+  WiiInputType_ClassicLeftTrigger = 4;
+  WiiInputType_ClassicRightTrigger = 5;
+  WiiInputType_DrumJoystickX = 6;
+  WiiInputType_DrumJoystickY = 7;
+  WiiInputType_GuitarJoystickX = 14;
+  WiiInputType_GuitarJoystickY = 15;
+  WiiInputType_GuitarWhammy = 16;
+  WiiInputType_GuitarTapBar = 17;
+  WiiInputType_NunchukStickX = 18;
+  WiiInputType_NunchukStickY = 19;
+  WiiInputType_NunchukAccelerationX = 20;
+  WiiInputType_NunchukAccelerationY = 21;
+  WiiInputType_NunchukAccelerationZ = 22;
+  WiiInputType_NunchukRotationPitch = 23;
+  WiiInputType_NunchukRotationRoll = 24;
+  WiiInputType_DjTurntableLeft = 25;
+  WiiInputType_DjTurntableRight = 26;
+  WiiInputType_DjCrossfadeSlider = 27;
+  WiiInputType_DjEffectDial = 28;
+  WiiInputType_DjStickX = 29;
+  WiiInputType_DjStickY = 30;
+  WiiInputType_UDrawPenX = 31;
+  WiiInputType_UDrawPenY = 32;
+  WiiInputType_UDrawPenPressure = 33;
+  WiiInputType_DrawsomePenX = 34;
+  WiiInputType_DrawsomePenY = 35;
+  WiiInputType_DrawsomePenPressure = 36;
+  WiiInputType_GuitarGreen = 37;
+  WiiInputType_GuitarRed = 38;
+  WiiInputType_GuitarYellow = 39;
+  WiiInputType_GuitarBlue = 40;
+  WiiInputType_GuitarOrange = 41;
+  WiiInputType_GuitarTapAll = 42;
+  WiiInputType_GuitarTapGreen = 43;
+  WiiInputType_GuitarTapRed = 44;
+  WiiInputType_GuitarTapYellow = 45;
+  WiiInputType_GuitarTapBlue = 46;
+  WiiInputType_GuitarTapOrange = 47;
+  WiiInputType_GuitarMinus = 48;
+  WiiInputType_GuitarPlus = 49;
+  WiiInputType_GuitarStrumUp = 50;
+  WiiInputType_GuitarStrumDown = 51;
+  WiiInputType_DrumMinus = 57;
+  WiiInputType_DrumPlus = 58;
+  WiiInputType_NunchukC = 60;
+  WiiInputType_NunchukZ = 61;
+  WiiInputType_UDrawPenClick = 62;
+  WiiInputType_UDrawPenButton1 = 63;
+  WiiInputType_UDrawPenButton2 = 64;
+  WiiInputType_TaTaConLeftDrumRim = 65;
+  WiiInputType_TaTaConLeftDrumCenter = 66;
+  WiiInputType_TaTaConRightDrumRim = 67;
+  WiiInputType_TaTaConRightDrumCenter = 68;
+  WiiInputType_DjHeroEuphoria = 69;
+  WiiInputType_DjHeroLeftGreen = 70;
+  WiiInputType_DjHeroLeftRed = 71;
+  WiiInputType_DjHeroLeftBlue = 72;
+  WiiInputType_DjHeroRightGreen = 73;
+  WiiInputType_DjHeroRightRed = 74;
+  WiiInputType_DjHeroRightBlue = 75;
+  WiiInputType_DjHeroMinus = 76;
+  WiiInputType_DjHeroPlus = 77;
+  WiiInputType_ClassicA = 78;
+  WiiInputType_ClassicB = 79;
+  WiiInputType_ClassicX = 80;
+  WiiInputType_ClassicY = 81;
+  WiiInputType_ClassicDPadUp = 82;
+  WiiInputType_ClassicDPadDown = 83;
+  WiiInputType_ClassicDPadLeft = 84;
+  WiiInputType_ClassicDPadRight = 85;
+  WiiInputType_ClassicZl = 86;
+  WiiInputType_ClassicZr = 87;
+  WiiInputType_ClassicLt = 88;
+  WiiInputType_ClassicRt = 89;
+  WiiInputType_ClassicPlus = 90;
+  WiiInputType_ClassicMinus = 91;
+  WiiInputType_ClassicHome = 92;
+  WiiInputType_JoystickToDpad = 93;
+  WiiInputType_GuitarPedal = 94;
+}
+
+message SerializedAccelInput {
+  optional AccelInputType type = 3;
+}
+
+message SerializedAnalogToDigital {
+  optional SerializedInput child = 1;
+  optional AnalogToDigitalType type = 2;
+  optional int32 threshold = 3;
+}
+
+message SerializedBluetoothInput {
+  optional UsbHostInputType type = 3;
+  optional bool combined = 4;
+  optional int32 key = 5;
+  optional MouseButtonType mouseButtonType = 6;
+  optional MouseAxisType mouseAxisType = 7;
+}
+
+message SerializedCloneCombinedOutput {
+  optional int32 sda = 4;
+  optional int32 scl = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedCloneNeckInput {
+  optional int32 sda = 1;
+  optional int32 scl = 2;
+  optional Gh5NeckInputType type = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedCloneNeckInputCombined {
+  optional Gh5NeckInputType type = 3;
+  optional bool peripheral = 8;
+}
+
+message SerializedCombinedBluetoothOutput {
+  repeated SerializedOutput outputs = 1;
+}
+
+message SerializedCombinedMidiOutput {
+  repeated SerializedOutput outputs = 1;
+  optional uint32 firstNote = 3;
+}
+
+message SerializedCombinedUsbHostOutput {
+  repeated SerializedOutput outputs = 1;
+}
+
+message SerializedConfiguration {
+  optional LedType ledType = 1;
+  optional bool xInputOnWindows = 2;
+  optional DeviceControllerType deviceType = 4;
+  optional EmulationType emulationType = 5;
+  repeated SerializedOutput bindings = 7;
+  optional int32 ledMosi = 8;
+  optional int32 ledSck = 9;
+  optional uint32 ledCount = 10;
+  optional MouseMovementType mouseMovementType = 11;
+  optional int32 wtSensitivity = 12;
+  optional int32 usbHostDp = 14;
+  optional int32 debounce = 24;
+  optional int32 strumDebounce = 25;
+  optional int32 pollRate = 26;
+  optional bool combinedStrumDebounce = 27;
+  optional bool queueBasedInputs = 28;
+  optional int32 djPollRate = 29;
+  optional bool djDual = 30;
+  optional bool swapSwitchFaceButtons = 31;
+  optional bool djSmooth = 32;
+  optional string variant = 33;
+  optional string btRxMacAddress = 34;
+  optional LedType ledTypePeripheral = 35;
+  optional int32 ledMosiPeripheral = 36;
+  optional int32 ledSckPeripheral = 37;
+  optional uint32 ledCountPeripheral = 38;
+  optional bool hasPeripheral = 39;
+  optional int32 peripheralSda = 40;
+  optional int32 peripheralScl = 41;
+  optional int32 stp16Oe = 42;
+  optional int32 stp16Le = 43;
+  optional int32 stp16OePeripheral = 44;
+  optional int32 stp16LePeripheral = 45;
+  optional RolloverMode rolloverMode = 46;
+  optional int32 ledBrightnessOn = 48;
+  optional bool apa102IsFullSize = 49;
+  optional bool ps3OnRpcs3 = 50 [default = true];
+  optional int32 mpr121CapacitiveCount = 51;
+  optional bool hasMpr121 = 52;
+  optional int32 mpr121Sda = 53;
+  optional int32 mpr121Scl = 54;
+  optional int32 ledBrightnessOff = 56;
+  optional bool hasMax1704X = 57;
+  optional int32 max1704XSda = 58;
+  optional int32 max1704XScl = 59;
+  optional bool hideControllerView = 61;
+  optional bool ps4Instruments = 62;
+  optional double adxlFilter = 63 [default = 0.05];
+  optional bool hasWiiOutput = 65;
+  optional int32 wiiOutputSda = 66;
+  optional int32 wiiOutputScl = 67;
+  optional bool hasPs2Output = 68;
+  optional int32 ps2OutputMosi = 69;
+  optional int32 ps2OutputMiso = 70;
+  optional int32 ps2OutputSck = 71;
+  optional int32 ps2OutputAtt = 72;
+  optional int32 ps2OutputAck = 73;
+  optional bool djNavButtons = 74 [default = false];
+  optional bool djFullRange = 75 [default = true];
+  optional bool selectDpadLeftXb1 = 76 [default = false];
+  optional bool adafruitHost = 77 [default = false];
+  optional bool hasAccel = 80;
+  optional int32 accelSda = 81;
+  optional int32 accelScl = 82;
+  optional bool classicMode = 84;
+  optional bool isBluetoothTx = 85;
+  optional bool localDebounceMode = 86;
+  optional bool sleepEnabled = 87 [default = false];
+  optional int32 sleepPin = 88 [default = -1];
+  optional int32 sleepTimer = 89 [default = 5];
+  optional int32 ledTimer = 90 [default = 0];
+  optional bool midiSerialEnabled = 92 [default = false];
+  optional int32 midiSerialPin = 93 [default = 1];
+  optional bool hasWtDrumInput = 94;
+  optional int32 wtDrumMosi = 95;
+  optional int32 wtDrumMiso = 96;
+  optional int32 wtDrumSck = 97;
+  optional int32 wtDrumCs = 98;
+  optional bool rb3CymbalGlitchFix = 99;
+  optional bool hasBhDrumInput = 100;
+  optional int32 bhDrumSda = 101;
+  optional int32 bhDrumScl = 102;
+  optional bool invertHidYAxis = 103;
+  optional bool hasMustangNeckInput = 104;
+  optional int32 mustangNeckMosi = 105;
+  optional int32 mustangNeckMiso = 106;
+  optional int32 mustangNeckSck = 107;
+  optional int32 mustangNeckCs = 108;
+  optional int32 wiiOutputEn = 109;
+  optional bool hasWiiOutputEn = 110;
+}
+
+message SerializedConstantInput {
+  optional int32 value = 1;
+  optional bool analog = 2;
+  optional bool tapBar = 3;
+  optional bool rbPickup = 4;
+  optional int32 min = 5;
+  optional int32 max = 6;
+}
+
+message SerializedControllerAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional int32 min = 4;
+  optional int32 max = 5;
+  optional int32 deadzone = 6;
+  optional StandardAxisType type = 7;
+  optional bytes ledIndex = 8;
+  optional bool childOfCombined = 9;
+  optional int32 threshold = 10;
+  optional bytes ledIndexPeripheral = 11;
+  optional bool outputEnabled = 12;
+  optional int32 outputPin = 13;
+  optional bool outputInverted = 14;
+  optional bool outputPeripheral = 15;
+  optional bytes ledIndexMpr121 = 16;
+  optional int32 offset = 17;
+  optional bool enabled = 18 [default = true];
+  optional SectionType section = 19;
+}
+
+message SerializedControllerButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional StandardButtonType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional int32 debounce = 9;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedCrkdCombinedOutput {
+  optional int32 tx = 4;
+  optional int32 rx = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedCrkdNeckInput {
+  optional int32 tx = 1;
+  optional int32 rx = 2;
+  optional CrkdNeckInputType type = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedCrkdNeckInputCombined {
+  optional CrkdNeckInputType type = 3;
+  optional bool peripheral = 8;
+}
+
+message SerializedDigitalToAnalog {
+  optional SerializedInput child = 1;
+  optional int32 on = 2;
+  optional bool trigger = 3;
+  optional DigitalToAnalogType type = 4;
+}
+
+message SerializedDirectInput {
+  optional int32 pin = 1;
+  optional DevicePinMode pinMode = 2;
+  optional bool inverted = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedDjAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional bytes ledIndex = 4;
+  optional int32 min = 5;
+  optional int32 max = 6;
+  optional int32 deadzoneOrMultiplier = 7;
+  optional bool childOfCombined = 8;
+  optional DjAxisType type = 10;
+  optional bytes ledIndexPeripheral = 11;
+  optional int32 ledMultiplier = 12;
+  optional bool outputEnabled = 13;
+  optional int32 outputPin = 14;
+  optional bool outputInverted = 15;
+  optional bool outputPeripheral = 16;
+  optional bytes ledIndexMpr121 = 17;
+  optional bool enabled = 18 [default = true];
+}
+
+message SerializedDjButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional DjInputType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional int32 debounce = 9;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedDjCombinedOutput {
+  optional int32 sda = 4;
+  optional int32 scl = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedDjInput {
+  optional int32 sda = 1;
+  optional int32 scl = 2;
+  optional DjInputType type = 3;
+  optional bool peripheral = 5;
+}
+
+message SerializedDjInputCombined {
+  optional DjInputType type = 3;
+  optional bool peripheral = 8;
+}
+
+message SerializedDrumAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional bytes ledIndex = 4;
+  optional int32 min = 5;
+  optional int32 max = 6;
+  optional int32 deadzone = 7;
+  optional int32 debounce = 9;
+  optional DrumAxisType type = 10;
+  optional bool childOfCombined = 11;
+  optional bytes ledIndexPeripheral = 12;
+  optional bool outputEnabled = 13;
+  optional int32 outputPin = 14;
+  optional bool outputInverted = 15;
+  optional bool outputPeripheral = 16;
+  optional bytes ledIndexMpr121 = 17;
+  optional bool enabled = 18 [default = true];
+  optional SerializedInput sensitivityInput = 19;
+}
+
+message SerializedEmulationMode {
+  optional SerializedInput input = 1;
+  optional EmulationModeType type = 2;
+  optional bool enabled = 3 [default = true];
+}
+
+message SerializedEncoderInput {
+  optional int32 pin = 1;
+  optional bool peripheral = 2;
+  optional int32 pollrate = 3;
+}
+
+message SerializedGh5CombinedOutput {
+  optional int32 sda = 4;
+  optional int32 scl = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedGh5NeckInput {
+  optional int32 sda = 1;
+  optional int32 scl = 2;
+  optional Gh5NeckInputType type = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedGh5NeckInputCombined {
+  optional Gh5NeckInputType type = 3;
+  optional bool peripheral = 8;
+}
+
+message SerializedGhWtInput {
+  optional int32 pin = 1;
+  optional int32 pinS0 = 2;
+  optional int32 pinS1 = 3;
+  optional int32 pinS2 = 4;
+  optional GhWtInputType type = 5;
+  optional bool peripheral = 8;
+}
+
+message SerializedGhWtInputCombined {
+  optional GhWtInputType type = 2;
+  optional bool peripheral = 3;
+}
+
+message SerializedGhwtCombinedOutput {
+  optional int32 pin = 2;
+  optional int32 pinS0 = 3;
+  optional int32 pinS1 = 4;
+  optional int32 pinS2 = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedGuitarAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional bytes ledIndex = 4;
+  optional int32 min = 5;
+  optional int32 max = 6;
+  optional int32 deadzone = 7;
+  optional bool childOfCombined = 8;
+  optional GuitarAxisType type = 10;
+  optional bytes ledIndexPeripheral = 11;
+  optional bool invert = 12;
+  optional bool outputEnabled = 13;
+  optional int32 outputPin = 14;
+  optional bool outputInverted = 15;
+  optional bool outputPeripheral = 16;
+  optional bytes ledIndexMpr121 = 17;
+  optional int32 pickupSelectorNotch1 = 18;
+  optional int32 pickupSelectorNotch2 = 19;
+  optional int32 pickupSelectorNotch3 = 20;
+  optional int32 pickupSelectorNotch4 = 21;
+  optional int32 pickupSelectorNotch5 = 22;
+  optional bool enabled = 23 [default = true];
+}
+
+message SerializedGuitarButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional InstrumentButtonType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional int32 debounce = 9;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedInput {
+  oneof subtype {
+    SerializedAnalogToDigital serializedAnalogToDigital = 101;
+    SerializedDigitalToAnalog serializedDigitalToAnalog = 102;
+    SerializedDirectInput serializedDirectInput = 103;
+    SerializedDjInput serializedDjInput = 104;
+    SerializedGh5NeckInput serializedGh5NeckInput = 105;
+    SerializedGhWtInput serializedGhWtInput = 106;
+    SerializedPs2Input serializedPs2Input = 107;
+    SerializedWiiInput serializedWiiInput = 108;
+    SerializedWiiInputCombined serializedWiiInputCombined = 109;
+    SerializedPs2InputCombined serializedPs2InputCombined = 110;
+    SerializedGhWtInputCombined serializedGhWtInputCombined = 111;
+    SerializedGh5NeckInputCombined serializedGh5NeckInputCombined = 112;
+    SerializedDjInputCombined serializedDjInputCombined = 113;
+    SerializedMacroInput serializedMacroInput = 114;
+    SerializedMultiplexerInput serializedMultiplexerInput = 115;
+    SerializedUsbHostInput serializedUsbHostInput = 116;
+    SerializedConstantInput serializedConstantInput = 117;
+    SerializedCloneNeckInput serializedCloneNeckInput = 118;
+    SerializedCloneNeckInputCombined serializedCloneNeckInputCombined = 119;
+    SerializedAccelInput serializedAccelInput = 120;
+    SerializedMpr121Input serializedMpr121Input = 121;
+    SerializedMpr121SliderInput serializedMpr121SliderInput = 122;
+    SerializedMidiInput serializedMidiInput = 123;
+    SerializedBluetoothInput serializedBluetoothInput = 124;
+    SerializedMatrixInput serializedMatrixInput = 125;
+    SerializedCrkdNeckInput serializedCrkdNeckInput = 126;
+    SerializedCrkdNeckInputCombined serializedCrkdNeckInputCombined = 127;
+    SerializedEncoderInput serializedEncoderInput = 128;
+  }
+}
+
+message SerializedJoystickToDpad {
+  optional int32 threshold = 1;
+  optional bool wii = 2;
+  optional bool peripheral = 8;
+  optional bool enabled = 9 [default = true];
+}
+
+message SerializedKeyboardButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional int32 type = 5;
+  optional bytes ledIndex = 6;
+  optional bytes ledIndexPeripheral = 7;
+  optional int32 debounce = 8;
+  optional bool outputEnabled = 9;
+  optional int32 outputPin = 10;
+  optional bool outputInverted = 11;
+  optional bool outputPeripheral = 12;
+  optional bytes ledIndexMpr121 = 13;
+  optional bool enabled = 14 [default = true];
+}
+
+message SerializedLed {
+  optional uint32 ledOn = 1;
+  optional uint32 ledOff = 2;
+  optional bytes ledIndex = 3;
+  optional LedCommandType type = 4;
+  optional bool outputEnabled = 5;
+  optional int32 pin = 6;
+  optional int32 param1 = 7;
+  optional int32 param2 = 8;
+  optional bool inverted = 9;
+  optional bool peripheral = 10;
+  optional bytes ledIndexPeripheral = 11;
+  optional bytes ledIndexMpr121 = 12;
+  optional bool enabled = 13 [default = true];
+}
+
+message SerializedMacroInput {
+  optional SerializedInput child1 = 1;
+  optional SerializedInput child2 = 2;
+}
+
+message SerializedMatrixInput {
+  optional int32 pin = 1;
+  optional bool inverted = 3;
+  optional int32 outPin = 4;
+}
+
+message SerializedMidiInput {
+  optional int32 key = 1;
+  optional MidiType type = 2;
+}
+
+message SerializedMouseAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional int32 min = 4;
+  optional int32 max = 5;
+  optional int32 deadzone = 6;
+  optional bytes ledIndex = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional bool outputEnabled = 9;
+  optional int32 outputPin = 10;
+  optional bool outputInverted = 11;
+  optional bool outputPeripheral = 12;
+  optional bytes ledIndexMpr121 = 13;
+  optional MouseAxisType type = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedMouseButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional MouseButtonType type = 5;
+  optional bytes ledIndex = 6;
+  optional bytes ledIndexPeripheral = 7;
+  optional int32 debounce = 8;
+  optional bool outputEnabled = 9;
+  optional int32 outputPin = 10;
+  optional bool outputInverted = 11;
+  optional bool outputPeripheral = 12;
+  optional bytes ledIndexMpr121 = 13;
+  optional bool enabled = 14 [default = true];
+}
+
+message SerializedMpr121Input {
+  optional int32 input = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedMpr121SliderInput {
+  optional int32 inputGreen = 3;
+  optional int32 inputRed = 4;
+  optional int32 inputYellow = 5;
+  optional int32 inputBlue = 6;
+  optional int32 inputOrange = 7;
+  optional bool peripheral = 8;
+}
+
+message SerializedMultiplexerInput {
+  optional int32 pin = 1;
+  optional int32 pinS0 = 2;
+  optional int32 pinS1 = 3;
+  optional int32 pinS2 = 4;
+  optional int32 pinS3 = 5;
+  optional MultiplexerType type = 6;
+  optional int32 channel = 7;
+  optional bool peripheral = 8;
+}
+
+message SerializedOutput {
+  oneof subtype {
+    SerializedKeyboardButton serializedKeyboardButton = 100;
+    SerializedMouseAxis serializedMouseAxis = 101;
+    SerializedMouseButton serializedMouseButton = 102;
+    SerializedControllerAxis serializedControllerAxis = 103;
+    SerializedControllerButton serializedControllerButton = 104;
+    SerializedDjCombinedOutput serializedDjCombinedOutput = 105;
+    SerializedGh5CombinedOutput serializedGh5CombinedOutput = 106;
+    SerializedGhwtCombinedOutput serializedGhwtCombinedOutput = 107;
+    SerializedPs2CombinedOutput serializedPs2CombinedOutput = 108;
+    SerializedWiiCombinedOutput serializedWiiCombinedOutput = 109;
+    SerializedDrumAxis serializedDrumAxis = 110;
+    SerializedPs3Axis serializedPs3Axis = 111;
+    SerializedDjButton serializedDjButton = 112;
+    SerializedGuitarAxis serializedGuitarAxis = 113;
+    SerializedDjAxis serializedDjAxis = 114;
+    SerializedGuitarButton serializedGuitarButton = 115;
+    SerializedLed serializedLed = 117;
+    SerializedEmulationMode serializedEmulationMode = 118;
+    SerializedJoystickToDpad serializedJoystickToDpad = 119;
+    SerializedCombinedUsbHostOutput serializedCombinedUsbHostOutput = 120;
+    SerializedCombinedBluetoothOutput serializedCombinedBluetoothOutput = 121;
+    SerializedCombinedUsbHostOutput serializedCombinedUsbHostOutput122 = 122;
+    SerializedReset serializedReset = 123;
+    SerializedCloneCombinedOutput serializedCloneCombinedOutput = 124;
+    SerializedStartSelectHome serializedStartSelectHome = 125;
+    SerializedPianoKey serializedPianoKey = 126;
+    SerializedCombinedMidiOutput serializedCombinedMidiOutput = 127;
+    SerializedPianoKeyButton serializedPianoKeyButton = 128;
+    SerializedProGuitarCombinedOutput serializedProGuitarCombinedOutput = 129;
+    SerializedWakeup360 serializedWakeup360 = 130;
+    SerializedCrkdCombinedOutput serializedCrkdCombinedOutput = 131;
+    SerializedProGuitarAxis serializedProGuitarAxis = 132;
+  }
+}
+
+message SerializedPianoKey {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional ProKeyType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedPianoKeyButton {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional ProKeyType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+}
+
+message SerializedProGuitarAxis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional ProGuitarType type = 5;
+  optional bytes ledIndex = 6;
+  optional bool childOfCombined = 7;
+  optional bytes ledIndexPeripheral = 8;
+  optional bool outputEnabled = 10;
+  optional int32 outputPin = 11;
+  optional bool outputInverted = 12;
+  optional bool outputPeripheral = 13;
+  optional bytes ledIndexMpr121 = 14;
+  optional bool enabled = 15 [default = true];
+  optional int32 min = 16;
+  optional int32 max = 17;
+  optional int32 deadzone = 18;
+}
+
+message SerializedProGuitarCombinedOutput {
+}
+
+message SerializedPs2CombinedOutput {
+  optional int32 miso = 4;
+  optional int32 mosi = 5;
+  optional int32 sck = 6;
+  optional int32 att = 7;
+  optional int32 ack = 8;
+  repeated SerializedOutput outputs = 9;
+  optional bool peripheral = 11;
+}
+
+message SerializedPs2Input {
+  optional int32 miso = 1;
+  optional int32 mosi = 2;
+  optional int32 sck = 3;
+  optional int32 att = 4;
+  optional int32 ack = 5;
+  optional Ps2InputType type = 6;
+  optional bool peripheral = 7;
+}
+
+message SerializedPs2InputCombined {
+  optional Ps2InputType type = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedPs3Axis {
+  optional SerializedInput input = 1;
+  optional uint32 ledOn = 2;
+  optional uint32 ledOff = 3;
+  optional int32 min = 4;
+  optional int32 max = 5;
+  optional int32 deadzone = 6;
+  optional Ps3AxisType type = 7;
+  optional bytes ledIndex = 8;
+  optional bool childOfCombined = 9;
+  optional bytes ledIndexPeripheral = 10;
+  optional bool outputEnabled = 11;
+  optional int32 outputPin = 12;
+  optional bool outputInverted = 13;
+  optional bool outputPeripheral = 14;
+  optional bytes ledIndexMpr121 = 15;
+  optional bool enabled = 16 [default = true];
+}
+
+message SerializedReset {
+  optional SerializedInput input = 1;
+  optional bool enabled = 2 [default = true];
+}
+
+message SerializedRumble {
+  optional RumbleMotorType type = 1;
+  optional int32 pin = 2;
+  optional bool peripheral = 3;
+  optional bool enabled = 4 [default = true];
+}
+
+message SerializedStartSelectHome {
+  optional bool wii = 2;
+  optional bool peripheral = 8;
+  optional bool enabled = 9 [default = true];
+}
+
+message SerializedUsbHostInput {
+  optional UsbHostInputType type = 3;
+  optional bool combined = 4;
+  optional int32 key = 5;
+  optional MouseButtonType mouseButtonType = 6;
+  optional MouseAxisType mouseAxisType = 7;
+}
+
+message SerializedWakeup360 {
+  optional SerializedInput input = 1;
+  optional bool enabled = 2 [default = true];
+}
+
+message SerializedWiiCombinedOutput {
+  optional int32 sda = 4;
+  optional int32 scl = 5;
+  repeated SerializedOutput outputs = 6;
+  optional bool peripheral = 8;
+}
+
+message SerializedWiiInput {
+  optional int32 sda = 1;
+  optional int32 scl = 2;
+  optional WiiInputType type = 3;
+  optional bool peripheral = 4;
+}
+
+message SerializedWiiInputCombined {
+  optional WiiInputType type = 3;
+  optional bool peripheral = 4;
+}

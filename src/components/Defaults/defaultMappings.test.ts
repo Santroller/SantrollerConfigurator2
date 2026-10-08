@@ -116,3 +116,63 @@ describe('drum defaults', () => {
     });
   }
 });
+
+describe('USB host defaults for a different emulated type', () => {
+  it('decodes the host as itself but outputs the emulated type', () => {
+    const mappings = getDefaultMappings(
+      'usbHost',
+      proto.SubType.RockBandGuitar,
+      3,
+      undefined,
+      proto.SubType.ProGuitarMustang
+    );
+    expect(
+      mappings.find(
+        (m) =>
+          m.input?.usbButton?.button?.proButton === proto.ProGuitarButtonType.ProGuitar_SoloBlue
+      )?.mapping
+    ).toEqual({ rbButton: proto.RockBandGuitarButtonType.RockBandGuitar_SoloBlue });
+    expect(
+      mappings.find(
+        (m) => m.input?.usbAxis?.axis?.proAxis === proto.ProGuitarAxisType.ProGuitar_Tilt
+      )?.mapping
+    ).toEqual({ rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Tilt });
+    // fret numbers and velocities have no Rock Band guitar equivalent
+    expect(mappings.some((m) => m.mapping?.proAxis != null || m.mapping?.proButton != null)).toBe(
+      false
+    );
+    // gamepad outputs work for every type
+    expect(
+      mappings.find(
+        (m) => m.input?.usbButton?.button?.gamepadButton === proto.GamepadButtonType.Gamepad_Start
+      )?.mapping
+    ).toEqual({ gamepadButton: proto.GamepadButtonType.Gamepad_Start });
+  });
+
+  it('maps solo frets to tap frets on a Guitar Hero guitar', () => {
+    const mappings = getDefaultMappings(
+      'bt',
+      proto.SubType.GuitarHeroGuitar,
+      1,
+      undefined,
+      proto.SubType.RockBandGuitar
+    );
+    expect(
+      mappings.find(
+        (m) =>
+          m.input?.btButton?.button?.rbButton ===
+          proto.RockBandGuitarButtonType.RockBandGuitar_SoloRed
+      )?.mapping
+    ).toEqual({ ghButton: proto.GuitarHeroGuitarButtonType.GuitarHeroGuitar_TapRed });
+    // Guitar Hero guitars have no pickup selector
+    expect(mappings.some((m) => m.mapping?.rbAxis != null)).toBe(false);
+  });
+
+  it('keeps everything when the host matches the emulated type', () => {
+    const mappings = getDefaultMappings('usbHost', proto.SubType.ProGuitarMustang, 0);
+    expect(
+      mappings.every((m) => m.mapping === (m.input?.usbButton?.button ?? m.input?.usbAxis?.axis))
+    ).toBe(true);
+    expect(mappings.length).toBeGreaterThan(20);
+  });
+});

@@ -1,6 +1,6 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, FileButton, Group, Progress, Space } from '@mantine/core';
+import { Alert, Button, FileButton, Group, List, Progress, Space } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
@@ -10,6 +10,9 @@ export function ConnectPage() {
   const bootloader = useConfigStore((state) => state.bootloader);
   const exportConfig = useConfigStore((state) => state.exportConfig);
   const loadConfig = useConfigStore((state) => state.loadConfig);
+  const importLegacy = useConfigStore((state) => state.importLegacyConfig);
+  const legacyImportWarnings = useConfigStore((state) => state.legacyImportWarnings);
+  const clearLegacyImportWarnings = useConfigStore((state) => state.clearLegacyImportWarnings);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
   const connected = useConfigStore((state) => state.connected);
   const hung = useConfigStore((state) => state.hung);
@@ -58,6 +61,34 @@ export function ConnectPage() {
                 </Button>
               )}
             </FileButton>
+            <Space h="md" />
+            <FileButton disabled={updating || hung} onChange={importLegacy} accept=".picoconfig">
+              {(props) => (
+                <Button disabled={updating || hung} {...props}>
+                  {t('connect.importLegacy')}
+                </Button>
+              )}
+            </FileButton>
+          </>
+        )}
+        {legacyImportWarnings.length > 0 && (
+          <>
+            <Space h="md" />
+            <Alert
+              variant="light"
+              color="yellow"
+              title={t('connect.legacyImportTitle')}
+              icon={<IconExclamationCircle />}
+              withCloseButton
+              closeButtonLabel={t('connect.legacyImportDismiss')}
+              onClose={clearLegacyImportWarnings}
+            >
+              <List size="sm">
+                {legacyImportWarnings.map((warning) => (
+                  <List.Item key={warning}>{warning}</List.Item>
+                ))}
+              </List>
+            </Alert>
           </>
         )}
         {hung && (
