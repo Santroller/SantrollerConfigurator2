@@ -2,10 +2,12 @@ import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, FileButton, Group, List, Progress, Space } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
+import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothConfigDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
+  const connectBluetooth = useConfigStore((state) => state.connectBluetooth);
   const disconnect = useConfigStore((state) => state.disconnect);
   const bootloader = useConfigStore((state) => state.bootloader);
   const exportConfig = useConfigStore((state) => state.exportConfig);
@@ -22,10 +24,11 @@ export function ConnectPage() {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
   const { t } = useTranslation();
+  const bluetoothSupported = BluetoothConfigDevice.isSupported();
   return (
     <>
       <Layout>
-        {!navigator.hid && (
+        {!navigator.hid && !bluetoothSupported && (
           <Alert
             variant="light"
             color="red"
@@ -35,7 +38,7 @@ export function ConnectPage() {
             {t('connect.webHidNotSupported')}
           </Alert>
         )}
-        {navigator.hid && connected && (
+        {connected && (
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={disconnect}>
@@ -43,7 +46,7 @@ export function ConnectPage() {
             </Button>
           </>
         )}
-        {navigator.hid && connected && !simpleMode && (
+        {connected && !simpleMode && (
           <>
             <Space h="md" />
             <Button disabled={updating || hung} onClick={bootloader}>
@@ -106,6 +109,14 @@ export function ConnectPage() {
           <Button disabled={updating} onClick={connect}>
             {t('connect.connect')}
           </Button>
+        )}
+        {bluetoothSupported && !connected && (
+          <>
+            <Space h="md" />
+            <Button disabled={updating} onClick={connectBluetooth}>
+              {t('connect.connectBluetooth')}
+            </Button>
+          </>
         )}
 
         {!latest && connected && !hung && (

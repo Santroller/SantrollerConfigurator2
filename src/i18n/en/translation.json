@@ -1563,6 +1563,7 @@
   },
   "connect": {
     "connect": "Connect to a Santroller powered device",
+    "connectBluetooth": "Connect to a Santroller powered device over Bluetooth",
     "webHidNotSupported": "This browser does not support WebHID, therefore Santroller will not work.\nYou need to use a Chromium based browser, Firefox based browsers don't support WebHID.",
     "browserNotSupported": "Browser Unsupported",
     "disconnect": "Disconnect from Santroller powered device",

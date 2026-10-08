@@ -24,6 +24,7 @@ import {
 import { createLabelConfig, getNextLabelId } from '@/components/Labels/labelRegistry';
 import { importLegacyConfig } from '@/components/Legacy/importLegacyConfig';
 import { CRC32 } from '@/CRC32.js';
+import { BluetoothConfigDevice } from './BluetoothConfigDevice';
 import { proto } from './config.js';
 
 // sourceId is unique per interface (including virtual wireless controller slots), older
@@ -390,6 +391,8 @@ export interface Actions {
   updateConfig: (config: proto.IConfig) => void;
   deleteDevice: (id: string) => void;
   connect: () => void;
+  connectBluetooth: () => void;
+  connectDevice: (device: HIDDevice) => Promise<void>;
   firmwareUpdate: () => void;
   peripheralFirmwareUpdate: (deviceId: number, file: File) => Promise<void>;
   login: () => void;
@@ -2212,124 +2215,133 @@ export const useConfigStore = create<ConfigState & Actions>()(
         filters: [{ vendorId: 0x1209, productId: 0x2882, usagePage: 0xff00 }],
       });
       if (devices.length) {
-        const device = devices[0];
-        if (!device.opened) {
-          await device.open();
-        }
-        device.addEventListener('inputreport', get().onReport);
+        await get().connectDevice(devices[0]);
+      }
+    },
+    connectBluetooth: async () => {
+      if (!BluetoothConfigDevice.isSupported()) {
+        return;
+      }
+      let bluetoothDevice: BluetoothConfigDevice;
+      try {
+        bluetoothDevice = await BluetoothConfigDevice.request();
+      } catch (e) {
+        // the user closed the device picker
+        console.log(e);
+        return;
+      }
+      bluetoothDevice.addEventListener('disconnect', () => onBluetoothDisconnect(bluetoothDevice));
+      await get().connectDevice(bluetoothDevice as unknown as HIDDevice);
+    },
+    connectDevice: async (device: HIDDevice) => {
+      if (!device.opened) {
+        await device.open();
+      }
+      device.addEventListener('inputreport', get().onReport);
+      try {
+        let latest = false;
         try {
-          let latest = false;
-          try {
-            const commitHash = await receiveFeatureReport(
-              device,
-              proto.ReportId.ReportIdGetVersion
-            );
-            const deviceVersion = String.fromCharCode
-              .apply(null, Array.from(new Uint8Array(commitHash.buffer.slice(1))))
-              .trim()
-              .substring(0, 8);
-            const latestVersion = (await (await fetch('commit.hash')).text())
-              .trim()
-              .substring(0, 8);
-            latest = deviceVersion === latestVersion;
-          } catch (e) {
-            console.log(e);
-          }
-          let activeProfiles: number[] = [];
-          try {
-            const profileData = await receiveFeatureReport(
-              device,
-              proto.ReportId.ReportIdGetActiveProfiles
-            );
-            const payload = new Uint8Array(
-              profileData.buffer,
-              profileData.byteOffset,
-              profileData.byteLength
-            ).slice(1);
-            if (payload.length > 0) {
-              activeProfiles = proto.GetActiveProfiles.decodeDelimited(payload).profiles || [];
-            }
-          } catch (e) {
-            console.error('Failed to get active profiles', e);
-          }
-          let deviceType = 'pico_w';
-          try {
-            const deviceTypeData = await receiveFeatureReport(
-              device,
-              proto.ReportId.ReportIdGetType
-            );
-            deviceType = String.fromCharCode
-              .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
-              .trim()
-              .replaceAll('\0', '');
-          } catch (e) {
-            console.log(e);
-          }
-          try {
-            const { data, info } = await fetchConfigData(device, false);
-            let dataSaved: Uint8Array | undefined = undefined;
-            try {
-              const { data: fetchedDataSaved } = await fetchConfigData(device, true);
-              dataSaved = fetchedDataSaved;
-            } catch (e) {
-              console.error('Failed to get saved config data', e);
-              // If fetching the saved config data fails, fall back to using the current config data.
-              dataSaved = data;
-            }
-            const config = proto.Config.decode(data, info.mainSize);
-            const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
-            const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
-            set(
-              (old) => ({
-                ...old,
-                ...InitState(config, aux),
-                seller: old.seller,
-                connected: true,
-                hung: false,
-                updating: false,
-                hidDevice: device,
-                crc: info.dataCrc,
-                type: deviceType,
-                latest,
-                missingStaticFirmware: !!info.missingStaticFirmware,
-                needsUf2Update: !!info.needsUf2Update,
-                keepaliveTimeout: timeout,
-                activeProfiles,
-                savedConfig: dataSaved,
-                configModified: !equals(dataSaved, data),
-              }),
-              true
-            );
-            await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
-          } catch (e) {
-            console.error('Failed to load config on connect', e);
-            set(
-              (old) => ({
-                ...old,
-                connected: true,
-                hidDevice: device,
-                crc: 0,
-              }),
-              true
-            );
+          const commitHash = await receiveFeatureReport(device, proto.ReportId.ReportIdGetVersion);
+          const deviceVersion = String.fromCharCode
+            .apply(null, Array.from(new Uint8Array(commitHash.buffer.slice(1))))
+            .trim()
+            .substring(0, 8);
+          const latestVersion = (await (await fetch('commit.hash')).text()).trim().substring(0, 8);
+          latest = deviceVersion === latestVersion;
+        } catch (e) {
+          console.log(e);
+        }
+        let activeProfiles: number[] = [];
+        try {
+          const profileData = await receiveFeatureReport(
+            device,
+            proto.ReportId.ReportIdGetActiveProfiles
+          );
+          const payload = new Uint8Array(
+            profileData.buffer,
+            profileData.byteOffset,
+            profileData.byteLength
+          ).slice(1);
+          if (payload.length > 0) {
+            activeProfiles = proto.GetActiveProfiles.decodeDelimited(payload).profiles || [];
           }
         } catch (e) {
-          if (e instanceof HidResponseTimeoutError) {
-            set(
-              (old) => ({
-                ...old,
-                connected: true,
-                hung: true,
-                hidDevice: device,
-                crc: 0,
-              }),
-              true
-            );
-          } else {
-            device.removeEventListener('inputreport', get().onReport);
-            if (device.opened) {
-              await device.close();
-            }
+          console.error('Failed to get active profiles', e);
+        }
+        let deviceType = 'pico_w';
+        try {
+          const deviceTypeData = await receiveFeatureReport(device, proto.ReportId.ReportIdGetType);
+          deviceType = String.fromCharCode
+            .apply(null, Array.from(new Uint8Array(deviceTypeData.buffer.slice(1))))
+            .trim()
+            .replaceAll('\0', '');
+        } catch (e) {
+          console.log(e);
+        }
+        try {
+          const { data, info } = await fetchConfigData(device, false);
+          let dataSaved: Uint8Array | undefined = undefined;
+          try {
+            const { data: fetchedDataSaved } = await fetchConfigData(device, true);
+            dataSaved = fetchedDataSaved;
+          } catch (e) {
+            console.error('Failed to get saved config data', e);
+            // If fetching the saved config data fails, fall back to using the current config data.
+            dataSaved = data;
+          }
+          const config = proto.Config.decode(data, info.mainSize);
+          const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
+          const timeout = setInterval(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
+          set(
+            (old) => ({
+              ...old,
+              ...InitState(config, aux),
+              seller: old.seller,
+              connected: true,
+              hung: false,
+              updating: false,
+              hidDevice: device,
+              crc: info.dataCrc,
+              type: deviceType,
+              latest,
+              missingStaticFirmware: !!info.missingStaticFirmware,
+              needsUf2Update: !!info.needsUf2Update,
+              keepaliveTimeout: timeout,
+              activeProfiles,
+              savedConfig: dataSaved,
+              configModified: !equals(dataSaved, data),
+            }),
+            true
+          );
+          await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
+        } catch (e) {
+          console.error('Failed to load config on connect', e);
+          set(
+            (old) => ({
+              ...old,
+              connected: true,
+              hidDevice: device,
+              crc: 0,
+            }),
+            true
+          );
+        }
+      } catch (e) {
+        if (e instanceof HidResponseTimeoutError) {
+          set(
+            (old) => ({
+              ...old,
+              connected: true,
+              hung: true,
+              hidDevice: device,
+              crc: 0,
+            }),
+            true
+          );
+        } else {
+          device.removeEventListener('inputreport', get().onReport);
+          if (device.opened) {
+            await device.close();
           }
         }
       }
@@ -2365,6 +2377,35 @@ async function fetchConfigData(device: HIDDevice, saved: boolean) {
   }
   return { data, info };
 }
+const BLUETOOTH_RECONNECT_ATTEMPTS = 15;
+const BLUETOOTH_RECONNECT_DELAY_MS = 2000;
+
+// Bluetooth has no connect events like WebHID, so when the controller reboots (e.g. after saving)
+// keep trying to reconnect to it ourselves
+async function onBluetoothDisconnect(device: BluetoothConfigDevice) {
+  const store = useConfigStore.getState();
+  if (store.hidDevice !== (device as unknown as HIDDevice)) {
+    return;
+  }
+  await store.disconnect();
+  for (
+    let i = 0;
+    i < BLUETOOTH_RECONNECT_ATTEMPTS && useConfigStore.getState().waitingForReload;
+    i++
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, BLUETOOTH_RECONNECT_DELAY_MS));
+    try {
+      await device.open();
+      if (!useConfigStore.getState().hidDevice) {
+        await useConfigStore.getState().reconnect(device as unknown as HIDDevice);
+      }
+      return;
+    } catch (e) {
+      console.log('Bluetooth reconnect failed, retrying', e);
+    }
+  }
+}
+
 const disconnect = (e: any) => {
   if (useConfigStore.getState().hidDevice === e.device) {
     useConfigStore.getState().disconnect();
