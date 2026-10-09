@@ -138,3 +138,6 @@ src/components/Legacy/legacy.d.ts
 public/santroller*.uf2
 public/santroller_ota_*.bin
 public/commit.hash
+
+# yarn is the package manager, see packageManager in package.json
+package-lock.json

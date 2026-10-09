@@ -27,6 +27,7 @@ import { importLegacyConfig } from '@/components/Legacy/importLegacyConfig';
 import { CRC32 } from '@/CRC32.js';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
 import { proto } from './config.js';
+import { truncateProfileName } from './profileName';
 
 // sourceId is unique per interface (including virtual wireless controller slots), older
 // firmware doesn't send it so fall back to port / interface
@@ -1822,6 +1823,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
           supportsSlider,
           opts: {
             ...profile.opts,
+            // Names from before the limit, or from imported configs, could be longer than the firmware holds
+            name: truncateProfileName(profile.opts.name ?? ''),
             supportsSlider,
             xinputOnWindows,
             ps4OrPs5Mode,

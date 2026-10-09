@@ -105,6 +105,7 @@ import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { proto } from '@/components/SettingsContext/config';
+import { truncateProfileName } from '@/components/SettingsContext/profileName';
 import {
   DeviceStatus,
   isDeviceAssigned,
@@ -7651,7 +7652,10 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             value={profile.opts.name}
             onChange={(e) =>
               updateProfile(
-                { ...profile, opts: { ...profile.opts, name: e.currentTarget.value } },
+                {
+                  ...profile,
+                  opts: { ...profile.opts, name: truncateProfileName(e.currentTarget.value) },
+                },
                 profileIdx
               )
             }

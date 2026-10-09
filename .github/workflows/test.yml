@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Only the top level Santroller submodule is needed, for the .proto files used by build_proto
+          submodules: true
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Generate protobuf modules
+        run: yarn build_proto
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Unit tests
+        run: yarn test:unit
