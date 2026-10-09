@@ -381,6 +381,8 @@ export interface ConfigState {
   configModified: boolean;
   bluetoothStates: proto.IBluetoothPairingState[];
   tlvEntries: proto.IBluetoothTlvEntry[];
+  // Guitar Hero Arcade cabinet side the device saved for itself, written back untouched
+  ghArcadeSide: number | null;
   missingStaticFirmware: boolean;
   needsUf2Update: boolean;
   // What couldn't be carried over when a Santroller 1 config was imported
@@ -563,6 +565,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     syncInputs: config.syncCalibrations || false,
     bluetoothStates: aux.bluetoothStates ?? [],
     tlvEntries: aux.tlvEntries ?? [],
+    ghArcadeSide: aux.ghArcadeSide ?? null,
     missingStaticFirmware: false,
     needsUf2Update: false,
     legacyImportWarnings: [],
@@ -1876,6 +1879,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         toggleStates,
         bluetoothStates: state.bluetoothStates,
         tlvEntries: state.tlvEntries,
+        ghArcadeSide: state.ghArcadeSide,
       };
       const bufferMain = proto.Config.encode(config).finish();
       const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
@@ -1937,6 +1941,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         set((state) => {
           state.bluetoothStates = aux.bluetoothStates ?? [];
           state.tlvEntries = aux.tlvEntries ?? [];
+          state.ghArcadeSide = aux.ghArcadeSide ?? null;
           state.refreshingBluetooth = false;
         });
       } catch (e) {
