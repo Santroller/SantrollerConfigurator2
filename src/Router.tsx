@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthPage } from './pages/Auth.page';
 import { CommercialToolPage } from './pages/Commercial';
+import { CompatibilityPage } from './pages/Compatibility.page';
 import { ConnectPage } from './pages/Connect.page';
 import { DebugPage } from './pages/Debug.page';
 import { DevicesPage } from './pages/Devices.page';
@@ -10,6 +11,7 @@ import { InputsPage } from './pages/Inputs.page';
 import { LabelsPage } from './pages/Labels.page';
 import { PeripheralsPage } from './pages/Peripherals.page';
 import { SetupPage } from './pages/Setup.page';
+import { SupportedHardwarePage } from './pages/SupportedHardware.page';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +29,22 @@ const router = createBrowserRouter([
   {
     path: '/guide',
     element: <GuideCatalogPage />,
+  },
+  {
+    path: '/supported-hardware',
+    element: <SupportedHardwarePage />,
+  },
+  {
+    path: '/hardware',
+    element: <SupportedHardwarePage />,
+  },
+  {
+    path: '/compatibility',
+    element: <CompatibilityPage />,
+  },
+  {
+    path: '/emulation-modes',
+    element: <CompatibilityPage />,
   },
   {
     path: '/devices',

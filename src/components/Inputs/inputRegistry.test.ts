@@ -4,11 +4,13 @@ import {
   createSlotInput,
   getAssignmentSlotIds,
   getAssignmentTriggerIds,
+  getJoybusInputFilters,
   getProfileSlotForInput,
   getProfileSlotKey,
   getProfileSlotLabel,
   getProfileSlots,
   getPS2InputFilters,
+  getSNESInputFilters,
   isDrumInput,
   isSelectablePS2Axis,
   isSelectableWiiAxis,
@@ -70,6 +72,42 @@ describe('PS2 input choices by controller type', () => {
     // pressure axes stay hidden for new mappings even on a DS2
     expect(filters.axis('PS2AxisDualshock2Cross')).toBe(false);
     expect(filters.button('PS2ButtonMouseLeft')).toBe(false);
+  });
+});
+
+describe('SNES input choices by controller type', () => {
+  it('offers everything until a controller is detected', () => {
+    const filters = getSNESInputFilters(proto.SNESControllerType.SNESControllerNone);
+    expect(filters.button('SNESButtonX')).toBe(true);
+    expect(filters.button('SNESButtonMouseLeft')).toBe(true);
+    expect(filters.axis('SNESAxisMouseX')).toBe(true);
+  });
+
+  it('only offers the NES buttons for a NES pad', () => {
+    const filters = getSNESInputFilters(proto.SNESControllerType.SNESControllerNES);
+    expect(filters.button('SNESButtonA')).toBe(true);
+    expect(filters.button('SNESButtonX')).toBe(false);
+    expect(filters.axis('SNESAxisMouseX')).toBe(false);
+    expect(filters.button('SNESButtonX', 'SNESButtonX')).toBe(true);
+  });
+
+  it('only offers the mouse inputs for a SNES mouse', () => {
+    const filters = getSNESInputFilters(proto.SNESControllerType.SNESControllerMouse);
+    expect(filters.button('SNESButtonMouseRight')).toBe(true);
+    expect(filters.button('SNESButtonB')).toBe(false);
+    expect(filters.axis('SNESAxisMouseY')).toBe(true);
+  });
+});
+
+describe('Joybus input choices by controller type', () => {
+  it('hides the buttons the detected controller does not have', () => {
+    const n64 = getJoybusInputFilters(proto.JoybusControllerType.JoybusControllerN64);
+    expect(n64.button('JoybusButtonX')).toBe(false);
+    expect(n64.button('JoybusButtonCUp')).toBe(true);
+    const gc = getJoybusInputFilters(proto.JoybusControllerType.JoybusControllerGameCube);
+    expect(gc.button('JoybusButtonX')).toBe(true);
+    expect(gc.button('JoybusButtonCUp')).toBe(false);
+    expect(gc.button('JoybusButtonCUp', 'JoybusButtonCUp')).toBe(true);
   });
 });
 

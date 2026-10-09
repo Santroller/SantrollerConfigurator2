@@ -91,10 +91,12 @@ import {
   getAssignmentTriggerIds,
   getHostSourceType,
   getInputDeviceId,
+  getJoybusInputFilters,
   getProfileSlotForInput,
   getProfileSlotLabel,
   getProfileSlots,
   getPS2InputFilters,
+  getSNESInputFilters,
   isAnalogInput,
   isDrumInput,
   isSelectableWiiAxis,
@@ -1621,6 +1623,22 @@ function SantrollerLabel({
           return <Text>{t(`inputs.${proto.PS2AxisType[input.ps2Axis.axis]}`)}</Text>;
         }
         return null;
+      case 'snes':
+        if (input.snesButton?.button != null) {
+          return <Text>{t(`inputs.${proto.SNESButtonType[input.snesButton.button]}`)}</Text>;
+        }
+        if (input.snesAxis?.axis != null) {
+          return <Text>{t(`inputs.${proto.SNESAxisType[input.snesAxis.axis]}`)}</Text>;
+        }
+        return null;
+      case 'joybus':
+        if (input.joybusButton?.button != null) {
+          return <Text>{t(`inputs.${proto.JoybusButtonType[input.joybusButton.button]}`)}</Text>;
+        }
+        if (input.joybusAxis?.axis != null) {
+          return <Text>{t(`inputs.${proto.JoybusAxisType[input.joybusAxis.axis]}`)}</Text>;
+        }
+        return null;
       case 'wii':
         if (input.wiiButton?.button != null) {
           return <Text>{t(`inputs.${proto.WiiButtonType[input.wiiButton.button]}`)}</Text>;
@@ -1646,6 +1664,18 @@ function SantrollerLabel({
   }
   if (input.wiiAxis?.axis != null) {
     return <Text>{t(`inputs.${proto.WiiAxisType[input.wiiAxis.axis]}`)}</Text>;
+  }
+  if (input.snesButton?.button != null) {
+    return <Text>{t(`inputs.${proto.SNESButtonType[input.snesButton.button]}`)}</Text>;
+  }
+  if (input.snesAxis?.axis != null) {
+    return <Text>{t(`inputs.${proto.SNESAxisType[input.snesAxis.axis]}`)}</Text>;
+  }
+  if (input.joybusButton?.button != null) {
+    return <Text>{t(`inputs.${proto.JoybusButtonType[input.joybusButton.button]}`)}</Text>;
+  }
+  if (input.joybusAxis?.axis != null) {
+    return <Text>{t(`inputs.${proto.JoybusAxisType[input.joybusAxis.axis]}`)}</Text>;
   }
   if (input.gpio) {
     const labelsText = getLabel(t, Object.values(guiDevices), [], input.gpio.pin, true, false);
@@ -1798,6 +1828,14 @@ function SantrollerInput({
       slotTypes.length ? slotTypes : device?.ps2CntType != null ? [device.ps2CntType] : []
     );
   }, [matchingSlot, device?.ps2CntType]);
+  const snesInputFilters = useMemo(
+    () => getSNESInputFilters(device?.snesCntType),
+    [device?.snesCntType]
+  );
+  const joybusInputFilters = useMemo(
+    () => getJoybusInputFilters(device?.joybusCntType),
+    [device?.joybusCntType]
+  );
 
   const effectiveUsbType = input.midi ? proto.SubType.Midi : (matchingSlot?.item.usbType ?? type);
 
@@ -2525,6 +2563,61 @@ function SantrollerInput({
             dispatch2={(ps2ButtonVal) =>
               dispatch({
                 ps2Button: { button: ps2ButtonVal as proto.PS2ButtonType, deviceid: deviceId },
+              })
+            }
+          />
+        </>
+      )}
+      {(device?.type === 'snes' || input.snesAxis || input.snesButton) && (
+        <>
+          <DropdownOutputBox
+            title="input"
+            e={proto.SNESAxisType}
+            filterFirstEnum={snesInputFilters.axis}
+            e2={proto.SNESButtonType}
+            filterSecondEnum={snesInputFilters.button}
+            val={input.snesAxis?.axis}
+            val2={input.snesButton?.button}
+            label="inputs"
+            legendMode={legendMode}
+            type={type}
+            dispatch={(snesAxisVal) =>
+              dispatch({
+                snesAxis: { axis: snesAxisVal as proto.SNESAxisType, deviceid: deviceId },
+              })
+            }
+            dispatch2={(snesButtonVal) =>
+              dispatch({
+                snesButton: { button: snesButtonVal as proto.SNESButtonType, deviceid: deviceId },
+              })
+            }
+          />
+        </>
+      )}
+      {(device?.type === 'joybus' || input.joybusAxis || input.joybusButton) && (
+        <>
+          <DropdownOutputBox
+            title="input"
+            e={proto.JoybusAxisType}
+            filterFirstEnum={joybusInputFilters.axis}
+            e2={proto.JoybusButtonType}
+            filterSecondEnum={joybusInputFilters.button}
+            val={input.joybusAxis?.axis}
+            val2={input.joybusButton?.button}
+            label="inputs"
+            legendMode={legendMode}
+            type={type}
+            dispatch={(joybusAxisVal) =>
+              dispatch({
+                joybusAxis: { axis: joybusAxisVal as proto.JoybusAxisType, deviceid: deviceId },
+              })
+            }
+            dispatch2={(joybusButtonVal) =>
+              dispatch({
+                joybusButton: {
+                  button: joybusButtonVal as proto.JoybusButtonType,
+                  deviceid: deviceId,
+                },
               })
             }
           />
@@ -5228,9 +5321,18 @@ const HostProfileAssignmentTypes: ProfileAssignmentTypes[] = [
 const DeviceProfileAssignmentTypes: ProfileAssignmentTypes[] = [
   'ps2Emulation',
   'wiiEmulation',
+  'joybusEmulation',
+  'snesEmulation',
   'bluetooth',
   'consoleType',
 ];
+type EmulationMode =
+  | 'consoleType'
+  | 'bluetooth'
+  | 'ps2Emulation'
+  | 'wiiEmulation'
+  | 'joybusEmulation'
+  | 'snesEmulation';
 const AllProfileAssignmentTypes: ProfileAssignmentTypes[] = OtherAssignmentTypes.concat(
   HostProfileAssignmentTypes
 ).concat(DeviceProfileAssignmentTypes);
@@ -5478,6 +5580,12 @@ export function SantrollerAssignment({
                 break;
               case 'wiiEmulation':
                 dispatch({ wiiEmulation: {} });
+                break;
+              case 'joybusEmulation':
+                dispatch({ joybusEmulation: {} });
+                break;
+              case 'snesEmulation':
+                dispatch({ snesEmulation: {} });
                 break;
               case 'consoleType':
                 dispatch({
@@ -6171,6 +6279,8 @@ function SantrollerAssignmentList({
   const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
   const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
   const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
+  const hasJoybusEmu = Object.values(deviceStatus).some((d) => d.type === 'joybusEmulation');
+  const hasSnesEmu = Object.values(deviceStatus).some((d) => d.type === 'snesEmulation');
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
   const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
@@ -6343,14 +6453,18 @@ function SantrollerAssignmentList({
     }
   };
 
-  const currentEmulMode: 'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation' =
+  const currentEmulMode: EmulationMode =
     emulationItem?.bluetooth != null
       ? 'bluetooth'
       : emulationItem?.ps2Emulation != null
         ? 'ps2Emulation'
         : emulationItem?.wiiEmulation != null
           ? 'wiiEmulation'
-          : 'consoleType';
+          : emulationItem?.joybusEmulation != null
+            ? 'joybusEmulation'
+            : emulationItem?.snesEmulation != null
+              ? 'snesEmulation'
+              : 'consoleType';
 
   const currentUsbOption: 'auto' | 'forced' | 'specific' =
     emulationItem?.consoleType?.forcedType != null
@@ -6373,6 +6487,12 @@ function SantrollerAssignmentList({
       : []),
     ...(hasPsxEmu ? [{ label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' }] : []),
     ...(hasWiiEmu ? [{ label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' }] : []),
+    ...(hasJoybusEmu
+      ? [{ label: t('assignments.emulation_mode.joybus'), value: 'joybusEmulation' }]
+      : []),
+    ...(hasSnesEmu
+      ? [{ label: t('assignments.emulation_mode.snes'), value: 'snesEmulation' }]
+      : []),
   ];
 
   const summaryText = useMemo(() => {
@@ -6391,6 +6511,10 @@ function SantrollerAssignmentList({
       emul = t('assignments.emulation_mode.ps2');
     } else if (emulationItem?.wiiEmulation) {
       emul = t('assignments.emulation_mode.wii');
+    } else if (emulationItem?.joybusEmulation) {
+      emul = t('assignments.emulation_mode.joybus');
+    } else if (emulationItem?.snesEmulation) {
+      emul = t('assignments.emulation_mode.snes');
     } else {
       emul = t('assignments.no_emulation');
     }
@@ -6611,6 +6735,12 @@ function SantrollerAssignmentList({
                       break;
                     case 'wiiEmulation':
                       updateEmulation({ wiiEmulation: {} });
+                      break;
+                    case 'joybusEmulation':
+                      updateEmulation({ joybusEmulation: {} });
+                      break;
+                    case 'snesEmulation':
+                      updateEmulation({ snesEmulation: {} });
                       break;
                   }
                 }}
@@ -6966,6 +7096,8 @@ function BlankProfileWizard({
   const hasBluetooth = Object.values(deviceStatus).some((d) => d.type === 'bt');
   const hasWiiEmu = Object.values(deviceStatus).some((d) => d.type === 'wiiEmulation');
   const hasPsxEmu = Object.values(deviceStatus).some((d) => d.type === 'psxEmulation');
+  const hasJoybusEmu = Object.values(deviceStatus).some((d) => d.type === 'joybusEmulation');
+  const hasSnesEmu = Object.values(deviceStatus).some((d) => d.type === 'snesEmulation');
   const hasWii = Object.values(deviceStatus).some((d) => d.type === 'wii');
   const hasPsx = Object.values(deviceStatus).some((d) => d.type === 'psx');
   const hasUsbHost = Object.values(deviceStatus).some((d) => d.type === 'usbHost');
@@ -6991,16 +7123,18 @@ function BlankProfileWizard({
   );
 
   // Step 1: Target Connection
-  const [currentEmulMode, setCurrentEmulMode] = useState<
-    'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation'
-  >(
+  const [currentEmulMode, setCurrentEmulMode] = useState<EmulationMode>(
     initialEmul?.bluetooth != null
       ? 'bluetooth'
       : initialEmul?.ps2Emulation != null
         ? 'ps2Emulation'
         : initialEmul?.wiiEmulation != null
           ? 'wiiEmulation'
-          : 'consoleType'
+          : initialEmul?.joybusEmulation != null
+            ? 'joybusEmulation'
+            : initialEmul?.snesEmulation != null
+              ? 'snesEmulation'
+              : 'consoleType'
   );
   const [usbMode, setUsbMode] = useState<'auto' | 'forced' | 'specific'>(
     initialEmul?.consoleType?.forcedType != null
@@ -7085,6 +7219,12 @@ function BlankProfileWizard({
       : []),
     ...(hasPsxEmu ? [{ label: t('assignments.emulation_mode.ps2'), value: 'ps2Emulation' }] : []),
     ...(hasWiiEmu ? [{ label: t('assignments.emulation_mode.wii'), value: 'wiiEmulation' }] : []),
+    ...(hasJoybusEmu
+      ? [{ label: t('assignments.emulation_mode.joybus'), value: 'joybusEmulation' }]
+      : []),
+    ...(hasSnesEmu
+      ? [{ label: t('assignments.emulation_mode.snes'), value: 'snesEmulation' }]
+      : []),
   ];
 
   const handleApply = () => {
@@ -7110,6 +7250,12 @@ function BlankProfileWizard({
         break;
       case 'wiiEmulation':
         finalAssignments.push({ wiiEmulation: {} });
+        break;
+      case 'joybusEmulation':
+        finalAssignments.push({ joybusEmulation: {} });
+        break;
+      case 'snesEmulation':
+        finalAssignments.push({ snesEmulation: {} });
         break;
     }
 
@@ -7260,11 +7406,7 @@ function BlankProfileWizard({
               fullWidth
               size="xs"
               value={currentEmulMode}
-              onChange={(val) =>
-                setCurrentEmulMode(
-                  val as 'consoleType' | 'bluetooth' | 'ps2Emulation' | 'wiiEmulation'
-                )
-              }
+              onChange={(val) => setCurrentEmulMode(val as EmulationMode)}
               data={targetOptions}
             />
           </Input.Wrapper>

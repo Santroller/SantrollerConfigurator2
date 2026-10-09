@@ -112,6 +112,62 @@ export function getPS2InputFilters(types: proto.PS2ControllerType[]) {
   };
 }
 
+const NES_BUTTONS = [
+  'SNESButtonB',
+  'SNESButtonA',
+  'SNESButtonSelect',
+  'SNESButtonStart',
+  'SNESButtonDpadUp',
+  'SNESButtonDpadDown',
+  'SNESButtonDpadLeft',
+  'SNESButtonDpadRight',
+];
+
+// Which SNES inputs the firmware can actually read for each controller type
+function snesInputsForType(type: proto.SNESControllerType): { axes: string[]; buttons: string[] } {
+  const T = proto.SNESControllerType;
+  const names = (e: object) => Object.keys(e).filter((key) => isNaN(Number(key)));
+  switch (type) {
+    case T.SNESControllerNES:
+      return { axes: [], buttons: NES_BUTTONS };
+    case T.SNESControllerSNES:
+      return {
+        axes: [],
+        buttons: names(proto.SNESButtonType).filter((key) => !key.startsWith('SNESButtonMouse')),
+      };
+    case T.SNESControllerMouse:
+      return {
+        axes: names(proto.SNESAxisType),
+        buttons: ['SNESButtonMouseLeft', 'SNESButtonMouseRight'],
+      };
+    default:
+      return { axes: names(proto.SNESAxisType), buttons: names(proto.SNESButtonType) };
+  }
+}
+
+// Filters for the SNES input dropdowns, everything is offered until a controller is detected
+export function getSNESInputFilters(type?: proto.SNESControllerType) {
+  const { axes, buttons } = snesInputsForType(type ?? proto.SNESControllerType.SNESControllerNone);
+  return {
+    axis: (key: string, selected?: string) => key === selected || axes.includes(key),
+    button: (key: string, selected?: string) => key === selected || buttons.includes(key),
+  };
+}
+
+// X/Y only exist on a GameCube controller, and the C buttons only on an N64 controller
+export function getJoybusInputFilters(type?: proto.JoybusControllerType) {
+  const hidden =
+    type === proto.JoybusControllerType.JoybusControllerN64
+      ? ['JoybusButtonX', 'JoybusButtonY']
+      : type === proto.JoybusControllerType.JoybusControllerGameCube
+        ? ['JoybusButtonCUp', 'JoybusButtonCDown', 'JoybusButtonCLeft', 'JoybusButtonCRight']
+        : [];
+  return {
+    axis: () => true,
+    button: (key: string, selected?: string) => key === selected || !hidden.includes(key),
+  };
+}
+
 export function isSelectableWiiAxis(key: string, selected?: string): boolean {
   return (
     (key !== 'WiiAxisClassicLeftTrigger' && key !== 'WiiAxisClassicRightTrigger') ||
@@ -184,6 +240,10 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   btButton: { usesDevice: hasDevice((input) => input.btButton) },
   ps2Axis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.ps2Axis) },
   ps2Button: { usesDevice: hasDevice((input) => input.ps2Button) },
+  snesAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.snesAxis) },
+  snesButton: { usesDevice: hasDevice((input) => input.snesButton) },
+  joybusAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.joybusAxis) },
+  joybusButton: { usesDevice: hasDevice((input) => input.joybusButton) },
   midi: {
     isAnalog: (input) =>
       !!(
@@ -249,6 +309,22 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
         ? { ps2Axis: { axis: proto.PS2AxisType.PS2AxisLeftStickX, deviceid } }
         : button
           ? { ps2Button: { button: proto.PS2ButtonType.PS2ButtonCross, deviceid } }
+          : undefined,
+  },
+  snes: {
+    create: (deviceid, { axis, button }) =>
+      axis
+        ? { snesAxis: { axis: proto.SNESAxisType.SNESAxisMouseX, deviceid } }
+        : button
+          ? { snesButton: { button: proto.SNESButtonType.SNESButtonB, deviceid } }
+          : undefined,
+  },
+  joybus: {
+    create: (deviceid, { axis, button }) =>
+      axis
+        ? { joybusAxis: { axis: proto.JoybusAxisType.JoybusAxisStickX, deviceid } }
+        : button
+          ? { joybusButton: { button: proto.JoybusButtonType.JoybusButtonA, deviceid } }
           : undefined,
   },
   ads1115: { create: (deviceid) => ({ ads1115: { channel: 0, deviceid } }) },
@@ -463,6 +539,8 @@ export function getAssignmentTriggerIds(assignments: proto.IProfileAssignmentInf
       item.bluetooth != null ||
       item.ps2Emulation != null ||
       item.wiiEmulation != null ||
+      item.joybusEmulation != null ||
+      item.snesEmulation != null ||
       getHostSourceType(item) != null ||
       hasInputTrigger;
     if (hasTrigger) {

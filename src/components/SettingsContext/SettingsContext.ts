@@ -209,6 +209,8 @@ export class DeviceStatus {
     this.usbDevices = {};
     this.btDevices = {};
     this.ps2CntType = proto.PS2ControllerType.PS2ControllerTypeUnknown;
+    this.snesCntType = proto.SNESControllerType.SNESControllerNone;
+    this.joybusCntType = proto.JoybusControllerType.JoybusControllerNone;
     this.cycleState = 0;
     this.toggleState = false;
     this.crkdDrumCalibration = {
@@ -288,6 +290,8 @@ export class DeviceStatus {
   parentId?: string;
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
+  snesCntType: proto.SNESControllerType;
+  joybusCntType: proto.JoybusControllerType;
   usbDevices: { [key: number]: proto.IUsbDeviceHotplugEvent };
   btDevices: { [key: number]: proto.IBtDeviceHotplugEvent };
   crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType]: proto.ICrkdCalibrationData };
@@ -1235,6 +1239,20 @@ export const useConfigStore = create<ConfigState & Actions>()(
           set((state) => {
             if (deviceEvent.ps2!.id in state.deviceStatus) {
               state.deviceStatus[deviceEvent.ps2!.id].ps2CntType = deviceEvent.ps2!.type;
+            }
+          });
+        }
+        if (deviceEvent.snes) {
+          set((state) => {
+            if (deviceEvent.snes!.id in state.deviceStatus) {
+              state.deviceStatus[deviceEvent.snes!.id].snesCntType = deviceEvent.snes!.type;
+            }
+          });
+        }
+        if (deviceEvent.joybus) {
+          set((state) => {
+            if (deviceEvent.joybus!.id in state.deviceStatus) {
+              state.deviceStatus[deviceEvent.joybus!.id].joybusCntType = deviceEvent.joybus!.type;
             }
           });
         }

@@ -41,6 +41,7 @@
     "wiiEmulation": "Wii Extension Emulation",
     "psxEmulation": "PS1/PS2 Controller Emulation",
     "joybusEmulation": "N64 / Gamecube Controller Emulation",
+    "snesEmulation": "NES / SNES Controller Emulation",
     "gpio": "GPIO",
     "gpio_analog": "(Analog)",
     "gpio_digital": "(Digital)",
@@ -95,7 +96,9 @@
     "debug": "Debug",
     "profiles": "Profiles",
     "addProfile": "Add profile",
-    "commercial": "Commercial Tooling"
+    "commercial": "Commercial Tooling",
+    "supportedHardware": "Supported Hardware",
+    "compatibility": "Console Compatibility"
   },
   "colorScheme": {
     "light": "Light",
@@ -511,6 +514,44 @@
     "PS2AxisDualshock2R1": "R1 (Pressure)",
     "PS2AxisDualshock2L2": "L2 (Pressure)",
     "PS2AxisDualshock2R2": "R2 (Pressure)",
+    "SNESButtonB": "B",
+    "SNESButtonY": "Y",
+    "SNESButtonSelect": "Select",
+    "SNESButtonStart": "Start",
+    "SNESButtonDpadUp": "D-pad Up",
+    "SNESButtonDpadDown": "D-pad Down",
+    "SNESButtonDpadLeft": "D-pad Left",
+    "SNESButtonDpadRight": "D-pad Right",
+    "SNESButtonA": "A",
+    "SNESButtonX": "X",
+    "SNESButtonL": "L",
+    "SNESButtonR": "R",
+    "SNESButtonMouseLeft": "Mouse Left Click",
+    "SNESButtonMouseRight": "Mouse Right Click",
+    "SNESAxisMouseX": "Mouse X",
+    "SNESAxisMouseY": "Mouse Y",
+    "JoybusButtonA": "A",
+    "JoybusButtonB": "B",
+    "JoybusButtonX": "X (GameCube)",
+    "JoybusButtonY": "Y (GameCube)",
+    "JoybusButtonStart": "Start",
+    "JoybusButtonZ": "Z",
+    "JoybusButtonL": "L",
+    "JoybusButtonR": "R",
+    "JoybusButtonDpadUp": "D-pad Up",
+    "JoybusButtonDpadDown": "D-pad Down",
+    "JoybusButtonDpadLeft": "D-pad Left",
+    "JoybusButtonDpadRight": "D-pad Right",
+    "JoybusButtonCUp": "C Up (N64)",
+    "JoybusButtonCDown": "C Down (N64)",
+    "JoybusButtonCLeft": "C Left (N64)",
+    "JoybusButtonCRight": "C Right (N64)",
+    "JoybusAxisStickX": "Control Stick X",
+    "JoybusAxisStickY": "Control Stick Y",
+    "JoybusAxisCStickX": "C Stick X (N64: C buttons)",
+    "JoybusAxisCStickY": "C Stick Y (N64: C buttons)",
+    "JoybusAxisLeftTrigger": "Left Trigger (N64: L button)",
+    "JoybusAxisRightTrigger": "Right Trigger (N64: R button)",
     "actions": "Actions",
     "action_hold_hint": "Actions default to a held input, so they need holding down for a moment and a stray press does nothing."
   },
@@ -658,10 +699,37 @@
   "snes": {
     "clock_pin": "Clock Pin",
     "data_pin": "Data Pin",
-    "latch_pin": "Latch Pin"
+    "latch_pin": "Latch Pin",
+    "devices": {
+      "SNESControllerNone": "Disconnected",
+      "SNESControllerSNES": "SNES Controller",
+      "SNESControllerNES": "NES Controller",
+      "SNESControllerMouse": "SNES Mouse"
+    }
   },
   "joybus": {
-    "data_pin": "Data Pin"
+    "data_pin": "Data Pin",
+    "devices": {
+      "JoybusControllerNone": "Disconnected",
+      "JoybusControllerN64": "N64 Controller",
+      "JoybusControllerGameCube": "GameCube Controller"
+    }
+  },
+  "joybusEmulation": {
+    "console": {
+      "label": "Console",
+      "description": "Which console this is plugged into",
+      "gamecube": "GameCube",
+      "n64": "N64"
+    }
+  },
+  "snesEmulation": {
+    "console": {
+      "label": "Console",
+      "description": "Which console this is plugged into",
+      "snes": "SNES",
+      "nes": "NES"
+    }
   },
   "battery": {
     "level": "Battery: {{level}}%",
@@ -1068,7 +1136,9 @@
       "usb": "USB",
       "bluetooth": "Bluetooth",
       "ps2": "PS1/2 Port",
-      "wii": "Wii Extension"
+      "wii": "Wii Extension",
+      "joybus": "GameCube / N64 Port",
+      "snes": "SNES / NES Port"
     },
     "usb_mode": {
       "label": "USB Console Mode",
@@ -1179,7 +1249,9 @@
     "consoleType": "USB Device Emulation",
     "bluetooth": "Bluetooth Device Emulation",
     "ps2Emulation": "PS1/2 Controller Emulation",
-    "wiiEmulation": "Wii Extension Emulation"
+    "wiiEmulation": "Wii Extension Emulation",
+    "joybusEmulation": "GameCube / N64 Controller Emulation",
+    "snesEmulation": "SNES / NES Controller Emulation"
   },
   "assignmentTypeDesc": {
     "wiiExt": "Match when a Wii Extension is plugged into this device",
@@ -1192,7 +1264,9 @@
     "consoleType": "Match when this device plugged into another via USB",
     "bluetooth": "Match when emulating a bluetooth device",
     "ps2Emulation": "Match when plugged into a PS1/PS2 via the PS controller port",
-    "wiiEmulation": "Match when plugged into a wii remote via the wii extension port"
+    "wiiEmulation": "Match when plugged into a wii remote via the wii extension port",
+    "joybusEmulation": "Match when plugged into a GameCube or N64 via the controller port",
+    "snesEmulation": "Match when plugged into a SNES or NES via the controller port"
   },
   "activation": {
     "usbType": "Usb Controller Type",

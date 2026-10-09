@@ -9,6 +9,8 @@ export type DeviceStatusSnapshot = {
   device: proto.IDevice;
   wiiExtType: proto.WiiExtType;
   ps2CntType: proto.PS2ControllerType;
+  snesCntType: proto.SNESControllerType;
+  joybusCntType: proto.JoybusControllerType;
   usbDevices: Record<number, unknown>;
 };
 
@@ -132,10 +134,14 @@ const deviceRegistry: DeviceDefinitions = {
       mappingMode: proto.MappingMode.PerInput,
     }),
     pins: ({ clockPin, latchPin, dataPin }) => [clockPin, latchPin, dataPin],
+    formatStatus: (status, pins) =>
+      `${status.snesCntType !== proto.SNESControllerType.SNESControllerNone ? i18next.t('connected_with_type', { type: i18next.t(`snes.devices.${proto.SNESControllerType[status.snesCntType]}`) }) : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
   },
   joybus: {
     create: () => ({ dataPin: -1, mappingMode: proto.MappingMode.PerInput }),
     pins: ({ dataPin }) => [dataPin],
+    formatStatus: (status, pins) =>
+      `${status.joybusCntType !== proto.JoybusControllerType.JoybusControllerNone ? i18next.t('connected_with_type', { type: i18next.t(`joybus.devices.${proto.JoybusControllerType[status.joybusCntType]}`) }) : i18next.t('disconnected', 'Disconnected')}, ${pins}`,
   },
   wiiEmulation: {
     create: () => ({ i2c: i2c(400000) }),
@@ -158,8 +164,17 @@ const deviceRegistry: DeviceDefinitions = {
     ],
   },
   joybusEmulation: {
-    create: () => ({ dataPin: -1 }),
+    create: () => ({ dataPin: -1, console: proto.JoybusConsole.JoybusConsoleGameCube }),
     pins: ({ dataPin }) => [dataPin],
+  },
+  snesEmulation: {
+    create: () => ({
+      clockPin: -1,
+      latchPin: -1,
+      dataPin: -1,
+      console: proto.SNESConsole.SNESConsoleSNES,
+    }),
+    pins: ({ clockPin, latchPin, dataPin }) => [clockPin, latchPin, dataPin],
   },
   peripheral: {
     create: () => ({ i2c: i2c(400000), address: 0x75 }),
@@ -270,6 +285,8 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'dmx',
   'psxEmulation',
   'wiiEmulation',
+  'joybusEmulation',
+  'snesEmulation',
   'xbox360Rf',
   'powerManagement',
   'adcBattery',

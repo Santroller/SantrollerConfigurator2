@@ -7,6 +7,7 @@ import {
   IconCopy,
   IconCpu,
   IconDeviceFloppy,
+  IconDeviceGamepad2,
   IconDeviceGamepad3,
   IconGuitarPick,
   IconMoon,
@@ -265,6 +266,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
             }}
             label={t('guides.navTitle', 'Build Guides & Docs')}
             leftSection={<IconGuitarPick size={16} stroke={1.5} />}
+          />
+          <NavLink
+            component={RouterNavLink}
+            to="/supported-hardware"
+            onClick={() => {
+              pollInputs(false);
+              nav('/supported-hardware');
+            }}
+            label={t('nav.supportedHardware', 'Supported Hardware')}
+            leftSection={<IconCpu size={16} stroke={1.5} />}
+          />
+          <NavLink
+            component={RouterNavLink}
+            to="/compatibility"
+            onClick={() => {
+              pollInputs(false);
+              nav('/compatibility');
+            }}
+            label={t('nav.compatibility', 'Console Compatibility')}
+            leftSection={<IconDeviceGamepad2 size={16} stroke={1.5} />}
           />
           {!connected && (
             <NavLink

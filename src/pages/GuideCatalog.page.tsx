@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { IconArrowRight, IconSearch } from '@tabler/icons-react';
+import { IconArrowRight, IconCpu, IconDeviceGamepad2, IconSearch } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
@@ -46,12 +46,39 @@ export function GuideCatalogPage() {
       <Container size="xl" px="md" pb="xl">
         {/* Header */}
         <Stack gap="xs" mb="lg">
-          <Title order={1} size="h2" fw={700}>
-            {t('guides.catalogTitle')}
-          </Title>
-          <Text size="sm" c="dimmed">
-            {t('guides.catalogSubtitle')}
-          </Text>
+          <Group justify="space-between" align="flex-start" wrap="wrap">
+            <div>
+              <Title order={1} size="h2" fw={700}>
+                {t('guides.catalogTitle')}
+              </Title>
+              <Text size="sm" c="dimmed">
+                {t('guides.catalogSubtitle')}
+              </Text>
+            </div>
+
+            <Group gap="xs">
+              <Button
+                variant="light"
+                size="xs"
+                color="blue"
+                component={Link}
+                to="/supported-hardware"
+                leftSection={<IconCpu size={14} />}
+              >
+                {t('nav.supportedHardware', 'Supported Hardware')}
+              </Button>
+              <Button
+                variant="light"
+                size="xs"
+                color="indigo"
+                component={Link}
+                to="/compatibility"
+                leftSection={<IconDeviceGamepad2 size={14} />}
+              >
+                {t('nav.compatibility', 'Console Compatibility')}
+              </Button>
+            </Group>
+          </Group>
         </Stack>
 
         {/* Filter & Search Bar */}

@@ -1613,7 +1613,9 @@ function SNESDevice({ id }: { id: string }) {
   const snes = device.snes;
   return (
     <DeviceCard
-      connected={status.connected}
+      connected={status.snesCntType !== proto.SNESControllerType.SNESControllerNone}
+      type={proto.SNESControllerType[status.snesCntType]}
+      type_prefix="snes.devices"
       title="devices.snes"
       image="covers/devices/snes.png"
       deleteDevice={() => deleteDevice(id)}
@@ -1657,7 +1659,9 @@ function JoybusDevice({ id }: { id: string }) {
   const joybus = device.joybus;
   return (
     <DeviceCard
-      connected={status.connected}
+      connected={status.joybusCntType !== proto.JoybusControllerType.JoybusControllerNone}
+      type={proto.JoybusControllerType[status.joybusCntType]}
+      type_prefix="joybus.devices"
       title="devices.joybus"
       image="covers/devices/joybus.png"
       deleteDevice={() => deleteDevice(id)}
@@ -2012,6 +2016,13 @@ function WiiEmulationDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+const joybusConsoles = [
+  {
+    label: 'joybusEmulation.console.gamecube',
+    value: proto.JoybusConsole.JoybusConsoleGameCube.toString(),
+  },
+  { label: 'joybusEmulation.console.n64', value: proto.JoybusConsole.JoybusConsoleN64.toString() },
+];
 function JoybusEmulationDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -2028,6 +2039,21 @@ function JoybusEmulationDevice({ id }: { id: string }) {
       image="covers/devices/joybus.png"
       deleteDevice={() => deleteDevice(id)}
     >
+      <LabeledSegmentedControl
+        label="joybusEmulation.console.label"
+        description="joybusEmulation.console.description"
+        data={joybusConsoles}
+        value={(joybusEmulation.console ?? proto.JoybusConsole.JoybusConsoleGameCube).toString()}
+        dispatch={(value) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              joybusEmulation: { ...joybusEmulation, console: parseInt(value, 10) },
+            },
+            id
+          )
+        }
+      />
       <PinBox
         label="joybus.data_pin"
         pin={joybusEmulation.dataPin}
@@ -2038,6 +2064,59 @@ function JoybusEmulationDevice({ id }: { id: string }) {
             id
           )
         }
+      />
+    </DeviceCard>
+  );
+}
+const snesConsoles = [
+  { label: 'snesEmulation.console.snes', value: proto.SNESConsole.SNESConsoleSNES.toString() },
+  { label: 'snesEmulation.console.nes', value: proto.SNESConsole.SNESConsoleNES.toString() },
+];
+function SNESEmulationDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.snesEmulation) {
+    throw new Error('device null!');
+  }
+  const snesEmulation = device.snesEmulation;
+  const update = (changes: Partial<proto.ISNESEmulationDevice>) =>
+    updateDevice(
+      { deviceid: parseInt(id, 10), snesEmulation: { ...snesEmulation, ...changes } },
+      id
+    );
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.snesEmulation"
+      image="covers/devices/snes.png"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <LabeledSegmentedControl
+        label="snesEmulation.console.label"
+        description="snesEmulation.console.description"
+        data={snesConsoles}
+        value={snesEmulation.console.toString()}
+        dispatch={(value) => update({ console: parseInt(value, 10) })}
+      />
+      <PinBox
+        label="snes.clock_pin"
+        pin={snesEmulation.clockPin}
+        valid={AllPinsNamed}
+        dispatch={(clockPin) => update({ clockPin })}
+      />
+      <PinBox
+        label="snes.data_pin"
+        pin={snesEmulation.dataPin}
+        valid={AllPinsNamed}
+        dispatch={(dataPin) => update({ dataPin })}
+      />
+      <PinBox
+        label="snes.latch_pin"
+        pin={snesEmulation.latchPin}
+        valid={AllPinsNamed}
+        dispatch={(latchPin) => update({ latchPin })}
       />
     </DeviceCard>
   );
@@ -2531,6 +2610,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   wiiEmulation: WiiEmulationDevice,
   psxEmulation: PSXEmulationDevice,
   joybusEmulation: JoybusEmulationDevice,
+  snesEmulation: SNESEmulationDevice,
   peripheral: PeripheralDevice,
   ads1115: ADS1115Device,
   debug: DebugDevice,
