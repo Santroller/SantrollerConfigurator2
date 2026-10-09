@@ -696,12 +696,9 @@ export function CompatibilityPage() {
               </SimpleGrid>
 
               <Paper withBorder radius="md" p="lg">
-                <Title order={3} size="h4" mb="xs">
+                <Title order={3} size="h4" mb="md">
                   {t('compatibility.festival.steps.title')}
                 </Title>
-                <Text size="xs" c="dimmed" mb="md">
-                  {t('compatibility.festival.steps.subtitle')}
-                </Text>
 
                 <List type="ordered" size="xs" spacing="sm">
                   <List.Item>

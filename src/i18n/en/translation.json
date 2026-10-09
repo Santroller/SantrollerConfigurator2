@@ -1657,7 +1657,7 @@
     "sellerWarningTitle": "Note",
     "sellerWarning": "If you have purchased this device from a seller, it should already have Santroller on it, and you should be able to just use the Connect button. If for some reason you need to reset the device to factory settings, you should ask the Seller for a UF2 file instead of using the ones below, as the Seller can provie a UF2 that has everything set up already, while the UF2 files below are blank and have no configuration.",
     "missingDongleFirmwareTitle": "Xbox Wireless Dongle Firmware Missing",
-    "missingDongleFirmware": "Your device is missing the Xbox Wireless dongle firmware. This cannot be updated via OTA — you must reflash via UF2 to restore dongle support."
+    "missingDongleFirmware": "Your device is missing the Xbox Wireless dongle firmware. This can't be updated over OTA, so you'll need to reflash via UF2 to restore dongle support."
   },
   "labels": {
     "title": "Label",
@@ -1831,7 +1831,7 @@
           "intro": "The frets are simple mechanical or membrane switches that share a common ground wire and have individual signal wires for each color.",
           "pcbCaption": "Example neck PCB showing fret contacts and common ground trace",
           "howToWire": "How to Wire Frets",
-          "stepGround": "Identify Common Ground: If the neck cable or PCB is not labeled, inspect the neck PCB traces. One trace loops across all 5 fret switches—that is your Common Ground.",
+          "stepGround": "Identify Common Ground: If the neck cable or PCB is not labeled, inspect the neck PCB traces. The trace that loops across all 5 fret switches is your Common Ground.",
           "stepMultimeter": "Confirm with Multimeter: In continuity mode, touch one probe to common ground and the other to a fret wire. Pressing that fret should beep.",
           "stepSolderGround": "Solder Common Ground: Connect the common ground wire to any GND pin on the Raspberry Pi Pico (e.g., Pin 3 or Pin 8).",
           "stepSolderSignals": "Solder Fret Signals: Connect each colored fret signal wire to an unused digital GPIO pin. Our recommended standard uses:",
@@ -1869,8 +1869,8 @@
           "rbSoloIntro": "Stock Rock Band guitars with solo frets use a 7-wire harness: 5 fret signal lines, 1 upper fret common, and 1 solo fret common. Santroller scans this directly as a 5x2 Matrix across 5 fret signal columns (GP2-GP6) and 2 row outputs (GP14 Upper, GP15 Solo), giving you 10 independent frets with no trace cutting required.",
           "rbSoloMatrixTitle": "7-Wire Matrix Pin Connections",
           "rbSoloMatrixCols": "5 Fret Signal Columns: Green (GP2), Red (GP3), Yellow (GP4), Blue (GP5), Orange (GP6)",
-          "rbSoloMatrixUpperRow": "Upper Frets Common: GP14 (Pin 19) — Matrix Row 1",
-          "rbSoloMatrixSoloRow": "Solo Frets Common: GP15 (Pin 20) — Matrix Row 2",
+          "rbSoloMatrixUpperRow": "Upper Frets Common: GP14 (Pin 19), Matrix Row 1",
+          "rbSoloMatrixSoloRow": "Solo Frets Common: GP15 (Pin 20), Matrix Row 2",
           "rbSoloMatrixNoGnd": "Do not connect the neck common wires to Pico GND. The Pico drives them dynamically as matrix row outputs.",
           "rbSoloDriverTitle": "Rock Band 7-Wire Matrix Driver",
           "rbSoloDriverDesc": "Enable Santroller's built-in Matrix driver to configure GP2-GP6 as column inputs and GP14/GP15 as row outputs, mapping all 10 frets automatically.",
@@ -2470,18 +2470,18 @@
   },
   "supportedHardware": {
     "title": "Supported Hardware",
-    "subtitle": "Comprehensive catalog of all microcontrollers, USB host devices, sensors, and accessories compatible with Santroller.",
-    "alertTitle": "Universal Connectivity",
-    "alertBody": "Santroller turns a Raspberry Pi Pico (RP2040 or RP2350) into an all-in-one controller hub. You can wire custom buttons, switches, and LEDs directly to GPIO pins, read legacy console buses (like Wii and PS2 controllers), or use the secondary USB Host port to connect modern wireless dongles, authentic controllers, and authentication keys.",
-    "cloneWarningTitle": "Buyer Beware: Counterfeit AliExpress \"Pico W\" Clones",
-    "cloneWarningBody": "Many ultra-cheap \"Pico W\" boards sold on AliExpress and similar marketplaces are knock-offs that replace the official Infineon CYW43439 chip with an obsolete <strong>ESP8266 or ESP8285</strong> Wi-Fi microcontroller. The ESP8266/ESP8285 has <strong>NO Bluetooth hardware</strong> whatsoever. Because Santroller relies on Bluetooth Classic for wireless controllers and Wii Remote emulation, <strong>these clone boards will NEVER work with Santroller Bluetooth</strong>. Always ensure your board is an authentic Raspberry Pi Pico W / Pico 2 W featuring the official silver metal RF shield stamped with the Raspberry Pi logo.",
+    "subtitle": "Microcontrollers, USB devices, sensors and accessories that work with Santroller.",
+    "alertTitle": "What you can connect",
+    "alertBody": "Santroller runs on a Raspberry Pi Pico (RP2040 or RP2350). You can wire buttons, switches and LEDs straight to the GPIO pins, read Wii and PS2 controllers over their original connectors, or use the USB Host port for controllers, wireless dongles and auth devices.",
+    "cloneWarningTitle": "Watch out for fake \"Pico W\" boards",
+    "cloneWarningBody": "A lot of cheap \"Pico W\" boards on AliExpress and similar sites swap the CYW43439 wireless chip for an <strong>ESP8266 or ESP8285</strong>. Those chips are Wi-Fi only and have <strong>no Bluetooth</strong>, so <strong>they won't work with any Santroller Bluetooth features</strong>, including wireless controllers and Wii Remote emulation. A genuine Pico W / Pico 2 W has a silver metal shield over the wireless chip with the Raspberry Pi logo on it.",
     "catAll": "All Hardware",
     "catMcu": "Microcontrollers",
     "catUsb": "USB Host Devices",
     "catPeriph": "Instrument Peripherals",
     "catSensors": "Sensors & Switches",
     "catExpansion": "Expansion & ICs",
-    "catLighting": "LEDs & Stage Lights",
+    "catLighting": "LEDs & Lighting",
     "catBus": "Console Buses & MIDI",
     "catPower": "Power & Battery",
     "searchPlaceholder": "Search hardware...",
@@ -2490,673 +2490,656 @@
     "items": {
       "pico_rp2040": {
         "name": "Raspberry Pi Pico (RP2040)",
-        "interfaceType": "Native Microcontroller",
-        "badge": "Primary Recommended",
-        "description": "The standard dual-core RP2040 development board. Delivers sub-millisecond input polling, 26 exposed GPIOs, and full USB HID emulation.",
+        "interfaceType": "Microcontroller",
+        "badge": "Recommended",
+        "description": "The standard Raspberry Pi Pico. Polls inputs in under a millisecond and has 26 usable GPIO pins.",
         "details": [
-          "Dual ARM Cortex-M0+ cores @ 133 MHz (overclockable)",
-          "Sub-millisecond USB polling rate (up to 1000 Hz / 1 ms)",
-          "3 high-speed ADC pins for whammy, analog sticks, or piezo sensors",
-          "Programmable I/O (PIO) used for software USB host and console bus emulation"
+          "Dual Cortex-M0+ at 133 MHz",
+          "Up to 1000 Hz (1 ms) USB polling",
+          "3 ADC pins for whammy, analog sticks or piezos",
+          "PIO is used for the USB host port and console controller protocols"
         ],
-        "guideLabel": "Direct Pico Build Guide"
+        "guideLabel": "Direct Pico build guide"
       },
       "pico2_rp2350": {
         "name": "Raspberry Pi Pico 2 (RP2350)",
-        "interfaceType": "Native Microcontroller",
-        "badge": "Next-Gen Supported",
-        "description": "The newer dual-core ARM Cortex-M33 / Hazard3 RISC-V board with enhanced clock speeds, more memory, and faster PIO performance.",
+        "interfaceType": "Microcontroller",
+        "badge": "Supported",
+        "description": "The newer Pico, with faster cores, more RAM and improved PIO.",
         "details": [
-          "Dual Cortex-M33 @ 150 MHz with hardware floating point",
-          "Increased SRAM (520 KB) and upgraded PIO engines",
-          "Drop-in pin-compatible with Raspberry Pi Pico 1",
-          "Supported with native Santroller Pico 2 firmware builds"
+          "Dual Cortex-M33 at 150 MHz with hardware floating point",
+          "520 KB SRAM",
+          "Same pinout as the original Pico",
+          "Uses the Santroller Pico 2 firmware build"
         ]
       },
       "pico_w_wireless": {
         "name": "Raspberry Pi Pico W / Pico 2 W",
-        "interfaceType": "Wireless Bluetooth + USB",
-        "badge": "Wireless Supported",
-        "description": "Equipped with an authentic Infineon CYW43439 wireless chip for Bluetooth Classic and BLE. Can emulate a complete Nintendo Wii Remote natively!",
+        "interfaceType": "Bluetooth + USB",
+        "badge": "Wireless",
+        "description": "Adds a CYW43439 chip for Bluetooth Classic and BLE, which Santroller uses for wireless controllers and Wii Remote emulation.",
         "details": [
-          "Full Wii Remote Bluetooth Emulation: Connects directly to Nintendo Wii / Wii U for Guitar Hero, Band Hero, and DJ Hero with real game discs and zero console mods",
-          "Can be configured as a low-latency Bluetooth Transmitter inside wireless guitars",
-          "Can be paired with a second Pico acting as a console receiver",
-          "Supports battery power via VSYS with reverse-protection Schottky diode",
-          "WARNING: Beware of cheap AliExpress clone boards that use an ESP8285 / ESP8266 chip instead of the CYW43439! The ESP8285/8266 is Wi-Fi ONLY, lacks Bluetooth hardware entirely, and will NEVER work with Santroller Bluetooth.",
-          "Only purchase genuine Raspberry Pi Pico W / Pico 2 W boards with the official silver metal RF shield marked \"Raspberry Pi\"."
-        ]
+          "Wii Remote emulation: play Guitar Hero, Band Hero and DJ Hero on an unmodified Wii / Wii U with retail discs",
+          "Can be used as a low-latency Bluetooth transmitter inside a wireless guitar",
+          "Pairs with a second Pico acting as the receiver",
+          "Can run off a battery on VSYS, with a Schottky diode for reverse protection"
+        ],
+        "warning": "Some cheap AliExpress \"Pico W\" boards use an ESP8285 / ESP8266 instead of the CYW43439. Those are Wi-Fi only, have no Bluetooth, and won't work. Genuine boards have a silver metal shield over the wireless chip marked \"Raspberry Pi\"."
       },
       "rp2040_derivatives": {
         "name": "Waveshare RP2040-Zero / One / Plus",
-        "interfaceType": "Compact Microcontroller",
-        "badge": "Compact Form Factor",
-        "description": "Compact RP2040 boards suitable for tight guitar bodies, neck boards, or compact adapter enclosures.",
+        "interfaceType": "Microcontroller",
+        "badge": "Compact",
+        "description": "Small RP2040 boards for tight spaces like guitar bodies, neck boards or small adapter cases.",
         "details": [
-          "RP2040-Zero: Miniature board with Type-C USB and castellation pins",
-          "Includes onboard RGB LED (WS2812B) on pin GP16 on Zero models",
-          "Fully compatible with Pico 1 Santroller firmware"
+          "RP2040-Zero: tiny board with USB-C and castellated pins",
+          "Zero models have a WS2812B RGB LED on GP16",
+          "Uses the same firmware as the Pico"
         ]
       },
       "mcu_legacy_promicro": {
         "name": "SparkFun Pro Micro (ATmega32U4)",
-        "interfaceType": "Legacy Microcontroller (S1)",
-        "badge": "Legacy Firmware (S1)",
-        "description": "Supported by legacy Santroller 1 firmware (v10.1.188). Uses the 8-bit AVR ATmega32U4 with native USB client.",
+        "interfaceType": "Legacy microcontroller",
+        "badge": "Old firmware only",
+        "description": "Only supported by the old Santroller 1 firmware (v10.1.188). Uses the ATmega32U4, which has built-in USB.",
         "details": [
-          "Available in 5V (16 MHz) and 3.3V (8 MHz) variants",
-          "Supported on older Santroller v10 releases for basic directly-wired guitars",
-          "Lacks USB Host, Bluetooth, and advanced multi-bus capabilities of the RP2040/RP2350",
-          "Rescue procedure: Short RST to GND twice within 0.5s to enter bootloader",
-          "New builds should use the Raspberry Pi Pico 1 or 2 instead",
-          "Older firmware can be quite buggy and if things are not working they wont be fixed"
-        ]
+          "Comes in 5V (16 MHz) and 3.3V (8 MHz) versions",
+          "Fine for basic directly wired guitars",
+          "No USB host, Bluetooth or most of the newer peripheral support",
+          "To get into the bootloader, short RST to GND twice within half a second"
+        ],
+        "warning": "This board only runs the old Santroller 1 firmware, which has known bugs that won't be fixed. For new builds, use a Pico or Pico 2 instead."
       },
       "mcu_legacy_uno_mega": {
         "name": "Arduino Uno R3 & Mega 2560 (ATmega16U2)",
-        "interfaceType": "Legacy Microcontroller (S1)",
-        "badge": "Legacy Firmware (S1)",
-        "description": "Supported by legacy Santroller 1 firmware (v10.1.188) via DFU flashing on boards with authentic ATmega16U2 USB co-processors.",
+        "interfaceType": "Legacy microcontroller",
+        "badge": "Old firmware only",
+        "description": "Only supported by the old Santroller 1 firmware (v10.1.188), flashed over DFU. The board needs a genuine ATmega16U2 USB chip.",
         "details": [
-          "Requires authentic 16U2 co-processor (CH340/FTDI clones are NOT supported)",
-          "Legacy dual-MCU architecture (co-processor handles USB while main MCU reads pins)",
-          "Rescue procedure: Short the 2x3 ICSP header pins near the USB port to enter DFU mode",
-          "New builds should use the Raspberry Pi Pico 1 or 2 instead",
-          "Older firmware can be quite buggy and if things are not working they wont be fixed"
-        ]
+          "Boards with a CH340 or FTDI USB chip won't work",
+          "The 16U2 handles USB while the main chip reads the inputs",
+          "To get into DFU mode, short the two ICSP pins nearest the USB port"
+        ],
+        "warning": "This board only runs the old Santroller 1 firmware, which has known bugs that won't be fixed. For new builds, use a Pico or Pico 2 instead."
       },
       "bt_csr8510": {
         "name": "CSR8510 A10 Bluetooth USB Dongle",
-        "interfaceType": "USB Host Port",
-        "badge": "Plug-and-Play",
-        "description": "Standard Bluetooth 4.0 USB dongle with complete mask ROM firmware. Works out-of-the-box on Santroller USB Host without any firmware uploads, enabling Wii Remote emulation on standard Picos.",
+        "interfaceType": "USB Host port",
+        "badge": "Plug & Play",
+        "description": "A common Bluetooth 4.0 dongle that works without loading any firmware. Lets a regular Pico do Wii Remote emulation.",
         "details": [
-          "Enables full Wii Remote Bluetooth Emulation on standard (non-W) Raspberry Pi Pico boards for native Wii Guitar Hero / DJ Hero support",
-          "Fully ROM-based HCI H2 transport (no external firmware patch needed)",
-          "Connects wireless PS3, PS4, and generic Bluetooth controllers/instruments",
-          "Widely available and very low cost under brands like TP-Link, ORICO, and generic CSR"
+          "Adds Wii Remote emulation to a regular (non-W) Pico for Wii Guitar Hero and DJ Hero",
+          "Runs from ROM, no firmware patch needed",
+          "Connects PS3, PS4 and other Bluetooth controllers",
+          "Cheap and easy to find, sold under brands like TP-Link and ORICO"
         ]
       },
       "bt_broadcom_bcm": {
         "name": "Broadcom BCM20702 / BCM20703 Dongles",
-        "interfaceType": "USB Host Port",
-        "badge": "ROM HCI Supported",
-        "description": "Broadcom Bluetooth USB adapters are supported in native HCI mode without requiring runtime firmware patching for Bluetooth Classic, enabling wireless controller pairing and Wii Remote emulation.",
+        "interfaceType": "USB Host port",
+        "badge": "Limited support",
+        "description": "Many Broadcom Bluetooth dongles work using only the firmware built into the dongle, but it isn't guaranteed for every model.",
         "details": [
-          "Santroller initializes the BCM internal mask ROM directly over USB",
-          "Enables wireless Wii Remote Bluetooth emulation and wireless gamepad connectivity on USB Host",
-          "Useful for existing Broadcom USB dongles without needing Linux-style .hcd loading"
-        ]
+          "Santroller starts the dongle using its built-in ROM firmware, without loading a firmware patch",
+          "When it works, Wii Remote emulation and wireless controllers are supported",
+          "If you're buying a dongle, a CSR8510 is the more reliable choice"
+        ],
+        "warning": "Santroller doesn't have the firmware space to bundle all the necessary Broadcom firmware internally, so some dongles may not work or they may not be reliable."
       },
       "usb_ps_controllers": {
         "name": "PlayStation DualShock 3 / 4 & DualSense",
-        "interfaceType": "USB Host Port",
-        "badge": "Native USB Host",
-        "description": "Plug official DualShock 3, DualShock 4, or DualSense (PS5) controllers into your Santroller USB Host port for direct gaming or authentication.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Plug in a DualShock 3, DualShock 4 or DualSense to use as an input or for PS4 authentication.",
         "details": [
-          "Automatic descriptor parsing for all standard buttons, analog sticks, and triggers",
-          "DualShock 4 serves as an authentic security controller for PS4 console passthrough",
-          "Supports wired USB and wireless pairing via supported Bluetooth dongles"
+          "All buttons, sticks and triggers are read",
+          "A DualShock 4 can handle PS4 authentication",
+          "Works wired, or wirelessly through a supported Bluetooth dongle"
         ]
       },
       "usb_ps3_instruments": {
         "name": "PlayStation 3 Wireless Instruments & Dongles",
-        "interfaceType": "USB Host Port",
-        "badge": "Native Rhythm Dongles",
-        "description": "Connect original PS3 Guitar Hero and Rock Band wireless USB dongles directly into the Santroller USB host port.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Plug PS3 Guitar Hero and Rock Band wireless dongles into the USB Host port.",
         "details": [
-          "PS3 Guitar Hero Guitars (Kramer, Les Paul, World Tour, GH5 dongles)",
-          "PS3 Guitar Hero Drums & Rock Band Wireless Drums",
-          "PS3 Rock Band Wireless Guitars (Fender Stratocaster dongles)",
-          "PS3 DJ Hero Wireless Turntables & Wii U / PS3 Guitar Hero Live dongles"
+          "PS3 Guitar Hero guitars (Kramer, Les Paul, World Tour, GH5)",
+          "PS3 Guitar Hero and Rock Band drums",
+          "PS3 Rock Band Stratocaster guitars",
+          "PS3 DJ Hero turntables and Wii U / PS3 Guitar Hero Live dongles"
         ]
       },
       "usb_modern_guitars": {
         "name": "PS4 / PS5 / Xbox One Guitars",
-        "interfaceType": "USB Host Port",
-        "badge": "Modern Rhythm Controller",
-        "description": "Current-generation wireless guitar controllers are natively recognized via their USB wireless dongles.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Current-generation wireless guitars work through their USB dongles.",
         "details": [
-          "Supports PS4/PS5 wireless dongle versions",
-          "Supports Xbox One wireless dongle versions",
-          "Full fret detection, strum bar, whammy bar, and tilt sensors"
+          "PS4 / PS5 dongle versions",
+          "Xbox One dongle versions",
+          "Frets, strum, whammy and tilt"
         ]
       },
       "usb_x360_wired": {
         "name": "Xbox 360 Wired Controllers & Instruments",
-        "interfaceType": "USB Host Port",
-        "badge": "XInput Native",
-        "description": "Direct USB support for all standard wired Xbox 360 controllers and official rhythm instruments.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Wired Xbox 360 controllers and instruments.",
         "details": [
-          "Xbox 360 X-Plorer wired guitar (Guitar Hero 2)",
-          "Xbox 360 wired Rock Band Stratocaster and drums",
-          "Xbox 360 Big Button Scene It? wireless sensor and controllers",
-          "All standard official and third-party wired Xbox 360 gamepads"
+          "X-Plorer guitar (Guitar Hero 2)",
+          "Wired Rock Band Stratocaster and drums",
+          "Scene It? Big Button receiver and controllers",
+          "Official and third-party wired Xbox 360 controllers"
         ]
       },
       "usb_x360_wireless_receiver": {
         "name": "Xbox 360 Wireless Gaming Receiver",
-        "interfaceType": "USB Host Port",
-        "badge": "Multi-Device Wireless",
-        "description": "Connect an official or third-party Xbox 360 Wireless Gaming Receiver to connect up to 4 wireless Xbox 360 controllers or instruments.",
+        "interfaceType": "USB Host port",
+        "badge": "Wireless",
+        "description": "An Xbox 360 wireless receiver lets you connect up to 4 wireless Xbox 360 controllers or instruments.",
         "details": [
-          "Compatible with wireless Les Paul, GHWT Sunburst, GH5 guitars, and wireless drums",
-          "Supports official Microsoft PC receivers and clone/generic receiver dongles",
-          "Automatic device negotiation and wireless sync handling"
+          "Works with wireless Les Paul, World Tour and GH5 guitars and wireless drums",
+          "Official Microsoft receivers and clones both work",
+          "Handles syncing and connecting controllers"
         ]
       },
       "usb_xone_series": {
         "name": "Xbox One / Series Controllers & Dongles",
-        "interfaceType": "USB Host Port",
-        "badge": "Xbox One Native",
-        "description": "Wired Xbox One and Xbox Series X|S controllers are supported for input, and official or most third-party Xbox One gamepads can provide security authentication for Xbox One/Series consoles.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Wired Xbox One and Series controllers work as inputs, and official or most third-party Xbox One controllers can handle Xbox One / Series authentication.",
         "details": [
-          "Official and most third-party wired Xbox One / Series gamepads",
-          "Xbox One Guitar Hero Live wireless dongle",
-          "Passthrough authentication host for playing on Xbox One and Xbox Series X|S"
+          "Official and most third-party wired Xbox One / Series controllers",
+          "Xbox One Guitar Hero Live dongle",
+          "Authentication for Xbox One and Series consoles"
         ]
       },
       "usb_xone_wireless_adapter": {
         "name": "Xbox One Wireless PC Adapter (MediaTek MT76x2U)",
-        "interfaceType": "USB Host Port",
-        "badge": "Proprietary Wireless",
-        "description": "Santroller integrates a native driver for the official Microsoft Xbox One Wireless PC Adapter dongle, allowing wireless Xbox One / Series gamepads and instruments to connect over USB Host.",
+        "interfaceType": "USB Host port",
+        "badge": "Wireless",
+        "description": "Santroller has a driver for the Microsoft Xbox Wireless Adapter, so wireless Xbox One / Series controllers and instruments can connect through the USB Host port.",
         "details": [
-          "Built-in MT76x2U Wi-Fi Direct driver and firmware loader",
-          "Connects wireless Xbox One, Xbox Series, and wireless GIP guitar/drum peripherals",
-          "Supports hardware pairing button and wireless status negotiation",
-          "Enables true wireless Xbox controller play without external PC drivers"
+          "Includes the MT76x2U driver and firmware",
+          "Connects wireless Xbox One / Series controllers, guitars and drums",
+          "The pairing button on the adapter works"
         ]
       },
       "usb_nintendo_devices": {
         "name": "Nintendo Switch Pro & Wii USB Dongles",
-        "interfaceType": "USB Host Port",
-        "badge": "Nintendo Native",
-        "description": "Connect Nintendo controllers and legacy Wii USB instruments through the USB host port.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Nintendo controllers and Wii USB instrument dongles.",
         "details": [
-          "Nintendo Switch Pro Controller (wired USB mode)",
-          "Wii Rock Band 1/2/3 Wireless Guitar and Drum USB dongles",
+          "Switch Pro Controller (wired)",
+          "Wii Rock Band 1/2/3 guitar and drum dongles",
           "Raphnet Classic Controller to USB adapters"
         ]
       },
       "rhythm_dance_pads": {
         "name": "Dance Pads (L-TEK & StepManiaX)",
-        "interfaceType": "USB Host Port",
-        "badge": "Rhythm Specialty",
-        "description": "Plug dedicated arcade and home dance pads into Santroller for console conversion or custom profiles.",
-        "details": [
-          "L-TEK Dance Pad & L-TEK Pro Dance Pad",
-          "StepManiaX Dance Stage controller",
-          "Zero-lag polling and debounced switch handling"
-        ]
+        "interfaceType": "USB Host port",
+        "badge": "Dance",
+        "description": "Use a dance pad on consoles or with your own profile.",
+        "details": ["L-TEK and L-TEK Pro dance pads", "StepManiaX stage", "Debounced inputs"]
       },
       "rhythm_bemanistyle": {
         "name": "BEMANI Arcade & Mini Controllers",
-        "interfaceType": "USB Host Port",
-        "badge": "Arcade Rhythm",
-        "description": "Dedicated support for Japanese arcade rhythm game controller layouts and converters.",
+        "interfaceType": "USB Host port",
+        "badge": "Arcade",
+        "description": "Controllers for Konami arcade rhythm games.",
         "details": [
-          "Pop’n Music mini and arcade controllers",
-          "Beatmania IIDX turntable and key controllers",
+          "Pop'n Music mini and arcade controllers",
+          "Beatmania IIDX controllers",
           "GuitarFreaks / DrumMania USB controllers",
           "PDLoader and Spice2x arcade I/O devices"
         ]
       },
       "usb_streamdeck": {
         "name": "Elgato Stream Deck & Stream Deck Pedals",
-        "interfaceType": "USB Host Port",
-        "badge": "Macro & Pedals",
-        "description": "Use Stream Deck Pedals as custom foot switches (Star Power, bass pedals, or macros) connected directly over USB.",
+        "interfaceType": "USB Host port",
+        "badge": "Pedals",
+        "description": "Use a Stream Deck Pedal as foot switches, for example Star Power or a kick pedal.",
         "details": [
-          "Stream Deck Pedal 3-button foot switch support",
-          "Ideal for activating Star Power / Overdrive hands-free",
-          "Can be mapped to any digital gamepad or instrument action"
+          "All three pedals are supported",
+          "Handy for Star Power / Overdrive without taking your hands off the guitar",
+          "Each pedal can be mapped to any button"
         ]
       },
       "usb_generic_hid": {
         "name": "Generic USB HID Gamepads, Keyboards & Mice",
-        "interfaceType": "USB Host Port",
-        "badge": "Universal Mapping",
-        "description": "Universal USB Host support allowing you to map any generic gamepad, keyboard, or mouse to your Santroller profile.",
+        "interfaceType": "USB Host port",
+        "badge": "USB Host",
+        "description": "Map any USB gamepad, keyboard or mouse to your Santroller profile.",
         "details": [
-          "USB Keyboards: Full NKRO and 6KRO support with custom key-to-button bindings",
-          "USB Mice: Bind mouse axes and mouse buttons to analog sticks or inputs",
-          "Generic HID Gamepads: Map the first 16 buttons and main axes to any guitar or console function"
+          "Keyboards: NKRO and 6KRO, bind any key to any button",
+          "Mice: bind movement and buttons to sticks or buttons",
+          "Gamepads: the first 16 buttons and main axes can be mapped"
         ]
       },
       "auth_security_dongles": {
         "name": "Authentication Dongles (Mayflash & Besavior)",
-        "interfaceType": "USB Host Port",
-        "badge": "Auth Passthrough",
-        "description": "Plug security dongles into the USB Host port to satisfy console security handshakes without dedicating a full controller.",
+        "interfaceType": "USB Host port",
+        "badge": "Authentication",
+        "description": "Auth dongles handle console authentication without needing a whole controller plugged in.",
         "details": [
-          "Mayflash Magicboots PS4 & Mayflash MAGPS4 for PlayStation 4",
-          "Besavior P5General for PlayStation 5 native gaming",
-          "Official or most third-party wired Xbox One / Series gamepads for Xbox consoles",
-          "Santroller passes authentication challenges transparently without interrupting play"
+          "Mayflash Magicboots PS4 and MAGPS4 for PS4",
+          "Besavior P5General for PS5",
+          "Official or most third-party wired Xbox One / Series controllers for Xbox",
+          "Auth requests are passed through while you play"
         ],
-        "guideLabel": "Read Authentication Guide"
+        "guideLabel": "Authentication guide"
       },
       "auth_xone_harvested": {
         "name": "Xbox One Security Auth Chip (Harvested)",
-        "interfaceType": "I2C Bus (SDA / SCL + Reset)",
-        "badge": "Hardware Auth Chip",
-        "description": "Harvest the security authentication chip from an Xbox One controller PCB and wire it directly to the Pico via I2C for completely internal, dongle-free Xbox One/Series authentication.",
+        "interfaceType": "I2C (SDA / SCL + Reset)",
+        "badge": "Authentication",
+        "description": "Take the auth chip off an Xbox One controller board and wire it to the Pico over I2C, so Xbox One / Series authentication works without anything plugged in.",
         "details": [
-          "Direct I2C bus wiring (SDA, SCL, 3.3V, GND, and optional reset pin)",
-          "Configured as an Xbox One Auth device in the Configurator",
-          "Eliminates the need to plug an external controller into a USB host port",
-          "Satisfies continuous Xbox One and Series X|S console security handshakes natively"
+          "Wired over I2C: SDA, SCL, 3.3V, GND and an optional reset pin",
+          "Set it up as an Xbox One Auth device in the Configurator",
+          "No controller needed on the USB Host port",
+          "Handles Xbox One and Series authentication"
         ],
-        "guideLabel": "Read Authentication Guide"
+        "guideLabel": "Authentication guide"
       },
       "switches_mechanical": {
         "name": "Mechanical & Arcade Switches",
-        "interfaceType": "Digital GPIO Pins",
-        "badge": "Direct Wiring",
-        "description": "Wire mechanical switches directly to the Pico pins with hardware debouncing in firmware.",
+        "interfaceType": "Digital GPIO",
+        "badge": "Direct wiring",
+        "description": "Wire switches straight to the Pico's pins. Debouncing is handled in firmware.",
         "details": [
-          "Compatible with Cherry MX, Kailh Box, Gateron, and Kailh Low-Profile Choc switches",
-          "Original guitar fret silicon membranes and strum microswitches",
-          "Internal pull-up resistors enabled automatically (wire switch between GPIO and GND)",
-          "Configurable debouncing algorithm to eliminate double-strums and ghost notes"
+          "Cherry MX, Kailh Box, Gateron and Kailh Choc switches",
+          "Original guitar fret membranes and strum switches",
+          "Internal pull-ups are used, so wire each switch between the pin and GND",
+          "Adjustable debounce to stop double strums and ghost notes"
         ],
-        "guideLabel": "Guitar Wiring Guide"
+        "guideLabel": "Guitar wiring guide"
       },
       "analog_whammy_joystick": {
         "name": "Potentiometers, Hall Sensors & Joysticks",
-        "interfaceType": "Analog ADC Pins (GP26-GP28)",
-        "badge": "Analog ADC",
-        "description": "Connect analog potentiometers or contactless Hall-effect sensors to measure whammy bar angle or joystick position.",
+        "interfaceType": "Analog pins (GP26-GP28)",
+        "badge": "Analog",
+        "description": "Potentiometers or Hall effect sensors for whammy, plus analog sticks.",
         "details": [
-          "10k Ohm linear potentiometers for whammy bars",
-          "Hall-effect magnetic angle sensors for wear-free contactless whammy",
-          "2-axis analog thumbstick modules with integrated push button",
-          "Piezoelectric transducers with conditioning circuit for electronic drum pads"
+          "10k linear potentiometers for whammy",
+          "Hall effect sensors for whammy that won't wear out",
+          "2-axis thumbstick modules with a push button",
+          "Piezos, with a conditioning circuit, for drum pads"
         ]
       },
       "sensors_tilt_imu": {
         "name": "Tilt Sensors & Digital Accelerometers",
-        "interfaceType": "Digital GPIO or I2C Bus",
-        "badge": "Star Power Activation",
-        "description": "Trigger Star Power / Overdrive naturally by tilting the neck of your guitar up.",
+        "interfaceType": "Digital GPIO or I2C",
+        "badge": "Tilt",
+        "description": "Activate Star Power / Overdrive by tilting the guitar neck up.",
         "details": [
-          "Mechanical ball-roll / mercury tilt switches wired to digital GPIO",
-          "Digital I2C Accelerometers / IMUs (MPU6050, ADXL345) for smooth gesture detection",
-          "Configurable angle threshold and tilt sensitivity in the Configurator"
+          "Ball or mercury tilt switches on a digital pin",
+          "I2C accelerometers (MPU6050, ADXL345) for smoother tilt",
+          "Adjustable tilt angle and sensitivity"
         ]
       },
       "periph_gh5_neck": {
         "name": "Guitar Hero 5 / Band Hero Detachable Neck",
-        "interfaceType": "I2C Bus (150 kHz)",
-        "badge": "I2C Neck",
-        "description": "Native digital support for the GH5 / Band Hero neck board. Communicates directly over the original 4-pin neck connector without modifying the neck PCB.",
+        "interfaceType": "I2C (150 kHz)",
+        "badge": "Guitar neck",
+        "description": "Reads the GH5 / Band Hero neck through its original 4-pin connector, with no changes to the neck.",
         "details": [
-          "Reads 5 frets and the touch-sensitive solo slider strip digitally over I2C",
-          "Uses original spring-pin contacts (VCC, GND, SDA, SCL)",
-          "Preserves detachable neck functionality on Guitar Hero 5 and Band Hero guitars"
+          "Reads the 5 frets and the touch slider over I2C",
+          "Uses the original spring contacts (VCC, GND, SDA, SCL)",
+          "The neck stays detachable"
         ]
       },
       "periph_crkd_neck": {
         "name": "CRKD Nitro Deck / Guitar Neck Board",
-        "interfaceType": "UART Bus (460,800 Baud)",
-        "badge": "High-Speed UART",
-        "description": "Serial protocol support for CRKD guitar necks powered by the PY32F002B ARM microcontroller.",
+        "interfaceType": "UART (460,800 baud)",
+        "badge": "Guitar neck",
+        "description": "Reads CRKD guitar necks, which use a PY32F002B microcontroller.",
         "details": [
-          "High-speed 460.8 kbps serial stream with CRC-8 Maxim/Dow integrity verification",
-          "Transmits 5 frets, solo tap frets, and neck D-pad axes in a compact frame",
-          "Supports CRKD neck WS2812 addressable LED pass-through"
+          "460.8 kbps serial with CRC-8 checking",
+          "Frets, solo frets and the neck D-pad",
+          "Supports the neck's WS2812 LEDs"
         ]
       },
       "periph_protar_neck": {
         "name": "Mad Catz Rock Band 3 Pro Guitar Neck",
-        "interfaceType": "SPI Bus (100 kHz, Mode 1)",
-        "badge": "Pro Guitar SPI",
-        "description": "Custom SPI communication driver for the 102-button Rock Band 3 Mustang and Squier Pro Guitar necks.",
+        "interfaceType": "SPI (100 kHz, mode 1)",
+        "badge": "Pro Guitar",
+        "description": "Reads the 102-button Rock Band 3 Mustang and Squier Pro Guitar necks.",
         "details": [
-          "Scans all 17 frets across all 6 strings (102 discrete fret switches)",
-          "Reads frets, fretboard solo flags, and navigation buttons",
-          "Connects via MOSI, MISO, SCK, and Attention / Chip Select pins"
+          "All 17 frets on all 6 strings (102 switches)",
+          "Frets, solo flags and navigation buttons",
+          "Uses MOSI, MISO, SCK and Attention / Chip Select"
         ]
       },
       "periph_crazy_guitar": {
         "name": "Crazy Guitar / RedOctane Custom Neck",
-        "interfaceType": "I2C Bus (100 kHz)",
-        "badge": "I2C Neck",
-        "description": "Direct protocol support for Crazy Guitar neck boards communicating over standard 2-wire I2C.",
+        "interfaceType": "I2C (100 kHz)",
+        "badge": "Guitar neck",
+        "description": "Reads Crazy Guitar neck boards over I2C.",
         "details": [
-          "5-fret digital decoding directly from neck microprocessor",
-          "Compatible with 3.3V and 5V signaling topologies"
+          "5 frets, read from the neck's microcontroller",
+          "Works with both 3.3V and 5V necks"
         ]
       },
       "periph_wt_drum": {
         "name": "Guitar Hero World Tour Drum Module",
-        "interfaceType": "SPI Bus (500 kHz)",
-        "badge": "Drum SPI",
-        "description": "Interfacing driver for the internal SPI microprocessor on Guitar Hero World Tour drum kits.",
+        "interfaceType": "SPI (500 kHz)",
+        "badge": "Drums",
+        "description": "Reads the drum module inside Guitar Hero World Tour drum kits.",
         "details": [
-          "Reads velocity and hit triggers from 3 drum pads, 2 cymbals, and bass kick pedal",
-          "Wires to SPI bus with dedicated Chip Select line"
+          "Hits and velocity for the 3 pads, 2 cymbals and kick pedal",
+          "Uses SPI with its own Chip Select line"
         ]
       },
       "periph_bh_drum": {
         "name": "Band Hero / Guitar Hero 5 Drum Module",
-        "interfaceType": "I2C Bus (100 kHz)",
-        "badge": "Drum I2C",
-        "description": "I2C protocol communication for Band Hero and GH5 drum brain electronics.",
+        "interfaceType": "I2C (100 kHz)",
+        "badge": "Drums",
+        "description": "Reads the drum module in Band Hero and GH5 drum kits.",
         "details": [
-          "Decodes dynamic velocity data from drum pads and cymbals over I2C",
-          "Allows reusing stock Band Hero drum hardware without replacing piezo sensors"
+          "Pad and cymbal velocity over I2C",
+          "Keeps the stock drum electronics and piezos"
         ]
       },
       "periph_crkd_drum": {
         "name": "CRKD Electronic Drum Interface",
-        "interfaceType": "UART Bus",
-        "badge": "Serial Drum",
-        "description": "High-speed UART communication for CRKD drum kit modules with digital trigger reporting.",
-        "details": [
-          "Direct hardware serial connection for drum hit reporting",
-          "Low-latency drum pad, cymbal, and kick pedal event stream"
-        ]
+        "interfaceType": "UART",
+        "badge": "Drums",
+        "description": "Reads CRKD drum kit modules over serial.",
+        "details": ["Direct serial connection", "Pads, cymbals and kick pedal"]
       },
       "periph_djh_turntable": {
         "name": "DJ Hero Turntable Platter Sub-Module",
-        "interfaceType": "I2C Bus (150 kHz)",
-        "badge": "Turntable I2C",
-        "description": "Direct I2C protocol reader for the detachable turntable platter mechanism from DJ Hero controllers.",
+        "interfaceType": "I2C (150 kHz)",
+        "badge": "Turntable",
+        "description": "Reads the platter module from a DJ Hero turntable.",
         "details": [
-          "Reads optical quadrature wheel ticks, 3 stream buttons (Green/Red/Blue), and 360° rotation",
-          "Configurable left-hand or right-hand platter orientation and 5 ms polling interval"
+          "Platter rotation and the 3 stream buttons (Green / Red / Blue)",
+          "Left or right hand orientation, polled every 5 ms"
         ]
       },
       "periph_infinium_fader": {
         "name": "Infinium Optical Contactless Crossfader",
-        "interfaceType": "UART Serial (31,250 Baud)",
-        "badge": "Optical Fader",
-        "description": "Ultra-precise optical crossfader interface used in professional DJ mixers and custom scratch builds.",
-        "details": [
-          "Wear-free contactless optical sensor tracking with infinite lifespan",
-          "Serial data stream polled at zero latency for razor-sharp crossfader cuts"
-        ]
+        "interfaceType": "UART (31,250 baud)",
+        "badge": "Crossfader",
+        "description": "Optical crossfader used in DJ mixers and custom scratch builds.",
+        "details": ["Optical, so it doesn't wear out like a pot", "Read over serial"]
       },
       "periph_vtech_guitar": {
         "name": "VTech KidiStar Guitar I/O Expander",
-        "interfaceType": "SPI Bus with Attention",
-        "badge": "Custom Expander",
-        "description": "Specialized SPI expander protocol for converting toy and rhythm instruments into full-featured Santroller controllers.",
-        "details": [
-          "Dedicated SPI driver with interrupt/attention signaling",
-          "Decodes matrixed buttons and fret switches into individual game actions"
-        ]
+        "interfaceType": "SPI with Attention",
+        "badge": "Guitar",
+        "description": "Reads the VTech KidiStar guitar's I/O expander, so it can be converted into a Santroller controller.",
+        "details": ["SPI with an attention line", "Reads its button and fret matrix"]
       },
       "periph_secondary_pico": {
         "name": "Secondary Pi Pico (I2C Coprocessor)",
-        "interfaceType": "I2C Bus (400 kHz, Addr 0x75)",
-        "badge": "Pico Coprocessor",
-        "description": "Put a second Raspberry Pi Pico in your guitar neck to scan frets and sensors with zero latency, sharing data over I2C with the main Pico.",
+        "interfaceType": "I2C (400 kHz, address 0x75)",
+        "badge": "Second Pico",
+        "description": "Put a second Pico in the guitar neck to read the frets and sensors there, and send them to the main Pico over I2C.",
         "details": [
-          "Secondary Pico runs Santroller Peripheral firmware in the neck or secondary enclosure",
-          "Allows ultra-clean 4-wire neck quick-disconnects (VCC, GND, SDA, SCL)",
-          "Offloads GPIO button scanning, matrix routing, or LEDs across a high-speed bus"
+          "The second Pico runs the Santroller peripheral firmware",
+          "Only 4 wires between body and neck (VCC, GND, SDA, SCL)",
+          "Can handle buttons, matrices or LEDs in the neck"
         ],
-        "guideLabel": "Read Guitar Guide"
+        "guideLabel": "Guitar guide"
       },
       "exp_mpr121": {
         "name": "MPR121 Capacitive Touch & Slider Sensor",
-        "interfaceType": "I2C Bus (400 kHz)",
-        "badge": "Touch Controller",
-        "description": "12-channel capacitive touch sensor. The gold-standard solution for rewiring the Guitar Hero World Tour touch slider bar.",
+        "interfaceType": "I2C (400 kHz)",
+        "badge": "Touch",
+        "description": "12-channel capacitive touch sensor. The best way to rewire a Guitar Hero World Tour touch slider.",
         "details": [
-          "12 independent capacitive electrode channels with auto-calibration",
-          "Channels 0-4 map to the 5 touch slider segments; remaining channels can poll frets",
-          "Drastically reduces latency and improves reliability over the stock WT slider circuit"
+          "12 touch channels with automatic calibration",
+          "Channels 0-4 are the slider segments, and the rest can be used for frets",
+          "Much faster and more reliable than the stock World Tour slider"
         ],
-        "guideLabel": "World Tour Slider Guide"
+        "guideLabel": "World Tour slider guide"
       },
       "exp_multiplexer": {
         "name": "Analog / Digital Multiplexers (CD4051 & CD4067)",
-        "interfaceType": "GPIO Address Pins (S0-S3 + Signal)",
-        "badge": "Pin Expander",
-        "description": "Expand a single GPIO or ADC pin into 8 or 16 inputs using affordable CD74HC4051 (8-ch) or CD74HC4067 (16-ch) multiplexers.",
+        "interfaceType": "GPIO address pins (S0-S3 + signal)",
+        "badge": "Pin expander",
+        "description": "Turn one GPIO or analog pin into 8 or 16 inputs with a CD74HC4051 (8 channels) or CD74HC4067 (16 channels).",
         "details": [
-          "CD4051: 8 channels controlled with 3 address pins (S0-S2) and 1 input line",
-          "CD4067: 16 channels controlled with 4 address pins (S0-S3) and 1 input line",
-          "Compatible with analog inputs (potentiometers/whammy) and digital buttons",
-          "Built-in configurable scanning loop in Santroller firmware"
+          "CD4051: 8 channels, 3 address pins (S0-S2) and 1 signal pin",
+          "CD4067: 16 channels, 4 address pins (S0-S3) and 1 signal pin",
+          "Works for both analog inputs and buttons",
+          "Scanning is handled by the firmware"
         ]
       },
       "exp_matrix_switch_network": {
         "name": "Key Matrix & Switch Networks (Dioded)",
-        "interfaceType": "Row / Column Digital GPIOs",
-        "badge": "Key Matrix",
-        "description": "Scan dozens of buttons and mechanical switches using minimal pins via row-and-column matrix scanning or resister networks.",
+        "interfaceType": "Row / column GPIO",
+        "badge": "Matrix",
+        "description": "Read lots of buttons with only a few pins, using a diode matrix or a resistor network.",
         "details": [
-          "Up to 32-pin matrix configurations with anti-ghosting diode support",
-          "Switch Network driver for decoded button networks",
-          "Ideal for arcade panels, dance stages, and full keyboard layouts"
+          "Matrices of up to 32 pins, with diodes to prevent ghosting",
+          "Switch network support for resistor-based button networks",
+          "Useful for arcade panels, dance pads and keyboards"
         ]
       },
       "exp_ads1115": {
         "name": "ADS1115 16-Bit Precision ADC",
-        "interfaceType": "I2C Bus (400 kHz + Alert)",
-        "badge": "16-Bit ADC",
-        "description": "Ultra-high precision 16-bit analog-to-digital converter for studio-grade analog whammy, analog stick, and piezo velocity tracking.",
+        "interfaceType": "I2C (400 kHz + Alert)",
+        "badge": "16-bit ADC",
+        "description": "16-bit ADC for whammy, analog sticks or piezos when you need more resolution than the Pico's built-in ADC.",
         "details": [
-          "4 single-ended or 2 differential high-precision analog channels",
-          "Programmable gain amplifier and hardware interrupt line",
-          "Provides far superior noise rejection and resolution compared to standard 10/12-bit ADCs"
+          "4 single-ended or 2 differential channels",
+          "Programmable gain and an alert/interrupt pin",
+          "Less noise and more resolution than the Pico's 12-bit ADC"
         ]
       },
       "exp_rotary_encoder": {
         "name": "Hardware Quadrature Rotary Encoders",
-        "interfaceType": "Dual GPIO Pins (A / B Channels)",
-        "badge": "Optical / Mechanical",
-        "description": "High-speed optical and mechanical rotary encoder decoding for DJ Hero platters, volume dials, and spinner wheels.",
+        "interfaceType": "2 GPIO pins (A / B)",
+        "badge": "Encoder",
+        "description": "Optical and mechanical rotary encoders, for DJ Hero platters, dials and spinners.",
         "details": [
-          "Hardware interrupt and PIO edge tracking prevents dropped ticks at high spin speeds",
-          "Sub-tick direction discrimination and configurable sensitivity multiplier"
+          "Read with PIO so ticks aren't missed at high speed",
+          "Direction detection and adjustable sensitivity"
         ]
       },
       "led_addressable_rgb": {
         "name": "Addressable RGB LEDs (WS2812B / Neopixels)",
-        "interfaceType": "Single GPIO Pin (via PIO)",
-        "badge": "Addressable RGB",
-        "description": "High-speed addressable LED strip and individual LED support driven seamlessly by RP2040 PIO.",
+        "interfaceType": "1 GPIO pin (PIO)",
+        "badge": "RGB",
+        "description": "Addressable LED strips and individual LEDs, driven by PIO.",
         "details": [
-          "Supports WS2812B, SK6812 (RGBW), and WS2813 LED strips",
-          "Under-fret lighting: Frets light up with their respective note colors when pressed",
-          "Reactive strum lighting and Star Power / Overdrive full-body illumination",
-          "Player number indicators and idle animation patterns"
+          "WS2812B, SK6812 (RGBW) and WS2813",
+          "Frets light up in their note color when pressed",
+          "Lighting for strums and Star Power / Overdrive",
+          "Player number and idle animations"
         ]
       },
       "led_apa102": {
         "name": "APA102 / DotStar High-Speed SPI LEDs",
-        "interfaceType": "SPI Bus (12 MHz, Data + Clock)",
-        "badge": "High-Speed SPI LED",
-        "description": "Two-wire SPI addressable LEDs capable of multi-megahertz refresh rates without timing jitter.",
+        "interfaceType": "SPI (12 MHz, data + clock)",
+        "badge": "RGB",
+        "description": "Addressable LEDs with a separate clock line, so they don't have the timing issues of single-wire LEDs.",
         "details": [
-          "Hardware SPI driven up to 12 MHz for flicker-free persistence-of-vision effects",
-          "Separate Data (MOSI) and Clock (SCK) lines prevent color timing glitches",
-          "RGB and BGR byte order configurations"
+          "Hardware SPI at up to 12 MHz",
+          "Separate data (MOSI) and clock (SCK) lines",
+          "RGB or BGR color order"
         ]
       },
       "led_stp16cpc": {
         "name": "STP16CPC26 Constant-Current LED Driver",
-        "interfaceType": "SPI Bus (Latch + Output Enable)",
-        "badge": "Constant Current",
-        "description": "16-channel constant-current LED sink driver for lighting original guitar LEDs, button backlights, or arcade lamps.",
+        "interfaceType": "SPI (latch + output enable)",
+        "badge": "LED driver",
+        "description": "16-channel constant-current LED driver, for original guitar LEDs, button backlights or arcade buttons.",
         "details": [
-          "16 constant-current sink outputs with single-resistor global current setting",
-          "Controlled via SPI (MOSI, SCK, LE Latch, OE Output Enable)",
-          "Eliminates per-LED resistors; ideal for custom PCB faceplates and illuminated frets"
+          "16 outputs, with one resistor setting the current for all of them",
+          "Controlled over SPI (MOSI, SCK, LE, OE)",
+          "No resistor needed per LED, which suits custom PCBs and lit frets"
         ]
       },
       "led_dmx512": {
         "name": "DMX512 Stage Lighting Interface",
-        "interfaceType": "Single GPIO (via PIO / RS485)",
-        "badge": "Stage Lighting",
-        "description": "Control real professional stage lights, smoke machines, and strobe fixtures synchronized to your gameplay in real time.",
+        "interfaceType": "1 GPIO (PIO / RS485)",
+        "badge": "Stage lighting",
+        "description": "Drive DMX stage lights, strobes and smoke machines in time with the game.",
         "details": [
-          "Generates genuine DMX512 packet timing (250 kbps RS-485 stream)",
-          "Outputs lighting triggers for notes hit, streaks, star power, and game state",
-          "Turn your living room or stage into an authentic concert experience while playing"
+          "Outputs DMX512 at 250 kbps over RS-485",
+          "Lights can react to notes, streaks, Star Power and game state"
         ]
       },
       "led_discrete": {
         "name": "Discrete Single-Color LEDs",
-        "interfaceType": "Digital GPIO Pins",
-        "badge": "Discrete LEDs",
-        "description": "Drive original faceplate LEDs, player indicator lights, or custom LEDs with current-limiting resistors.",
+        "interfaceType": "Digital GPIO",
+        "badge": "LEDs",
+        "description": "Ordinary single-color LEDs, such as the original faceplate LEDs or player lights, each with a resistor.",
         "details": [
-          "Player 1-4 indicator LEDs",
-          "Star Power / Overdrive alert LEDs",
-          "Low battery warning indicator (on Pico W wireless builds)"
+          "Player 1-4 lights",
+          "Star Power / Overdrive indicator",
+          "Low battery warning (Pico W wireless builds)"
         ]
       },
       "pwr_max1704x": {
         "name": "MAX17043 / MAX17048 Fuel Gauge IC",
-        "interfaceType": "I2C Bus (400 kHz)",
-        "badge": "I2C Fuel Gauge",
-        "description": "Dedicated LiPo / Li-Ion battery fuel gauge IC utilizing Maxim ModelGauge algorithm for accurate state-of-charge tracking.",
+        "interfaceType": "I2C (400 kHz)",
+        "badge": "Battery",
+        "description": "Battery fuel gauge for LiPo / Li-ion cells, giving an accurate charge percentage.",
         "details": [
-          "Reports cell voltage and battery percentage directly over I2C",
-          "Alert pin threshold triggers when battery drops below low power limit",
-          "Provides accurate battery reporting to game consoles (PS3, PS4, Switch, Wii)"
+          "Reports battery voltage and percentage over I2C",
+          "Alert pin for low battery",
+          "Battery level is reported to the console (PS3, PS4, Switch, Wii)"
         ]
       },
       "pwr_adc_battery": {
         "name": "ADC Voltage Divider Battery Monitor",
-        "interfaceType": "Analog ADC Pin (GP29 on Pico)",
-        "badge": "ADC Divider",
-        "description": "Monitor single-cell LiPo battery voltage using the Raspberry Pi Pico onboard 3:1 voltage divider circuit.",
+        "interfaceType": "Analog pin (GP29 on Pico)",
+        "badge": "Battery",
+        "description": "Measure a single-cell LiPo using the Pico's built-in 3:1 voltage divider.",
         "details": [
-          "GP29 measures VSYS battery supply voltage (3.3V empty to 4.2V full cell)",
-          "Configurable voltage divider ratio and millivolt thresholds in Configurator",
-          "Triggers console low-battery indicators and sleep routines without extra ICs"
+          "GP29 reads VSYS (about 3.3V empty to 4.2V full)",
+          "Divider ratio and voltage thresholds can be set in the Configurator",
+          "Shows low battery on the console and can trigger sleep, no extra parts needed"
         ]
       },
       "pwr_management_sleep": {
         "name": "Power Management & Inactivity Sleep",
-        "interfaceType": "Heartbeat & Inactivity GPIOs",
-        "badge": "Auto Sleep",
-        "description": "Advanced firmware power saving that cuts power to external LED strips, peripherals, or sleep ICs during inactivity.",
+        "interfaceType": "Heartbeat & inactivity pins",
+        "badge": "Sleep",
+        "description": "Turn off LEDs and other hardware when the controller isn't being used.",
         "details": [
-          "Periodic heartbeat pulse pin to keep external power banks awake",
-          "Inactivity timeout pin drives high/low to shut down MOSFET switches and save battery",
-          "Wakes instantly on any fret, strum, or button press"
+          "Heartbeat pin to stop power banks from turning off",
+          "Inactivity pin can switch a MOSFET to cut power and save battery",
+          "Wakes up on any fret, strum or button press"
         ]
       },
       "bus_wii_extension": {
         "name": "Wii Extension Bus (I2C Input)",
-        "interfaceType": "I2C Bus (3.3V SDA/SCL)",
-        "badge": "Console Bus",
-        "description": "Read authentic Wii Guitar Hero guitars, drums, or Nunchuks directly through the 6-pin Wii extension connector.",
+        "interfaceType": "I2C (3.3V SDA / SCL)",
+        "badge": "Console controller",
+        "description": "Read Wii Guitar Hero guitars, drums or Nunchuks through the Wii extension connector.",
         "details": [
-          "No need to gut your Wii guitar: plugs straight into the Wii Remote extension cable",
-          "Reads frets, strum bar, whammy, joystick, and touch slider over standard 3.3V I2C",
-          "Allows creating a standalone plug-and-play USB adapter for Wii rhythm controllers"
+          "Plug the controller in as-is, no need to open it up",
+          "Frets, strum, whammy, joystick and touch slider",
+          "Makes a USB adapter for Wii instruments"
         ],
-        "guideLabel": "Wii Adapter Guide"
+        "guideLabel": "Wii adapter guide"
       },
       "bus_wii_emulation": {
         "name": "Wii Extension Port Emulation (Hardware Bus)",
-        "interfaceType": "I2C Bus (3.3V)",
-        "badge": "Extension Output",
-        "description": "Emulate a physical Wii Extension device (Guitar Hero guitar or Classic Controller) to plug Santroller directly into a genuine Wii Remote!",
+        "interfaceType": "I2C (3.3V)",
+        "badge": "Console output",
+        "description": "Act as a Wii extension (Guitar Hero guitar or Classic Controller) so you can plug into a real Wii Remote.",
         "details": [
-          "Santroller acts as the I2C peripheral speaking the encrypted Nintendo extension protocol",
-          "Plugs into physical Wii Remotes to play Wii Guitar Hero games wirelessly on consoles"
+          "Santroller handles the encrypted extension protocol",
+          "Plug into a Wii Remote to play Wii Guitar Hero wirelessly"
         ]
       },
       "bus_ps2_controller": {
         "name": "PlayStation 1 & 2 Controller Bus (SPI Input)",
-        "interfaceType": "SPI Bus with ACK line",
-        "badge": "Console Bus",
-        "description": "Directly read original PS1/PS2 DualShock controllers and Guitar Hero SG guitars via their native serial bus.",
+        "interfaceType": "SPI with ACK",
+        "badge": "Console controller",
+        "description": "Read PS1 / PS2 controllers and Guitar Hero SG guitars.",
         "details": [
-          "Compatible with PS2 Guitar Hero SG guitars and standard DualShock 2 controllers",
-          "Reads button pressure levels and analog stick data with microsecond accuracy",
-          "Builds a zero-lag USB adapter for original PS2 rhythm controllers"
+          "PS2 Guitar Hero SG guitars and DualShock 2 controllers",
+          "Pressure-sensitive buttons and analog sticks",
+          "Makes a USB adapter for PS2 instruments"
         ],
-        "guideLabel": "PS2 Adapter Guide"
+        "guideLabel": "PS2 adapter guide"
       },
       "bus_ps2_emulation": {
         "name": "PlayStation 1 & 2 Port Emulation (Output)",
-        "interfaceType": "SPI Pins (CMD, ATT, ACK, DATA, CLK)",
-        "badge": "Console Output",
-        "description": "Santroller natively emulates a physical PS1/PS2 controller, allowing you to plug your custom instrument into original PlayStation hardware.",
+        "interfaceType": "SPI pins (CMD, ATT, ACK, DATA, CLK)",
+        "badge": "Console output",
+        "description": "Act as a PS1 / PS2 controller so you can plug into a real PlayStation or PS2.",
         "details": [
-          "Full 5-wire hardware emulation of DualShock and Guitar Hero SG controllers",
-          "Connects directly to the PS1/PS2 console controller ports with zero latency"
+          "Can act as a DualShock or Guitar Hero SG guitar",
+          "Plugs straight into the console's controller port"
         ]
       },
       "bus_snes_pad": {
         "name": "Super Nintendo (SNES) / NES Controller Bus",
-        "interfaceType": "3-Pin Serial (Clock, Latch, Data)",
-        "badge": "Retro Bus",
-        "description": "Direct support for reading Super Nintendo and NES gamepads and rhythm accessories.",
+        "interfaceType": "3-pin serial (clock, latch, data)",
+        "badge": "Retro",
+        "description": "Read SNES and NES controllers.",
         "details": [
-          "Reads standard 4021 shift-register serial gamepads over Clock, Latch, and Data lines",
-          "Sub-millisecond shift register latching directly into Santroller inputs"
+          "Standard 4021 shift register controllers over clock, latch and data",
+          "Read in under a millisecond"
         ]
       },
       "bus_joybus": {
         "name": "Nintendo Joybus (N64 & GameCube Controller Bus)",
-        "interfaceType": "Single-Wire Joybus (PIO)",
-        "badge": "Joybus Input",
-        "description": "Direct bidirectional communication with original Nintendo 64 and Nintendo GameCube controllers.",
+        "interfaceType": "Joybus (PIO)",
+        "badge": "Console controller",
+        "description": "Read N64 and GameCube controllers.",
         "details": [
-          "Single-wire bidirectional Joybus protocol driven with RP2040 PIO",
-          "Reads original GameCube controllers, DK Bongos, and N64 gamepads with microsecond timing"
+          "Joybus protocol handled with PIO",
+          "GameCube controllers, DK Bongos and N64 controllers"
         ]
       },
       "bus_joybus_emulation": {
         "name": "GameCube / Joybus Port Emulation (Output)",
-        "interfaceType": "Single-Wire Joybus (PIO)",
-        "badge": "Joybus Output",
-        "description": "Santroller can emulate a native GameCube controller, enabling you to plug directly into GameCube and Wii GC controller ports.",
+        "interfaceType": "Joybus (PIO)",
+        "badge": "Console output",
+        "description": "Act as a GameCube controller, for GameCube consoles and the Wii's GameCube ports.",
         "details": [
-          "Works with GameCube consoles, Wii GameCube ports, and Smash Bros USB adapters",
-          "Native Joybus response timing generated via high-speed PIO state machines"
+          "Works with GameCube, the Wii's GameCube ports, and GameCube USB adapters",
+          "Joybus timing handled with PIO"
         ]
       },
       "bus_xbox360_rf": {
         "name": "Xbox 360 RF Wireless Module (Front Panel)",
-        "interfaceType": "3-Pin Serial (Data, Clock, Sync)",
-        "badge": "RF Module",
-        "description": "Wire the front-panel RF board harvested from an Xbox 360 Fat or Slim console to Santroller to build a standalone wireless receiver!",
+        "interfaceType": "3-pin serial (data, clock, sync)",
+        "badge": "Wireless",
+        "description": "Wire up the front-panel RF board from an Xbox 360 to make a wireless receiver.",
         "details": [
-          "Supports Xbox 360 Fat and Slim RF daughterboards",
-          "Reads wireless controllers, wireless guitars, and wireless drums directly over RF",
-          "Supports the hardware SYNC button and animated Ring of Light LED status"
+          "Works with RF boards from both original and Slim consoles",
+          "Wireless controllers, guitars and drums",
+          "The SYNC button and Ring of Light LEDs work"
         ]
       },
       "bus_midi": {
         "name": "MIDI 5-Pin DIN & USB-MIDI Devices",
         "interfaceType": "UART / USB / Bluetooth",
-        "badge": "Musical MIDI",
-        "description": "Interface professional electronic drum kits, MIDI keyboards, or synthesizers directly to Santroller.",
+        "badge": "MIDI",
+        "description": "Connect electronic drum kits, MIDI keyboards or other MIDI devices.",
         "details": [
-          "Standard 5-pin DIN MIDI IN with optocoupler circuit via hardware UART (31,250 baud)",
-          "USB-MIDI instruments plugged into Santroller USB Host port",
-          "MIDI over Bluetooth for wireless electronic drum kits",
-          "Map MIDI note numbers and velocity directly to Rock Band Pro Drum pads and cymbals"
+          "5-pin DIN MIDI IN using an optocoupler on a UART (31,250 baud)",
+          "USB MIDI devices on the USB Host port",
+          "Bluetooth MIDI for wireless drum kits",
+          "Map MIDI notes and velocity to Rock Band Pro Drums pads and cymbals"
         ]
       }
     }
   },
   "compatibility": {
-    "title": "Console Compatibility & Emulation Modes",
-    "subtitle": "Detailed guide to Santroller emulation modes, console security handshakes, and setup guides for Wii Brainslug and PS2 PADEMU.",
+    "title": "Console Compatibility",
+    "subtitle": "Which emulation mode to use on each console, how console authentication works, and setup for Wii Brainslug and PS2 PADEMU.",
     "tabs": {
-      "matrix": "Compatibility Matrix",
+      "matrix": "Compatibility",
       "modes": "Emulation Modes",
-      "plugins": "Console Plugins & Homebrew",
-      "auth": "Authentication Passthrough",
-      "festival": "Fortnite Festival Guide"
+      "plugins": "Plugins & Homebrew",
+      "auth": "Authentication",
+      "festival": "Fortnite Festival"
     },
     "matrix": {
-      "filterLabel": "Filter by Console Ecosystem:",
+      "filterLabel": "Console:",
       "filters": {
         "all": "All Consoles",
         "playstation": "PlayStation (PS2-PS5)",
@@ -3174,44 +3157,44 @@
       },
       "noRequirements": "None",
       "status": {
-        "nativePlugAndPlay": "Native Plug & Play",
-        "nativeUsb": "Native USB",
+        "nativePlugAndPlay": "Plug & Play",
+        "nativeUsb": "USB",
         "setupRequired": "Setup Required",
         "legacyMode": "Legacy Mode",
         "authRequired": "Auth Required",
         "noAuthNeeded": "No Auth Needed",
-        "specialAuthDongle": "Special Auth Dongle",
-        "nativeWireless": "Native Wireless",
-        "nativeProtocol": "Native Protocol"
+        "specialAuthDongle": "Auth Dongle Required",
+        "nativeWireless": "Wireless",
+        "nativeProtocol": "Supported"
       },
       "rows": {
         "pc": {
           "console": "PC / Windows / Linux / Mac",
-          "games": "Clone Hero, YARG, Fortnite Festival, Emulators (RPCS3, PCSX2, Dolphin)",
+          "games": "Clone Hero, YARG, Fortnite Festival, emulators (RPCS3, PCSX2, Dolphin)",
           "recommendedMode": "XInput or DirectInput (Gamepad / GH Guitar / RB Guitar)",
           "connection": "Direct USB",
-          "notes": "Zero setup required. Automatic detection with full whammy bar, tilt, and RGB LED lighting support."
+          "notes": "No setup needed. Whammy, tilt and RGB LEDs all work."
         },
         "ps3": {
           "console": "PlayStation 3",
-          "games": "All Guitar Hero, Rock Band, DJ Hero & standard games",
+          "games": "Guitar Hero, Rock Band, DJ Hero and regular games",
           "recommendedMode": "PS3 Guitar / PS3 Drums / PS3 Gamepad",
           "connection": "Direct USB",
-          "notes": "Fully supported out of the box. No security checks or console authentication needed."
+          "notes": "Works out of the box. The PS3 doesn't authenticate controllers."
         },
         "ps2_usb": {
           "console": "PlayStation 2",
           "games": "Rock Band 1 & 2, GH World Tour, GH5, Band Hero",
           "recommendedMode": "Rock Band Guitar / Drums or GH Guitar",
           "connection": "Direct USB",
-          "notes": "These later PS2 rhythm titles natively support standard USB instruments without special software."
+          "notes": "These later PS2 rhythm games support USB instruments directly."
         },
         "ps2_pademu": {
           "console": "PlayStation 2",
-          "games": "Guitar Hero 1 & 2, standard DualShock games",
-          "recommendedMode": "PS3 Gamepad / Guitar (into PADEMU) OR Hardware PS2 Bus",
-          "connection": "USB (via PADEMU) or SPI Controller Bus",
-          "notes": "Early PS2 games only support controllers plugged into the front PS2 port. Use OPL with PADEMU enabled, or wire a hardware PS2 SPI bus.",
+          "games": "Guitar Hero 1 & 2, regular DualShock games",
+          "recommendedMode": "PS3 Gamepad / Guitar (with PADEMU) or PS2 controller bus",
+          "connection": "USB (with PADEMU) or PS2 controller port",
+          "notes": "Older PS2 games only read controllers in the front controller ports. Either use OPL with PADEMU, or wire the Pico to a PS2 controller port.",
           "pluginOrAuth": "<pademu>PADEMU in Open PS2 Loader</pademu>"
         },
         "ps4_rb4": {
@@ -3219,14 +3202,14 @@
           "games": "Rock Band 4",
           "recommendedMode": "PS3 Guitar / PS3 Drums",
           "connection": "Direct USB",
-          "notes": "Works in-game without authentication via Mad Catz PS3 legacy instrument support (cannot navigate the PS4 home OS menu)."
+          "notes": "Rock Band 4 accepts PS3 instruments without authentication, but you can't use them to navigate the PS4 home menu."
         },
         "ps4_native": {
           "console": "PlayStation 4",
-          "games": "Native PS4 Games (Full OS & In-Game Navigation)",
+          "games": "PS4 games, including the home menu",
           "recommendedMode": "PS4 Gamepad / Instrument",
-          "connection": "USB + USB Host Passthrough",
-          "notes": "Requires continuous authentication handshake. Plug a DualShock 4 or Mayflash MAGPS4 dongle into the Santroller USB Host port.",
+          "connection": "USB + USB Host passthrough",
+          "notes": "Needs authentication. Plug a DualShock 4 or Mayflash MAGPS4 into the Santroller USB Host port.",
           "pluginOrAuth": "<auth>DualShock 4 / MAGPS4</auth> or <orbis>GoldHEN OrbisInstrumentalizer</orbis>"
         },
         "ps45_festival": {
@@ -3234,299 +3217,295 @@
           "games": "Fortnite Festival (Pro Lead / Bass / Drums)",
           "recommendedMode": "Keyboard Profile (Festival Preset / Custom Keys)",
           "connection": "Direct USB",
-          "notes": "Create a Keyboard Profile in Santroller. Consoles treat it as a standard USB keyboard, bypassing controller authentication completely while letting you fully customize every key."
+          "notes": "Use a Keyboard profile. Keyboards don't need to authenticate, and you can bind whatever keys you like."
         },
         "ps5_rb4": {
           "console": "PlayStation 5",
           "games": "Rock Band 4",
           "recommendedMode": "PS3 Guitar / PS3 Drums",
           "connection": "Direct USB",
-          "notes": "Works inside Rock Band 4 under legacy PS3 instrument mode. No authentication needed in-game."
+          "notes": "Rock Band 4 accepts PS3 instruments without authentication."
         },
         "ps5_native": {
           "console": "PlayStation 5",
-          "games": "Native PS5 Games",
+          "games": "PS5 games",
           "recommendedMode": "PS5 Gamepad / Instrument",
-          "connection": "USB + USB Host Passthrough",
-          "notes": "Native PS5 titles require specialized authentication. Must use a Besavior P5General dongle connected to Santroller USB Host.",
+          "connection": "USB + USB Host passthrough",
+          "notes": "PS5 games need a Besavior P5General plugged into the Santroller USB Host port.",
           "pluginOrAuth": "<auth>Besavior P5General</auth>"
         },
         "x360": {
           "console": "Xbox 360",
-          "games": "All Guitar Hero, Rock Band, DJ Hero & standard games",
+          "games": "Guitar Hero, Rock Band, DJ Hero and regular games",
           "recommendedMode": "Xbox 360 Guitar / Drums / Gamepad",
           "connection": "Direct USB",
-          "notes": "Santroller includes built-in Xbox 360 security keys. Works completely out of the box on all Xbox 360 consoles with zero setup or extra hardware required."
+          "notes": "Santroller handles Xbox 360 authentication itself, so no extra hardware is needed."
         },
         "xbone_festival": {
           "console": "Xbox One / Series X|S",
           "games": "Fortnite Festival (Pro Lead / Bass / Drums)",
           "recommendedMode": "Keyboard Profile (Festival Preset / Custom Keys)",
           "connection": "Direct USB",
-          "notes": "Create a Keyboard Profile in Santroller. Xbox consoles accept USB keyboards without controller security checks, allowing you to map and customize every key freely."
+          "notes": "Use a Keyboard profile. Keyboards don't need to authenticate, and you can bind whatever keys you like."
         },
         "xbone_native": {
           "console": "Xbox One / Series X|S",
-          "games": "Rock Band 4 & Native Xbox One/Series Games",
+          "games": "Rock Band 4 and other Xbox One / Series games",
           "recommendedMode": "Xbox One Gamepad / Instrument",
-          "connection": "USB Host Passthrough OR I2C Auth Chip",
-          "notes": "Can be authenticated via USB Host using official or most third-party Xbox One controllers, or internally via a harvested Xbox One security chip wired over I2C.",
-          "pluginOrAuth": "<auth>Xbox One Controller (Official/3rd-Party) OR Harvested I2C Auth Chip</auth>"
+          "connection": "USB Host passthrough or I2C auth chip",
+          "notes": "Authenticate with an official or most third-party Xbox One controllers on the USB Host port, or with an auth chip taken from an Xbox One controller and wired over I2C.",
+          "pluginOrAuth": "<auth>Xbox One controller or I2C auth chip</auth>"
         },
         "wii_rb": {
           "console": "Nintendo Wii & Wii U",
           "games": "Rock Band 1, 2, 3, Beatles",
           "recommendedMode": "Rock Band Guitar / Drums (Wii USB)",
           "connection": "Direct USB",
-          "notes": "Wii Rock Band games use standard USB instruments. Set your emulation mode to Rock Band and plug in."
+          "notes": "Wii Rock Band games use USB instruments. Set the emulation mode to Rock Band and plug in."
         },
         "wii_gh": {
           "console": "Nintendo Wii & Wii U",
           "games": "Guitar Hero, Band Hero, DJ Hero",
-          "recommendedMode": "Wii Remote Bluetooth Emulation (Pico W or BT Dongle)",
-          "connection": "Wireless Bluetooth OR USB (Brainslug) OR Physical Extension",
-          "notes": "Santroller can now emulate the entire Wii Remote over Bluetooth using a Pico W or a USB-hosted Bluetooth dongle. This works natively on unmodified Wiis with real discs! Alternatively, use Brainslug on modded Wiis or wire a physical Wii extension cable.",
-          "pluginOrAuth": "<wii>Bluetooth (Pico W or USB BT Dongle)</wii>"
+          "recommendedMode": "Wii Remote emulation (Pico W or Bluetooth dongle)",
+          "connection": "Bluetooth, USB (Brainslug) or Wii extension cable",
+          "notes": "Santroller can act as a Wii Remote over Bluetooth using a Pico W or a USB Bluetooth dongle. This works on an unmodified Wii with retail discs. Otherwise, use Brainslug on a modded Wii or wire up a Wii extension cable.",
+          "pluginOrAuth": "<wii>Bluetooth (Pico W or USB dongle)</wii>"
         },
         "switch": {
           "console": "Nintendo Switch",
-          "games": "All Switch Games (e.g. Taiko, Rhythm Sprout)",
+          "games": "All Switch games (e.g. Taiko, Rhythm Sprout)",
           "recommendedMode": "Nintendo Switch Pro Controller",
           "connection": "Direct USB",
-          "notes": "Plug-and-play. Remember to enable \"Pro Controller Wired Communication\" in Switch System Settings -> Controllers and Sensors."
+          "notes": "Enable \"Pro Controller Wired Communication\" under System Settings → Controllers and Sensors."
         },
         "ogxbox": {
           "console": "Original Xbox",
-          "games": "All Original Xbox titles",
+          "games": "All original Xbox games",
           "recommendedMode": "Original Xbox (ogxbox)",
-          "connection": "USB to Xbox Port Adapter",
-          "notes": "Santroller natively speaks the Original Xbox USB protocol. Wire a standard USB-to-Xbox controller breakout cable."
+          "connection": "USB to Xbox port adapter",
+          "notes": "Santroller speaks the original Xbox controller protocol. You need a USB to Xbox controller port adapter cable."
         }
       }
     },
     "modes": {
-      "intro": "Santroller supports several distinct emulation types in firmware. Configure your mode under <strong>Controller Settings → Emulation Type</strong> in the Configurator.",
+      "intro": "Set the emulation mode under <strong>Controller Settings → Emulation Type</strong>.",
       "cards": {
         "ghGuitar": {
           "title": "Guitar Hero Guitar",
           "badge": "Guitar Hero",
-          "description": "Replicates original Guitar Hero hardware (PS3 / Xbox 360 / Wii / PS2). Includes dedicated mappings for 5 fret buttons (Green, Red, Yellow, Blue, Orange), up/down strum bar, whammy bar potentiometer, tilt sensor, and Star Power button.",
+          "description": "Acts like a Guitar Hero guitar on PS3, Xbox 360, Wii and PS2: five frets, strum up/down, whammy, tilt and Star Power.",
           "features": [
-            "Compatible with all Guitar Hero games across PS3, 360, Wii",
-            "Supports touch slider / solo strip on compatible guitars",
-            "Full whammy axis calibration and deadzone controls"
+            "Works with Guitar Hero games on PS3, 360 and Wii",
+            "Supports the touch slider on guitars that have one",
+            "Whammy calibration and deadzone settings"
           ]
         },
         "rbGuitar": {
           "title": "Rock Band Guitar",
           "badge": "Rock Band",
-          "description": "Replicates the Fender Stratocaster. Features 5 primary frets plus 5 lower solo frets (tapping notes without strumming), a 5-way pickup selector switch for audio effects, whammy bar, and Overdrive tilt.",
+          "description": "Acts like a Rock Band Stratocaster: five frets plus five solo frets, the 5-way pickup switch, whammy and tilt for Overdrive.",
           "features": [
-            "Solo frets automatically register as tap notes in Rock Band",
-            "5-way switch maps to audio effect filters in RB2/3/4",
-            "Works natively over USB in Rock Band 1-4"
+            "Solo frets register as solo notes in Rock Band",
+            "Pickup switch controls the effects in RB2, RB3 and RB4",
+            "Works over USB in Rock Band 1 to 4"
           ]
         },
         "rbDrums": {
           "title": "Rock Band Drums & Pro Drums",
           "badge": "Drums",
-          "description": "Supports 4 drum pads (Red, Yellow, Blue, Green), bass kick pedals, and optional Pro Drum cymbals (Yellow, Blue, Green cymbals) with independent velocity dynamics.",
+          "description": "Four pads, kick pedal and optional Pro Drums cymbals, with velocity.",
           "features": [
-            "Pro Drums flag signals cymbals independently to Rock Band 3 & 4",
-            "Supports electronic drum kits via MIDI IN or USB-MIDI",
-            "Custom crosstalk and piezo debounce filtering in firmware"
+            "Pro Drums cymbals are reported separately to Rock Band 3 and 4",
+            "Electronic drum kits work over MIDI IN or USB MIDI",
+            "Crosstalk and debounce filtering for piezo pads"
           ]
         },
         "djh": {
           "title": "DJ Hero Turntable",
           "badge": "DJ Hero",
-          "description": "Emulates the DJ Hero turntable controller with left and right platter optical quadrature encoders, 3 stream buttons (Green, Red, Blue), crossfader, Euphoria button, and effects dial.",
-          "features": [
-            "High-resolution rotary encoder tracking",
-            "Calibratable crossfader center and edge zones"
-          ]
+          "description": "Acts like a DJ Hero turntable: platter encoders, the three stream buttons, crossfader, Euphoria button and effects dial.",
+          "features": ["High resolution platter tracking", "Crossfader calibration"]
         },
         "festival": {
-          "title": "Fortnite Festival (Profiles & Presets)",
+          "title": "Fortnite Festival",
           "badge": "Fortnite Festival",
-          "description": "In modern Santroller firmware, Fortnite Festival is handled through customizable Profiles rather than rigid built-in modes. This gives you full control over key bindings, strum keys, and overdrive triggers.",
+          "description": "Fortnite Festival is set up with a profile rather than a dedicated mode, so you choose the key bindings yourself.",
           "features": [
-            "<strong>Custom Key Bindings:</strong> Set up your own exact keys for every fret, strum, and navigation button.",
-            "<strong>1-Click Presets:</strong> Quickly load built-in presets (Lead Guitar, Pro Guitar, Drums, Pro Drums).",
-            "<strong>Consoles (PS4/PS5/Xbox):</strong> Use a Keyboard profile to play without console controller authentication or dongles!",
-            "<strong>Overdrive Integration:</strong> Enable 'Select to D-pad Left' in profile options for instant Star Power in game."
+            "<strong>Key bindings:</strong> Pick the key for every fret, strum direction and menu button.",
+            "<strong>Presets:</strong> Load bindings for Lead Guitar, Pro Guitar, Drums or Pro Drums in one click.",
+            "<strong>Consoles:</strong> A Keyboard profile works on PS4, PS5 and Xbox without authentication.",
+            "<strong>Overdrive:</strong> Turn on 'Select to D-pad Left' in the profile options so Select triggers Overdrive."
           ]
         },
         "gamepad": {
-          "title": "Standard Gamepad & Arcade Modes",
-          "badge": "Universal",
-          "description": "Standard gaming modes for traditional controllers, dance pads, and Japanese arcade titles.",
+          "title": "Gamepad & Arcade",
+          "badge": "General",
+          "description": "Modes for regular controllers, dance pads and arcade games.",
           "features": [
-            "Standard XInput (PC/Xbox), DirectInput (PS3/Switch), and OG Xbox",
-            "BEMANI modes: Pop'n Music, Beatmania IIDX, and GuitarFreaks",
-            "Arcade I/O: PDLoader and Spice2x compatibility"
+            "XInput (PC/Xbox), DirectInput (PS3/Switch) and original Xbox",
+            "BEMANI: Pop'n Music, Beatmania IIDX and GuitarFreaks",
+            "Arcade I/O for PDLoader and Spice2x"
           ]
         }
       }
     },
     "plugins": {
       "wiiBluetooth": {
-        "title": "Nintendo Wii & Wii U: Wireless Wii Remote Emulation (Recommended)",
-        "subtitle": "Connect natively via Bluetooth with ZERO console modifications, plugins, or homebrew",
-        "badge": "Recommended Method",
-        "alertTitle": "No Softmods or Homebrew Required!",
-        "alertBody": "Modern Santroller firmware can <strong>emulate an entire wireless Nintendo Wii Remote</strong> directly over Bluetooth. This allows you to play <strong>Guitar Hero, Band Hero, and DJ Hero</strong> on completely stock Wii and Wii U consoles running real retail game discs, without needing Brainslug or homebrew.",
-        "hardwareTitle": "Hardware Options",
-        "hardwarePicoW": "<strong>Raspberry Pi Pico W / Pico 2 W:</strong> Built-in CYW43439 Bluetooth radio emulates the Wii Remote wirelessly.",
-        "hardwarePicoWWarning": "* Warning: Avoid knockoff AliExpress \"Pico W\" boards that use an ESP8285/ESP8266 chip. They lack Bluetooth hardware and will not work!",
-        "hardwareDongle": "<strong>Standard Pico + USB Host BT Dongle:</strong> Plug a CSR8510 or BCM20702 Bluetooth adapter into your Pico's USB host port.",
-        "pairingTitle": "Pairing Instructions",
+        "title": "Wii & Wii U: Wii Remote emulation",
+        "subtitle": "Connects over Bluetooth. No console mods or homebrew needed.",
+        "badge": "Recommended",
+        "alertTitle": "Works on an unmodified console",
+        "alertBody": "Santroller can <strong>act as a Wii Remote</strong> over Bluetooth, so you can play <strong>Guitar Hero, Band Hero and DJ Hero</strong> on a stock Wii or Wii U with retail discs.",
+        "hardwareTitle": "What you need",
+        "hardwarePicoW": "<strong>Raspberry Pi Pico W / Pico 2 W:</strong> uses the built-in CYW43439 Bluetooth radio.",
+        "hardwarePicoWWarning": "Some cheap \"Pico W\" boards from AliExpress use an ESP8285/ESP8266 chip instead. These don't have Bluetooth and won't work.",
+        "hardwareDongle": "<strong>Regular Pico + Bluetooth dongle:</strong> plug a CSR8510 or BCM20702 dongle into the Pico's USB host port.",
+        "pairingTitle": "Pairing",
         "pairingSteps": [
-          "Configure your device in Santroller Configurator with <strong>Wii Remote Emulation</strong> enabled.",
-          "Power on your instrument and your Nintendo Wii / Wii U console.",
-          "Press the red <strong>SYNC</strong> button on the Wii console, then press SYNC on your controller.",
-          "The controller connects as Player 1 (or 2/3/4) and behaves as a genuine Wii Remote with guitar/drum extension!"
+          "Turn on <strong>Wii Remote Emulation</strong> for your device in the Configurator.",
+          "Turn on your instrument and the Wii / Wii U.",
+          "Press the <strong>SYNC</strong> button on the console, then press SYNC on your controller.",
+          "The controller connects as a Wii Remote with a guitar or drum extension."
         ]
       },
       "brainslug": {
-        "title": "Nintendo Wii: Santroller Brainslug (Alternative / USB Option)",
-        "subtitle": "Allows Guitar Hero, Band Hero, and DJ Hero on Wii to recognize wired USB instruments as Wii Remotes",
-        "badge": "Wii / Wii U Homebrew",
-        "intro": "If you are using a wired USB controller without Bluetooth hardware, Guitar Hero and DJ Hero on Wii expect guitars to be plugged into a Wii Remote extension port. <strong>Santroller Brainslug</strong> is a custom homebrew module that intercepts game controller routines and routes USB instruments directly to the game!",
-        "discTitle": "Setup with Real Game Discs (Homebrew Channel)",
+        "title": "Wii: Santroller Brainslug",
+        "subtitle": "Lets Guitar Hero, Band Hero and DJ Hero on Wii use wired USB instruments",
+        "badge": "Wii Homebrew",
+        "intro": "Guitar Hero and DJ Hero on Wii only look for instruments plugged into a Wii Remote. If you're using a wired USB controller without Bluetooth, <strong>Santroller Brainslug</strong> is a homebrew patch that makes these games read USB instruments instead.",
+        "discTitle": "Using game discs (Homebrew Channel)",
         "discSteps": [
-          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug Releases <icon /></extlink>",
-          "Extract the contents of <code>sd.zip</code> directly to the root of your Wii SD card.",
-          "Plug your Santroller USB instrument into the Wii USB port.",
-          "Insert your game disc and launch the Homebrew Channel.",
-          "Launch <strong>Brainslug</strong> from the Homebrew Channel. The game will boot with USB instrument support enabled."
+          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug releases <icon /></extlink>.",
+          "Extract <code>sd.zip</code> to the root of your Wii's SD card.",
+          "Plug your instrument into one of the Wii's USB ports.",
+          "Insert the game disc and open the Homebrew Channel.",
+          "Launch <strong>Brainslug</strong>. The game will boot with USB instrument support."
         ],
-        "usbLoaderTitle": "Setup with USB Loader GX (USB Hard Drive Games)",
-        "usbLoaderAlertTitle": "Important Requirement",
-        "usbLoaderAlertBody": "You <strong>must run the game from a USB hard drive/flash drive</strong>. Booting games from an SD card locks the card and prevents Brainslug from loading its modules.",
+        "usbLoaderTitle": "Using USB Loader GX",
+        "usbLoaderAlertTitle": "Load games from USB, not SD",
+        "usbLoaderAlertBody": "The game <strong>has to be loaded from a USB drive</strong>. Loading it from the SD card stops Brainslug from loading its modules.",
         "usbLoaderSteps": [
-          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug Releases <icon /></extlink>",
+          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug releases <icon /></extlink>.",
           "Extract <code>sd.zip</code> to the root of your SD card.",
-          "In <code>/bcs/dols/</code>, rename <code>RGHE52.dol</code> to the <strong>Title ID</strong> of the game you want to play (e.g., <code>SXEE52.dol</code> for Guitar Hero 5). You can duplicate and rename the file for multiple games.",
-          "Launch USBLoaderGX on your Wii.",
-          "Select your Guitar Hero game and click <strong>Settings</strong> → <strong>Game Load</strong>.",
+          "In <code>/bcs/dols/</code>, rename <code>RGHE52.dol</code> to the <strong>Title ID</strong> of your game (e.g. <code>SXEE52.dol</code> for Guitar Hero 5). Make a copy for each game you want to use.",
+          "Open USB Loader GX.",
+          "Select the game and go to <strong>Settings</strong> → <strong>Game Load</strong>.",
           "Set <strong>Game IOS</strong> to <code>Custom</code>.",
           "Set <strong>Custom Game IOS</strong> to <code>249</code> (or your cIOS slot).",
           "Set <strong>Alternate DOL</strong> to <code>Load from SD/USB</code>.",
-          "Save settings, plug in your USB instrument, and launch the game!"
+          "Save, plug in your instrument and start the game."
         ]
       },
       "pademu": {
-        "title": "PlayStation 2: PADEMU in Open PS2 Loader (OPL)",
-        "subtitle": "Emulate standard PS2 controller inputs from USB instruments on modded PS2 consoles",
+        "title": "PS2: PADEMU in Open PS2 Loader",
+        "subtitle": "Use USB instruments in older PS2 games on a modded PS2",
         "badge": "PS2 Homebrew",
-        "intro": "Because early PS2 games (such as Guitar Hero 1 & 2 and standard gamepads) only recognize controllers wired to the front DualShock ports, they ignore standard USB inputs. <strong>PADEMU (Pad Emulator)</strong> built into Open PS2 Loader translates USB controllers into virtual PS2 controllers in software!",
-        "note": "<strong>Note:</strong> Santroller firmware automatically enters PS3 mode when plugged into a PS2. PADEMU detects PS3 guitars and emulates an authentic PS2 Guitar Hero SG controller automatically. PADEMU works with ISO/backup games booted through OPL (not retail disc booting).",
+        "intro": "Older PS2 games, including Guitar Hero 1 and 2, only read controllers in the front controller ports and ignore USB. <strong>PADEMU</strong>, built into Open PS2 Loader, makes USB controllers show up as PS2 controllers.",
+        "note": "<strong>Note:</strong> Santroller switches to PS3 mode when plugged into a PS2. PADEMU sees a PS3 guitar and presents it to the game as a PS2 Guitar Hero controller. PADEMU only works for games launched from OPL, not retail discs.",
         "steps": [
-          "Plug your Santroller guitar or controller into a PS2 USB port.",
-          "Plug an original PS2 controller into Port 2 (useful for backup menu navigation).",
-          "Ensure you are running a recent build of <extlink>Open PS2 Loader (OPL) <icon /></extlink>.",
-          "Launch OPL and press Start to open <strong>Settings</strong>.",
-          "Navigate to <strong>Configure PADEMU</strong>.",
+          "Plug your Santroller controller into one of the PS2's USB ports.",
+          "Plug a normal PS2 controller into port 2, so you can still get around the menus.",
+          "Make sure you have a recent build of <extlink>Open PS2 Loader (OPL) <icon /></extlink>.",
+          "Start OPL and press Start to open <strong>Settings</strong>.",
+          "Go to <strong>Configure PADEMU</strong>.",
           "Set <strong>Pad Emulator</strong> to <code>On</code>.",
           "Set <strong>Pad Emulator Mode</strong> to <code>DualShock3/4 USB</code>.",
           "Set <strong>Multitap Emulation</strong> to <code>Off</code>.",
-          "Set <strong>Settings For Port</strong> to <code>1P</code> and set <strong>Emulation</strong> to <code>On</code>.",
-          "Click <strong>OK</strong>, then select <strong>Save Changes</strong>.",
-          "Launch Guitar Hero or any standard PS2 game from OPL. Your USB instrument will now work!"
+          "Set <strong>Settings For Port</strong> to <code>1P</code> and <strong>Emulation</strong> to <code>On</code>.",
+          "Press <strong>OK</strong>, then <strong>Save Changes</strong>.",
+          "Start the game from OPL."
         ]
       },
       "orbis": {
-        "title": "Modded Console Plugins: PS4 OrbisInstrumentalizer",
-        "subtitle": "Patch out instrument restrictions on jailbroken PlayStation 4 consoles",
-        "badge": "PS4 Jailbreak Plugin",
-        "cardTitle": "PS4: OrbisInstrumentalizer",
-        "cardSubtitle": "GoldHEN plugin for jailbroken PlayStation 4 consoles.",
-        "cardBody": "Patches Rock Band 4 and Guitar Hero Live to remove instrument restrictions and authentication checks, allowing any USB guitar or drum controller to work without needing an authentic security controller plugged into the USB Host port.",
+        "title": "PS4: OrbisInstrumentalizer",
+        "subtitle": "Removes instrument restrictions on a jailbroken PS4",
+        "badge": "PS4 Jailbreak",
+        "cardTitle": "OrbisInstrumentalizer",
+        "cardSubtitle": "A GoldHEN plugin for jailbroken PS4s.",
+        "cardBody": "Patches Rock Band 4 and Guitar Hero Live to remove the instrument and authentication checks, so any USB guitar or drum kit works without an auth controller plugged into the USB Host port.",
         "viewOnGithub": "View on GitHub"
       }
     },
     "auth": {
-      "alertTitle": "How Console Controller Authentication Works",
-      "alertBody": "Modern consoles (Xbox One, Xbox Series, PS4, PS5) challenge connected USB controllers with cryptographic challenges every few minutes. If a controller cannot sign the challenge using an official private key, the console disables or disconnects it after 8 minutes.",
-      "methodsTitle": "Methods to Handle Authentication",
+      "alertTitle": "How console authentication works",
+      "alertBody": "The Xbox One, Xbox Series, PS4 and PS5 regularly ask controllers to prove they're official. A controller that can't answer gets disconnected after about 8 minutes.",
+      "methodsTitle": "Ways to handle authentication",
       "methods": {
         "builtIn": {
-          "title": "1. Built-in Keys",
-          "body": "Santroller includes built-in security keys for the <strong>Xbox 360</strong>. It passes the Xbox 360 security handshake natively without requiring an external dongle or setup."
+          "title": "1. Built in",
+          "body": "Santroller handles <strong>Xbox 360</strong> authentication itself. No extra hardware needed."
         },
         "usbPassthrough": {
-          "title": "2. USB Passthrough",
-          "body": "Connect an official controller or most third-party Xbox One gamepads / security dongles into the secondary USB Host port. Santroller transparently passes challenges through while you play."
+          "title": "2. USB passthrough",
+          "body": "Plug an official controller, most third-party Xbox One controllers, or an auth dongle into the USB Host port. Santroller passes the console's requests through to it."
         },
         "harvestedChip": {
-          "title": "3. Harvested Chip (I2C)",
-          "body": "Harvest the security authentication chip from an Xbox One controller PCB and wire it directly to the Pico via I2C. Enables fully internal, dongle-free Xbox One/Series authentication!"
+          "title": "3. Auth chip (I2C)",
+          "body": "Take the auth chip off an Xbox One controller board and wire it to the Pico over I2C. This handles Xbox One / Series authentication without anything plugged in."
         },
         "noAuth": {
-          "title": "4. No-Auth Modes",
-          "body": "Use protocol modes that do not require authentication:<br />• <strong>Fortnite Festival:</strong> Keyboard Profiles<br />• <strong>Rock Band 4 on PS4/PS5:</strong> Legacy PS3 mode"
+          "title": "4. Avoid it",
+          "body": "Some setups don't need authentication at all:<br />• <strong>Fortnite Festival:</strong> Keyboard profiles<br />• <strong>Rock Band 4 on PS4/PS5:</strong> PS3 instrument mode"
         }
       },
-      "hardwareTitle": "Supported Security Hardware for Xbox & PlayStation",
-      "hardwareSubtitle": "When USB Host inputs or an I2C Xbox One auth chip are configured, authentication challenges from the console are automatically handled:",
+      "hardwareTitle": "Supported auth hardware",
+      "hardwareSubtitle": "With one of these on the USB Host port, or an auth chip wired over I2C, Santroller answers the console's auth requests automatically:",
       "columns": {
         "console": "Console",
-        "hardware": "Supported Authentication Controller / Chip",
+        "hardware": "Controller / Chip",
         "notes": "Notes"
       },
       "rows": {
         "xbone": {
           "console": "Xbox One / Series X|S",
-          "hardware": "Official or most 3rd-party wired Xbox One/Series gamepads, OR harvested Xbox One auth chip (I2C)",
-          "notes": "Most third-party Xbox One gamepads are supported over USB Host. Alternatively, solder a harvested Xbox One security chip directly to Pico I2C pins for an internal, dongle-free build."
+          "hardware": "Official or most third-party wired Xbox One / Series controllers, or an Xbox One auth chip (I2C)",
+          "notes": "Most third-party Xbox One controllers work over USB Host. You can also wire an auth chip from an Xbox One controller to the Pico's I2C pins so nothing needs to be plugged in."
         },
         "ps4": {
           "console": "PlayStation 4",
           "hardware": "DualShock 4 or Mayflash MAGPS4 / Magicboots PS4 dongle",
-          "notes": "Keep the dongle or controller connected while playing."
+          "notes": "Leave the dongle or controller plugged in while you play."
         },
         "ps5": {
           "console": "PlayStation 5",
           "hardware": "Besavior P5General",
-          "notes": "Required for native PS5 titles. Magicboots PS4/S5 do not work on native PS5 games."
+          "notes": "Needed for PS5 games. Magicboots PS4/S5 don't work with PS5 games."
         }
       }
     },
     "festival": {
-      "alertTitle": "Fortnite Festival: Configurable Profiles & Keybindings",
-      "alertBody": "In modern Santroller firmware, Fortnite Festival is no longer a rigid, hardcoded mode. Instead, you set it up by creating <strong>Profiles</strong>! This gives you full freedom to configure your own custom keybindings, choose between keyboard and controller emulation, and play on consoles without needing any authentication dongles.",
+      "alertTitle": "Fortnite Festival uses profiles",
+      "alertBody": "There's no dedicated Fortnite Festival mode. Instead you create a <strong>profile</strong>, which lets you choose your own key bindings, pick keyboard or controller output, and play on consoles without an auth dongle.",
       "keyboard": {
-        "title": "Why Use a Keyboard Profile on Consoles?",
-        "subtitle": "Bypasses all console controller authentication without extra hardware!",
-        "body1": "Consoles (PlayStation 4, PlayStation 5, Xbox One, and Xbox Series X|S) enforce strict cryptographic security handshakes on gamepads, causing unauthenticated devices to disconnect after 8 minutes.",
-        "body2": "However, <strong>all modern consoles natively accept USB keyboards without any authentication checks</strong>. By creating a Keyboard Profile in Santroller, your guitar or drum controller acts as a standard keyboard—allowing you to play Fortnite Festival natively with zero timeouts and no security dongles!",
+        "title": "Keyboard profiles on consoles",
+        "subtitle": "No auth dongle needed",
+        "body1": "PS4, PS5, Xbox One and Xbox Series consoles require controllers to authenticate, and will disconnect a controller that can't after about 8 minutes.",
+        "body2": "Keyboards don't need to authenticate, and Fortnite Festival supports keyboard controls. If you set up a Keyboard profile, your guitar or drums show up as a USB keyboard and you can play without any extra hardware.",
         "badge": "Works on PS4, PS5, Xbox One & Series"
       },
       "pc": {
-        "title": "Playing on PC / Windows",
-        "subtitle": "Choose between native controller mode or keyboard emulation",
-        "body": "On PC, Fortnite Festival supports both native guitar controllers and standard keyboards:",
+        "title": "Playing on PC",
+        "subtitle": "Controller or keyboard",
+        "body": "On PC, Fortnite Festival works with both guitar controllers and keyboards:",
         "options": [
-          "<strong>Native Guitar Mode:</strong> Use a standard Guitar Hero or Rock Band profile with XInput enabled. Enable <strong>Send Select as D-pad Left</strong> in Profile Options so Overdrive activates properly.",
-          "<strong>Keyboard Mode:</strong> Use a Keyboard profile if you prefer binding custom keys or matching PC keyboard rhythm setups."
+          "<strong>Guitar:</strong> Use a Guitar Hero or Rock Band profile with XInput. Turn on <strong>Send Select as D-pad Left</strong> in the profile options so Overdrive works.",
+          "<strong>Keyboard:</strong> Use a Keyboard profile if you'd rather bind your own keys."
         ]
       },
       "steps": {
-        "title": "Step-by-Step: Creating a Fortnite Festival Profile",
-        "subtitle": "Follow these steps to create and customize your Fortnite Festival setup in the new configurator:",
-        "addProfile": "<strong>Add a New Profile:</strong> In the sidebar under the <strong>Profiles</strong> section, click <strong>Add profile</strong>. Name it something clear, such as <code>Fortnite Keyboard</code>.",
-        "setEmulation": "<strong>Set Emulation Type to Keyboard:</strong> In your profile's options, set <strong>Device to Emulate</strong> to <code>Keyboard / Mouse</code>.",
-        "loadPreset": "<strong>Load a Mapping Preset (Optional Quickstart):</strong> Under the <strong>Mappings</strong> section, select <strong>Presets</strong> to populate default bindings:",
+        "title": "Setting up a Fortnite Festival profile",
+        "addProfile": "<strong>Add a profile:</strong> Under <strong>Profiles</strong> in the sidebar, click <strong>Add profile</strong> and give it a name like <code>Fortnite Keyboard</code>.",
+        "setEmulation": "<strong>Switch it to keyboard:</strong> In the profile options, set <strong>Device to Emulate</strong> to <code>Keyboard / Mouse</code>.",
+        "loadPreset": "<strong>Load a preset (optional):</strong> Under <strong>Mappings</strong>, pick one of the <strong>Presets</strong>:",
         "presets": [
-          "<code>Fortnite Festival - Guitar (Lead)</code>: Binds frets to D, F, J, K, L and Overdrive to Space.",
-          "<code>Fortnite Festival - Pro Guitar</code>: Binds frets to 1-5, strums to Right Shift / Right Ctrl, whammy to Slash, and tilt to PageDown.",
-          "<code>Fortnite Festival - Drums / Pro Drums</code>: Binds pads and cymbals to standard drum keys."
+          "<code>Fortnite Festival - Guitar (Lead)</code>: frets on D, F, J, K, L and Overdrive on Space.",
+          "<code>Fortnite Festival - Pro Guitar</code>: frets on 1-5, strum on Right Shift / Right Ctrl, whammy on Slash and tilt on PageDown.",
+          "<code>Fortnite Festival - Drums / Pro Drums</code>: pads and cymbals on the default drum keys."
         ],
-        "customize": "<strong>Customize Your Own Key Bindings:</strong> You are not locked into the presets! Click any input row to bind your frets, strum bar, whammy bar, or tilt sensor to whatever keys you prefer in your in-game Fortnite settings.",
-        "navigation": "<strong>Add Menu Navigation Bindings:</strong> In the new firmware, you can bind navigation keys (such as Arrow keys, Enter, or Escape) to dedicated buttons or button shortcuts (e.g. Start + Select) so you can navigate Fortnite's menus with ease.",
-        "assignments": "<strong>Set Profile Assignments (Triggers):</strong> Under <strong>Assignments</strong>, configure when this profile activates. You can set an activation trigger to hold a button (like the Green fret or Start button) while plugging in to switch into this profile, or set it as default.",
-        "save": "<strong>Save to Device:</strong> Click <strong>Save Settings</strong>. Your controller will now output your custom keyboard bindings when plugged in!"
+        "customize": "<strong>Change bindings:</strong> Click any input to bind it to a different key. Just make sure it matches your Fortnite settings.",
+        "navigation": "<strong>Menu navigation:</strong> Bind keys like the arrow keys, Enter and Escape to buttons or button combos (e.g. Start + Select) so you can get around Fortnite's menus.",
+        "assignments": "<strong>Choose when it's used:</strong> Under <strong>Assignments</strong>, set the profile as the default, or have it activate when you hold a button (like Green or Start) while plugging in.",
+        "save": "<strong>Save:</strong> Click <strong>Save Settings</strong>."
       }
     }
   }

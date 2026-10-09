@@ -59,6 +59,8 @@ interface HardwareText {
   badge: string;
   description: string;
   details: string[];
+  // Shown as a highlighted callout below the details
+  warning?: string;
   guideLabel?: string;
 }
 
@@ -75,7 +77,7 @@ const HARDWARE_CATALOG: HardwareItem[] = [
   { id: 'mcu_legacy_promicro', category: 'mcu', badgeColor: 'orange' },
   { id: 'mcu_legacy_uno_mega', category: 'mcu', badgeColor: 'orange' },
   { id: 'bt_csr8510', category: 'usb_host', badgeColor: 'teal' },
-  { id: 'bt_broadcom_bcm', category: 'usb_host', badgeColor: 'indigo' },
+  { id: 'bt_broadcom_bcm', category: 'usb_host', badgeColor: 'yellow' },
   { id: 'usb_ps_controllers', category: 'usb_host', badgeColor: 'blue' },
   { id: 'usb_ps3_instruments', category: 'usb_host', badgeColor: 'teal' },
   { id: 'usb_modern_guitars', category: 'usb_host', badgeColor: 'teal' },
@@ -176,7 +178,8 @@ export function SupportedHardwarePage() {
         item.name.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
         item.interfaceType.toLowerCase().includes(q) ||
-        item.details.some((d) => d.toLowerCase().includes(q));
+        item.details.some((d) => d.toLowerCase().includes(q)) ||
+        !!item.warning?.toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
   }, [catalog, selectedCategory, search]);
@@ -349,6 +352,19 @@ export function SupportedHardwarePage() {
                     </Group>
                   ))}
                 </Stack>
+
+                {item.warning && (
+                  <Alert
+                    variant="light"
+                    color="yellow"
+                    radius="sm"
+                    p="xs"
+                    mt={6}
+                    icon={<IconAlertTriangle size={16} />}
+                  >
+                    <Text size="xs">{item.warning}</Text>
+                  </Alert>
+                )}
               </Stack>
 
               {item.guideLink && (
