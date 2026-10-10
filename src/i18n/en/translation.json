@@ -3561,7 +3561,7 @@
     },
     "auth": {
       "alertTitle": "How console authentication works",
-      "alertBody": "The Xbox One, Xbox Series, PS4 and PS5 regularly ask controllers to prove they're official. A controller that can't answer gets disconnected after about 8 minutes.",
+      "alertBody": "The PS4 and PS5 regularly ask controllers to prove they're official, and will disconnect a controller that can't answer after about 8 minutes. The Xbox One and Xbox Series only check authentication on plug in - you can outright unplug an auth controller once authenticated and it still stays authenticated.",
       "methodsTitle": "Ways to handle authentication",
       "methods": {
         "builtIn": {
@@ -3592,7 +3592,7 @@
         "xbone": {
           "console": "Xbox One / Series X|S",
           "hardware": "Official or most third-party wired Xbox One / Series controllers, or an Xbox One auth chip (I2C)",
-          "notes": "Most third-party Xbox One controllers work over USB Host. You can also wire an auth chip from an Xbox One controller to the Pico's I2C pins so nothing needs to be plugged in."
+          "notes": "Most third-party Xbox One controllers work over USB Host. Because auth is only checked on plug in, you can unplug the auth controller once authenticated. You can also wire an auth chip from an Xbox One controller to the Pico's I2C pins so nothing needs to be plugged in."
         },
         "ps4": {
           "console": "PlayStation 4",
@@ -3612,7 +3612,7 @@
       "keyboard": {
         "title": "Keyboard profiles on consoles",
         "subtitle": "No auth dongle needed",
-        "body1": "PS4, PS5, Xbox One and Xbox Series consoles require controllers to authenticate, and will disconnect a controller that can't after about 8 minutes.",
+        "body1": "PS4, PS5, Xbox One and Xbox Series consoles require controllers to authenticate (with PS4 and PS5 disconnecting controllers after about 8 minutes if they can't answer).",
         "body2": "Keyboards don't need to authenticate, and Fortnite Festival supports keyboard controls. If you set up a Keyboard profile, your guitar or drums show up as a USB keyboard and you can play without any extra hardware.",
         "badge": "Works on PS4, PS5, Xbox One & Series"
       },
