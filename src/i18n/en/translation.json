@@ -3404,7 +3404,7 @@
           "recommendedMode": "Wii Remote emulation (Pico W or Bluetooth dongle)",
           "connection": "Bluetooth, USB (Brainslug) or Wii extension cable",
           "notes": "Santroller can act as a Wii Remote over Bluetooth using a Pico W or a USB Bluetooth dongle. This works on an unmodified Wii with retail discs. Otherwise, use Brainslug on a modded Wii or wire up a Wii extension cable.",
-          "pluginOrAuth": "<wii>Bluetooth (Pico W or USB dongle)</wii>"
+          "pluginOrAuth": "<wii>Bluetooth (Pico W or USB dongle)</wii> or <brainslug>Brainslug (USB)</brainslug>"
         },
         "switch": {
           "console": "Nintendo Switch",

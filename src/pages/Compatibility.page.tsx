@@ -54,6 +54,7 @@ interface CompatibilityRow {
 // <tag>...</tag>, so a single requirement can point at several sections.
 const REQUIREMENT_SECTIONS: Record<string, { tab: string; section: string }> = {
   wii: { tab: 'plugins', section: 'wii-bluetooth' },
+  brainslug: { tab: 'plugins', section: 'brainslug' },
   pademu: { tab: 'plugins', section: 'pademu' },
   orbis: { tab: 'plugins', section: 'orbis' },
   auth: { tab: 'auth', section: 'auth-hardware' },
@@ -429,7 +430,7 @@ export function CompatibilityPage() {
               </Paper>
 
               {/* Brainslug Wii Guide */}
-              <Paper withBorder radius="md" p="lg">
+              <Paper id="brainslug" withBorder radius="md" p="lg">
                 <Group justify="space-between" mb="sm">
                   <Group gap="xs">
                     <ThemeIcon color="red" variant="light" size="lg" radius="md">
