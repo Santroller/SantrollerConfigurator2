@@ -8,6 +8,7 @@ import {
   IconDeviceGamepad,
   IconDeviceGamepad2,
   IconDevices,
+  IconExternalLink,
   IconFlame,
   IconInfoCircle,
   IconLamp,
@@ -74,8 +75,18 @@ const HARDWARE_CATALOG: HardwareItem[] = [
   { id: 'pico2_rp2350', category: 'mcu', badgeColor: 'blue' },
   { id: 'pico_w_wireless', category: 'mcu', badgeColor: 'violet' },
   { id: 'rp2040_derivatives', category: 'mcu', badgeColor: 'cyan' },
-  { id: 'mcu_legacy_promicro', category: 'mcu', badgeColor: 'orange' },
-  { id: 'mcu_legacy_uno_mega', category: 'mcu', badgeColor: 'orange' },
+  {
+    id: 'mcu_legacy_promicro',
+    category: 'mcu',
+    badgeColor: 'orange',
+    guideLink: 'https://legacy.santroller.com',
+  },
+  {
+    id: 'mcu_legacy_uno_mega',
+    category: 'mcu',
+    badgeColor: 'orange',
+    guideLink: 'https://legacy.santroller.com',
+  },
   { id: 'bt_csr8510', category: 'usb_host', badgeColor: 'teal' },
   { id: 'bt_broadcom_bcm', category: 'usb_host', badgeColor: 'yellow' },
   { id: 'usb_ps_controllers', category: 'usb_host', badgeColor: 'blue' },
@@ -379,17 +390,33 @@ export function SupportedHardwarePage() {
                   pt="sm"
                   style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
                 >
-                  <Button
-                    size="xs"
-                    variant="subtle"
-                    color="blue"
-                    rightSection={<IconArrowRight size={14} />}
-                    component={Link}
-                    to={item.guideLink}
-                    px={6}
-                  >
-                    {item.guideLabel ?? t('supportedHardware.openGuide')}
-                  </Button>
+                  {item.guideLink.startsWith('http') ? (
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      color="blue"
+                      rightSection={<IconExternalLink size={14} />}
+                      component="a"
+                      href={item.guideLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      px={6}
+                    >
+                      {item.guideLabel ?? t('supportedHardware.openGuide')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      color="blue"
+                      rightSection={<IconArrowRight size={14} />}
+                      component={Link}
+                      to={item.guideLink}
+                      px={6}
+                    >
+                      {item.guideLabel ?? t('supportedHardware.openGuide')}
+                    </Button>
+                  )}
                 </Group>
               )}
             </Card>

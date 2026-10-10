@@ -2444,6 +2444,12 @@
           "descSerialClock": "Serial bus clock synchronization line",
           "descSync": "Optional sync button pin (active low to ground)"
         },
+        "rf-wiring": {
+          "shortTitle": "Wiring",
+          "title": "2. Module Pinout & Wiring",
+          "badge": "Wiring",
+          "description": "Step-by-step soldering instructions for your chosen module."
+        },
         "rf-fat": {
           "shortTitle": "Fat Module",
           "title": "2. Wiring the Original / Fat RF Module (RF01 / Rev H)",
@@ -2671,26 +2677,24 @@
         "name": "SparkFun Pro Micro (ATmega32U4)",
         "interfaceType": "Legacy microcontroller",
         "badge": "Old firmware only",
-        "description": "Only supported by the old Santroller 1 firmware (v10.1.188). Uses the ATmega32U4, which has built-in USB.",
+        "description": "Only supported by the old Santroller 1 firmware (v10.1.189-legacy.2). Uses the ATmega32U4, which has built-in USB.",
         "details": [
-          "Comes in 5V (16 MHz) and 3.3V (8 MHz) versions",
-          "Fine for basic directly wired guitars",
-          "No USB host, Bluetooth or most of the newer peripheral support",
-          "To get into the bootloader, short RST to GND twice within half a second"
+          "No USB host, Bluetooth or most of the newer peripheral support"
         ],
-        "warning": "This board only runs the old Santroller 1 firmware, which has known bugs that won't be fixed. For new builds, use a Pico or Pico 2 instead."
+        "warning": "This board only runs the old Santroller 1 firmware, which may have bugs and is missing a lot of newer features. For new builds, use a Pico or Pico 2 instead.",
+        "guideLabel": "Legacy Firmware Documentation"
       },
       "mcu_legacy_uno_mega": {
         "name": "Arduino Uno R3 & Mega 2560 (ATmega16U2)",
         "interfaceType": "Legacy microcontroller",
         "badge": "Old firmware only",
-        "description": "Only supported by the old Santroller 1 firmware (v10.1.188), flashed over DFU. The board needs a genuine ATmega16U2 USB chip.",
+        "description": "Only supported by the old Santroller 1 firmware (v10.1.189-legacy.2), flashed over DFU. The board needs a genuine ATmega16U2 USB chip.",
         "details": [
           "Boards with a CH340 or FTDI USB chip won't work",
-          "The 16U2 handles USB while the main chip reads the inputs",
-          "To get into DFU mode, short the two ICSP pins nearest the USB port"
+          "No USB host, Bluetooth or most of the newer peripheral support"
         ],
-        "warning": "This board only runs the old Santroller 1 firmware, which has known bugs that won't be fixed. For new builds, use a Pico or Pico 2 instead."
+        "warning": "This board only runs the old Santroller 1 firmware, which may have bugs and is missing a lot of newer features. For new builds, use a Pico or Pico 2 instead.",
+        "guideLabel": "Legacy Firmware Documentation"
       },
       "bt_csr8510": {
         "name": "CSR8510 A10 Bluetooth USB Dongle",

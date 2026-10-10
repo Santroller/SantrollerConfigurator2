@@ -6,12 +6,12 @@ import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core
 import { Layout } from '@/components/Layout/Layout';
 import { GuideStepNav } from '@/guides/components/GuideStepNav';
 import { DIRECT_PICO_GUITAR_GUIDE } from '@/guides/guitar/guitarGuide';
-import { getGuideById } from '@/guides/registry';
+import { getLocalizedGuide, useGuideById } from '@/guides/registry';
 
 export function GuidePage() {
   const { t } = useTranslation();
   const { guideId } = useParams<{ guideId?: string }>();
-  const guide = getGuideById(guideId) ?? DIRECT_PICO_GUITAR_GUIDE;
+  const guide = useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t);
 
   const storageKey = `santroller_guide_step_${guide.id}`;
 

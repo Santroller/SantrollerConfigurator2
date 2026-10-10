@@ -59,21 +59,70 @@ export function useGuideCategories(): CategoryInfo[] {
   return useMemo(() => getGuideCategories(t), [t]);
 }
 
-export function getAllGuides(): GuideDefinition[] {
-  return Object.values(GUIDE_REGISTRY);
+export function getLocalizedGuide(guide: GuideDefinition, t?: TFunction): GuideDefinition {
+  const translate = t ?? i18next.t.bind(i18next);
+  const localizedTitle = translate(`guides.${guide.id}.title`, guide.title);
+  const localizedSubtitle = translate(`guides.${guide.id}.subtitle`, guide.subtitle);
+  const localizedDesc = translate(`guides.${guide.id}.description`, guide.description);
+  const localizedTime = translate(`guides.${guide.id}.estimatedTime`, guide.estimatedTime);
+  const localizedBadge = guide.badge
+    ? translate(`guides.${guide.id}.badge`, guide.badge)
+    : undefined;
+
+  const localizedSteps = guide.steps.map((step) => ({
+    ...step,
+    title: translate(`guides.${guide.id}.steps.${step.id}.title`, step.title),
+    shortTitle: translate(`guides.${guide.id}.steps.${step.id}.shortTitle`, step.shortTitle),
+    description: translate(`guides.${guide.id}.steps.${step.id}.description`, step.description),
+    badge: step.badge
+      ? translate(`guides.${guide.id}.steps.${step.id}.badge`, step.badge)
+      : undefined,
+  }));
+
+  return {
+    ...guide,
+    title: String(localizedTitle),
+    subtitle: String(localizedSubtitle),
+    description: String(localizedDesc),
+    estimatedTime: String(localizedTime),
+    badge: localizedBadge ? String(localizedBadge) : undefined,
+    steps: localizedSteps,
+  };
 }
 
-export function getGuideById(id: string | undefined): GuideDefinition | undefined {
-  if (!id) {
+export function getAllGuides(t?: TFunction): GuideDefinition[] {
+  return Object.values(GUIDE_REGISTRY).map((g) => getLocalizedGuide(g, t));
+}
+
+export function useAllGuides(): GuideDefinition[] {
+  const { t } = useTranslation();
+  return useMemo(() => getAllGuides(t), [t]);
+}
+
+export function getGuideById(id: string | undefined, t?: TFunction): GuideDefinition | undefined {
+  if (!id || !GUIDE_REGISTRY[id]) {
     return undefined;
   }
-  return GUIDE_REGISTRY[id];
+  return getLocalizedGuide(GUIDE_REGISTRY[id], t);
 }
 
-export function getGuidesByCategory(category: GuideCategory | 'all'): GuideDefinition[] {
-  const all = getAllGuides();
+export function useGuideById(id: string | undefined): GuideDefinition | undefined {
+  const { t } = useTranslation();
+  return useMemo(() => getGuideById(id, t), [id, t]);
+}
+
+export function getGuidesByCategory(
+  category: GuideCategory | 'all',
+  t?: TFunction
+): GuideDefinition[] {
+  const all = getAllGuides(t);
   if (category === 'all') {
     return all;
   }
   return all.filter((g) => g.category === category);
+}
+
+export function useGuidesByCategory(category: GuideCategory | 'all'): GuideDefinition[] {
+  const { t } = useTranslation();
+  return useMemo(() => getGuidesByCategory(category, t), [category, t]);
 }

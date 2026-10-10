@@ -16,7 +16,7 @@ import {
   Title,
 } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
-import { getAllGuides, useGuideCategories } from '@/guides/registry';
+import { useAllGuides, useGuideCategories } from '@/guides/registry';
 import { GuideCategory } from '@/guides/types';
 
 export function GuideCatalogPage() {
@@ -26,7 +26,7 @@ export function GuideCatalogPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<GuideCategory | 'all'>('all');
 
-  const allGuides = useMemo(() => getAllGuides(), []);
+  const allGuides = useAllGuides();
 
   const filteredGuides = useMemo(() => {
     return allGuides.filter((guide) => {
