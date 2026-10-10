@@ -9,6 +9,7 @@ import { RGB_LED_GUIDE } from './leds/ledGuide';
 import { DJ_TURNTABLE_GUIDE } from './turntable/turntableGuide';
 import { GuideCategory, GuideDefinition } from './types';
 import { USB_HOST_GUIDE } from './usb/usbHostGuide';
+import { XBOX360_RF_GUIDE } from './xbox360rf/xbox360RfGuide';
 
 export const GUIDE_REGISTRY: Record<string, GuideDefinition> = {
   [DIRECT_PICO_GUITAR_GUIDE.id]: DIRECT_PICO_GUITAR_GUIDE,
@@ -18,6 +19,7 @@ export const GUIDE_REGISTRY: Record<string, GuideDefinition> = {
   [DJ_TURNTABLE_GUIDE.id]: DJ_TURNTABLE_GUIDE,
   [USB_HOST_GUIDE.id]: USB_HOST_GUIDE,
   [RGB_LED_GUIDE.id]: RGB_LED_GUIDE,
+  [XBOX360_RF_GUIDE.id]: XBOX360_RF_GUIDE,
 };
 
 export interface CategoryInfo {

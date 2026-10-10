@@ -151,7 +151,12 @@ const HARDWARE_CATALOG: HardwareItem[] = [
   { id: 'bus_snes_pad', category: 'bus', badgeColor: 'red' },
   { id: 'bus_joybus', category: 'bus', badgeColor: 'purple' },
   { id: 'bus_joybus_emulation', category: 'bus', badgeColor: 'purple' },
-  { id: 'bus_xbox360_rf', category: 'bus', badgeColor: 'green' },
+  {
+    id: 'bus_xbox360_rf',
+    category: 'bus',
+    badgeColor: 'green',
+    guideLink: '/guides/xbox360-rf',
+  },
   { id: 'bus_midi', category: 'bus', badgeColor: 'grape' },
 ];
 
