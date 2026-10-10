@@ -487,13 +487,23 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const deviceStatus: Record<string, DeviceStatus> = {};
   for (const x of config.devices || []) {
     const parentIdStr = x.deviceid.toString();
-    const typeName = Object.keys(x).find((k) => k !== 'deviceid')! as DeviceType;
+    const typeName = Object.keys(x).find((k) => k !== 'deviceid') as DeviceType | undefined;
+    // A device whose type this tool doesn't know (e.g. saved by an older build) can't be shown or
+    // edited, and the firmware can't build it either, so drop it rather than saving it back
+    if (!typeName || !isDeviceKind(typeName)) {
+      console.warn('Dropping device with unknown type', x);
+      continue;
+    }
     deviceStatus[parentIdStr] = new DeviceStatus(parentIdStr, typeName, x);
 
     if (x.peripheral?.devices?.length) {
       for (const sub of x.peripheral.devices) {
         const subIdStr = sub.deviceid.toString();
-        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid')! as DeviceType;
+        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid') as DeviceType | undefined;
+        if (!subTypeName || !isDeviceKind(subTypeName)) {
+          console.warn('Dropping peripheral device with unknown type', sub);
+          continue;
+        }
         deviceStatus[subIdStr] = new DeviceStatus(subIdStr, subTypeName, sub, parentIdStr);
       }
     }
