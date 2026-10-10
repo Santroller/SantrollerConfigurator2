@@ -2704,7 +2704,7 @@
         "details": [
           "Adds Wii Remote emulation to a regular (non-W) Pico for Wii Guitar Hero and DJ Hero",
           "Runs from ROM, no firmware patch needed",
-          "Connects PS3, PS4 and other Bluetooth controllers",
+          "Connects PS3, PS4 (including Bluetooth PS4 guitars) and other Bluetooth controllers",
           "Cheap and easy to find, sold under brands like TP-Link and ORICO"
         ]
       },
@@ -2745,13 +2745,15 @@
       },
       "usb_modern_guitars": {
         "name": "PS4 / PS5 / Xbox One Guitars",
-        "interfaceType": "USB Host port",
-        "badge": "USB Host",
-        "description": "Current-generation wireless guitars work through their USB dongles.",
+        "interfaceType": "USB Host / Bluetooth",
+        "badge": "USB & Bluetooth",
+        "description": "Current-generation wireless guitars work through their USB dongles (including CRKD and PDP Riffmaster), and native Bluetooth PS4 guitars also work wirelessly.",
         "details": [
-          "PS4 / PS5 dongle versions",
-          "Xbox One dongle versions",
-          "Frets, strum, whammy and tilt"
+          "Native Bluetooth PS4 guitars: Mad Catz Rock Band 4 Stratocaster and PDP Jaguar (plus RB4 drums) connect directly over Bluetooth without a dongle",
+          "Native Xbox One guitars: Mad Catz Rock Band 4 Stratocaster and PDP Jaguar (plus RB4 drums) connect via the Xbox Wireless Receiver",
+          "USB dongle guitars: CRKD guitars, PDP Riffmaster, and Guitar Hero Live wireless dongles",
+          "PS4, PS5 and Xbox One dongle versions supported",
+          "Frets, strum, whammy and tilt are all supported"
         ]
       },
       "usb_x360_wired": {
