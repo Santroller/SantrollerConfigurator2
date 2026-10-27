@@ -16,7 +16,7 @@ use futures_lite::StreamExt;
 use hidapi::{HidApi, HidDevice};
 use nusb::hotplug::HotplugEvent;
 use serde::Serialize;
-use tauri::{ipc::Request, AppHandle, Emitter, Manager, State, Url};
+use tauri::{ipc::{Channel, Request}, AppHandle, Emitter, Manager, State, Url};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
@@ -522,6 +522,110 @@ async fn save_file(app: AppHandle, request: Request<'_>) -> Result<bool, String>
     Ok(true)
 }
 
+// The portable build is just the exe, which the updater can't update: it would install the msi
+// alongside it. It replaces itself with the portable exe from the release instead.
+#[cfg(feature = "portable")]
+fn portable_update_target() -> Option<String> {
+    tauri_plugin_updater::target().map(|target| format!("{target}-portable"))
+}
+
+// Windows won't let the running exe be overwritten, but it can be renamed out of the way. It's
+// left behind until the next start.
+#[cfg(feature = "portable")]
+fn replaced_exe(exe: &Path) -> PathBuf {
+    let mut name = exe.as_os_str().to_owned();
+    name.push(".old");
+    PathBuf::from(name)
+}
+
+// What to pass to the updater's check, so it looks for the portable exe. None when installed.
+#[tauri::command]
+fn update_target() -> Option<String> {
+    #[cfg(feature = "portable")]
+    {
+        portable_update_target()
+    }
+    #[cfg(not(feature = "portable"))]
+    {
+        None
+    }
+}
+
+// The same events as the updater's downloadAndInstall
+#[cfg_attr(not(feature = "portable"), allow(dead_code))]
+#[derive(Clone, Serialize)]
+#[serde(tag = "event", content = "data")]
+enum DownloadEvent {
+    #[serde(rename_all = "camelCase")]
+    Started {
+        content_length: Option<u64>,
+    },
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        chunk_length: usize,
+    },
+    Finished,
+}
+
+// Swaps the portable exe for the latest release's and starts that
+#[tauri::command]
+async fn install_portable_update(
+    app: AppHandle,
+    on_event: Channel<DownloadEvent>,
+) -> Result<(), String> {
+    #[cfg(feature = "portable")]
+    {
+        use tauri_plugin_updater::UpdaterExt;
+        let target = portable_update_target().ok_or("Updates aren't supported here")?;
+        let update = app
+            .updater_builder()
+            .target(target)
+            .build()
+            .map_err(|e| e.to_string())?
+            .check()
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or("There's no update to install")?;
+        let mut started = false;
+        // checks the signature before handing it over
+        let new_exe = update
+            .download(
+                |chunk_length, content_length| {
+                    if !std::mem::replace(&mut started, true) {
+                        let _ = on_event.send(DownloadEvent::Started { content_length });
+                    }
+                    let _ = on_event.send(DownloadEvent::Progress { chunk_length });
+                },
+                || {
+                    let _ = on_event.send(DownloadEvent::Finished);
+                },
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let old = replaced_exe(&exe);
+        let _ = std::fs::remove_file(&old);
+        std::fs::rename(&exe, &old)
+            .map_err(|e| format!("Couldn't replace {}: {e}", exe.display()))?;
+        if let Err(e) = std::fs::write(&exe, new_exe) {
+            let _ = std::fs::remove_file(&exe);
+            let _ = std::fs::rename(&old, &exe);
+            return Err(format!("Couldn't write {}: {e}", exe.display()));
+        }
+        std::process::Command::new(&exe)
+            .args(std::env::args_os().skip(1))
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        app.exit(0);
+        Ok(())
+    }
+    #[cfg(not(feature = "portable"))]
+    {
+        let _ = (app, on_event);
+        Err("Only the portable build updates itself".to_owned())
+    }
+}
+
 fn is_app_url(url: &Url) -> bool {
     matches!(url.scheme(), "tauri" | "asset")
         || matches!(url.host_str(), Some("localhost" | "tauri.localhost" | "127.0.0.1"))
@@ -548,6 +652,14 @@ pub fn run() {
                 .build(),
         )
         .manage(HidState::default())
+        .setup(|_| {
+            // the exe an update replaced, now that it isn't running
+            #[cfg(feature = "portable")]
+            if let Ok(exe) = std::env::current_exe() {
+                let _ = std::fs::remove_file(replaced_exe(&exe));
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             hid_list,
             hid_watch,
@@ -559,6 +671,8 @@ pub fn run() {
             save_file,
             check_udev_rules,
             install_udev_rules,
+            update_target,
+            install_portable_update,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run the Santroller Configurator");

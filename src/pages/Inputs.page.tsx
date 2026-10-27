@@ -20,6 +20,7 @@ import {
   IconDeviceGamepad,
   IconExclamationCircle,
   IconGripVertical,
+  IconMoon,
   IconPencil,
   IconPlus,
   IconSparkles,
@@ -5340,12 +5341,15 @@ function SantrollerLed({
   selected = false,
   onSelect,
   placeholder = false,
+  standby = false,
 }: {
   led: proto.ILed;
   profileIdx: number;
   ledIdx: number;
   mode: proto.FaceButtonMappingMode;
   type: proto.SubType;
+  // The standby lighting profile has no host, so nothing drives the LED types that come from one
+  standby?: boolean;
   legendMode: LegendMode;
   dispatch: (led: proto.ILed) => void;
   deleteLed: () => void;
@@ -6069,22 +6073,30 @@ function SantrollerLed({
                         <Combobox.Option value="input">{t('leds.type.input')}</Combobox.Option>
                         <Combobox.Option value="pattern">{t('leds.type.pattern')}</Combobox.Option>
                         <Combobox.Option value="static">{t('leds.type.static')}</Combobox.Option>
-                        <Combobox.Option value="euphoria">
-                          {t('leds.type.euphoria')}
-                        </Combobox.Option>
-                        <Combobox.Option value="player">{t('leds.type.player')}</Combobox.Option>
-                        <Combobox.Option value="playstation">
-                          {t('leds.type.playstation')}
-                        </Combobox.Option>
-                        <Combobox.Option value="rumble">{t('leds.type.rumble')}</Combobox.Option>
-                        <Combobox.Option value="stageKit">
-                          {t('leds.type.stageKit')}
-                        </Combobox.Option>
-                        <Combobox.Option value="gameFeedback">
-                          {t('leds.type.gameFeedback')}
-                        </Combobox.Option>
+                        {!standby && (
+                          <>
+                            <Combobox.Option value="euphoria">
+                              {t('leds.type.euphoria')}
+                            </Combobox.Option>
+                            <Combobox.Option value="player">
+                              {t('leds.type.player')}
+                            </Combobox.Option>
+                            <Combobox.Option value="playstation">
+                              {t('leds.type.playstation')}
+                            </Combobox.Option>
+                            <Combobox.Option value="rumble">
+                              {t('leds.type.rumble')}
+                            </Combobox.Option>
+                            <Combobox.Option value="stageKit">
+                              {t('leds.type.stageKit')}
+                            </Combobox.Option>
+                            <Combobox.Option value="gameFeedback">
+                              {t('leds.type.gameFeedback')}
+                            </Combobox.Option>
+                          </>
+                        )}
                         <Combobox.Option value="status">{t('leds.type.status')}</Combobox.Option>
-                        {type === proto.SubType.KeyboardMouse && (
+                        {!standby && type === proto.SubType.KeyboardMouse && (
                           <Combobox.Option value="keyboard">
                             {t('leds.type.keyboard')}
                           </Combobox.Option>
@@ -9830,6 +9842,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
+  // Only lights its LEDs while no other profile is active, so it has no rules or inputs
+  const standby = !!profile?.opts.standbyLighting;
   const profileSlots = useMemo(() => getProfileSlots(profile, t), [profile, t]);
   const ruleCards = useExpandedCards(profileIdx, profile?.assignments?.length ?? 0);
   const mappingCards = useExpandedCards(profileIdx, profile?.mappings?.length ?? 0);
@@ -10067,21 +10081,28 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         <>
           <Group gap="xs" align="center">
             <Title order={2}>{t('main.settings')}</Title>
-            <ActionIcon
-              color="blue"
-              title={t('main.clone_profile')}
-              onClick={() => cloneProfile(profileIdx)}
-            >
-              <IconCopy style={{ width: '70%', height: '70%' }} />
-            </ActionIcon>
+            {!standby && (
+              <ActionIcon
+                color="blue"
+                title={t('main.clone_profile')}
+                onClick={() => cloneProfile(profileIdx)}
+              >
+                <IconCopy style={{ width: '70%', height: '70%' }} />
+              </ActionIcon>
+            )}
             <ActionIcon color="red" title={t('main.delete_profile')} onClick={openDeleteProfile}>
               <IconTrash style={{ width: '70%', height: '70%' }} />
             </ActionIcon>
           </Group>
-          <Space h="md" />
-          <DeviceIdentitySettings />
-          <Space h="md" />
-          <XboxOneLegacyAdapterSetting />
+          {/* Device wide settings that are about the controller, which is never standby lighting */}
+          {!standby && (
+            <>
+              <Space h="md" />
+              <DeviceIdentitySettings />
+              <Space h="md" />
+              <XboxOneLegacyAdapterSetting />
+            </>
+          )}
           <Space h="md" />
           <TextInput
             value={profile.opts.name}
@@ -10096,24 +10117,36 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             }
             label={t('main.profile_name.label')}
           />
-          <Space h="md" />
-          <DropdownBox
-            title="main.device_to_emulate.label"
-            description="main.device_to_emulate.description"
-            e={proto.SubType}
-            exclude={[proto.SubType.Unknown]}
-            val={profile.opts.deviceToEmulate!}
-            label="subType"
-            dispatch={(deviceToEmulate) => {
-              const dropped = countMappingsDroppedBySubType(profile, deviceToEmulate);
-              if (dropped > 0) {
-                setPendingSubType({ subType: deviceToEmulate, dropped });
-                return;
-              }
-              updateProfile({ ...profile, opts: { ...profile.opts, deviceToEmulate } }, profileIdx);
-            }}
-          />
+          {!standby && (
+            <>
+              <Space h="md" />
+              <DropdownBox
+                title="main.device_to_emulate.label"
+                description="main.device_to_emulate.description"
+                e={proto.SubType}
+                exclude={[proto.SubType.Unknown]}
+                val={profile.opts.deviceToEmulate!}
+                label="subType"
+                dispatch={(deviceToEmulate) => {
+                  const dropped = countMappingsDroppedBySubType(profile, deviceToEmulate);
+                  if (dropped > 0) {
+                    setPendingSubType({ subType: deviceToEmulate, dropped });
+                    return;
+                  }
+                  updateProfile(
+                    { ...profile, opts: { ...profile.opts, deviceToEmulate } },
+                    profileIdx
+                  );
+                }}
+              />
+            </>
+          )}
         </>
+      )}
+      {standby && (
+        <Alert variant="light" icon={<IconMoon size={16} />} mt="md">
+          {t('main.standbyLighting.description')}
+        </Alert>
       )}
 
       <Space h="md" />
@@ -10126,7 +10159,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
       />
 
-      {profile.opts.deviceToEmulate === proto.SubType.Gamepad && (
+      {!standby && profile.opts.deviceToEmulate === proto.SubType.Gamepad && (
         <>
           <Space h="md" />
           <FaceButtonMappingMode
@@ -10156,20 +10189,24 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </>
       )}
 
-      <Space h="md" />
-      <Switch
-        label={t('main.syncCalibrations.label')}
-        description={t('main.syncCalibrations.description')}
-        checked={syncCalibrations}
-        onChange={(event) => setSyncMode(event.currentTarget.checked)}
-      />
+      {!standby && (
+        <>
+          <Space h="md" />
+          <Switch
+            label={t('main.syncCalibrations.label')}
+            description={t('main.syncCalibrations.description')}
+            checked={syncCalibrations}
+            onChange={(event) => setSyncMode(event.currentTarget.checked)}
+          />
+        </>
+      )}
       {!simpleMode && (
         <>
           <Space h="md" />
           <InactivitySettings />
         </>
       )}
-      {hasBluetooth && !simpleMode && (
+      {hasBluetooth && !simpleMode && !standby && (
         <>
           <Space h="md" />
           <Switch
@@ -10191,7 +10228,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
         </>
       )}
-      {!simpleMode && (
+      {!simpleMode && !standby && (
         <>
           {(profile.opts.deviceToEmulate === proto.SubType.GuitarHeroGuitar ||
             profile.opts.deviceToEmulate === proto.SubType.RockBandGuitar ||
@@ -10699,196 +10736,94 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </>
       )}
 
-      <Divider my="xl" />
-      <Table
-        stickyHeader
-        stickyHeaderOffset={STICKY_HEADER_OFFSET}
-        withRowBorders={false}
-        layout="fixed"
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>
-              <Group justify="space-between" align="center" gap="sm">
-                <Group gap="sm" align="center">
-                  <Title order={2} size="h3">
-                    {t('inputs.title')}
-                  </Title>
-                  {!simpleMode && (
-                    <>
-                      <Button
-                        variant="filled"
-                        onClick={() =>
-                          updateProfile(
-                            {
-                              ...profile,
-                              mappings: [
-                                ...profile.mappings!,
+      {!standby && (
+        <>
+          <Divider my="xl" />
+          <Table
+            stickyHeader
+            stickyHeaderOffset={STICKY_HEADER_OFFSET}
+            withRowBorders={false}
+            layout="fixed"
+          >
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>
+                  <Group justify="space-between" align="center" gap="sm">
+                    <Group gap="sm" align="center">
+                      <Title order={2} size="h3">
+                        {t('inputs.title')}
+                      </Title>
+                      {!simpleMode && (
+                        <>
+                          <Button
+                            variant="filled"
+                            onClick={() =>
+                              updateProfile(
                                 {
-                                  mapping: {},
-                                  input: {
-                                    gpio: { analog: false, pin: -1, pinMode: proto.PinMode.PullUp },
-                                  },
-                                },
-                              ],
-                            },
-                            profileIdx
-                          )
-                        }
-                      >
-                        {t('inputs.add')}
-                      </Button>
-                      <Menu shadow="md" width={320}>
-                        <Menu.Target>
-                          <Button variant="filled" rightSection={<IconChevronDown size={14} />}>
-                            {t('defaults_dialog.load')}
-                          </Button>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            onClick={() => {
-                              setDefaultTarget(undefined);
-                              open();
-                            }}
-                          >
-                            {t('defaults_dialog.type', {
-                              type: t(`subType.${proto.SubType[profile.opts.deviceToEmulate]}`),
-                            })}
-                          </Menu.Item>
-                          <DeviceDefaultsItems
-                            profile={profile}
-                            slots={profileSlots}
-                            onPick={(item) => {
-                              setDefaultTarget(item);
-                              open();
-                            }}
-                          />
-                        </Menu.Dropdown>
-                      </Menu>
-                    </>
-                  )}
-                </Group>
-                <ExpandCollapseAll cards={mappingCards} />
-              </Group>
-              {selectionBar('mappings')}
-            </Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          <Table.Tr>
-            <Table.Td>
-              <Space h="md" />
-              <Group align="stretch">
-                {simpleMode &&
-                  profile.mappings?.map((mapping, mappingIdx) => (
-                    <SantrollerMapping
-                      key={mappingIdx}
-                      mapping={mapping}
-                      type={profile.opts.deviceToEmulate}
-                      profileIdx={profileIdx}
-                      mappingIdx={mappingIdx}
-                      expanded={mappingCards.isOpen(mappingIdx)}
-                      onToggleExpanded={() => mappingCards.toggle(mappingIdx)}
-                      legendMode={legendMode}
-                      mode={profile.opts.faceButtonMappingMode}
-                      dispatch={(val) => {
-                        if (syncCalibrations) {
-                          updateProfiles([
-                            ...profiles.map((profilea) => ({
-                              ...profilea,
-                              mappings: [
-                                ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                  cMappingIdx === mappingIdx
-                                    ? val
-                                    : inputKey(cMapping.input) === inputKey(val.input) &&
-                                        cMapping.trigger === val.trigger
-                                      ? {
-                                          ...cMapping,
-                                          center: val.center,
-                                          deadzone: val.deadzone,
-                                          min: val.min,
-                                          max: val.max,
-                                        }
-                                      : cMapping
-                                ),
-                              ],
-                              assignments: [
-                                ...profilea.assignments!.map((cMapping, _) => ({
-                                  ...cMapping,
-                                  assignments: [
-                                    ...cMapping.assignments!.map((cAssignment, _) =>
-                                      inputKey(cAssignment.input?.input) === inputKey(val.input) &&
-                                      cAssignment.input?.trigger === val.trigger
-                                        ? {
-                                            ...cAssignment,
-                                            input: {
-                                              ...cAssignment!.input!,
-                                              center: val.center,
-                                              deadzone: val.deadzone,
-                                              min: val.min,
-                                              max: val.max,
-                                            },
-                                          }
-                                        : cAssignment
-                                    ),
-                                  ],
-                                })),
-                              ],
-                              leds: [
-                                ...profilea.leds!.map((cMapping, _) =>
-                                  inputKey(cMapping.mapping.inputMapping?.input) ===
-                                  inputKey(val.input)
-                                    ? {
-                                        ...cMapping,
-                                        mapping: {
-                                          ...cMapping.mapping,
-                                          inputMapping: {
-                                            ...cMapping.mapping.inputMapping!,
-                                            center: val.center,
-                                            deadzone: val.deadzone,
-                                            min: val.min,
-                                            max: val.max,
-                                          },
+                                  ...profile,
+                                  mappings: [
+                                    ...profile.mappings!,
+                                    {
+                                      mapping: {},
+                                      input: {
+                                        gpio: {
+                                          analog: false,
+                                          pin: -1,
+                                          pinMode: proto.PinMode.PullUp,
                                         },
-                                      }
-                                    : cMapping
-                                ),
-                              ],
-                            })),
-                          ]);
-                        } else {
-                          updateProfile(
-                            {
-                              ...profile,
-                              mappings: [
-                                ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                                  cMappingIdx === mappingIdx ? val : cMapping
-                                ),
-                              ],
-                            },
-                            profileIdx
-                          );
-                        }
-                      }}
-                      deleteInput={() => deleteFromList('mappings', mappingIdx)}
-                      copyInput={() =>
-                        updateProfile(
-                          {
-                            ...profile,
-                            mappings: [...profile.mappings!, { ...mapping }],
-                          },
-                          profileIdx
-                        )
-                      }
-                    />
-                  ))}
-                {!simpleMode && (
-                  <DndContext {...dndProps('mappings')}>
-                    <SortableContext
-                      items={profile.mappings!.map((_, mappingIdx) => mappingIdx)}
-                      strategy={sortingStrategy('mappings')}
-                    >
-                      {profile.mappings?.map((mapping, mappingIdx) => (
+                                      },
+                                    },
+                                  ],
+                                },
+                                profileIdx
+                              )
+                            }
+                          >
+                            {t('inputs.add')}
+                          </Button>
+                          <Menu shadow="md" width={320}>
+                            <Menu.Target>
+                              <Button variant="filled" rightSection={<IconChevronDown size={14} />}>
+                                {t('defaults_dialog.load')}
+                              </Button>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                              <Menu.Item
+                                onClick={() => {
+                                  setDefaultTarget(undefined);
+                                  open();
+                                }}
+                              >
+                                {t('defaults_dialog.type', {
+                                  type: t(`subType.${proto.SubType[profile.opts.deviceToEmulate]}`),
+                                })}
+                              </Menu.Item>
+                              <DeviceDefaultsItems
+                                profile={profile}
+                                slots={profileSlots}
+                                onPick={(item) => {
+                                  setDefaultTarget(item);
+                                  open();
+                                }}
+                              />
+                            </Menu.Dropdown>
+                          </Menu>
+                        </>
+                      )}
+                    </Group>
+                    <ExpandCollapseAll cards={mappingCards} />
+                  </Group>
+                  {selectionBar('mappings')}
+                </Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              <Table.Tr>
+                <Table.Td>
+                  <Space h="md" />
+                  <Group align="stretch">
+                    {simpleMode &&
+                      profile.mappings?.map((mapping, mappingIdx) => (
                         <SantrollerMapping
                           key={mappingIdx}
                           mapping={mapping}
@@ -10897,16 +10832,16 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           mappingIdx={mappingIdx}
                           expanded={mappingCards.isOpen(mappingIdx)}
                           onToggleExpanded={() => mappingCards.toggle(mappingIdx)}
-                          mode={profile.opts.faceButtonMappingMode}
                           legendMode={legendMode}
+                          mode={profile.opts.faceButtonMappingMode}
                           dispatch={(val) => {
                             if (syncCalibrations) {
                               updateProfiles([
-                                ...profiles.map((profilea, profileIdxa) => ({
+                                ...profiles.map((profilea) => ({
                                   ...profilea,
                                   mappings: [
                                     ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx === mappingIdx && profileIdxa === profileIdx
+                                      cMappingIdx === mappingIdx
                                         ? val
                                         : inputKey(cMapping.input) === inputKey(val.input) &&
                                             cMapping.trigger === val.trigger
@@ -10980,7 +10915,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             }
                           }}
                           deleteInput={() => deleteFromList('mappings', mappingIdx)}
-                          {...selectProps('mappings', mappingIdx)}
                           copyInput={() =>
                             updateProfile(
                               {
@@ -10992,15 +10926,127 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           }
                         />
                       ))}
-                    </SortableContext>
-                    {dragPreview('mappings')}
-                  </DndContext>
-                )}
-              </Group>
-            </Table.Td>
-          </Table.Tr>
-        </Table.Tbody>
-      </Table>
+                    {!simpleMode && (
+                      <DndContext {...dndProps('mappings')}>
+                        <SortableContext
+                          items={profile.mappings!.map((_, mappingIdx) => mappingIdx)}
+                          strategy={sortingStrategy('mappings')}
+                        >
+                          {profile.mappings?.map((mapping, mappingIdx) => (
+                            <SantrollerMapping
+                              key={mappingIdx}
+                              mapping={mapping}
+                              type={profile.opts.deviceToEmulate}
+                              profileIdx={profileIdx}
+                              mappingIdx={mappingIdx}
+                              expanded={mappingCards.isOpen(mappingIdx)}
+                              onToggleExpanded={() => mappingCards.toggle(mappingIdx)}
+                              mode={profile.opts.faceButtonMappingMode}
+                              legendMode={legendMode}
+                              dispatch={(val) => {
+                                if (syncCalibrations) {
+                                  updateProfiles([
+                                    ...profiles.map((profilea, profileIdxa) => ({
+                                      ...profilea,
+                                      mappings: [
+                                        ...profilea.mappings!.map((cMapping, cMappingIdx) =>
+                                          cMappingIdx === mappingIdx && profileIdxa === profileIdx
+                                            ? val
+                                            : inputKey(cMapping.input) === inputKey(val.input) &&
+                                                cMapping.trigger === val.trigger
+                                              ? {
+                                                  ...cMapping,
+                                                  center: val.center,
+                                                  deadzone: val.deadzone,
+                                                  min: val.min,
+                                                  max: val.max,
+                                                }
+                                              : cMapping
+                                        ),
+                                      ],
+                                      assignments: [
+                                        ...profilea.assignments!.map((cMapping, _) => ({
+                                          ...cMapping,
+                                          assignments: [
+                                            ...cMapping.assignments!.map((cAssignment, _) =>
+                                              inputKey(cAssignment.input?.input) ===
+                                                inputKey(val.input) &&
+                                              cAssignment.input?.trigger === val.trigger
+                                                ? {
+                                                    ...cAssignment,
+                                                    input: {
+                                                      ...cAssignment!.input!,
+                                                      center: val.center,
+                                                      deadzone: val.deadzone,
+                                                      min: val.min,
+                                                      max: val.max,
+                                                    },
+                                                  }
+                                                : cAssignment
+                                            ),
+                                          ],
+                                        })),
+                                      ],
+                                      leds: [
+                                        ...profilea.leds!.map((cMapping, _) =>
+                                          inputKey(cMapping.mapping.inputMapping?.input) ===
+                                          inputKey(val.input)
+                                            ? {
+                                                ...cMapping,
+                                                mapping: {
+                                                  ...cMapping.mapping,
+                                                  inputMapping: {
+                                                    ...cMapping.mapping.inputMapping!,
+                                                    center: val.center,
+                                                    deadzone: val.deadzone,
+                                                    min: val.min,
+                                                    max: val.max,
+                                                  },
+                                                },
+                                              }
+                                            : cMapping
+                                        ),
+                                      ],
+                                    })),
+                                  ]);
+                                } else {
+                                  updateProfile(
+                                    {
+                                      ...profile,
+                                      mappings: [
+                                        ...profile.mappings!.map((cMapping, cMappingIdx) =>
+                                          cMappingIdx === mappingIdx ? val : cMapping
+                                        ),
+                                      ],
+                                    },
+                                    profileIdx
+                                  );
+                                }
+                              }}
+                              deleteInput={() => deleteFromList('mappings', mappingIdx)}
+                              {...selectProps('mappings', mappingIdx)}
+                              copyInput={() =>
+                                updateProfile(
+                                  {
+                                    ...profile,
+                                    mappings: [...profile.mappings!, { ...mapping }],
+                                  },
+                                  profileIdx
+                                )
+                              }
+                            />
+                          ))}
+                        </SortableContext>
+                        {dragPreview('mappings')}
+                      </DndContext>
+                    )}
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            </Table.Tbody>
+          </Table>
+        </>
+      )}
       {(!simpleMode || !!profile.leds?.length) && (
         <>
           <Divider my="xl" />
@@ -11093,6 +11139,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             onToggleExpanded={() => ledCards.toggle(ledIdx)}
                             mode={profile.opts.faceButtonMappingMode}
                             type={profile.opts.deviceToEmulate}
+                            standby={standby}
                             legendMode={legendMode}
                             dispatch={(val) =>
                               updateProfile(
@@ -11167,7 +11214,9 @@ export function InputsPage() {
   }
 
   const profile = profiles[activeProfile];
+  // Standby lighting never has mappings, and has nothing for the wizard to set up
   const isBlank =
+    !profile.opts?.standbyLighting &&
     (!profile.mappings || profile.mappings.length === 0) &&
     !skippedProfileUids.has(profile.opts?.uid ?? activeProfile);
 

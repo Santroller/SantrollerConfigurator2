@@ -189,6 +189,7 @@
     "debug": "Debug",
     "profiles": "Profiles",
     "addProfile": "Add profile",
+    "addStandbyLighting": "Add standby lighting",
     "commercial": "Commercial Tooling",
     "supportedHardware": "Supported Hardware",
     "compatibility": "Console Compatibility",
@@ -225,6 +226,9 @@
     }
   },
   "main": {
+    "standbyLighting": {
+      "description": "Standby lighting isn't a controller. Its LEDs light up while no other profile is active, like when the device isn't plugged into anything or is only charging. Only input, pattern, static and status LEDs work here, as there's no game or console to drive the rest."
+    },
     "expand_all": "Expand All",
     "collapse_all": "Collapse All",
     "settings": "Settings",
@@ -5981,7 +5985,8 @@
   },
   "profileDefaults": {
     "name": "Device",
-    "copyName": "{{name}} (Copy)"
+    "copyName": "{{name}} (Copy)",
+    "standbyName": "Standby Lighting"
   },
   "filter": {
     "title": "Filters",

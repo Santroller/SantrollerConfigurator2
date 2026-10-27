@@ -636,6 +636,8 @@ export interface Actions {
   updateCycle: (id: number, state: number) => void;
   updateToggle: (id: number, state: boolean) => void;
   addProfile: () => void;
+  // The profile whose LEDs run while no other profile is active. There's only ever one
+  addStandbyProfile: () => void;
   cloneProfile: (id: number) => void;
   deleteProfile: (id: number) => void;
   moveProfile: (from: number, to: number) => void;
@@ -715,8 +717,20 @@ export interface Actions {
   testLed: (profileId: number, ledId?: number, durationMs?: number) => Promise<void>;
 }
 
+// Standby lighting is only used once no other profile matched, so it's kept below them all, and other
+// profiles go in above it
+export function profileInsertIndex(profiles: proto.IProfile[] | null | undefined): number {
+  const standbyIdx = profiles?.findIndex((x) => x.opts?.standbyLighting) ?? -1;
+  return standbyIdx === -1 ? (profiles?.length ?? 0) : standbyIdx;
+}
+
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
   const splitTargets = splitExtraTargets(config);
+  // The firmware doesn't care where it is, so this isn't a change that needs saving
+  config.profiles = [
+    ...(config.profiles ?? []).filter((x) => !x.opts?.standbyLighting),
+    ...(config.profiles ?? []).filter((x) => x.opts?.standbyLighting),
+  ];
   const centeredTilt = centerTilt(config);
   config.profiles?.forEach((profile) => {
     profile.assignments?.forEach((list) => {
@@ -1519,6 +1533,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
         if (!profiles || from === to || !profiles[from] || !profiles[to]) {
           return;
         }
+        // Standby lighting stays at the bottom
+        if (profiles[from].opts.standbyLighting || profiles[to].opts.standbyLighting) {
+          return;
+        }
         // Profiles are tried in order, so this changes which one wins when several match
         const move = <T>(list: T[]) => {
           const next = [...list];
@@ -2017,6 +2035,42 @@ export const useConfigStore = create<ConfigState & Actions>()(
             },
           ],
         };
+        const newIdx = profileInsertIndex(state.config.profiles);
+        const profiles = [...(state.config.profiles || [])];
+        profiles.splice(newIdx, 0, {
+          opts: {
+            faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
+            deviceToEmulate: proto.SubType.Gamepad,
+            deviceSlotIdVersion: 2,
+            name: i18next.t('profileDefaults.name'),
+            uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
+          },
+          assignments: [defaultAssignment],
+          mappings: [],
+          leds: [],
+        });
+        state.config = { ...state.config, profiles };
+        // Standby lighting moved down one to make room
+        if (state.lastProfile >= newIdx) {
+          state.lastProfile += 1;
+        }
+        state.currentProfile = newIdx;
+        state.mappingStatus.splice(newIdx, 0, []);
+        state.activationStatus.splice(newIdx, 0, {
+          0: [new ActivationStatus(0, defaultAssignment.assignments![0])],
+        });
+        state.activationListStatus.splice(newIdx, 0, {
+          0: new ActivationListStatus(0),
+        });
+        state.ledStatus.splice(newIdx, 0, []);
+      });
+      get().saveConfig();
+    },
+    addStandbyProfile: () => {
+      set((state) => {
+        if (state.config.profiles?.some((x) => x.opts.standbyLighting)) {
+          return;
+        }
         state.config = {
           ...state.config,
           profiles: [
@@ -2026,10 +2080,11 @@ export const useConfigStore = create<ConfigState & Actions>()(
                 faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
                 deviceToEmulate: proto.SubType.Gamepad,
                 deviceSlotIdVersion: 2,
-                name: i18next.t('profileDefaults.name'),
+                name: i18next.t('profileDefaults.standbyName'),
                 uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
+                standbyLighting: true,
               },
-              assignments: [defaultAssignment],
+              assignments: [],
               mappings: [],
               leds: [],
             },
@@ -2038,12 +2093,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
         const newIdx = state.config.profiles!.length - 1;
         state.currentProfile = newIdx;
         state.mappingStatus[newIdx] = [];
-        state.activationStatus[newIdx] = {
-          0: [new ActivationStatus(0, defaultAssignment.assignments![0])],
-        };
-        state.activationListStatus[newIdx] = {
-          0: new ActivationListStatus(0),
-        };
+        state.activationStatus[newIdx] = {};
+        state.activationListStatus[newIdx] = {};
         state.ledStatus[newIdx] = [];
       });
       get().saveConfig();
@@ -2075,11 +2126,14 @@ export const useConfigStore = create<ConfigState & Actions>()(
             };
           }
         }
-        state.config = {
-          ...state.config,
-          profiles: [...(state.config.profiles || []), cloned],
-        };
-        const newIdx = state.config.profiles!.length - 1;
+        const newIdx = profileInsertIndex(state.config.profiles);
+        const profiles = [...(state.config.profiles || [])];
+        profiles.splice(newIdx, 0, cloned);
+        state.config = { ...state.config, profiles };
+        // Standby lighting moved down one to make room
+        if (state.lastProfile >= newIdx) {
+          state.lastProfile += 1;
+        }
         state.currentProfile = newIdx;
         state.mappingStatus = state.config.profiles!.map((p) =>
           Object.fromEntries((p.mappings ?? []).map((x, i) => [i, new MappingStatus(i, x)]))

@@ -156,6 +156,30 @@ jobs:
           includeUpdaterJson: false
           releaseId: ${{ needs.release.outputs.id }}
           args: ${{ matrix.args }} --config src-tauri/tauri.release.conf.json
+      # The exe on its own, for people who'd rather not install it. Built with the portable feature so
+      # it updates itself rather than installing the msi next to it, and signed so it can.
+      - name: Build and upload the portable exe
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RELEASE_ID: ${{ needs.release.outputs.id }}
+        run: |
+          yarn tauri build --no-bundle --features portable --config src-tauri/tauri.release.conf.json
+          name="Santroller.Configurator_${VERSION}_x64_portable.exe"
+          cp src-tauri/target/release/santroller-configurator.exe "$name"
+          yarn tauri signer sign --app-version "$VERSION" "$name"
+          upload=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --jq '.upload_url | sub("\\{.*"; "")')
+          # replaces ones left by an earlier attempt at this release
+          for file in "$name" "$name.sig"; do
+            old=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" \
+              --jq ".[] | select(.name == \"$file\") | .id")
+            [ -z "$old" ] || gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$old"
+            gh api -X POST "$upload?name=$file" -H 'Content-Type: application/octet-stream' \
+              --input "$file" --silent
+          done
 
   publish:
     needs: [web, release, desktop]
@@ -195,6 +219,7 @@ jobs:
           add '\.rpm$' linux-x86_64-rpm
           add '\.msi$' windows-x86_64 windows-x86_64-msi
           add '-setup\.exe$' windows-x86_64-nsis
+          add '_portable\.exe$' windows-x86_64-portable
           add '\.app\.tar\.gz$' darwin-x86_64 darwin-aarch64 darwin-x86_64-app darwin-aarch64-app
           jq -n --arg v "$VERSION" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson p "$platforms" \
             '{version: $v, notes: "", pub_date: $d, platforms: $p}' > latest.json

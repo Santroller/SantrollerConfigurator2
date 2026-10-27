@@ -76,6 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const profiles = useConfigStore((state) => state.config.profiles!);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
+  const addStandbyProfile = useConfigStore((state) => state.addStandbyProfile);
   const cloneProfile = useConfigStore((state) => state.cloneProfile);
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const moveProfile = useConfigStore((state) => state.moveProfile);
@@ -309,9 +310,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {icon}
     </ActionIcon>
   );
+  // Standby lighting is always last, so it can't be moved and nothing moves below it
+  const movableProfiles = profiles.filter((x) => !x.opts.standbyLighting).length;
   const profileActions = (i: number) => (
     <>
-      {profiles.length > 1 && (
+      {movableProfiles > 1 && !profiles[i]?.opts.standbyLighting && (
         <>
           {profileAction(
             t('main.move_profile_up', 'Move up'),
@@ -325,11 +328,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <IconChevronDown size={13} />,
             () => moveProfile(i, i + 1),
             'gray',
-            i === profiles.length - 1
+            i === movableProfiles - 1
           )}
         </>
       )}
-      {profileAction(t('main.clone_profile'), <IconCopy size={13} />, () => cloneProfile(i))}
+      {!profiles[i]?.opts.standbyLighting &&
+        profileAction(t('main.clone_profile'), <IconCopy size={13} />, () => cloneProfile(i))}
       {profiles.length > 1 &&
         profileAction(
           t('main.delete_profile'),
@@ -629,7 +633,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                             currentProfileInstance === 0
                           }
                           label={label}
-                          leftSection={<IconDeviceGamepad3 size={16} stroke={1.5} />}
+                          leftSection={
+                            x.opts.standbyLighting ? (
+                              <IconMoon size={16} stroke={1.5} />
+                            ) : (
+                              <IconDeviceGamepad3 size={16} stroke={1.5} />
+                            )
+                          }
                         />,
                       ];
                     }
@@ -674,6 +684,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       href="#add-profile"
                       label={t('nav.addProfile', 'Add profile')}
                       onClick={addProfile}
+                      leftSection={<IconPlus size={16} stroke={1.5} />}
+                    />
+                  )}
+                  {!simpleMode && !profiles.some((x) => x.opts.standbyLighting) && (
+                    <NavLink
+                      disabled={updating}
+                      href="#add-standby-lighting"
+                      label={t('nav.addStandbyLighting')}
+                      onClick={addStandbyProfile}
                       leftSection={<IconPlus size={16} stroke={1.5} />}
                     />
                   )}

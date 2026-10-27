@@ -35,3 +35,5 @@ default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 # Web inspector in release builds, for test builds sent to users (right click -> Inspect Element)
 devtools = ["tauri/devtools"]
+# The standalone exe offered alongside the Windows installers, which updates itself in place
+portable = []
