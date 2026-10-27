@@ -873,6 +873,7 @@ function OutputBox({
   midi,
   valMidi,
   actions,
+  hostInput,
   dispatch,
   dispatchMidi,
 }: {
@@ -886,6 +887,8 @@ function OutputBox({
   valMidi?: proto.IMidiInput | undefined;
   // Also offer actions (bootloader etc) alongside the outputs
   actions?: boolean;
+  // Picking what to read from a USB or Bluetooth controller, so also offer buttons only they have
+  hostInput?: boolean;
   dispatch: (mapping: proto.IOutput, trigger: boolean, analog: boolean) => void;
   dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
 }) {
@@ -896,6 +899,7 @@ function OutputBox({
         dispatchAction: (action: proto.ActionType) => dispatch({ action }, false, false),
       }
     : {};
+  const boxProps = { ...actionProps, hostInput };
   const outputCombobox = useCombobox({
     onDropdownClose: () => outputCombobox.resetSelectedOption(),
   });
@@ -924,7 +928,7 @@ function OutputBox({
       }
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           mode={mode}
@@ -941,7 +945,7 @@ function OutputBox({
     case proto.SubType.StageKit:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           mode={mode}
@@ -961,7 +965,7 @@ function OutputBox({
     case proto.SubType.GuitarHeroGuitar:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.GuitarHeroGuitarAxisType}
@@ -994,7 +998,7 @@ function OutputBox({
     case proto.SubType.RockBandGuitar:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.RockBandGuitarAxisType}
@@ -1029,7 +1033,7 @@ function OutputBox({
     case proto.SubType.GuitarHeroDrums:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.GuitarHeroDrumsAxisType}
@@ -1052,7 +1056,7 @@ function OutputBox({
     case proto.SubType.RockBandDrums:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.RockBandDrumsAxisType}
@@ -1078,7 +1082,7 @@ function OutputBox({
     case proto.SubType.LiveGuitar:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.GuitarHeroLiveGuitarAxisType}
@@ -1110,7 +1114,7 @@ function OutputBox({
     case proto.SubType.DjHeroTurntable:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.DJHTurntableAxisType}
@@ -1143,7 +1147,7 @@ function OutputBox({
     case proto.SubType.ProGuitarSquier:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           e={proto.ProGuitarAxisType}
@@ -1170,7 +1174,7 @@ function OutputBox({
     case proto.SubType.GuitarFreaks:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1193,7 +1197,7 @@ function OutputBox({
     case proto.SubType.DrumMania:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1216,7 +1220,7 @@ function OutputBox({
     case proto.SubType.KeyboardMania:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1250,7 +1254,7 @@ function OutputBox({
     case proto.SubType.BeatMania:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1273,7 +1277,7 @@ function OutputBox({
     case proto.SubType.PopNMusic:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1296,7 +1300,7 @@ function OutputBox({
     case proto.SubType.ProjectDiva:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           type={type}
@@ -1330,7 +1334,7 @@ function OutputBox({
     case proto.SubType.ProKeys:
       return (
         <DropdownOutputBox
-          {...actionProps}
+          {...boxProps}
           label={label}
           title={title}
           // Shown for inputs too, so a key on a pro keyboard can drive any output
@@ -1724,6 +1728,16 @@ const MIDI_INPUT_KIND_LABEL_KEYS: Record<MidiInputKind, string> = {
   midiProGuitarAxis: 'input.midiProGuitarAxis.title',
 };
 
+// Buttons read from USB and Bluetooth controllers that no emulated controller sends
+const HOST_ONLY_OUTPUTS = new Set([
+  'Gamepad_LeftPaddle1',
+  'Gamepad_RightPaddle1',
+  'Gamepad_LeftPaddle2',
+  'Gamepad_RightPaddle2',
+  'Gamepad_LeftGripTouch',
+  'Gamepad_RightGripTouch',
+]);
+
 function DropdownOutputBox<
   T extends StandardEnum<unknown>,
   T2 extends StandardEnum<unknown>,
@@ -1757,6 +1771,7 @@ function DropdownOutputBox<
   dispatchExtra,
   valAction,
   dispatchAction,
+  hostInput,
 }: {
   e?: T;
   filterFirstEnum?: (key: string, selected?: string) => boolean;
@@ -1785,6 +1800,7 @@ function DropdownOutputBox<
   dispatchExtra?: (val: string) => void;
   valAction?: proto.ActionType;
   dispatchAction?: (action: proto.ActionType) => void;
+  hostInput?: boolean;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -1798,6 +1814,7 @@ function DropdownOutputBox<
     (e3 && e3[val3 as keyof T3]) ||
     (e4 && e4[val4 as keyof T4]) ||
     (valMidi && MIDI_INPUT_KINDS.find((kind) => valMidi[kind]))) as string;
+  const listed = (key: string) => hostInput || key === v || !HOST_ONLY_OUTPUTS.has(key);
   const actionOptions = dispatchAction
     ? Object.entries(proto.ActionType)
         .filter(([, value]) => typeof value === 'number')
@@ -1950,6 +1967,7 @@ function DropdownOutputBox<
             Object.keys(e2)
               .filter((key) => isNaN(Number(key)))
               .filter((key) => !filterSecondEnum || filterSecondEnum(key, v))
+              .filter(listed)
               .map((item) => (
                 <Combobox.Option value={item} key={item} selected={item === v}>
                   {t(
@@ -1970,6 +1988,7 @@ function DropdownOutputBox<
           {e4 &&
             Object.keys(e4)
               .filter((key) => isNaN(Number(key)))
+              .filter(listed)
               .map((item) => (
                 <Combobox.Option value={item} key={item} selected={item === v}>
                   {t(
@@ -3398,6 +3417,7 @@ function SantrollerInput({
           <OutputBox
             label="outputs"
             title="input"
+            hostInput
             valMidi={input.midi ?? undefined}
             dispatch={(mapping, _, analog) =>
               dispatch(
@@ -3463,6 +3483,7 @@ function SantrollerInput({
           <OutputBox
             label="outputs"
             title="input"
+            hostInput
             valMidi={input.midi ?? undefined}
             dispatch={(mapping, _, analog) =>
               dispatch(
