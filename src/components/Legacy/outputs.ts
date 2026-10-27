@@ -94,6 +94,13 @@ function debounceFor(ctx: LegacyImportContext, local: number | null | undefined,
   return debounce;
 }
 
+function applyDebounce(mapping: proto.IMapping, debounce100us: number | null | undefined) {
+  if (debounce100us) {
+    // Event inputs need their minimum hold even when the old binding had shorter debounce.
+    mapping.debounce100us = Math.max(debounce100us, (mapping.debounce ?? 0) * 10);
+  }
+}
+
 export function addButton(
   ctx: LegacyImportContext,
   input: legacy.ISerializedInput | null | undefined,
@@ -123,9 +130,7 @@ export function addButtonMapping(
     mapping.trigger = proto.AnalogToDigitalTriggerType.JoyHigh;
     mapping.triggerValue = converted.isUint ? 32767 : INT16_OFFSET;
   }
-  if (debounce100us) {
-    mapping.debounce100us = debounce100us;
-  }
+  applyDebounce(mapping, debounce100us);
   ctx.mappings.push(mapping);
 }
 
@@ -601,9 +606,7 @@ const CORE_OUTPUTS: Partial<Record<LegacyOutputKind, OutputConverter>> = {
         mapping.triggerValue =
           (o!.min ?? 0) + (o!.deadzone ?? 0) + (converted.isUint ? 0 : INT16_OFFSET);
       }
-      if (debounce) {
-        mapping.debounce100us = debounce;
-      }
+      applyDebounce(mapping, debounce);
       ctx.mappings.push(mapping);
       return;
     }
@@ -613,9 +616,7 @@ const CORE_OUTPUTS: Partial<Record<LegacyOutputKind, OutputConverter>> = {
       deadzone: o!.deadzone,
       trigger: true,
     });
-    if (debounce) {
-      added.debounce100us = debounce;
-    }
+    applyDebounce(added, debounce);
   },
 
   serializedDjButton: (ctx, { serializedDjButton: o }) => {

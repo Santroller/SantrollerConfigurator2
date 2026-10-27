@@ -13,6 +13,7 @@ export function DropdownBox<T extends number>({
   label,
   description,
   dispatch,
+  exclude,
 }: {
   e: StandardEnum<T>;
   val: T;
@@ -20,6 +21,7 @@ export function DropdownBox<T extends number>({
   label: string;
   description?: string;
   dispatch: (input: T) => void;
+  exclude?: T[];
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -56,7 +58,7 @@ export function DropdownBox<T extends number>({
         <Combobox.Options>
           {inputCombobox.dropdownOpened &&
             Object.keys(e)
-              .filter((key) => isNaN(Number(key)))
+              .filter((key) => isNaN(Number(key)) && !exclude?.includes(e[key] as T))
               .map((item) => (
                 <Combobox.Option
                   value={item}

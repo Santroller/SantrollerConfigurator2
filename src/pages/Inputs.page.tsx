@@ -9414,6 +9414,7 @@ function BlankProfileWizard({
           title="main.device_to_emulate.label"
           description="main.device_to_emulate.description"
           e={proto.SubType}
+          exclude={[proto.SubType.Unknown]}
           val={deviceToEmulate}
           label="subType"
           dispatch={(val) => {
@@ -10100,6 +10101,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             title="main.device_to_emulate.label"
             description="main.device_to_emulate.description"
             e={proto.SubType}
+            exclude={[proto.SubType.Unknown]}
             val={profile.opts.deviceToEmulate!}
             label="subType"
             dispatch={(deviceToEmulate) => {

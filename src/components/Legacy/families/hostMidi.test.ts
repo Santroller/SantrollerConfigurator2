@@ -351,6 +351,62 @@ describe('keyboard outputs', () => {
 });
 
 describe('MIDI', () => {
+  describe.each([DT.DeviceControllerType_GuitarHeroDrums, DT.DeviceControllerType_RockBandDrums])(
+    'note holds for drum controller %s',
+    (deviceType) => {
+      describe.each([true, false])('local debounce: %s', (localDebounceMode) => {
+        describe.each([true, false])('queued inputs: %s', (queueBasedInputs) => {
+          it.each([undefined, 0, 10, 50, 300, 305, 500, 505])(
+            'preserves the MIDI hold with legacy debounce %s',
+            (debounce) => {
+              const { config } = load({
+                deviceType,
+                midiSerialEnabled: true,
+                localDebounceMode,
+                queueBasedInputs,
+                debounce: localDebounceMode ? 1000 : debounce,
+                bindings: [
+                  ...[
+                    legacy.DrumAxisType.DrumAxisType_Kick,
+                    legacy.DrumAxisType.DrumAxisType_Kick2,
+                    legacy.DrumAxisType.DrumAxisType_Red,
+                  ].map((type) => ({
+                    serializedDrumAxis: {
+                      type,
+                      input: midi(36),
+                      debounce: localDebounceMode ? debounce : 1000,
+                    },
+                  })),
+                  {
+                    serializedControllerButton: {
+                      type: legacy.StandardButtonType.StandardButtonType_A,
+                      input: midi(36),
+                      debounce: localDebounceMode ? debounce : 1000,
+                    },
+                  },
+                ],
+              });
+              const roundTrip = proto.Config.decode(proto.Config.encode(config).finish());
+              const mappings = roundTrip.profiles[0].mappings;
+              expect(mappings).toHaveLength(4);
+              const legacyDebounce = queueBasedInputs
+                ? (debounce ?? 0)
+                : Math.floor((debounce ?? 0) / 10) * 10;
+              for (const mapping of mappings) {
+                const holdUs =
+                  mapping.debounce100us != null
+                    ? mapping.debounce100us * 100
+                    : (mapping.debounce ?? 0) * 1000;
+                expect(holdUs).toBe(Math.max(30000, legacyDebounce * 100));
+                expect(mapping.peakBased).toBe(true);
+              }
+            }
+          );
+        });
+      });
+    }
+  );
+
   it('reads serial MIDI on the drum channel', () => {
     const { config, warnings } = load({
       deviceType: DT.DeviceControllerType_RockBandDrums,
@@ -464,7 +520,7 @@ describe('MIDI', () => {
     for (const m of mappings) {
       expect(m.mapping?.ghDrumAxis).toBe(proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad);
       // the copies follow changes the core made after adding the mapping
-      expect(m.debounce100us).toBe(50);
+      expect(m.debounce100us).toBe(300);
     }
   });
 
