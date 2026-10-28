@@ -657,6 +657,42 @@ export function CompatibilityPage() {
                   </Table.Tbody>
                 </Table>
               </Paper>
+              <Paper id="xbox-wla" withBorder radius="md" p="lg">
+                <Stack gap="sm">
+                  <Title order={3} size="h4">
+                    {t('compatibility.auth.wla.title')}
+                  </Title>
+                  <Text size="sm">{t('compatibility.auth.wla.body')}</Text>
+                  <List size="sm" spacing="xs">
+                    <RichListItems i18nKey="compatibility.auth.wla.games" />
+                  </List>
+                  <Title order={4} size="h5">
+                    {t('compatibility.auth.wla.swapTitle')}
+                  </Title>
+                  <List type="ordered" size="sm" spacing="xs">
+                    <RichListItems i18nKey="compatibility.auth.wla.swapSteps" />
+                  </List>
+                  <Text size="xs" c="dimmed">
+                    {t('compatibility.auth.wla.swapNote')}
+                  </Text>
+                  <Alert
+                    color="blue"
+                    variant="light"
+                    title={t('compatibility.auth.wla.windowsTitle')}
+                  >
+                    <Text size="sm">{t('compatibility.auth.wla.windowsBody')}</Text>
+                  </Alert>
+                  <Button
+                    component={Link}
+                    to="/guides/xbox-auth"
+                    variant="light"
+                    size="xs"
+                    rightSection={<IconExternalLink size={14} />}
+                  >
+                    {t('compatibility.auth.wla.buildGuideLink')}
+                  </Button>
+                </Stack>
+              </Paper>
             </Stack>
           </Tabs.Panel>
 

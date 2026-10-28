@@ -5812,6 +5812,26 @@
       }
     },
     "auth": {
+      "wla": {
+        "title": "Xbox One / Series: Wireless Legacy Adapter (WLA)",
+        "body": "On Xbox One/Series, Santroller can appear as a Rock Band 4 Wireless Legacy Adapter. No physical legacy adapter is needed, and your instruments do not have to be wireless. The \"Always emulate the Rock Band 4 Wireless Legacy Adapter on Xbox One/Series\" setting is enabled for new configurations and factory resets; existing configurations keep their saved setting. With it enabled, the adapter stays connected and authenticated while you unplug a controller and connect an instrument, including during the gap with nothing attached.",
+        "games": [
+          "<strong>Rock Band 4:</strong> Multiple supported guitars and drums can share the adapter. Santroller switches to the game's instrument report layout automatically.",
+          "<strong>Guitar Hero Live:</strong> Use a Guitar Hero Live profile. Guitar reports and standard menu navigation work together, with one GHL guitar per emulated adapter.",
+          "<strong>Gamepad games and dashboard:</strong> Santroller's WLA emulation also includes full gamepad support, including sticks and triggers, so you can leave it enabled for games that use a standard gamepad. When the console signals that an instrument game has lost focus, Santroller returns to standard gamepad input.",
+          "<strong>Fortnite Festival and specific instrument support:</strong> Fortnite Festival does not recognize WLA-connected guitars as supported guitar controllers. You can use a Keyboard profile instead, which works on consoles without an authentication controller or auth chip. For guitar-controller support on Xbox One/Series, turn off WLA emulation and use a single Rock Band guitar profile so Santroller identifies itself as a standard guitar instead. Other games that require a particular instrument identity may also need WLA emulation turned off. On Windows, Santroller automatically uses the profile's native controller identity instead of WLA."
+        ],
+        "swapTitle": "Swap the Donor Controller for a Guitar",
+        "swapSteps": [
+          "Enable \"Always emulate the Rock Band 4 Wireless Legacy Adapter on Xbox One/Series\" and configure a matching USB Host profile for your guitar, including the correct instrument type.",
+          "Connect the donor gamepad to the Pico's USB Host port and plug the Pico into the console. Wait until authentication has completed before unplugging the donor.",
+          "Unplug the donor gamepad from the Pico's USB Host port, then plug in the guitar. The same adapter stays connected and keeps its authentication through the empty-port gap."
+        ],
+        "swapNote": "You can also use a USB hub to leave the donor connected alongside the instruments. Authentication lasts for the current console connection: after restarting Santroller or disconnecting it from the console, connect the donor again.",
+        "windowsTitle": "Windows Uses the Native Controller Identity",
+        "windowsBody": "When Windows is detected, Xbox One mode uses the native identity of the first reporting profile instead of WLA, even with the WLA setting enabled. For Fortnite Festival on Windows, use a Rock Band guitar profile in Xbox One mode so the game sees a standard guitar. This does not force Xbox One mode on other platforms.",
+        "buildGuideLink": "Build an Xbox authentication source"
+      },
       "alertTitle": "How console authentication works",
       "alertBody": "The PS4 and PS5 regularly ask controllers to prove they're official, and will disconnect a controller that can't answer after about 8 minutes. The Xbox One and Xbox Series only check authentication when a controller is plugged in, so you can outright unplug an auth controller once authenticated and it still stays authenticated.",
       "methodsTitle": "Ways to handle authentication",
@@ -5873,6 +5893,7 @@
         "subtitle": "Controller or keyboard",
         "body": "On PC, Fortnite Festival works with both guitar controllers and keyboards:",
         "options": [
+          "<strong>Xbox One guitar mode on Windows:</strong> Use a Rock Band guitar profile in Xbox One mode for a standard guitar identity. Santroller does not emulate WLA when Windows is detected, even if WLA is enabled for consoles.",
           "<strong>Guitar:</strong> Use a Guitar Hero or Rock Band profile with XInput. Turn on <strong>Send Select as D-pad Left</strong> in the profile options so Overdrive works.",
           "<strong>Keyboard:</strong> Use a Keyboard profile if you'd rather bind your own keys."
         ]
