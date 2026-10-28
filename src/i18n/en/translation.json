@@ -290,11 +290,7 @@
     },
     "xboxOneLegacyAdapter": {
       "label": "Always emulate the Rock Band 4 Wireless Legacy Adapter on Xbox One/Series",
-      "description": "Normally the controller only becomes a Wireless Legacy Adapter when more than one player is connected. With this on it always is one, so players can come and go without the controller having to authenticate again. Gamepads still work fully outside of Rock Band 4. This won't work for GHL guitars."
-    },
-    "xboxOneLegacyAdapterGamepad": {
-      "label": "Full gamepad support on the Wireless Legacy Adapter",
-      "description": "When the controller is a Rock Band 4 Wireless Legacy Adapter, gamepads get working sticks and triggers outside of Rock Band 4, eg on the Xbox dashboard. Turn this off for games other than Rock Band 4 that read the adapter's instruments directly, as the adapter has to switch report layouts for this, and only Rock Band 4 handles that."
+      "description": "Enabled by default for new configurations. Emulates a Wireless Legacy Adapter so players can come and go without authenticating again, including swapping the authentication gamepad for a Guitar Hero Live guitar. Supports Rock Band 4 and Guitar Hero Live, with gamepad navigation outside games. Turn this off to use the native controller identity instead."
     },
     "selectToDpadLeft": {
       "label": "Map Select to D-pad Left on Xbox One/Series, PS4/5 and Switch",

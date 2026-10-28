@@ -872,6 +872,7 @@ export const initialConfig = InitState(
   proto.Config.create({
     devices: [],
     profiles: [],
+    xboxOneLegacyAdapter: true,
   }),
   proto.AuxConfigBlock.create({
     states: [],
@@ -2394,6 +2395,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
         proto.Config.create({
           devices: [],
           profiles: [],
+          xboxOneLegacyAdapter: true,
           // Whether this board boots as a peripheral is part of how it was flashed, not its setup
           peripheralBoot: config.peripheralBoot,
         }),
