@@ -96,8 +96,6 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
-import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
-import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -134,6 +132,8 @@ import {
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { ledOverlaps } from '@/components/Inputs/ledOverlap';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
+import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
+import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { useProfileLabels } from '@/components/Labels/useProfileLabels';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
@@ -8211,10 +8211,12 @@ function SantrollerAssignmentList({
         ? 'specific'
         : 'auto';
 
+  const xboxOneLegacyAdapter = useConfigStore((state) => !!state.config.xboxOneLegacyAdapter);
   const xboxOneAuthIdx = assignments.findIndex((x) => x.xboxOneAuth != null);
   const xboxOneAuth = xboxOneAuthIdx !== -1 ? assignments[xboxOneAuthIdx].xboxOneAuth : undefined;
-  // Holding auth is only useful on a rule that can end up as an Xbox One device
+  // Holding auth is only useful on a rule that can end up as an Xbox One device, and not when WLA emulation is active
   const canHoldXboxOneAuth =
+    !xboxOneLegacyAdapter &&
     currentEmulMode === 'consoleType' &&
     hasUsbHost &&
     (currentUsbOption === 'auto' ||
@@ -8715,7 +8717,7 @@ function SantrollerAssignmentList({
                 }
               />
 
-              {(canHoldXboxOneAuth || xboxOneAuth) && (
+              {!xboxOneLegacyAdapter && (canHoldXboxOneAuth || xboxOneAuth) && (
                 <Stack gap={4}>
                   <Switch
                     size="xs"
@@ -8815,7 +8817,7 @@ function SantrollerAssignmentList({
         </Card>
       </div>
       <Modal
-        opened={authTriggerOpened && xboxOneAuth != null}
+        opened={authTriggerOpened && xboxOneAuth != null && !xboxOneLegacyAdapter}
         onClose={closeAuthTrigger}
         size="lg"
         title={`${t('assignments.rule_title', { num: listIdx + 1 })}: ${t('assignments.xboxOneAuth')}`}

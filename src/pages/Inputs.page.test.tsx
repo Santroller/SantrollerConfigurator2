@@ -16,6 +16,7 @@ vi.mock('@/components/SettingsContext/SettingsContext', () => ({
         1: { type: 'matrix', device: { deviceid: 1, matrix: { inPins: 1, outPins: 2 } } },
       },
       guiDevices: {},
+      config: { profiles: [], xboxOneLegacyAdapter: false },
     }),
 }));
 
