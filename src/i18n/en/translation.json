@@ -290,7 +290,7 @@
     },
     "xboxOneLegacyAdapter": {
       "label": "Always emulate the Rock Band 4 Wireless Legacy Adapter on Xbox One/Series",
-      "description": "Enabled by default for new configurations. Emulates a Wireless Legacy Adapter so players can come and go without authenticating again, including swapping the authentication gamepad for a Guitar Hero Live guitar. Supports Rock Band 4 and Guitar Hero Live, with gamepad navigation outside games. Turn this off to use the native controller identity instead."
+      "description": "Enabled by default for new configurations. On Xbox One/Series, emulates a Wireless Legacy Adapter so players can come and go without authenticating again, including swapping the authentication gamepad for a Guitar Hero Live guitar. Supports Rock Band 4 and Guitar Hero Live, with gamepad navigation outside games. On Windows, Xbox One mode uses the native controller identity instead, for games such as Fortnite Festival. Turn this off to use the native identity on consoles too."
     },
     "selectToDpadLeft": {
       "label": "Map Select to D-pad Left on Xbox One/Series, PS4/5 and Switch",
