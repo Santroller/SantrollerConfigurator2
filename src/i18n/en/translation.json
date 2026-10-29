@@ -189,7 +189,7 @@
     "debug": "Debug",
     "profiles": "Profiles",
     "addProfile": "Add profile",
-    "addStandbyLighting": "Add standby lighting",
+    "addStandbyLighting": "Add standby profile",
     "commercial": "Commercial Tooling",
     "supportedHardware": "Supported Hardware",
     "compatibility": "Console Compatibility",
@@ -227,7 +227,22 @@
   },
   "main": {
     "standbyLighting": {
-      "description": "Standby lighting isn't a controller. Its LEDs light up while no other profile is active, like when the device isn't plugged into anything or is only charging. Only input, pattern, static and status LEDs work here, as there's no game or console to drive the rest."
+      "description": "The standby profile isn't a controller. Its LEDs light up while no other profile is active, like when the device isn't plugged into anything or is only charging, and it can pick the buttons that wake a sleeping console or PC. Only input, pattern, static and status LEDs work here, as there's no game or console to drive the rest.",
+      "whileSuspended": {
+        "label": "Also light up while the console or PC is asleep",
+        "description": "Normally the LEDs turn off when a console or PC goes to sleep with the controller still plugged in. With this on, the standby profile's LEDs take over instead. A sleeping console or PC only gives out a little power, so keep it to a few LEDs."
+      },
+      "controllers": {
+        "label": "Connected controllers",
+        "description": "Controllers plugged into this device (USB, Wii extension and so on) that the standby profile can read, so their buttons can light LEDs or wake a console or PC. Add the same ones the profile that uses them has. While that profile is active, the standby profile shares its controllers rather than taking them."
+      },
+      "wake": {
+        "label": "Wake-up buttons",
+        "description": "Pressing one of these wakes up a console or PC that's asleep with the controller plugged in. Without any, the controller's own buttons wake it as usual. They can be on the connected controllers added above.",
+        "button": "Button {{num}}",
+        "add": "Add button",
+        "remove": "Remove button"
+      }
     },
     "expand_all": "Expand All",
     "collapse_all": "Collapse All",
@@ -6009,7 +6024,7 @@
   "profileDefaults": {
     "name": "Device",
     "copyName": "{{name}} (Copy)",
-    "standbyName": "Standby Lighting"
+    "standbyName": "Standby"
   },
   "filter": {
     "title": "Filters",

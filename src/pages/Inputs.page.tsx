@@ -96,6 +96,8 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
+import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
+import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -132,8 +134,6 @@ import {
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { ledOverlaps } from '@/components/Inputs/ledOverlap';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
-import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
-import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { useProfileLabels } from '@/components/Labels/useProfileLabels';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
@@ -7572,6 +7572,34 @@ function ConnectedDevicePicker({
   );
 }
 
+// What a newly added controller source starts as, by its ControllerSourcesEditor type
+function defaultHostSource(sourceType: string): proto.IProfileAssignmentInfo | null {
+  switch (sourceType) {
+    case 'wiiExt':
+      return { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar };
+    case 'ps2Cnt':
+      return { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar };
+    case 'snesCnt':
+      return { snesCnt: proto.SNESControllerType.SNESControllerSNES };
+    case 'joybusCnt':
+      return { joybusCnt: proto.JoybusControllerType.JoybusControllerGameCube };
+    case 'usbType':
+      return { usbType: proto.SubType.Gamepad };
+    case 'usbDevice':
+      return { usbDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } };
+    case 'bluetoothType':
+      return { bluetoothType: proto.SubType.Gamepad };
+    case 'bluetoothDevice':
+      return { bluetoothDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } };
+    case 'midiChannel':
+      return { midiChannel: 10 };
+    case 'midiProGuitar':
+      return { midiProGuitar: proto.SubType.ProGuitarSquier };
+    default:
+      return null;
+  }
+}
+
 export function ControllerSourcesEditor({
   assignments,
   slotIds,
@@ -7585,6 +7613,8 @@ export function ControllerSourcesEditor({
   hasPsx,
   hasSnes,
   hasJoybus,
+  showTitle = true,
+  wrap = false,
 }: {
   assignments: proto.IProfileAssignmentInfo[];
   // The slot id of each assignment
@@ -7599,6 +7629,10 @@ export function ControllerSourcesEditor({
   hasPsx: boolean;
   hasSnes: boolean;
   hasJoybus: boolean;
+  // Left out where the surrounding page labels the section itself, as the step number only fits a rule
+  showTitle?: boolean;
+  // Cards sit side by side and wrap, like the LEDs, where there's the width for it
+  wrap?: boolean;
 }) {
   const { t } = useTranslation();
   const hostIndices = useMemo(() => {
@@ -7629,236 +7663,254 @@ export function ControllerSourcesEditor({
   const hasAnySource =
     showUsbHost || showBluetooth || showMidi || showWii || showPsx || showSnes || showJoybus;
 
+  const cards = hostIndices.map(({ item, idx, slotId, type: hType }) => (
+    <Card
+      key={idx}
+      padding="xs"
+      radius="sm"
+      withBorder
+      bg="var(--mantine-color-default-hover)"
+      w={wrap ? 420 : undefined}
+      maw="100%"
+    >
+      <Stack gap={4}>
+        <Group justify="space-between" align="center">
+          <Badge size="sm" variant="light" color="blue">
+            {getProfileSlotLabel(item, slotId, t)}
+          </Badge>
+          <ActionIcon
+            size="xs"
+            variant="subtle"
+            color="red"
+            onClick={() => onRemoveSource(idx)}
+            title={t('assignments.removeSource')}
+          >
+            <IconTrash size={14} />
+          </ActionIcon>
+        </Group>
+
+        {hType === 'wiiExt' && (
+          <DropdownBox
+            title="activation.wiiExt"
+            e={proto.WiiExtType}
+            val={item.wiiExt ?? proto.WiiExtType.WiiGuitarHeroGuitar}
+            label="wiiExt"
+            dispatch={(wiiExt) => onUpdateSource(idx, { wiiExt })}
+          />
+        )}
+        {hType === 'ps2Cnt' && (
+          <DropdownBox
+            title="activation.ps2Cnt"
+            e={proto.PS2ControllerType}
+            val={item.ps2Cnt ?? proto.PS2ControllerType.PS2ControllerTypeGuitar}
+            label="ps2Cnt"
+            dispatch={(ps2Cnt) => onUpdateSource(idx, { ps2Cnt })}
+          />
+        )}
+        {hType === 'snesCnt' && (
+          <DropdownBox
+            title="activation.snesCnt"
+            e={SNES_CONTROLLER_TYPES_ENUM}
+            val={item.snesCnt ?? proto.SNESControllerType.SNESControllerSNES}
+            label="snesCnt"
+            dispatch={(snesCnt) => onUpdateSource(idx, { snesCnt })}
+          />
+        )}
+        {hType === 'joybusCnt' && (
+          <DropdownBox
+            title="activation.joybusCnt"
+            e={JOYBUS_CONTROLLER_TYPES_ENUM}
+            val={item.joybusCnt ?? proto.JoybusControllerType.JoybusControllerGameCube}
+            label="joybusCnt"
+            dispatch={(joybusCnt) => onUpdateSource(idx, { joybusCnt })}
+          />
+        )}
+        {hType === 'usbType' && (
+          <DropdownBox
+            title="activation.usbType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={item.usbType ?? proto.SubType.Gamepad}
+            label="subType"
+            dispatch={(usbType) => onUpdateSource(idx, { usbType })}
+          />
+        )}
+        {hType === 'usbDevice' && (
+          <ConnectedDevicePicker
+            kind="usb"
+            current={item.usbDevice}
+            onPick={({ vid, pid, subtype }) =>
+              onUpdateSource(idx, {
+                usbDevice: {
+                  ...item.usbDevice,
+                  vid,
+                  pid,
+                  subtype: subtype ?? item.usbDevice?.subtype,
+                },
+              })
+            }
+          />
+        )}
+        {hType === 'usbDevice' && (
+          <Group grow>
+            <TextInput
+              size="xs"
+              label={t('assignments.vendorId')}
+              leftSection="0x"
+              value={(item.usbDevice?.vid ?? 0).toString(16)}
+              onChange={(e) =>
+                onUpdateSource(idx, {
+                  usbDevice: {
+                    ...item.usbDevice,
+                    vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                    pid: item.usbDevice?.pid ?? 0,
+                  },
+                })
+              }
+            />
+            <TextInput
+              size="xs"
+              label={t('assignments.productId')}
+              leftSection="0x"
+              value={(item.usbDevice?.pid ?? 0).toString(16)}
+              onChange={(e) =>
+                onUpdateSource(idx, {
+                  usbDevice: {
+                    ...item.usbDevice,
+                    vid: item.usbDevice?.vid ?? 0,
+                    pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                  },
+                })
+              }
+            />
+          </Group>
+        )}
+        {hType === 'usbDevice' && (
+          <DropdownBox
+            title="activation.usbType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={item.usbDevice?.subtype ?? proto.SubType.Gamepad}
+            label="subType"
+            dispatch={(subtype) =>
+              onUpdateSource(idx, {
+                usbDevice: { vid: 0, pid: 0, ...item.usbDevice, subtype },
+              })
+            }
+          />
+        )}
+        {hType === 'bluetoothType' && (
+          <DropdownBox
+            title="activation.bluetoothType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={item.bluetoothType ?? proto.SubType.Gamepad}
+            label="subType"
+            dispatch={(bluetoothType) => onUpdateSource(idx, { bluetoothType })}
+          />
+        )}
+        {hType === 'bluetoothDevice' && (
+          <ConnectedDevicePicker
+            kind="bt"
+            current={item.bluetoothDevice}
+            onPick={({ vid, pid, subtype }) =>
+              onUpdateSource(idx, {
+                bluetoothDevice: {
+                  ...item.bluetoothDevice,
+                  vid,
+                  pid,
+                  subtype: subtype ?? item.bluetoothDevice?.subtype,
+                },
+              })
+            }
+          />
+        )}
+        {hType === 'bluetoothDevice' && (
+          <Group grow>
+            <TextInput
+              size="xs"
+              label={t('assignments.vendorId')}
+              leftSection="0x"
+              value={(item.bluetoothDevice?.vid ?? 0).toString(16)}
+              onChange={(e) =>
+                onUpdateSource(idx, {
+                  bluetoothDevice: {
+                    ...item.bluetoothDevice,
+                    vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                    pid: item.bluetoothDevice?.pid ?? 0,
+                  },
+                })
+              }
+            />
+            <TextInput
+              size="xs"
+              label={t('assignments.productId')}
+              leftSection="0x"
+              value={(item.bluetoothDevice?.pid ?? 0).toString(16)}
+              onChange={(e) =>
+                onUpdateSource(idx, {
+                  bluetoothDevice: {
+                    ...item.bluetoothDevice,
+                    vid: item.bluetoothDevice?.vid ?? 0,
+                    pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
+                  },
+                })
+              }
+            />
+          </Group>
+        )}
+        {hType === 'bluetoothDevice' && (
+          <DropdownBox
+            title="activation.bluetoothType"
+            e={USB_HOST_SUBTYPES_ENUM}
+            val={item.bluetoothDevice?.subtype ?? proto.SubType.Gamepad}
+            label="subType"
+            dispatch={(subtype) =>
+              onUpdateSource(idx, {
+                bluetoothDevice: { vid: 0, pid: 0, ...item.bluetoothDevice, subtype },
+              })
+            }
+          />
+        )}
+        {hType === 'midiChannel' && (
+          <NumberInput
+            size="xs"
+            label={t('assignments.midiChannel')}
+            value={item.midiChannel ?? 10}
+            min={1}
+            max={16}
+            onChange={(val) =>
+              onUpdateSource(idx, {
+                midiChannel: parseInt(val?.toString() ?? '1', 10) || 1,
+              })
+            }
+          />
+        )}
+        {hType === 'midiProGuitar' && (
+          <DropdownBox
+            title="activation.midiProGuitar"
+            e={MIDI_PRO_GUITAR_SUBTYPES_ENUM}
+            val={item.midiProGuitar ?? proto.SubType.ProGuitarSquier}
+            label="subType"
+            dispatch={(midiProGuitar) => onUpdateSource(idx, { midiProGuitar })}
+          />
+        )}
+      </Stack>
+    </Card>
+  ));
+
   return (
-    <Stack gap="xs">
-      <Text size="xs" fw={500}>
-        {t('assignments.step2_title')}
-      </Text>
+    <Stack gap="xs" align={wrap ? 'flex-start' : undefined}>
+      {showTitle && (
+        <Text size="xs" fw={500}>
+          {t('assignments.step2_title')}
+        </Text>
+      )}
 
-      {hostIndices.map(({ item, idx, slotId, type: hType }) => (
-        <Card key={idx} padding="xs" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
-          <Stack gap={4}>
-            <Group justify="space-between" align="center">
-              <Badge size="sm" variant="light" color="blue">
-                {getProfileSlotLabel(item, slotId, t)}
-              </Badge>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                color="red"
-                onClick={() => onRemoveSource(idx)}
-                title={t('assignments.removeSource')}
-              >
-                <IconTrash size={14} />
-              </ActionIcon>
-            </Group>
-
-            {hType === 'wiiExt' && (
-              <DropdownBox
-                title="activation.wiiExt"
-                e={proto.WiiExtType}
-                val={item.wiiExt ?? proto.WiiExtType.WiiGuitarHeroGuitar}
-                label="wiiExt"
-                dispatch={(wiiExt) => onUpdateSource(idx, { wiiExt })}
-              />
-            )}
-            {hType === 'ps2Cnt' && (
-              <DropdownBox
-                title="activation.ps2Cnt"
-                e={proto.PS2ControllerType}
-                val={item.ps2Cnt ?? proto.PS2ControllerType.PS2ControllerTypeGuitar}
-                label="ps2Cnt"
-                dispatch={(ps2Cnt) => onUpdateSource(idx, { ps2Cnt })}
-              />
-            )}
-            {hType === 'snesCnt' && (
-              <DropdownBox
-                title="activation.snesCnt"
-                e={SNES_CONTROLLER_TYPES_ENUM}
-                val={item.snesCnt ?? proto.SNESControllerType.SNESControllerSNES}
-                label="snesCnt"
-                dispatch={(snesCnt) => onUpdateSource(idx, { snesCnt })}
-              />
-            )}
-            {hType === 'joybusCnt' && (
-              <DropdownBox
-                title="activation.joybusCnt"
-                e={JOYBUS_CONTROLLER_TYPES_ENUM}
-                val={item.joybusCnt ?? proto.JoybusControllerType.JoybusControllerGameCube}
-                label="joybusCnt"
-                dispatch={(joybusCnt) => onUpdateSource(idx, { joybusCnt })}
-              />
-            )}
-            {hType === 'usbType' && (
-              <DropdownBox
-                title="activation.usbType"
-                e={USB_HOST_SUBTYPES_ENUM}
-                val={item.usbType ?? proto.SubType.Gamepad}
-                label="subType"
-                dispatch={(usbType) => onUpdateSource(idx, { usbType })}
-              />
-            )}
-            {hType === 'usbDevice' && (
-              <ConnectedDevicePicker
-                kind="usb"
-                current={item.usbDevice}
-                onPick={({ vid, pid, subtype }) =>
-                  onUpdateSource(idx, {
-                    usbDevice: {
-                      ...item.usbDevice,
-                      vid,
-                      pid,
-                      subtype: subtype ?? item.usbDevice?.subtype,
-                    },
-                  })
-                }
-              />
-            )}
-            {hType === 'usbDevice' && (
-              <Group grow>
-                <TextInput
-                  size="xs"
-                  label={t('assignments.vendorId')}
-                  leftSection="0x"
-                  value={(item.usbDevice?.vid ?? 0).toString(16)}
-                  onChange={(e) =>
-                    onUpdateSource(idx, {
-                      usbDevice: {
-                        ...item.usbDevice,
-                        vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                        pid: item.usbDevice?.pid ?? 0,
-                      },
-                    })
-                  }
-                />
-                <TextInput
-                  size="xs"
-                  label={t('assignments.productId')}
-                  leftSection="0x"
-                  value={(item.usbDevice?.pid ?? 0).toString(16)}
-                  onChange={(e) =>
-                    onUpdateSource(idx, {
-                      usbDevice: {
-                        ...item.usbDevice,
-                        vid: item.usbDevice?.vid ?? 0,
-                        pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                      },
-                    })
-                  }
-                />
-              </Group>
-            )}
-            {hType === 'usbDevice' && (
-              <DropdownBox
-                title="activation.usbType"
-                e={USB_HOST_SUBTYPES_ENUM}
-                val={item.usbDevice?.subtype ?? proto.SubType.Gamepad}
-                label="subType"
-                dispatch={(subtype) =>
-                  onUpdateSource(idx, {
-                    usbDevice: { vid: 0, pid: 0, ...item.usbDevice, subtype },
-                  })
-                }
-              />
-            )}
-            {hType === 'bluetoothType' && (
-              <DropdownBox
-                title="activation.bluetoothType"
-                e={USB_HOST_SUBTYPES_ENUM}
-                val={item.bluetoothType ?? proto.SubType.Gamepad}
-                label="subType"
-                dispatch={(bluetoothType) => onUpdateSource(idx, { bluetoothType })}
-              />
-            )}
-            {hType === 'bluetoothDevice' && (
-              <ConnectedDevicePicker
-                kind="bt"
-                current={item.bluetoothDevice}
-                onPick={({ vid, pid, subtype }) =>
-                  onUpdateSource(idx, {
-                    bluetoothDevice: {
-                      ...item.bluetoothDevice,
-                      vid,
-                      pid,
-                      subtype: subtype ?? item.bluetoothDevice?.subtype,
-                    },
-                  })
-                }
-              />
-            )}
-            {hType === 'bluetoothDevice' && (
-              <Group grow>
-                <TextInput
-                  size="xs"
-                  label={t('assignments.vendorId')}
-                  leftSection="0x"
-                  value={(item.bluetoothDevice?.vid ?? 0).toString(16)}
-                  onChange={(e) =>
-                    onUpdateSource(idx, {
-                      bluetoothDevice: {
-                        ...item.bluetoothDevice,
-                        vid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                        pid: item.bluetoothDevice?.pid ?? 0,
-                      },
-                    })
-                  }
-                />
-                <TextInput
-                  size="xs"
-                  label={t('assignments.productId')}
-                  leftSection="0x"
-                  value={(item.bluetoothDevice?.pid ?? 0).toString(16)}
-                  onChange={(e) =>
-                    onUpdateSource(idx, {
-                      bluetoothDevice: {
-                        ...item.bluetoothDevice,
-                        vid: item.bluetoothDevice?.vid ?? 0,
-                        pid: parseInt((e.currentTarget.value || '0').substring(0, 4), 16) ?? 0,
-                      },
-                    })
-                  }
-                />
-              </Group>
-            )}
-            {hType === 'bluetoothDevice' && (
-              <DropdownBox
-                title="activation.bluetoothType"
-                e={USB_HOST_SUBTYPES_ENUM}
-                val={item.bluetoothDevice?.subtype ?? proto.SubType.Gamepad}
-                label="subType"
-                dispatch={(subtype) =>
-                  onUpdateSource(idx, {
-                    bluetoothDevice: { vid: 0, pid: 0, ...item.bluetoothDevice, subtype },
-                  })
-                }
-              />
-            )}
-            {hType === 'midiChannel' && (
-              <NumberInput
-                size="xs"
-                label={t('assignments.midiChannel')}
-                value={item.midiChannel ?? 10}
-                min={1}
-                max={16}
-                onChange={(val) =>
-                  onUpdateSource(idx, {
-                    midiChannel: parseInt(val?.toString() ?? '1', 10) || 1,
-                  })
-                }
-              />
-            )}
-            {hType === 'midiProGuitar' && (
-              <DropdownBox
-                title="activation.midiProGuitar"
-                e={MIDI_PRO_GUITAR_SUBTYPES_ENUM}
-                val={item.midiProGuitar ?? proto.SubType.ProGuitarSquier}
-                label="subType"
-                dispatch={(midiProGuitar) => onUpdateSource(idx, { midiProGuitar })}
-              />
-            )}
-          </Stack>
-        </Card>
-      ))}
+      {wrap ? (
+        <Group align="flex-start" gap="xs">
+          {cards}
+        </Group>
+      ) : (
+        cards
+      )}
 
       <Menu shadow="md" width={220}>
         <Menu.Target>
@@ -8033,40 +8085,10 @@ function SantrollerAssignmentList({
   };
 
   const addHostSource = (sourceType: string) => {
-    const next = [...assignments];
-    switch (sourceType) {
-      case 'wiiExt':
-        next.push({ wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
-        break;
-      case 'ps2Cnt':
-        next.push({ ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar });
-        break;
-      case 'snesCnt':
-        next.push({ snesCnt: proto.SNESControllerType.SNESControllerSNES });
-        break;
-      case 'joybusCnt':
-        next.push({ joybusCnt: proto.JoybusControllerType.JoybusControllerGameCube });
-        break;
-      case 'usbType':
-        next.push({ usbType: proto.SubType.Gamepad });
-        break;
-      case 'usbDevice':
-        next.push({ usbDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } });
-        break;
-      case 'bluetoothType':
-        next.push({ bluetoothType: proto.SubType.Gamepad });
-        break;
-      case 'bluetoothDevice':
-        next.push({ bluetoothDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } });
-        break;
-      case 'midiChannel':
-        next.push({ midiChannel: 10 });
-        break;
-      case 'midiProGuitar':
-        next.push({ midiProGuitar: proto.SubType.ProGuitarSquier });
-        break;
+    const source = defaultHostSource(sourceType);
+    if (source) {
+      dispatch({ ...mapping, assignments: [...assignments, source] });
     }
-    dispatch({ ...mapping, assignments: next });
   };
 
   const removeHostSource = (targetIdx: number) => {
@@ -9216,36 +9238,7 @@ function BlankProfileWizard({
   };
 
   const addHostSource = (sourceType: string) => {
-    let next: proto.IProfileAssignmentInfo | null = null;
-    switch (sourceType) {
-      case 'wiiExt':
-        next = { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar };
-        break;
-      case 'ps2Cnt':
-        next = { ps2Cnt: proto.PS2ControllerType.PS2ControllerTypeGuitar };
-        break;
-      case 'snesCnt':
-        next = { snesCnt: proto.SNESControllerType.SNESControllerSNES };
-        break;
-      case 'joybusCnt':
-        next = { joybusCnt: proto.JoybusControllerType.JoybusControllerGameCube };
-        break;
-      case 'usbType':
-        next = { usbType: proto.SubType.Gamepad };
-        break;
-      case 'usbDevice':
-        next = { usbDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } };
-        break;
-      case 'bluetoothType':
-        next = { bluetoothType: proto.SubType.Gamepad };
-        break;
-      case 'bluetoothDevice':
-        next = { bluetoothDevice: { vid: 0, pid: 0, subtype: proto.SubType.Gamepad } };
-        break;
-      case 'midiChannel':
-        next = { midiChannel: 10 };
-        break;
-    }
+    const next = defaultHostSource(sourceType);
     if (next) {
       const updated = [...hostAssignments, next];
       setHostAssignments(updated);
@@ -9867,6 +9860,17 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const profile = profiles[profileIdx];
   // Only lights its LEDs while no other profile is active, so it has no rules or inputs
   const standby = !!profile?.opts.standbyLighting;
+  const standbySources = (profile?.assignments ?? []).flatMap((list) => list.assignments ?? []);
+  const standbyWake = profile?.standbyWake ?? [];
+  const updateStandbyWake = (wake: proto.IInputActivationTrigger[]) =>
+    updateProfile({ ...profile, standbyWake: wake }, profileIdx);
+  const updateStandbyWakeAt = (idx: number, wake: proto.IInputActivationTrigger) =>
+    updateStandbyWake(standbyWake.map((x, i) => (i === idx ? wake : x)));
+  const updateStandbySources = (sources: proto.IProfileAssignmentInfo[]) =>
+    updateProfile(
+      { ...profile, assignments: sources.map((source) => ({ assignments: [source] })) },
+      profileIdx
+    );
   const profileSlots = useMemo(() => getProfileSlots(profile, t), [profile, t]);
   const ruleCards = useExpandedCards(profileIdx, profile?.assignments?.length ?? 0);
   const mappingCards = useExpandedCards(profileIdx, profile?.mappings?.length ?? 0);
@@ -10170,6 +10174,136 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         <Alert variant="light" icon={<IconMoon size={16} />} mt="md">
           {t('main.standbyLighting.description')}
         </Alert>
+      )}
+      {standby && !simpleMode && (
+        <>
+          <Space h="md" />
+          <Switch
+            label={t('main.standbyLighting.whileSuspended.label')}
+            description={t('main.standbyLighting.whileSuspended.description')}
+            checked={!!profile.opts.standbyWhileSuspended}
+            onChange={(event) =>
+              updateProfile(
+                {
+                  ...profile,
+                  opts: { ...profile.opts, standbyWhileSuspended: event.currentTarget.checked },
+                },
+                profileIdx
+              )
+            }
+          />
+          <Space h="md" />
+          <Input.Wrapper
+            label={t('main.standbyLighting.controllers.label')}
+            description={t('main.standbyLighting.controllers.description')}
+          >
+            {/* Each controller is a rule of its own, so it's claimed whether or not the others are connected */}
+            <ControllerSourcesEditor
+              assignments={standbySources}
+              slotIds={getProfileSlotIds(profile).flat()}
+              onAddSource={(type) => {
+                const source = defaultHostSource(type);
+                if (source) {
+                  updateStandbySources([...standbySources, source]);
+                }
+              }}
+              onRemoveSource={(idx) =>
+                updateStandbySources(standbySources.filter((_, i) => i !== idx))
+              }
+              onUpdateSource={(idx, updated) =>
+                updateStandbySources(standbySources.map((x, i) => (i === idx ? updated : x)))
+              }
+              hasUsbHost={deviceTypes.includes('usbHost')}
+              hasBluetooth={hasBluetooth}
+              hasMidi={deviceTypes.some(
+                (type) =>
+                  type === 'midiSerial' ||
+                  type === 'usbHost' ||
+                  type === 'wii' ||
+                  type === 'bhDrum' ||
+                  type === 'worldTourDrum'
+              )}
+              hasWii={hasWii}
+              hasPsx={hasPsx}
+              hasSnes={deviceTypes.includes('snes')}
+              hasJoybus={deviceTypes.includes('joybus')}
+              showTitle={false}
+              wrap
+            />
+          </Input.Wrapper>
+          <Space h="md" />
+          <Input.Wrapper
+            label={t('main.standbyLighting.wake.label')}
+            description={t('main.standbyLighting.wake.description')}
+          >
+            <Stack gap="xs" mt={4} align="flex-start">
+              <Group align="flex-start" gap="xs">
+                {standbyWake.map((wake, wakeIdx) => (
+                  <Card key={wakeIdx} padding="xs" radius="sm" withBorder w={420} maw="100%">
+                    <Stack gap={4}>
+                      <Group justify="space-between" align="center">
+                        <Text size="xs" fw={500}>
+                          {t('main.standbyLighting.wake.button', { num: wakeIdx + 1 })}
+                        </Text>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="red"
+                          title={t('main.standbyLighting.wake.remove')}
+                          onClick={() =>
+                            updateStandbyWake(standbyWake.filter((_, i) => i !== wakeIdx))
+                          }
+                        >
+                          <IconTrash size={14} />
+                        </ActionIcon>
+                      </Group>
+                      {/* Standby lighting has no rules, so detecting an input can use the activation slots */}
+                      <SantrollerInput
+                        axis={false}
+                        button
+                        type={profile.opts.deviceToEmulate}
+                        activationIdx={wakeIdx}
+                        mode={profile.opts.faceButtonMappingMode}
+                        legendMode={legendMode}
+                        input={wake.input ?? {}}
+                        dispatch={(input) => updateStandbyWakeAt(wakeIdx, { ...wake, input })}
+                      />
+                      {wake.input && isAnalog(wake.input) ? (
+                        <ActivationTrigger
+                          input={wake}
+                          profileIdx={profileIdx}
+                          listIdx={0}
+                          activationIdx={wakeIdx}
+                          dispatch={(updated) => updateStandbyWakeAt(wakeIdx, updated)}
+                        />
+                      ) : (
+                        <Switch
+                          size="xs"
+                          label={t('calibration.inverted')}
+                          checked={!!wake.inverted}
+                          onChange={(evt) =>
+                            updateStandbyWakeAt(wakeIdx, {
+                              ...wake,
+                              inverted: evt.currentTarget.checked,
+                            })
+                          }
+                        />
+                      )}
+                    </Stack>
+                  </Card>
+                ))}
+              </Group>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconPlus size={14} />}
+                onClick={() => updateStandbyWake([...standbyWake, { input: {} }])}
+              >
+                {t('main.standbyLighting.wake.add')}
+              </Button>
+            </Stack>
+          </Input.Wrapper>
+        </>
       )}
 
       <Space h="md" />
