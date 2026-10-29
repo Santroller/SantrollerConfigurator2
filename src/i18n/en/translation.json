@@ -238,7 +238,7 @@
       },
       "wake": {
         "label": "Wake-up buttons",
-        "description": "Pressing one of these wakes up a console or PC that's asleep with the controller plugged in. Without any, the controller's own buttons wake it as usual. They can be on the connected controllers added above.",
+        "description": "Pressing one of these wakes up a console or PC that's asleep with the controller plugged in. Without any, the controller doesn't wake it at all. They can be on the connected controllers added above.",
         "button": "Button {{num}}",
         "add": "Add button",
         "remove": "Remove button"
