@@ -135,7 +135,9 @@ export class NativeHidDevice extends EventTarget {
   // Like WebHID, the report id comes first
   async receiveFeatureReport(reportId: number) {
     const known = this.descriptor?.featureReportLengths.get(reportId);
-    const length = (known ?? this.descriptor?.maxFeatureReportLength ?? 64) + 1;
+    // On Windows over Bluetooth, the buffer must be at least caps.FeatureReportByteLength
+    // (the maximum feature report length in the collection plus the report ID). Passing less fails.
+    const length = Math.max(known ?? 0, this.descriptor?.maxFeatureReportLength ?? 0, 63) + 1;
     let data: number[];
     try {
       data = await invoke<number[]>('hid_receive_feature_report', {

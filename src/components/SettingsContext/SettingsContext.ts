@@ -100,16 +100,29 @@ async function fetchShipped(file: string) {
 async function checkFirmwareVersion(device: HIDDevice) {
   let version: string | undefined;
   let build: number | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      ({ version, build } = parseVersionReport(
+        await receiveFeatureReport(device, proto.ReportId.ReportIdGetVersion)
+      ));
+      if (version) {
+        break;
+      }
+    } catch (e) {
+      if (attempt < 2) {
+        await delay(100);
+      } else {
+        console.warn('Failed to read firmware version:', e);
+      }
+    }
+  }
   try {
-    ({ version, build } = parseVersionReport(
-      await receiveFeatureReport(device, proto.ReportId.ReportIdGetVersion)
-    ));
     const [latestVersion, latestBuild] = await Promise.all([
       fetchShipped('commit.hash'),
       fetchShipped('commit.build'),
     ]);
     const shippedBuild = Number(latestBuild) || undefined;
-    const latest = version === latestVersion?.substring(0, 8);
+    const latest = !!version && version === latestVersion?.substring(0, 8);
     // newer firmware than this tool has, so updating would go backwards
     const newer = !latest && !!build && !!shippedBuild && build > shippedBuild;
     return { version, build, latest, newer };

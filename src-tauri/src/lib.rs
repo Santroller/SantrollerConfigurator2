@@ -110,7 +110,12 @@ fn handle_command(device: &HidDevice, command: Command) {
             length,
             done,
         } => {
-            let mut report = vec![0; length.clamp(2, BUFFER_SIZE)];
+            // Windows expects the buffer passed to get_feature_report (DeviceIoControl/HidD_GetFeature)
+            // to be at least caps.FeatureReportByteLength, which is the maximum feature report length
+            // in the collection plus the report ID (64 bytes for Santroller). Passing a smaller buffer
+            // fails on Bluetooth with ERROR_INVALID_USER_BUFFER.
+            let buf_size = length.max(64).clamp(2, BUFFER_SIZE);
+            let mut report = vec![0; buf_size];
             report[0] = report_id;
             let result = device
                 .get_feature_report(&mut report)
