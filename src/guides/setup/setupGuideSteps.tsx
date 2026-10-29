@@ -12,6 +12,7 @@ import {
   IconFileExport,
   IconInfoCircle,
   IconListCheck,
+  IconMoon,
   IconPlug,
 } from '@tabler/icons-react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -407,6 +408,57 @@ export function SetupProfileStep(props: GuideStepProps) {
     <StepWorkbench
       {...props}
       {...useStepText('profile')}
+      guideContent={guideContent}
+      workbenchContent={workbenchContent || <></>}
+    />
+  );
+}
+
+export function SetupStandbyStep(props: GuideStepProps) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const connected = useConfigStore((state) => state.connected);
+  const profiles = useConfigStore((state) => state.config.profiles);
+  const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
+  const addStandbyProfile = useConfigStore((state) => state.addStandbyProfile);
+  const standbyIdx = (profiles ?? []).findIndex((profile) => profile.opts?.standbyLighting);
+
+  const guideContent = <StepSections keys={['standby', 'standbyWake']} />;
+
+  const openStandby = (idx: number) => {
+    setActiveProfile(idx.toString(), 0);
+    navigate('/profiles');
+  };
+  const workbenchContent = connected && (
+    <Stack gap="xs">
+      {standbyIdx !== -1 ? (
+        <Button
+          variant="light"
+          leftSection={<IconMoon size={16} />}
+          onClick={() => openStandby(standbyIdx)}
+        >
+          {t('guides.setup.workbench.openStandby')}
+        </Button>
+      ) : (
+        <Button
+          variant="light"
+          leftSection={<IconMoon size={16} />}
+          onClick={() => {
+            addStandbyProfile();
+            // It's added at the end, where it always stays
+            openStandby(useConfigStore.getState().config.profiles!.length - 1);
+          }}
+        >
+          {t('nav.addStandbyLighting')}
+        </Button>
+      )}
+    </Stack>
+  );
+
+  return (
+    <StepWorkbench
+      {...props}
+      {...useStepText('standby')}
       guideContent={guideContent}
       workbenchContent={workbenchContent || <></>}
     />

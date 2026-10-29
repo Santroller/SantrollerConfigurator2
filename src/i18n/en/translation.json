@@ -946,6 +946,14 @@
         "title": "Set up LEDs (optional)",
         "body": "If you added an LED device, use <strong>Add LED Mapping</strong> in the <strong>LEDs</strong> section to link LEDs to inputs and choose colours. <strong>Test All LEDs</strong> confirms the wiring and LED order."
       },
+      "standby": {
+        "title": "Standby profile (optional)",
+        "body": "A standby profile sets what the controller does when it isn't in use. Click <strong>Add standby profile</strong> under <strong>Profiles</strong> in the sidebar. Its LEDs light up while no other profile is active, like when the controller isn't plugged into anything or is only charging. Turn on <strong>Also light up while the console or PC is asleep</strong> to have them light up then too."
+      },
+      "standbyWake": {
+        "title": "Wake a sleeping console or PC (optional)",
+        "body": "The controller only wakes up a sleeping console or PC with the standby profile's <strong>Wake-up buttons</strong>. Without any, it won't wake it at all. If a button is on a controller plugged into this device (like a USB guitar), add that controller under <strong>Connected controllers</strong> first."
+      },
       "save": {
         "title": "Save changes",
         "body": "Edits are sent to the controller as you make them so you can test straight away, but they are only stored once you click <strong>Save changes</strong> at the top of the page."
@@ -4790,6 +4798,11 @@
           "shortTitle": "More on assignments",
           "description": "Reading several controllers in one profile, the order profiles are checked in, and console modes."
         },
+        "standby": {
+          "title": "Standby profile",
+          "shortTitle": "Standby",
+          "description": "Light up when the controller isn't in use, and pick the buttons that wake a sleeping console or PC."
+        },
         "save": {
           "title": "Save and back up",
           "shortTitle": "Save",
@@ -4811,6 +4824,7 @@
         "openDevices": "Open Devices",
         "profilesTitle": "Your profiles",
         "addProfile": "Add profile",
+        "openStandby": "Open the standby profile",
         "allSaved": "Everything is saved."
       },
       "seller": {

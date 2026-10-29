@@ -7,6 +7,7 @@ import {
   SetupOverviewStep,
   SetupProfileStep,
   SetupSaveStep,
+  SetupStandbyStep,
   SetupWireStep,
 } from './setupGuideSteps';
 
@@ -75,6 +76,14 @@ export const SETUP_GUIDE: GuideDefinition = {
       description:
         'Reading several controllers in one profile, the order profiles are checked in, and console modes.',
       render: AssignmentsAdvancedStep,
+    },
+    {
+      id: 'standby',
+      title: 'Standby profile',
+      shortTitle: 'Standby',
+      description:
+        "Light up when the controller isn't in use, and pick the buttons that wake a sleeping console or PC.",
+      render: SetupStandbyStep,
     },
     {
       id: 'save',
