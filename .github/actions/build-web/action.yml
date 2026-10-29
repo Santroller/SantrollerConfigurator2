@@ -101,6 +101,10 @@ runs:
       with:
         key: firmware
         max-size: 500M
+        # its own save runs as a post step even when the job is cancelled mid-build, and a cache
+        # saved then had objects under the wrong sources, breaking every later link. Save it below
+        # instead, which only happens once the build has succeeded
+        save: false
     - name: Configure ccache
       shell: bash
       run: |
@@ -122,6 +126,13 @@ runs:
     - name: Show how much ccache saved
       shell: bash
       run: ccache --show-stats
+    # restoring matches on the ccache-firmware- prefix and takes the newest
+    - name: Save ccache
+      if: success()
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/.ccache
+        key: ccache-firmware-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Work out the version
       id: version
       shell: bash
