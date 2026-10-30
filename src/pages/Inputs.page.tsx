@@ -131,7 +131,7 @@ import {
   SLOT_ID_VERSION_LATEST,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
-import { ledOverlaps } from '@/components/Inputs/ledOverlap';
+import { ledOverlaps, pwmChannelShares } from '@/components/Inputs/ledOverlap';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
 import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
 import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
@@ -5425,6 +5425,10 @@ function SantrollerLed({
     () => (profileLeds ? ledOverlaps(profileLeds)[ledIdx] : undefined),
     [profileLeds, ledIdx]
   );
+  const pwmShares = useMemo(
+    () => (profileLeds ? pwmChannelShares(profileLeds)[ledIdx] : []),
+    [profileLeds, ledIdx]
+  );
   const ledInput = led.mapping.inputMapping?.input;
   const mapping = useMemo(() => {
     const key = inputKey(ledInput);
@@ -5739,6 +5743,17 @@ function SantrollerLed({
                 ? t('leds.cutsShort.off_colour', { leds: ledNames(overlap.cutsShort) })
                 : t('leds.cutsShort.always', { leds: ledNames(overlap.cutsShort) })}
             </Text>
+          </Alert>
+        )}
+        {pwmShares.length > 0 && (
+          <Alert
+            variant="light"
+            color="yellow"
+            title={t('leds.pwmShared.title')}
+            icon={<IconExclamationCircle size={16} />}
+            mb="sm"
+          >
+            <Text size="xs">{t('leds.pwmShared.body', { leds: ledNames(pwmShares) })}</Text>
           </Alert>
         )}
 
@@ -6144,7 +6159,7 @@ function SantrollerLed({
                   <>
                     <PinBox
                       label="pin_label"
-                      valid={led.device.gpio.analog ? AnalogPinsNamed : LedPinsNamed}
+                      valid={LedPinsNamed}
                       pin={led.device.gpio.pin}
                       dispatch={(pin) =>
                         dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })

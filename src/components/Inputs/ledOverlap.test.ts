@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
-import { ledOverlaps } from './ledOverlap';
+import { ledOverlaps, pwmChannelShares } from './ledOverlap';
 
 const input: proto.ILedMapping = { inputMapping: { input: {} } };
 const rumble: proto.ILedMapping = { rumbleMapping: { type: proto.LedRumbleType.RumbleLeft } };
@@ -52,5 +52,24 @@ describe('ledOverlaps', () => {
 
   it('lets the host keep the LED while an RGB mapping without an off colour is released', () => {
     expect(cutsShort([rgb([0], true, rumble), rgb([0], false)])).toEqual([[], []]);
+  });
+});
+
+describe('pwmChannelShares', () => {
+  const pwm = (pin: number): proto.ILed => ({
+    device: { gpio: { pin, analog: true } },
+    mapping: input,
+  });
+
+  it('flags PWM pins 16 apart', () => {
+    expect(pwmChannelShares([pwm(0), pwm(16), pwm(1)])).toEqual([[1], [0], []]);
+  });
+
+  it('flags RP2350B pins 8 apart, but not against the lower pins', () => {
+    expect(pwmChannelShares([pwm(32), pwm(40), pwm(16)])).toEqual([[1], [0], []]);
+  });
+
+  it('ignores the same pin, digital pins and unset pins', () => {
+    expect(pwmChannelShares([pwm(2), pwm(2), gpio(18), pwm(-1)])).toEqual([[], [], [], []]);
   });
 });

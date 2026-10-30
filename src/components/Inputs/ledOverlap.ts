@@ -80,3 +80,29 @@ export function ledOverlaps(leds: proto.ILed[]): LedOverlap[] {
     return overlap;
   });
 }
+
+// The PWM output (slice and channel) driving a pin, as in the SDK's pwm_gpio_to_slice_num. GP0 - GP31
+// share 16 outputs, so pins 16 apart (GP0 and GP16) always show the same brightness. That's the same
+// on the RP2350, whose extra outputs are only on the RP2350B's GP32 - GP47, there shared by pins 8 apart.
+function pwmOutput(pin: number): number {
+  return pin < 32 ? pin % 16 : 16 + ((pin - 32) % 8);
+}
+
+// For each mapping, the other PWM mappings on a different pin that shares its PWM output
+export function pwmChannelShares(leds: proto.ILed[]): number[][] {
+  return leds.map((led) => {
+    const gpio = led.device.gpio;
+    if (!gpio?.analog || gpio.pin < 0) {
+      return [];
+    }
+    return leds.flatMap((other, otherIdx) => {
+      const otherGpio = other.device.gpio;
+      return otherGpio?.analog &&
+        otherGpio.pin >= 0 &&
+        otherGpio.pin !== gpio.pin &&
+        pwmOutput(otherGpio.pin) === pwmOutput(gpio.pin)
+        ? [otherIdx]
+        : [];
+    });
+  });
+}

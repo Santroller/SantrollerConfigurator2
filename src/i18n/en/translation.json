@@ -1632,6 +1632,10 @@
       "off_colour": "This mapping shares an LED with {{leds}}. It shows its released colour whenever it isn't active, so {{leds}} never shows. Turn on \"Overlay\" here so the earlier mappings show through while this input is released.",
       "always": "This mapping shares an LED with {{leds}}. It updates that LED all the time, so {{leds}} never shows. When mappings share an LED, only the last one in the list is visible."
     },
+    "pwmShared": {
+      "title": "Shares a PWM output",
+      "body": "This pin shares its PWM output with {{leds}}, as pins 16 apart (like GP0 and GP16) do, so they always show the same brightness. Move one of them to another pin."
+    },
     "cutsShort": {
       "title": "Takes over an LED the game controls",
       "off_colour": "This mapping shares an LED with {{leds}}, which the game controls. It shows its released colour whenever it isn't active, taking the LED back about a second after the game last changed it, so the game's colour barely shows. Turn on \"Overlay\" here so this mapping only takes the LED while the input is pressed.",
