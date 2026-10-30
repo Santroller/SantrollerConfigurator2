@@ -12,6 +12,7 @@ import {
   getDevicePins,
   getDeviceStatusLabel,
   getGroupedDevices,
+  isInputDeviceKind,
   isSingletonDeviceKind,
 } from './deviceRegistry';
 
@@ -202,5 +203,14 @@ describe('device names', () => {
     expect(
       getDeviceName('mpr121', { deviceid: 0, mpr121: createDeviceConfig('mpr121', 0).mpr121 })
     ).toBe('MPR121');
+  });
+});
+
+describe('input device kinds', () => {
+  it("doesn't offer outputs as input sources", () => {
+    for (const kind of ['display', 'ws2812', 'dmx']) {
+      expect(isInputDeviceKind(kind)).toBe(false);
+    }
+    expect(isInputDeviceKind('mpr121')).toBe(true);
   });
 });

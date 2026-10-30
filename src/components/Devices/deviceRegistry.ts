@@ -407,6 +407,7 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'apa102',
   'stp16cpc',
   'dmx',
+  'display',
   'psxEmulation',
   'wiiEmulation',
   'joybusEmulation',
