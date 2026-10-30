@@ -56,6 +56,7 @@ import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './sav
 import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
 import { remapMappingsForSubType } from './subTypeMappings';
 import { centerTilt } from './tiltCenter';
+import { fixAbsoluteTriggerDeadzones } from './triggerDeadzone';
 
 // sourceId is unique per interface (including virtual wireless controller slots), older
 // firmware doesn't send it so fall back to port / interface
@@ -771,6 +772,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     ...(config.profiles ?? []).filter((x) => x.opts?.standbyLighting),
   ];
   const centeredTilt = centerTilt(config);
+  const fixedDeadzones = fixAbsoluteTriggerDeadzones(config);
   config.profiles?.forEach((profile) => {
     profile.assignments?.forEach((list) => {
       list.assignments?.forEach((assignment) => {
@@ -863,7 +865,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     savedConfig: proto.Config.encode(config).finish(),
     updatePercentage: 0,
     // so the repaired config can be saved
-    configModified: splitTargets || centeredTilt || migratedSlotIds,
+    configModified: splitTargets || centeredTilt || fixedDeadzones || migratedSlotIds,
     waitingForReload: false,
     reloadLost: false,
     updating: false,

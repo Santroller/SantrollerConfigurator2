@@ -167,6 +167,48 @@ function DisplayPreview({
   );
 }
 
+// Just this element on its display, small, for the collapsed card
+export function DisplayThumbnail({
+  element,
+  display,
+}: {
+  element: proto.IDisplayLedDevice;
+  display: proto.IDisplayDevice;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { t } = useTranslation();
+  const { width, height } = displaySize(display);
+  useEffect(() => {
+    const context = canvasRef.current?.getContext('2d');
+    if (!context) {
+      return;
+    }
+    const frame = new MonoFrame(width, height);
+    frame.drawElement(element, 32768);
+    const image = context.createImageData(width, height);
+    for (let i = 0; i < frame.pixels.length; i++) {
+      const on = frame.pixels[i];
+      image.data.set(on ? [0x7f, 0xd4, 0xff, 0xff] : [0, 0, 0, 0xff], i * 4);
+    }
+    context.putImageData(image, 0, 0);
+  }, [element, width, height]);
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      role="img"
+      aria-label={t('display.preview')}
+      style={{
+        height: Math.min(height, 32),
+        imageRendering: 'pixelated',
+        borderRadius: 2,
+        alignSelf: 'flex-start',
+      }}
+    />
+  );
+}
+
 function elementSize(element: proto.IDisplayLedDevice) {
   if (element.type === proto.DisplayElementType.DisplayElementText) {
     const scale = Math.min(MAX_SCALE, Math.max(1, element.scale ?? 1));

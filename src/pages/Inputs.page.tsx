@@ -40,6 +40,7 @@ import {
   Button,
   Card,
   Center,
+  ColorSwatch,
   Combobox,
   Divider,
   Flex,
@@ -96,7 +97,11 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
-import { DisplayElementEditor, newDisplayElement } from '@/components/Inputs/DisplayElementEditor';
+import {
+  DisplayElementEditor,
+  DisplayThumbnail,
+  newDisplayElement,
+} from '@/components/Inputs/DisplayElementEditor';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -133,6 +138,7 @@ import {
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { ledOverlaps, pwmChannelShares } from '@/components/Inputs/ledOverlap';
+import { ledModeDetail, ledOutputSummary } from '@/components/Inputs/ledSummary';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
 import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
 import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
@@ -172,6 +178,7 @@ import {
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
 import { countMappingsDroppedBySubType } from '@/components/SettingsContext/subTypeMappings';
+import { calibratesAsTrigger } from '@/components/SettingsContext/triggerDeadzone';
 import { CODE_TO_HID, hidKeyName, MEDIA_KEYS, mediaKeyName } from '@/devices/keyboard';
 import {
   GM_PERCUSSION,
@@ -352,24 +359,19 @@ function StateSection({
     minCalc = max;
     maxCalc = min;
   }
-  if (trigger) {
-    const minPerc = (minCalc / 65535) * 100;
-    const maxPerc = (maxCalc / 65535) * 100;
-    return (
-      <>
-        <Progress.Section value={(decayedRaw / 65535) * 100} />
-        <Overlay
-          gradient={`linear-gradient(90deg, rgba(255, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) ${minPerc}%, rgba(255, 0, 0, 0.2) ${minPerc}%, rgba(255, 0, 0, 0.2) ${maxPerc}%,  rgba(255, 0, 0, 0) ${maxPerc}%, rgba(0, 0, 0, 0) 100%, rgba(255, 0, 0, 0.2) 100%)`}
-          opacity={0.85}
-        />
-      </>
-    );
-  }
   if (raw) {
     const minPerc = (minCalc / 65535) * 100;
     const maxPerc = (maxCalc / 65535) * 100;
-    const deadZoneStartPerc = ((center - deadzone) / 65535) * 100;
-    const deadZoneEndPerc = ((center + deadzone) / 65535) * 100;
+    // a trigger's deadzone runs from min towards max, a stick's sits either side of its center
+    let deadZoneStart = center - deadzone;
+    let deadZoneEnd = center + deadzone;
+    if (trigger) {
+      deadZoneStart = min > max ? min - deadzone : min;
+      deadZoneEnd = min > max ? min : min + deadzone;
+    }
+    const clamp = (v: number) => Math.min(Math.max(v, minCalc), maxCalc);
+    const deadZoneStartPerc = (clamp(deadZoneStart) / 65535) * 100;
+    const deadZoneEndPerc = (clamp(deadZoneEnd) / 65535) * 100;
     return (
       <>
         <Progress.Section value={(decayedRaw / 65535) * 100} />
@@ -3645,6 +3647,22 @@ function SantrollerInput({
           >
             {t('pin_detect')}
           </Button>
+          {input.gpio.analog && (
+            <Switch
+              mt="sm"
+              label={t('gpio.ignoreWhenFloating.label')}
+              description={t('gpio.ignoreWhenFloating.description')}
+              checked={!!input.gpio.ignoreWhenFloating}
+              onChange={(event) =>
+                dispatch({
+                  gpio: {
+                    ...input.gpio!,
+                    ignoreWhenFloating: event.currentTarget.checked || null,
+                  },
+                })
+              }
+            />
+          )}
         </>
       )}
       {input.peripheral && (
@@ -4122,6 +4140,9 @@ function SantrollerMapping({
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
   // pitch bend rests in the middle like a stick does
   const stick = (axis && label?.includes('Stick')) || mapping.mapping.midiPitchBend != null;
+  const triggerAxis = !!axis && calibratesAsTrigger(mapping);
+  // a trigger's deadzone is a distance from min, so it can't be more than the travel
+  const deadzoneMax = triggerAxis ? Math.abs((mapping.max ?? 0) - (mapping.min ?? 0)) : 65535;
   // MIDI labels are translated, so check GM drum names by their (English) key instead
   const midiDrumKey =
     mapping.mapping.midiNote?.channel === MIDI_PERCUSSION_CHANNEL
@@ -4943,6 +4964,7 @@ function SantrollerMapping({
                             min={mapping.min!}
                             max={mapping.max!}
                             deadzone={mapping.deadzone!}
+                            trigger={triggerAxis}
                             raw
                             zeroBased={drum}
                           />
@@ -5070,14 +5092,14 @@ function SantrollerMapping({
                               flex={1}
                               value={mapping.deadzone!}
                               min={0}
-                              max={65535}
+                              max={deadzoneMax}
                               onChange={(val) => dispatch({ ...mapping, deadzone: val })}
                             />
 
                             <NumberInput
                               value={mapping.deadzone!}
                               min={0}
-                              max={65535}
+                              max={deadzoneMax}
                               onChange={(e) =>
                                 dispatch({ ...mapping, deadzone: parseInt(e.toString(), 10) })
                               }
@@ -5429,6 +5451,8 @@ function SantrollerLed({
     deviceId = led.device.mpr121.deviceId;
   } else if (led.device.display) {
     deviceId = led.device.display.deviceId;
+  } else if (led.device.dmx) {
+    deviceId = led.device.dmx.deviceId;
   }
   const guiDevices = useProfileLabels();
   const simpleMode = useConfigStore((state) => state.simpleMode);
@@ -5617,6 +5641,32 @@ function SantrollerLed({
     if (pat) {
       summaryModeText = `${mappingValue}: ${t(`leds.pattern.${pat}`)}`;
     }
+  }
+  // The input, player, status etc. that turns it on, when there's no output name for it
+  if (summaryModeText === mappingValue) {
+    const detail = ledModeDetail(led.mapping, t);
+    if (detail) {
+      summaryModeText = `${mappingValue}: ${detail}`;
+    }
+  }
+  const outputSummary = ledOutputSummary(
+    led,
+    device ? DeviceStatus.title(device) : undefined,
+    t,
+    (n) => (allLabels[n] ? `${n} (${allLabels[n].join(', ')})` : `${n}`)
+  );
+  // The colours it lights in, where they're set here rather than by the host or a rainbow
+  const swatches: string[] = [];
+  if (
+    led.device.rgb &&
+    !hostSetsColour &&
+    led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow
+  ) {
+    const rgb = led.device.rgb;
+    if (rgb.hasStart && !led.mapping.staticMapping) {
+      swatches.push(`rgb(${rgb.startR}, ${rgb.startG}, ${rgb.startB})`);
+    }
+    swatches.push(`rgb(${rgb.endR}, ${rgb.endG}, ${rgb.endB})`);
   }
 
   const testButton = (
@@ -5822,12 +5872,30 @@ function SantrollerLed({
                 alt={t('inputs.led_icon')}
                 fallbackSrc="/Icons/Generic.png"
               />
-              <Text size="xs" fw={500} c="dimmed">
-                {t('leds.summary_mode')}:
-              </Text>
-              <Badge variant="light" color="blue" size="sm" miw={0}>
-                {summaryModeText}
-              </Badge>
+              <Stack gap={4} miw={0}>
+                <Group gap="xs" wrap="nowrap" miw={0}>
+                  <Text size="xs" fw={500} c="dimmed" style={{ flexShrink: 0 }}>
+                    {t('leds.summary_mode')}:
+                  </Text>
+                  <Badge variant="light" color="blue" size="sm" miw={0}>
+                    {summaryModeText}
+                  </Badge>
+                </Group>
+                <Group gap="xs" wrap="nowrap" miw={0}>
+                  <Text size="xs" fw={500} c="dimmed" style={{ flexShrink: 0 }}>
+                    {t(led.device.display ? 'leds.summary_output_display' : 'leds.summary_output')}:
+                  </Text>
+                  <Text size="xs" truncate="end" title={outputSummary}>
+                    {outputSummary}
+                  </Text>
+                  {swatches.map((colour, i) => (
+                    <ColorSwatch key={i} color={colour} size={12} style={{ flexShrink: 0 }} />
+                  ))}
+                </Group>
+                {led.device.display && device?.device.display && (
+                  <DisplayThumbnail element={led.device.display} display={device.device.display} />
+                )}
+              </Stack>
             </Group>
           </Card>
         )}

@@ -843,6 +843,10 @@
       "Floating": "Floating",
       "BusKeep": "Bus Keep",
       "label": "Mode"
+    },
+    "ignoreWhenFloating": {
+      "label": "Ignore when not connected",
+      "description": "For optional parts, like a joystick a board may be sold without. If nothing is connected to this pin when the controller starts, this input stays at rest instead of drifting."
     }
   },
   "state": {
@@ -1628,6 +1632,22 @@
     "section_led": "LED",
     "section_display": "Display",
     "section_trigger": "Controlled by",
+    "summary_output": "Lights",
+    "summary_output_display": "Shows",
+    "summary": {
+      "no_device": "Device missing",
+      "no_pin": "No pin picked",
+      "no_leds": "No LEDs picked",
+      "leds_one": "LED {{leds}}",
+      "leds_other": "LEDs {{leds}}",
+      "leds_more": "LEDs {{leds}} and {{count}} more",
+      "channel": "Channel {{channel}}",
+      "display_text": "Text \"{{text}}\" at {{x}}, {{y}}",
+      "display_image": "{{width}} x {{height}} image at {{x}}, {{y}}",
+      "display_no_image": "No image uploaded",
+      "display_bar": "{{width}} x {{height}} bar at {{x}}, {{y}}",
+      "player": "Player {{player}}"
+    },
     "device": "LED Device",
     "mode": "LED Mode",
     "colour": "Colour",
