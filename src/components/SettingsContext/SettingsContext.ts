@@ -151,7 +151,7 @@ function stopFirmwareApplyProgress() {
     firmwareApplyTimer = undefined;
   }
 }
-type DeviceType = keyof Omit<proto.IDevice, 'deviceid'>;
+type DeviceType = keyof Omit<proto.IDevice, 'deviceid' | 'gate'>;
 class HidResponseTimeoutError extends Error {}
 // The config came back incomplete or corrupted, so reading it again may work
 class ConfigReadError extends Error {}
@@ -789,7 +789,9 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const deviceStatus: Record<string, DeviceStatus> = {};
   for (const x of config.devices || []) {
     const parentIdStr = x.deviceid.toString();
-    const typeName = Object.keys(x).find((k) => k !== 'deviceid') as DeviceType | undefined;
+    // Every other field is the device's type, besides its gate
+    const typeName = Object.keys(x).find((k) => k !== 'deviceid' && k !== 'gate') as
+      DeviceType | undefined;
     // A device whose type this tool doesn't know (e.g. saved by an older build) can't be shown or
     // edited, and the firmware can't build it either, so drop it rather than saving it back
     if (!typeName || !isDeviceKind(typeName)) {
@@ -801,7 +803,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     if (x.peripheral?.devices?.length) {
       for (const sub of x.peripheral.devices) {
         const subIdStr = sub.deviceid.toString();
-        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid') as
+        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid' && k !== 'gate') as
           DeviceType | undefined;
         if (!subTypeName || !isDeviceKind(subTypeName)) {
           console.warn('Dropping peripheral device with unknown type', sub);
@@ -1355,7 +1357,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     updateDevice: (device: proto.IDevice, id: string) => {
       set((state) => {
-        state.deviceStatus[id].device = device;
+        // Device editors only pass their own settings, so the gate is kept unless it's set (or null to remove it)
+        const gate = device.gate === undefined ? state.deviceStatus[id].device.gate : device.gate;
+        state.deviceStatus[id].device = gate === undefined ? device : { ...device, gate };
       });
       get().saveConfig();
     },

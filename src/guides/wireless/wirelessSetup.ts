@@ -181,7 +181,8 @@ export function fuelGaugeConflicts(
       continue;
     }
     const kind = Object.keys(status.device).find(
-      (key) => key !== 'deviceid' && status.device[key as keyof proto.IDevice] != null
+      (key) =>
+        key !== 'deviceid' && key !== 'gate' && status.device[key as keyof proto.IDevice] != null
     );
     const value = kind ? (status.device[kind as keyof proto.IDevice] as { i2c?: unknown }) : null;
     const i2c = value?.i2c as proto.II2CDevice | undefined;

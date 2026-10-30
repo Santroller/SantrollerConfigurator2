@@ -67,6 +67,7 @@ import {
 } from '@/components/Selection/Selection';
 import {
   AllPinsNamed,
+  AnalogPins,
   AnalogPinsNamed,
   I2CGroups,
   MisoPins,
@@ -207,6 +208,108 @@ function UARTDevice({
   );
 }
 
+const GATE_PIN_MODES = [proto.PinMode.PullUp, proto.PinMode.PullDown, proto.PinMode.Floating];
+
+// Only loads the device while a pin reads a certain way, so devices on different connectors can share pins
+function DeviceGateSection({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const device = useConfigStore((state) => state.deviceStatus[id]?.device);
+  const parentId = useConfigStore((state) => state.deviceStatus[id]?.parentId);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  // A secondary pico loads its own devices, and doesn't watch for gates changing
+  if (!device || parentId !== undefined) {
+    return null;
+  }
+  const gate = device.gate;
+  const update = (changes: Partial<proto.IDeviceGate> | null) =>
+    updateDevice(
+      { ...device, gate: changes ? ({ ...gate, ...changes } as proto.IDeviceGate) : null },
+      id
+    );
+  return (
+    <Stack gap="xs" mt="md">
+      <Switch
+        label={t('device_gate.enable')}
+        description={t('device_gate.description')}
+        checked={!!gate}
+        onChange={(e) =>
+          update(
+            e.currentTarget.checked
+              ? { pin: -1, pinMode: proto.PinMode.PullUp, analog: false, minMv: 0, maxMv: 3300 }
+              : null
+          )
+        }
+      />
+      {gate && (
+        <>
+          <SegmentedControl
+            data={[
+              { value: 'digital', label: t('device_gate.digital') },
+              { value: 'analog', label: t('device_gate.analog') },
+            ]}
+            value={gate.analog ? 'analog' : 'digital'}
+            onChange={(value) =>
+              update(
+                value === 'analog'
+                  ? {
+                      analog: true,
+                      pinMode: proto.PinMode.Floating,
+                      pin: AnalogPins.includes(gate.pin) ? gate.pin : -1,
+                    }
+                  : { analog: false, pinMode: proto.PinMode.PullUp }
+              )
+            }
+          />
+          <PinBox
+            label="device_gate.pin"
+            pin={gate.pin}
+            valid={gate.analog ? AnalogPinsNamed : AllPinsNamed}
+            dispatch={(pin) => update({ pin })}
+          />
+          <Select
+            label={t('gpio.mode.label')}
+            data={GATE_PIN_MODES.map((pinMode) => ({
+              value: `${pinMode}`,
+              label: t(`gpio.mode.${proto.PinMode[pinMode]}`),
+            }))}
+            value={`${gate.pinMode}`}
+            allowDeselect={false}
+            onChange={(value) => value !== null && update({ pinMode: Number(value) })}
+          />
+          {gate.analog ? (
+            <Group grow>
+              <NumberInput
+                label={t('device_gate.min')}
+                suffix=" mV"
+                min={0}
+                max={3300}
+                value={gate.minMv ?? 0}
+                onChange={(val) => update({ minMv: Number(val) || 0 })}
+              />
+              <NumberInput
+                label={t('device_gate.max')}
+                suffix=" mV"
+                min={0}
+                max={3300}
+                value={gate.maxMv ?? 0}
+                onChange={(val) => update({ maxMv: Number(val) || 0 })}
+              />
+            </Group>
+          ) : (
+            <Text size="xs" c="dimmed">
+              {t(
+                gate.pinMode === proto.PinMode.PullUp
+                  ? 'device_gate.active_low'
+                  : 'device_gate.active_high'
+              )}
+            </Text>
+          )}
+        </>
+      )}
+    </Stack>
+  );
+}
+
 function DeviceCard({
   connected,
   id,
@@ -341,6 +444,7 @@ function DeviceCard({
           </Group>
         </Center>
         {children}
+        {deviceId && <DeviceGateSection id={deviceId} />}
       </Card>
     </>
   );
@@ -2199,6 +2303,7 @@ function USBHostDevice({ id }: { id: string }) {
         description="usb.selector.description"
       />
       <Switch
+        mt="md"
         label={t('usb.hostPower.label')}
         description={t('usb.hostPower.description')}
         checked={usbHost.enable5v}

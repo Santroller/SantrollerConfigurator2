@@ -822,6 +822,17 @@
     "rawValue": "Raw Value",
     "value": "Value"
   },
+  "device_gate": {
+    "enable": "Enable with a pin",
+    "description": "Only enables this device while a pin reads a certain way, so devices on different connectors can share pins.",
+    "digital": "Digital",
+    "analog": "Analog",
+    "pin": "Enable pin",
+    "min": "Minimum voltage",
+    "max": "Maximum voltage",
+    "active_low": "Enabled while the pin is pulled low",
+    "active_high": "Enabled while the pin is pulled high"
+  },
   "gpio": {
     "mode": {
       "PullDown": "Pull Down",
@@ -979,6 +990,10 @@
       "desktopApp": {
         "title": "Website or desktop app",
         "body": "Both do the same job. The website needs a browser with WebHID (Chrome, Edge or another Chromium browser). The desktop app works anywhere and can install the Linux udev rules for you."
+      },
+      "sharedPins": {
+        "title": "Swappable connectors on the same pins",
+        "body": "Devices that are never plugged in at the same time, like a PS2 port and a SNES port on a modular adapter, can share pins. Turn on <strong>Enable with a pin</strong> on each device, and have each connector set that pin differently: tied high or low, or to its own voltage on an analog pin. Only the device that's plugged in is used, and swapping connectors switches over by itself."
       },
       "peripherals": {
         "title": "Running out of pins",

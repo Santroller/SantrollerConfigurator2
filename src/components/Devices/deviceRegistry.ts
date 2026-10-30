@@ -2,7 +2,8 @@ import i18next from 'i18next';
 import { matrixAllPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
 
-export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid'>;
+// Every field of a device but its id and gate is one of the kinds of device
+export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid' | 'gate'>;
 
 export type DeviceStatusSnapshot = {
   id: string;
@@ -465,7 +466,9 @@ function resolveDeviceDetail<Kind extends DeviceKind>(kind: Kind, device: proto.
 
 export function getDevicePins(device: proto.IDevice): number[] {
   const kind = deviceKinds.find((candidate) => device[candidate] != null);
-  return kind ? resolveDevicePins(kind, device) : [];
+  const pins = kind ? resolveDevicePins(kind, device) : [];
+  // The gate's detect pin is often shared with the other devices it picks between
+  return device.gate && device.gate.pin >= 0 ? [...pins, device.gate.pin] : pins;
 }
 
 export function getDeviceStatusLabel(status: DeviceStatusSnapshot): string {

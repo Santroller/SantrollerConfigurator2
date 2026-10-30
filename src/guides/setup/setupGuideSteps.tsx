@@ -341,7 +341,7 @@ export function SetupDevicesStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <StepSections keys={['devices']} />
-      <GoodToKnow keys={['peripherals', 'labels']} />
+      <GoodToKnow keys={['peripherals', 'sharedPins', 'labels']} />
     </Stack>
   );
 
