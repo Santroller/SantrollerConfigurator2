@@ -3,6 +3,7 @@ import { getWiiDefaults } from '@/components/Defaults/defaultMappings';
 import { proto } from '@/components/SettingsContext/config';
 import {
   getProfileSlotForInput,
+  getProfileSlotIds,
   getProfileSlots,
   getProfileWideSlotIds,
   moveWiiDrumNotesToMidiSlot,
@@ -204,7 +205,7 @@ describe('migrating slot ids', () => {
         1
       )
     );
-    expect(migrated.opts!.deviceSlotIdVersion).toBe(2);
+    expect(migrated.opts!.deviceSlotIdVersion).toBe(3);
     expect(migrated.mappings!.map((m) => m.input!.key!.deviceid)).toEqual([2]);
   });
 
@@ -264,13 +265,49 @@ describe('migrating slot ids', () => {
   it('migrates version 0 ids, which counted every trigger', () => {
     // The gamepad was trigger 1, after the console type
     const migrated = migrateSlotIds(profile([[console_, gamepad]], [usbA(1)]));
-    expect(migrated.opts!.deviceSlotIdVersion).toBe(2);
+    expect(migrated.opts!.deviceSlotIdVersion).toBe(3);
     expect(deviceIds(migrated)).toEqual([1]);
   });
 
-  it('leaves version 2 profiles alone', () => {
-    const p = profile([[gamepad], [keyboard]], [usbA(1)], 2);
+  it('leaves profiles on the latest version alone', () => {
+    const p = profile([[gamepad], [keyboard]], [usbA(1)], 3);
     expect(migrateSlotIds(p)).toBe(p);
+  });
+
+  it('numbers MIDI slots by channel and device like the firmware', () => {
+    // Same lists and ids as the firmware's MidiSlotsOnDifferentChannelsOrDevicesAreDifferentSlots
+    const fromUsb = { midiChannel: 10, midiDevice: { usbDevice: { vid: 1, pid: 2 } } };
+    expect(
+      getProfileWideSlotIds([
+        [{ midiChannel: 10 }],
+        [{ midiChannel: 5 }],
+        [fromUsb],
+        [{ midiChannel: 10 }],
+      ])
+    ).toEqual([[2], [1], [3], [2]]);
+  });
+
+  it('splits version 2 MIDI slots by channel and device, copying their inputs onto each', () => {
+    const note: proto.IMapping = {
+      mapping: { gamepadButton: proto.GamepadButtonType.Gamepad_A },
+      input: {
+        midi: {
+          deviceid: 1,
+          sourceType: proto.MidiInputSourceType.MidiInputSourceType_MIDI,
+          midiNote: { note: 38, channel: 10 },
+        },
+      },
+    };
+    const kitA = { midiChannel: 10, midiDevice: { deviceid: 4 } };
+    const kitB = { midiChannel: 10, midiDevice: { usbHost: {} } };
+    // Every MIDI slot was slot 1 in version 2
+    const p = profile([[kitA], [kitB], [{ midiChannel: 5 }]], [note], 2);
+    expect(getProfileSlotIds(p)).toEqual([[1], [1], [1]]);
+    const migrated = migrateSlotIds(p);
+    expect(migrated.opts!.deviceSlotIdVersion).toBe(3);
+    expect(getProfileSlotIds(migrated)).toEqual([[3], [2], [1]]);
+    // The note read whichever of them matched, so it reads each of them still
+    expect(migrated.mappings!.map((m) => m.input!.midi!.deviceid)).toEqual([3, 2, 1]);
   });
 });
 

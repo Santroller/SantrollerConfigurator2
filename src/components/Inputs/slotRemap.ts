@@ -5,7 +5,9 @@ import {
   getProfileSlotIds,
   getProfileWideSlotIds,
   getSlotDeviceKind,
+  getSlotKeyType,
   getSlotSubtype,
+  SLOT_ID_VERSION_LATEST,
   SLOT_UNTYPED,
 } from './inputRegistry';
 
@@ -161,9 +163,10 @@ export function remapProfileSlotInputs(
   };
 }
 
-// The kind, subtype and n of each slot in each list, which say which slot it is when lists are
-// added or removed
+// The kind, type and n of each slot in each list, which say which slot it is when lists are added
+// or removed
 function slotKeys(profile: proto.IProfile) {
+  const version = profile.opts?.deviceSlotIdVersion ?? 0;
   return (profile.assignments ?? []).map((list) => {
     const counts = new Map<string, number>();
     return (list.assignments ?? []).map((item) => {
@@ -171,16 +174,7 @@ function slotKeys(profile: proto.IProfile) {
       if (!kind) {
         return undefined;
       }
-      const type = JSON.stringify([
-        item.usbType,
-        item.usbDevice?.subtype,
-        item.bluetoothType,
-        item.bluetoothDevice?.subtype,
-        item.ps2Cnt,
-        item.wiiExt,
-        item.snesCnt,
-        item.joybusCnt,
-      ]);
+      const type = getSlotKeyType(item, version);
       const n = (counts.get(`${kind}:${type}`) ?? 0) + 1;
       counts.set(`${kind}:${type}`, n);
       return `${kind}:${type}:${n}`;
@@ -359,11 +353,12 @@ export function remapSlotChoices(
   return { ...remapProfileSlotInputs({ ...profile, mappings: [] }, pick(0)), mappings };
 }
 
-// Moves a profile using the older slot ids (numbered within each list, so the same id could be a
-// different slot in each list) to deviceSlotIdVersion 2, where each slot has an id of its own
-// across the whole profile.
+// Moves a profile using older slot ids to the latest deviceSlotIdVersion. Before version 2 they were
+// numbered within each list, so the same id could be a different slot in each list. Version 2 gave
+// each slot an id of its own across the whole profile, but MIDI slots on different channels or
+// devices still shared one.
 export function migrateSlotIds(profile: proto.IProfile): proto.IProfile {
-  if ((profile.opts?.deviceSlotIdVersion ?? 0) >= 2) {
+  if ((profile.opts?.deviceSlotIdVersion ?? 0) >= SLOT_ID_VERSION_LATEST) {
     return profile;
   }
   const lists = (profile.assignments ?? []).map((list) => list.assignments ?? []);
@@ -384,5 +379,5 @@ export function migrateSlotIds(profile: proto.IProfile): proto.IProfile {
     })
   );
   const migrated = remapSlotChoices(profile, choices);
-  return { ...migrated, opts: { ...migrated.opts!, deviceSlotIdVersion: 2 } };
+  return { ...migrated, opts: { ...migrated.opts!, deviceSlotIdVersion: SLOT_ID_VERSION_LATEST } };
 }

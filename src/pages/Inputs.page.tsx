@@ -130,6 +130,7 @@ import {
   midiInputSourceType,
   moveWiiDrumNotesToMidiSlot,
   ProfileSlot,
+  SLOT_ID_VERSION_LATEST,
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { ledOverlaps } from '@/components/Inputs/ledOverlap';
@@ -7152,7 +7153,12 @@ export function SantrollerAssignment({
             value={mapping.midiChannel}
             min={1}
             max={17}
-            onChange={(val) => dispatch({ midiChannel: parseInt(val.toString(), 10) ?? 1 })}
+            onChange={(val) =>
+              dispatch({
+                midiChannel: parseInt(val.toString(), 10) ?? 1,
+                midiDevice: mapping.midiDevice,
+              })
+            }
           />
         )}
         {mapping.midiProGuitar && (
@@ -7161,7 +7167,15 @@ export function SantrollerAssignment({
             e={MIDI_PRO_GUITAR_SUBTYPES_ENUM}
             val={mapping.midiProGuitar}
             label="subType"
-            dispatch={(midiProGuitar) => dispatch({ midiProGuitar })}
+            dispatch={(midiProGuitar) =>
+              dispatch({ midiProGuitar, midiDevice: mapping.midiDevice })
+            }
+          />
+        )}
+        {(mapping.midiChannel || mapping.midiProGuitar) && (
+          <MidiSourceDeviceEditor
+            value={mapping.midiDevice}
+            onChange={(midiDevice) => dispatch({ ...mapping, midiDevice })}
           />
         )}
         {mapping.consoleType && (
@@ -7572,6 +7586,190 @@ function ConnectedDevicePicker({
   );
 }
 
+// What the MIDI device dropdown has picked: any device, a USB / bluetooth VID / PID, or `device:<id>` for a
+// device from the config
+type MidiSourceKind =
+  'any' | 'usbHost' | 'usbDevice' | 'bluetooth' | 'bluetoothDevice' | `device:${number}`;
+
+// status is the dimmed part after the name, like other device pickers show
+type MidiSourceOption = { value: string; label: string; status?: string };
+
+// Limits a MIDI channel / Pro Guitar slot to one device, or to the USB host port or bluetooth, instead of any
+// device sending on its channel
+function MidiSourceDeviceEditor({
+  value,
+  onChange,
+}: {
+  value: proto.IMidiSourceDevice | null | undefined;
+  onChange: (value: proto.IMidiSourceDevice | null) => void;
+}) {
+  const { t } = useTranslation();
+  // Selected as JSON so this only re-renders when the list of MIDI sources changes
+  const configuredJson = useConfigStore((state) =>
+    JSON.stringify(
+      Object.values(state.deviceStatus)
+        .filter(
+          (d) =>
+            !isMidiOutDevice(d.device) &&
+            (d.type === 'midiSerial' ||
+              d.type === 'wii' ||
+              d.type === 'bhDrum' ||
+              d.type === 'worldTourDrum')
+        )
+        .map((d) => ({
+          value: `device:${d.id}`,
+          label: t(`devices.${d.type}`),
+          status: DeviceStatus.label(d),
+        }))
+    )
+  );
+  const configured = useMemo(
+    () => JSON.parse(configuredJson) as MidiSourceOption[],
+    [configuredJson]
+  );
+  const combobox = useCombobox({
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
+  });
+  const kind: MidiSourceKind =
+    value?.usbHost != null
+      ? 'usbHost'
+      : value?.usbDevice != null
+        ? 'usbDevice'
+        : value?.bluetooth != null
+          ? 'bluetooth'
+          : value?.bluetoothDevice != null
+            ? 'bluetoothDevice'
+            : value?.deviceid != null
+              ? `device:${value.deviceid}`
+              : 'any';
+  const usbHost = t('assignments.midiDevice.usbHost', 'USB Host');
+  const bluetooth = t('assignments.midiDevice.bluetooth', 'Bluetooth');
+  const anyDevice = t('assignments.midiDevice.anyDevice', 'Any Device');
+  const specificDevice = t('assignments.midiDevice.specificDevice', 'Specific Device');
+  const options: MidiSourceOption[] = [
+    { value: 'any', label: t('assignments.midiDevice.any', 'Any device') },
+    { value: 'usbHost', label: usbHost, status: anyDevice },
+    { value: 'usbDevice', label: usbHost, status: specificDevice },
+    { value: 'bluetooth', label: bluetooth, status: anyDevice },
+    { value: 'bluetoothDevice', label: bluetooth, status: specificDevice },
+    ...configured,
+  ];
+  // A device that has since been removed from the config still needs an option to show as picked
+  if (!options.some((x) => x.value === kind)) {
+    options.push({
+      value: kind,
+      label: t('assignments.midiDevice.removed', 'Removed device ({{id}})', {
+        id: value?.deviceid,
+      }),
+    });
+  }
+  const optionLabel = (option: MidiSourceOption) => (
+    <Group gap="2">
+      <Text fz="sm" span>
+        {option.label}
+      </Text>
+      {option.status && (
+        <Text fz="xs" span opacity="0.7">
+          ({option.status})
+        </Text>
+      )}
+    </Group>
+  );
+  const specific = value?.usbDevice ?? value?.bluetoothDevice;
+  const setSpecific = (vid: number, pid: number) =>
+    onChange(
+      kind === 'usbDevice' ? { usbDevice: { vid, pid } } : { bluetoothDevice: { vid, pid } }
+    );
+  return (
+    <>
+      <Combobox
+        store={combobox}
+        onOptionSubmit={(val) => {
+          if (val === 'usbHost') {
+            onChange({ usbHost: {} });
+          } else if (val === 'bluetooth') {
+            onChange({ bluetooth: {} });
+          } else if (val === 'usbDevice') {
+            onChange({ usbDevice: { vid: 0, pid: 0 } });
+          } else if (val === 'bluetoothDevice') {
+            onChange({ bluetoothDevice: { vid: 0, pid: 0 } });
+          } else if (val.startsWith('device:')) {
+            onChange({ deviceid: parseInt(val.substring('device:'.length), 10) });
+          } else {
+            onChange(null);
+          }
+          combobox.closeDropdown();
+        }}
+      >
+        <Combobox.Target>
+          <InputBase
+            size="xs"
+            label={t('assignments.midiDevice.label', 'MIDI Device')}
+            description={t(
+              'assignments.midiDevice.desc',
+              'Only take this slot from one device, instead of any device sending on its channel'
+            )}
+            component="button"
+            type="button"
+            pointer
+            rightSection={<Combobox.Chevron />}
+            rightSectionPointerEvents="none"
+            onClick={() => combobox.toggleDropdown()}
+          >
+            {optionLabel(options.find((x) => x.value === kind)!)}
+          </InputBase>
+        </Combobox.Target>
+        <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
+          <Combobox.Options>
+            {options.map((option) => (
+              <Combobox.Option
+                value={option.value}
+                key={option.value}
+                selected={option.value === kind}
+              >
+                {optionLabel(option)}
+              </Combobox.Option>
+            ))}
+          </Combobox.Options>
+        </Combobox.Dropdown>
+      </Combobox>
+      {(kind === 'usbDevice' || kind === 'bluetoothDevice') && (
+        <>
+          <ConnectedDevicePicker
+            kind={kind === 'usbDevice' ? 'usb' : 'bt'}
+            current={specific}
+            onPick={({ vid, pid }) => setSpecific(vid, pid)}
+          />
+          <TextInput
+            size="xs"
+            label={t('assignments.vendorId')}
+            leftSection="0x"
+            value={(specific?.vid ?? 0).toString(16)}
+            onChange={(event) =>
+              setSpecific(
+                parseInt((event.currentTarget.value || '0').substring(0, 4), 16) || 0,
+                specific?.pid ?? 0
+              )
+            }
+          />
+          <TextInput
+            size="xs"
+            label={t('assignments.productId')}
+            leftSection="0x"
+            value={(specific?.pid ?? 0).toString(16)}
+            onChange={(event) =>
+              setSpecific(
+                specific?.vid ?? 0,
+                parseInt((event.currentTarget.value || '0').substring(0, 4), 16) || 0
+              )
+            }
+          />
+        </>
+      )}
+    </>
+  );
+}
+
 // What a newly added controller source starts as, by its ControllerSourcesEditor type
 function defaultHostSource(sourceType: string): proto.IProfileAssignmentInfo | null {
   switch (sourceType) {
@@ -7879,6 +8077,7 @@ export function ControllerSourcesEditor({
             onChange={(val) =>
               onUpdateSource(idx, {
                 midiChannel: parseInt(val?.toString() ?? '1', 10) || 1,
+                midiDevice: item.midiDevice,
               })
             }
           />
@@ -7889,7 +8088,15 @@ export function ControllerSourcesEditor({
             e={MIDI_PRO_GUITAR_SUBTYPES_ENUM}
             val={item.midiProGuitar ?? proto.SubType.ProGuitarSquier}
             label="subType"
-            dispatch={(midiProGuitar) => onUpdateSource(idx, { midiProGuitar })}
+            dispatch={(midiProGuitar) =>
+              onUpdateSource(idx, { midiProGuitar, midiDevice: item.midiDevice })
+            }
+          />
+        )}
+        {(hType === 'midiChannel' || hType === 'midiProGuitar') && (
+          <MidiSourceDeviceEditor
+            value={item.midiDevice}
+            onChange={(midiDevice) => onUpdateSource(idx, { ...item, midiDevice })}
           />
         )}
       </Stack>
@@ -9227,7 +9434,7 @@ function BlankProfileWizard({
         ...currentProfile,
         opts: {
           ...currentProfile.opts,
-          deviceSlotIdVersion: 2,
+          deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
           name: truncateProfileName(updatedName),
           deviceToEmulate: updatedDeviceToEmulate,
         },
@@ -9397,7 +9604,7 @@ function BlankProfileWizard({
         ...currentProfile,
         opts: {
           ...currentProfile.opts,
-          deviceSlotIdVersion: 2,
+          deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
           name: truncateProfileName(name),
           deviceToEmulate,
         },

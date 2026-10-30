@@ -643,11 +643,43 @@ export function getSlotSubtype(item: proto.IProfileAssignmentInfo): number {
   );
 }
 
-// Slot ids for deviceSlotIdVersion 2, matching the firmware's ProfileSlotIds. Each slot is the nth
-// slot of its kind and subtype within a list, and gets the same id in every list, so an input's
-// deviceid always means the same type of device whichever list matched. Ids are numbered per kind,
-// in order of subtype and then n.
-export function getProfileWideSlotIds(lists: proto.IProfileAssignmentInfo[][]): number[][] {
+// The newest deviceSlotIdVersion, matching the firmware's SLOT_ID_VERSION_LATEST
+export const SLOT_ID_VERSION_LATEST = 3;
+
+// What tells slots of a kind apart, matching the firmware's slot_key_type. From version 3 a MIDI slot
+// is also told apart by its channel and the device it's limited to, so slots on different channels or
+// devices aren't read as the same one. Multiplied rather than shifted, as it's wider than 32 bits.
+export function getSlotKeyType(item: proto.IProfileAssignmentInfo, version: number): number {
+  const subtype = getSlotSubtype(item);
+  if (version < 3 || getSlotDeviceKind(item) !== 'midi') {
+    return subtype;
+  }
+  const base = item.midiChannel != null ? 0x10000 + (item.midiChannel & 0xffff) : subtype;
+  const device = item.midiDevice;
+  const vidPid = (x: { vid: number; pid: number }) => (x.vid & 0xffff) * 0x10000 + (x.pid & 0xffff);
+  const [source, detail] =
+    device?.usbHost != null
+      ? [1, 0]
+      : device?.bluetooth != null
+        ? [2, 0]
+        : device?.usbDevice != null
+          ? [3, vidPid(device.usbDevice)]
+          : device?.bluetoothDevice != null
+            ? [4, vidPid(device.bluetoothDevice)]
+            : device?.deviceid != null
+              ? [5, device.deviceid >>> 0]
+              : [0, 0];
+  return (source * 2 ** 32 + detail) * 2 ** 17 + base;
+}
+
+// Slot ids for deviceSlotIdVersion 2 and up, matching the firmware's ProfileSlotIds. Each slot is the
+// nth slot of its kind and type (getSlotKeyType) within a list, and gets the same id in every list,
+// so an input's deviceid always means the same type of device whichever list matched. Ids are
+// numbered per kind, in order of type and then n.
+export function getProfileWideSlotIds(
+  lists: proto.IProfileAssignmentInfo[][],
+  version: number = SLOT_ID_VERSION_LATEST
+): number[][] {
   const keyed = lists.map((list) => {
     const counts = new Map<string, number>();
     return list.map((item) => {
@@ -655,7 +687,7 @@ export function getProfileWideSlotIds(lists: proto.IProfileAssignmentInfo[][]): 
       if (!kind) {
         return undefined;
       }
-      const type = getSlotSubtype(item);
+      const type = getSlotKeyType(item, version);
       const n = (counts.get(`${kind}:${type}`) ?? 0) + 1;
       counts.set(`${kind}:${type}`, n);
       return { kind, type, n, key: `${kind}:${type}:${n}` };
@@ -683,7 +715,7 @@ export function getProfileSlotIds(profile?: proto.IProfile): number[][] {
 
 function getSlotIdsForLists(lists: proto.IProfileAssignmentInfo[][], version: number): number[][] {
   if (version >= 2) {
-    return getProfileWideSlotIds(lists);
+    return getProfileWideSlotIds(lists, version);
   }
   return lists.map((list) =>
     version >= 1 ? getAssignmentSlotIds(list) : getAssignmentTriggerIds(list)

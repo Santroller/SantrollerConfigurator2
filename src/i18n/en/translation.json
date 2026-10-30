@@ -1837,6 +1837,16 @@
     "host": "Host (Connecting something to this device)",
     "emulation": "Emulation (Connecting this device to something)",
     "midiChannel": "MIDI Channel",
+    "midiDevice": {
+      "label": "MIDI Device",
+      "desc": "Only take this slot from one device, instead of any device sending on its channel",
+      "any": "Any device",
+      "usbHost": "USB Host",
+      "bluetooth": "Bluetooth",
+      "anyDevice": "Any Device",
+      "specificDevice": "Specific Device",
+      "removed": "Removed device ({{id}})"
+    },
     "vendorId": "Vendor ID",
     "productId": "Product ID",
     "connected_device": "Connected Device",

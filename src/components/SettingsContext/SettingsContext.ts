@@ -32,9 +32,10 @@ import {
   inputUsesDevice,
   moveWiiDrumNotesToMidiSlot,
   ProfileSlot,
+  SLOT_ID_VERSION_LATEST,
   withSlotMidiChannel,
 } from '@/components/Inputs/inputRegistry';
-import { remapEditedSlotIds } from '@/components/Inputs/slotRemap';
+import { migrateSlotIds, remapEditedSlotIds } from '@/components/Inputs/slotRemap';
 import {
   createLabelConfig,
   getLabelKind,
@@ -737,8 +738,28 @@ export function profileInsertIndex(profiles: proto.IProfile[] | null | undefined
   return standbyIdx === -1 ? (profiles?.length ?? 0) : standbyIdx;
 }
 
+// Version 2 profiles are moved to the latest slot numbering without asking, as it only splits MIDI
+// slots on different channels or devices. Returns whether that moved any inputs, so the config needs
+// saving before the firmware reads the same slots. Otherwise the numberings agree, and only the
+// version changes.
+function migrateVersion2SlotIds(config: proto.IConfig): boolean {
+  let changed = false;
+  config.profiles = config.profiles?.map((profile) => {
+    if (profile.opts?.deviceSlotIdVersion !== 2) {
+      return profile;
+    }
+    const migrated = migrateSlotIds(profile);
+    const withoutVersion = (x: proto.IProfile) =>
+      JSON.stringify({ ...x, opts: { ...x.opts, deviceSlotIdVersion: null } });
+    changed ||= withoutVersion(migrated) !== withoutVersion(profile);
+    return migrated;
+  });
+  return changed;
+}
+
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
   const splitTargets = splitExtraTargets(config);
+  const migratedSlotIds = migrateVersion2SlotIds(config);
   // The firmware doesn't care where it is, so this isn't a change that needs saving
   config.profiles = [
     ...(config.profiles ?? []).filter((x) => !x.opts?.standbyLighting),
@@ -835,7 +856,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     savedConfig: proto.Config.encode(config).finish(),
     updatePercentage: 0,
     // so the repaired config can be saved
-    configModified: splitTargets || centeredTilt,
+    configModified: splitTargets || centeredTilt || migratedSlotIds,
     waitingForReload: false,
     reloadLost: false,
     updating: false,
@@ -2055,7 +2076,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           opts: {
             faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
             deviceToEmulate: proto.SubType.Gamepad,
-            deviceSlotIdVersion: 2,
+            deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
             name: i18next.t('profileDefaults.name'),
             uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
           },
@@ -2093,7 +2114,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
               opts: {
                 faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
                 deviceToEmulate: proto.SubType.Gamepad,
-                deviceSlotIdVersion: 2,
+                deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
                 name: i18next.t('profileDefaults.standbyName'),
                 uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
                 standbyLighting: true,

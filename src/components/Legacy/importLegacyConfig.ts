@@ -2,6 +2,7 @@ import {
   getProfileWideSlotIds,
   getSlotDeviceKind,
   getSlotSubtype,
+  SLOT_ID_VERSION_LATEST,
 } from '@/components/Inputs/inputRegistry';
 import { getInputSlotKind, remapSlotChoices } from '@/components/Inputs/slotRemap';
 import { proto } from '@/components/SettingsContext/config';
@@ -223,7 +224,7 @@ export function importLegacyConfig(data: Uint8Array, name = 'Imported'): LegacyI
       uid: 1,
       name: profileName,
       deviceToEmulate: subType,
-      deviceSlotIdVersion: 2,
+      deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
       faceButtonMappingMode: old.swapSwitchFaceButtons
         ? proto.FaceButtonMappingMode.PositionBased
         : proto.FaceButtonMappingMode.LegendBased,
@@ -256,7 +257,7 @@ export function importLegacyConfig(data: Uint8Array, name = 'Imported'): LegacyI
           uid: 2,
           name: festivalProfileName(profileName),
           deviceToEmulate: proto.SubType.KeyboardMouse,
-          deviceSlotIdVersion: 2,
+          deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
           faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
           queueInputs: old.queueBasedInputs,
           combinedStrumDebounce: old.combinedStrumDebounce,

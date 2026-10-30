@@ -71,7 +71,7 @@ describe('splitExtraTargets', () => {
     } as proto.IConfig;
     expect(splitExtraTargets(config)).toBe(true);
     const profile = config.profiles![0];
-    expect(profile.opts!.deviceSlotIdVersion).toBe(2);
+    expect(profile.opts!.deviceSlotIdVersion).toBe(3);
     expect(rules(config)).toEqual([
       [USB, WII],
       [BT, WII],

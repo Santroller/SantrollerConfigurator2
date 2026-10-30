@@ -173,7 +173,7 @@ describe('importLegacyConfig', () => {
 
     // the gamepad and keyboard work together or on their own, and keep their slots in every list.
     // With only USB host inputs there's no list without them, so plugging one in later still works.
-    expect(profile.opts.deviceSlotIdVersion).toBe(2);
+    expect(profile.opts.deviceSlotIdVersion).toBe(3);
     expect(profile.assignments.map((list) => list.assignments.map((x) => x.usbType))).toEqual([
       [null, proto.SubType.Gamepad, proto.SubType.KeyboardMouse],
       [null, proto.SubType.Gamepad],
