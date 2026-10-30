@@ -57,6 +57,7 @@ import {
 } from '@/components/Devices/deviceRegistry';
 import { matrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
 import { DeviceContext, PinBox } from '@/components/Devices/Pins';
+import { displayPanel, displayPanels } from '@/components/Inputs/displayRender';
 import {
   IdSelectionContext,
   selectableCardStyle,
@@ -818,6 +819,102 @@ function MPR121Device({ id }: { id: string }) {
             id
           )
         }
+      />
+    </DeviceCard>
+  );
+}
+function DisplayDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  const { t } = useTranslation();
+  if (!device.display) {
+    throw new Error('device null!');
+  }
+  const display = device.display;
+  const update = (changes: Partial<proto.IDisplayDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), display: { ...display, ...changes } }, id);
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.display"
+      image="covers/devices/display.svg"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <I2CDevice device={display.i2c} dispatch={(i2c) => update({ i2c })} />
+      <Select
+        label={t('display.controller')}
+        description={t('display.controller_description')}
+        allowDeselect={false}
+        data={[
+          { value: `${proto.DisplayController.DisplaySSD1306}`, label: 'SSD1306' },
+          { value: `${proto.DisplayController.DisplaySSD1309}`, label: 'SSD1309' },
+          { value: `${proto.DisplayController.DisplaySH1106}`, label: 'SH1106' },
+          { value: `${proto.DisplayController.DisplaySH1107}`, label: 'SH1107' },
+        ]}
+        value={`${display.controller}`}
+        onChange={(val) => {
+          if (val == null) {
+            return;
+          }
+          const controller = parseInt(val, 10) as proto.DisplayController;
+          // The SH1107's panels are a different shape, so it starts on its most common one
+          const panel = displayPanels(controller)[0];
+          update(
+            controller === proto.DisplayController.DisplaySH1107
+              ? { controller, width: panel.width, height: null }
+              : { controller, width: null, height: displayPanel(display).height === 32 ? 32 : 64 }
+          );
+        }}
+      />
+      <Select
+        mt="xs"
+        label={t('display.address')}
+        description={t('display.address_description')}
+        allowDeselect={false}
+        data={['0x3C', '0x3D']}
+        value={`0x${(display.address ?? 0x3c).toString(16).toUpperCase()}`}
+        onChange={(val) => val != null && update({ address: parseInt(val, 16) })}
+      />
+      <Select
+        mt="xs"
+        label={t('display.size')}
+        allowDeselect={false}
+        data={displayPanels(display.controller).map(({ width, height }) => ({
+          value: `${width}x${height}`,
+          label: `${width} x ${height}`,
+        }))}
+        value={`${displayPanel(display).width}x${displayPanel(display).height}`}
+        onChange={(val) => {
+          if (val == null) {
+            return;
+          }
+          const [width, height] = val.split('x').map((x) => parseInt(x, 10));
+          update(
+            display.controller === proto.DisplayController.DisplaySH1107 ? { width } : { height }
+          );
+        }}
+      />
+      <Select
+        mt="xs"
+        label={t('display.rotation')}
+        description={t('display.rotation_description')}
+        allowDeselect={false}
+        data={[0, 1, 2, 3].map((turns) => ({
+          value: `${turns}`,
+          label: t('display.degrees', { degrees: turns * 90 }),
+        }))}
+        value={`${display.rotation ?? 0}`}
+        onChange={(val) => val != null && update({ rotation: parseInt(val, 10) })}
+      />
+      <NumberInput
+        mt="xs"
+        label={t('display.contrast')}
+        min={0}
+        max={255}
+        value={display.contrast ?? 207}
+        onChange={(val) => update({ contrast: Math.max(0, Math.min(255, Number(val) || 0)) })}
       />
     </DeviceCard>
   );
@@ -3000,6 +3097,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   adcBattery: AdcBatteryDevice,
   xboxOneAuth: XboxOneAuthDevice,
   mpr121: MPR121Device,
+  display: DisplayDevice,
   crazyGuitarNeck: CrazyGuitarNeckDevice,
   gh5Neck: GH5NeckDevice,
   djhTurntable: DJHeroTurntableDevice,

@@ -16,6 +16,7 @@ import {
 } from '@/components/Defaults/mappingPresets';
 import {
   createDeviceConfig,
+  getDeviceName,
   getDevicePins,
   getDeviceStatusLabel,
   isDeviceKind,
@@ -475,6 +476,10 @@ export class DeviceStatus {
   crkdDrumCalibration: { [key in proto.CrkdDrumCalibrationType]: proto.ICrkdCalibrationData };
   static label(status: DeviceStatus) {
     return getDeviceStatusLabel(status);
+  }
+  // What this device is called, more specific than its type's name where that covers several parts
+  static title(status: DeviceStatus) {
+    return getDeviceName(status.type, status.device);
   }
   static pins(status: DeviceStatus): number[] {
     return getDevicePins(status.device);

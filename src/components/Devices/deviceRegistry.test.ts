@@ -1,12 +1,14 @@
 import i18next from 'i18next';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
+import en from '@/i18n/en/translation.json';
 import {
   canAddDeviceKind,
   createDeviceConfig,
   DEVICE_CATEGORIES,
   deviceKinds,
   getDeviceCategory,
+  getDeviceName,
   getDevicePins,
   getDeviceStatusLabel,
   getGroupedDevices,
@@ -174,5 +176,31 @@ describe('device status labels', () => {
         })
       )
     ).toBe('GP1, GP2, GP3, GP4');
+  });
+});
+
+describe('device names', () => {
+  beforeAll(() => i18next.init({ lng: 'en', resources: { en: { translation: en } } }));
+  const i2c = { block: 0, sda: 4, scl: 5, clock: 400000 };
+
+  it('names a display by its controller', () => {
+    expect(
+      getDeviceName('display', {
+        deviceid: 0,
+        display: { i2c, controller: proto.DisplayController.DisplaySH1107 },
+      })
+    ).toBe('SH1107 Display');
+    expect(
+      getDeviceName('display', {
+        deviceid: 0,
+        display: { i2c, controller: proto.DisplayController.DisplaySSD1306 },
+      })
+    ).toBe('SSD1306 Display');
+  });
+
+  it("uses the kind's own name otherwise", () => {
+    expect(
+      getDeviceName('mpr121', { deviceid: 0, mpr121: createDeviceConfig('mpr121', 0).mpr121 })
+    ).toBe('MPR121');
   });
 });

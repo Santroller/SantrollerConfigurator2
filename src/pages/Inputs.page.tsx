@@ -96,6 +96,7 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
+import { DisplayElementEditor, newDisplayElement } from '@/components/Inputs/DisplayElementEditor';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -5325,7 +5326,6 @@ const MPR121_GPIO_PINS = [4, 5, 6, 7, 8, 9, 10, 11];
 
 // The LED device dropdown's options, so only the open dropdown follows every device's status
 function LedDeviceOptions() {
-  const { t } = useTranslation();
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   return (
     <>
@@ -5335,7 +5335,7 @@ function LedDeviceOptions() {
           <Combobox.Option value={item.id} key={item.id}>
             <Group gap="2">
               <Text fz="sm" span>
-                {t(`devices.${item.type}`)}
+                {DeviceStatus.title(item)}
               </Text>
 
               <Text fz="xs" span opacity="0.7">
@@ -5345,6 +5345,21 @@ function LedDeviceOptions() {
           </Combobox.Option>
         ))}
     </>
+  );
+}
+
+// Splits an LED card into what it lights and what turns it on
+function LedSectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <Divider
+      my="md"
+      labelPosition="left"
+      label={
+        <Text size="sm" fw={600} c="var(--mantine-color-text)">
+          {children}
+        </Text>
+      }
+    />
   );
 }
 
@@ -5412,6 +5427,8 @@ function SantrollerLed({
     deviceId = led.device.vtechExpander.deviceId;
   } else if (led.device.mpr121) {
     deviceId = led.device.mpr121.deviceId;
+  } else if (led.device.display) {
+    deviceId = led.device.display.deviceId;
   }
   const guiDevices = useProfileLabels();
   const simpleMode = useConfigStore((state) => state.simpleMode);
@@ -5502,7 +5519,7 @@ function SantrollerLed({
     deviceValue = (
       <Group gap="2">
         <Text fz="sm" span>
-          {t(`devices.${device.type}`)}
+          {DeviceStatus.title(device)}
         </Text>
 
         <Text fz="xs" span opacity="0.7">
@@ -5817,6 +5834,11 @@ function SantrollerLed({
         {/* The editor itself, only while the card is open */}
         {expanded && (
           <>
+            {(!simpleMode || led.device.rgb) && (
+              <LedSectionTitle>
+                {t(led.device.display ? 'leds.section_display' : 'leds.section_led')}
+              </LedSectionTitle>
+            )}
             {!simpleMode && (
               <>
                 {(deviceCombobox.dropdownOpened && (
@@ -5889,6 +5911,16 @@ function SantrollerLed({
                                   deviceId: parseInt(val, 10),
                                 },
                               },
+                            });
+                            break;
+                          case 'display':
+                            dispatch({
+                              ...led,
+                              device: { display: newDisplayElement(parseInt(val, 10)) },
+                              // There are no patterns on a display
+                              mapping: led.mapping.patternMapping
+                                ? { staticMapping: {} }
+                                : led.mapping,
                             });
                             break;
                         }
@@ -5968,6 +6000,288 @@ function SantrollerLed({
                   </InputBase>
                 )}
                 <Space h="md" />
+                {led.device.gpio && (
+                  <>
+                    <PinBox
+                      label="pin_label"
+                      valid={LedPinsNamed}
+                      pin={led.device.gpio.pin}
+                      dispatch={(pin) =>
+                        dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })
+                      }
+                    />
+                    <Space h="sm" />
+                    <Switch
+                      label={t('leds.invert')}
+                      description={t('leds.invert_desc')}
+                      checked={!!led.device.gpio.inverted}
+                      onChange={(event) =>
+                        dispatch({
+                          ...led,
+                          device: {
+                            gpio: {
+                              ...led.device.gpio!,
+                              inverted: event.currentTarget.checked,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </>
+                )}
+                {led.device.mpr121 && (
+                  <Select
+                    label={t('leds.mpr121_pin')}
+                    description={t('leds.mpr121_pin_description')}
+                    allowDeselect={false}
+                    data={MPR121_GPIO_PINS.map((pin) => ({
+                      value: `${pin}`,
+                      label: t('leds.mpr121_electrode', { pin }),
+                    }))}
+                    value={`${led.device.mpr121.pin}`}
+                    onChange={(val) =>
+                      val != null &&
+                      dispatch({
+                        ...led,
+                        device: { mpr121: { ...led.device.mpr121!, pin: parseInt(val, 10) } },
+                      })
+                    }
+                  />
+                )}
+                {led.device.dmx && (
+                  <NumberInput
+                    value={led.device.dmx.channel}
+                    min={0}
+                    max={device?.device.dmx?.channelCount}
+                    onChange={(e) =>
+                      dispatch({
+                        ...led,
+                        device: {
+                          dmx: { ...led.device.dmx!, channel: parseInt(e.toString(), 10) },
+                        },
+                      })
+                    }
+                  />
+                )}
+                {led.device.vtechExpander && (
+                  <MultiSelect
+                    label={t('leds.label')}
+                    value={Array.from(Array(8).keys())
+                      .filter((x) => led.device.vtechExpander!.activeLed! & (1 << x))
+                      .map((x) => x.toString())}
+                    data={Array.from({ length: 8 }, (_, x) => x.toString())}
+                    clearable
+                    maxValues={8}
+                    onChange={(val) =>
+                      dispatch({
+                        ...led,
+                        device: {
+                          vtechExpander: {
+                            ...led.device.vtechExpander!,
+                            activeLed: val.reduce(
+                              (prev, current) => prev | (1 << parseInt(current, 10)),
+                              0
+                            ),
+                          },
+                        },
+                      })
+                    }
+                    searchable
+                  />
+                )}
+                {led.device.display && (
+                  <DisplayElementEditor
+                    element={led.device.display}
+                    display={device?.device.display}
+                    elements={(profileLeds ?? [])
+                      .map((other, idx) => (idx === ledIdx ? led : other).device.display)
+                      .filter(
+                        (other): other is proto.IDisplayLedDevice => other?.deviceId === deviceId
+                      )}
+                    dispatch={(display) => dispatch({ ...led, device: { display } })}
+                  />
+                )}
+              </>
+            )}
+            {led.device.rgb && (
+              <>
+                {(simpleMode && labels.length && (
+                  <>
+                    <Text fz="sm" fw={700}>
+                      {t('leds.label')}
+                    </Text>
+                    {labels.map((x) => (
+                      <Text size="sm">{x}</Text>
+                    ))}
+                  </>
+                )) ||
+                  undefined}
+                {!simpleMode && (
+                  <MultiSelect
+                    label={t('leds.label')}
+                    value={led.device.rgb?.activeLed?.map((x) => x.toString())}
+                    data={Array.from(
+                      { length: device?.device.ws2812?.count || device?.device.apa102?.count || 0 },
+                      (_, x) => ({ value: x.toString(), label: x.toString() + getLedLabel(x) })
+                    )}
+                    clearable
+                    maxValues={255}
+                    onChange={(val) =>
+                      dispatch({
+                        ...led,
+                        device: {
+                          rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x, 10)) },
+                        },
+                      })
+                    }
+                    searchable
+                  />
+                )}
+                {!led.mapping.staticMapping &&
+                  !hostSetsColour &&
+                  !simpleMode &&
+                  led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow && (
+                    <>
+                      <Space h="md" />
+                      <Switch
+                        label={t('leds.overlay.label')}
+                        description={t('leds.overlay.description')}
+                        checked={!led.device.rgb.hasStart}
+                        onChange={(event) => {
+                          dispatch({
+                            ...led,
+                            device: {
+                              rgb: {
+                                ...led.device.rgb!,
+                                // an overlay has no released colour to write
+                                hasStart: !event.currentTarget.checked,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                    </>
+                  )}
+                {(led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow &&
+                  led.device.rgb.hasStart &&
+                  !led.mapping.staticMapping &&
+                  !hostSetsColour && (
+                    <>
+                      <Space h="md" />
+                      <Group grow>
+                        <LedColorInput
+                          label={t('leds.released')}
+                          r={led.device.rgb?.startR}
+                          g={led.device.rgb?.startG}
+                          b={led.device.rgb?.startB}
+                          w={led.device.rgb?.startW}
+                          onChange={({ r, g, b, w }) => {
+                            dispatch({
+                              ...led,
+                              device: {
+                                ...led.device,
+                                rgb: {
+                                  ...led.device.rgb!,
+                                  startR: r,
+                                  startG: g,
+                                  startB: b,
+                                  startW: w,
+                                },
+                              },
+                            });
+                          }}
+                        />
+                        <Input.Wrapper label=" " description=" " error=" ">
+                          <Button
+                            w="100%"
+                            h="auto"
+                            mih={36}
+                            styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
+                            onClick={() =>
+                              dispatch({
+                                ...led,
+                                device: {
+                                  ...led.device,
+                                  rgb: {
+                                    ...led.device.rgb!,
+                                    endR: led.device.rgb!.startR,
+                                    endG: led.device.rgb!.startG,
+                                    endB: led.device.rgb!.startB,
+                                    endW: led.device.rgb!.startW,
+                                  },
+                                },
+                              })
+                            }
+                          >
+                            {t('leds.copyToPressed')}
+                          </Button>
+                        </Input.Wrapper>
+                      </Group>
+                    </>
+                  )) ||
+                  undefined}
+                <Space h="md" />
+                {led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow &&
+                  !hostSetsColour && (
+                    <Group grow>
+                      <LedColorInput
+                        label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
+                        r={led.device.rgb?.endR}
+                        g={led.device.rgb?.endG}
+                        b={led.device.rgb?.endB}
+                        w={led.device.rgb?.endW}
+                        onChange={({ r, g, b, w }) => {
+                          dispatch({
+                            ...led,
+                            device: {
+                              ...led.device,
+                              rgb: {
+                                ...led.device.rgb!,
+                                endR: r,
+                                endG: g,
+                                endB: b,
+                                endW: w,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                      {!led.mapping.staticMapping && led.device.rgb.hasStart && (
+                        <Input.Wrapper label=" " description=" " error=" " mr="0">
+                          <Button
+                            w="100%"
+                            h="auto"
+                            mih={36}
+                            styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
+                            onClick={() =>
+                              dispatch({
+                                ...led,
+                                device: {
+                                  ...led.device,
+                                  rgb: {
+                                    ...led.device.rgb!,
+                                    startR: led.device.rgb!.endR,
+                                    startG: led.device.rgb!.endG,
+                                    startB: led.device.rgb!.endB,
+                                    startW: led.device.rgb!.endW,
+                                  },
+                                },
+                              })
+                            }
+                          >
+                            {t('leds.copyToReleased')}
+                          </Button>
+                        </Input.Wrapper>
+                      )}
+                    </Group>
+                  )}
+              </>
+            )}
+            {(!simpleMode || (led.mapping.inputMapping && analog)) && (
+              <LedSectionTitle>{t('leds.section_trigger')}</LedSectionTitle>
+            )}
+            {!simpleMode && (
+              <>
                 {(typeCombobox.dropdownOpened && (
                   <Combobox
                     store={typeCombobox}
@@ -6108,7 +6422,12 @@ function SantrollerLed({
                     <Combobox.Dropdown mah="300px" style={{ overflow: 'auto' }}>
                       <Combobox.Options>
                         <Combobox.Option value="input">{t('leds.type.input')}</Combobox.Option>
-                        <Combobox.Option value="pattern">{t('leds.type.pattern')}</Combobox.Option>
+                        {/* Rainbows and fades don't mean anything on a monochrome display */}
+                        {!led.device.display && (
+                          <Combobox.Option value="pattern">
+                            {t('leds.type.pattern')}
+                          </Combobox.Option>
+                        )}
                         <Combobox.Option value="static">{t('leds.type.static')}</Combobox.Option>
                         {!standby && (
                           <>
@@ -6153,96 +6472,6 @@ function SantrollerLed({
                   >
                     {mappingValue || <Input.Placeholder>{t('pick_value')}</Input.Placeholder>}
                   </InputBase>
-                )}
-                <Space h="md" />
-                {led.device.gpio && (
-                  <>
-                    <PinBox
-                      label="pin_label"
-                      valid={LedPinsNamed}
-                      pin={led.device.gpio.pin}
-                      dispatch={(pin) =>
-                        dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })
-                      }
-                    />
-                    <Space h="sm" />
-                    <Switch
-                      label={t('leds.invert')}
-                      description={t('leds.invert_desc')}
-                      checked={!!led.device.gpio.inverted}
-                      onChange={(event) =>
-                        dispatch({
-                          ...led,
-                          device: {
-                            gpio: {
-                              ...led.device.gpio!,
-                              inverted: event.currentTarget.checked,
-                            },
-                          },
-                        })
-                      }
-                    />
-                  </>
-                )}
-                {led.device.mpr121 && (
-                  <Select
-                    label={t('leds.mpr121_pin')}
-                    description={t('leds.mpr121_pin_description')}
-                    allowDeselect={false}
-                    data={MPR121_GPIO_PINS.map((pin) => ({
-                      value: `${pin}`,
-                      label: t('leds.mpr121_electrode', { pin }),
-                    }))}
-                    value={`${led.device.mpr121.pin}`}
-                    onChange={(val) =>
-                      val != null &&
-                      dispatch({
-                        ...led,
-                        device: { mpr121: { ...led.device.mpr121!, pin: parseInt(val, 10) } },
-                      })
-                    }
-                  />
-                )}
-                {led.device.dmx && (
-                  <NumberInput
-                    value={led.device.dmx.channel}
-                    min={0}
-                    max={device?.device.dmx?.channelCount}
-                    onChange={(e) =>
-                      dispatch({
-                        ...led,
-                        device: {
-                          dmx: { ...led.device.dmx!, channel: parseInt(e.toString(), 10) },
-                        },
-                      })
-                    }
-                  />
-                )}
-                {led.device.vtechExpander && (
-                  <MultiSelect
-                    label={t('leds.label')}
-                    value={Array.from(Array(8).keys())
-                      .filter((x) => led.device.vtechExpander!.activeLed! & (1 << x))
-                      .map((x) => x.toString())}
-                    data={Array.from({ length: 8 }, (_, x) => x.toString())}
-                    clearable
-                    maxValues={8}
-                    onChange={(val) =>
-                      dispatch({
-                        ...led,
-                        device: {
-                          vtechExpander: {
-                            ...led.device.vtechExpander!,
-                            activeLed: val.reduce(
-                              (prev, current) => prev | (1 << parseInt(current, 10)),
-                              0
-                            ),
-                          },
-                        },
-                      })
-                    }
-                    searchable
-                  />
                 )}
                 <Space h="md" />
                 {led.mapping.inputMapping?.input && (
@@ -6484,182 +6713,6 @@ function SantrollerLed({
                     )}
                   </>
                 )}
-                <Space h="md" />
-              </>
-            )}
-
-            {led.device.rgb && (
-              <>
-                {(simpleMode && labels.length && (
-                  <>
-                    <Text fz="sm" fw={700}>
-                      {t('leds.label')}
-                    </Text>
-                    {labels.map((x) => (
-                      <Text size="sm">{x}</Text>
-                    ))}
-                  </>
-                )) ||
-                  undefined}
-                {!simpleMode && (
-                  <MultiSelect
-                    label={t('leds.label')}
-                    value={led.device.rgb?.activeLed?.map((x) => x.toString())}
-                    data={Array.from(
-                      { length: device?.device.ws2812?.count || device?.device.apa102?.count || 0 },
-                      (_, x) => ({ value: x.toString(), label: x.toString() + getLedLabel(x) })
-                    )}
-                    clearable
-                    maxValues={255}
-                    onChange={(val) =>
-                      dispatch({
-                        ...led,
-                        device: {
-                          rgb: { ...led.device.rgb!, activeLed: val.map((x) => parseInt(x, 10)) },
-                        },
-                      })
-                    }
-                    searchable
-                  />
-                )}
-                {!led.mapping.staticMapping &&
-                  !hostSetsColour &&
-                  !simpleMode &&
-                  led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow && (
-                    <>
-                      <Space h="md" />
-                      <Switch
-                        label={t('leds.overlay.label')}
-                        description={t('leds.overlay.description')}
-                        checked={!led.device.rgb.hasStart}
-                        onChange={(event) => {
-                          dispatch({
-                            ...led,
-                            device: {
-                              rgb: {
-                                ...led.device.rgb!,
-                                // an overlay has no released colour to write
-                                hasStart: !event.currentTarget.checked,
-                              },
-                            },
-                          });
-                        }}
-                      />
-                    </>
-                  )}
-                {(led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow &&
-                  led.device.rgb.hasStart &&
-                  !led.mapping.staticMapping &&
-                  !hostSetsColour && (
-                    <>
-                      <Space h="md" />
-                      <Group grow>
-                        <LedColorInput
-                          label={t('leds.released')}
-                          r={led.device.rgb?.startR}
-                          g={led.device.rgb?.startG}
-                          b={led.device.rgb?.startB}
-                          w={led.device.rgb?.startW}
-                          onChange={({ r, g, b, w }) => {
-                            dispatch({
-                              ...led,
-                              device: {
-                                ...led.device,
-                                rgb: {
-                                  ...led.device.rgb!,
-                                  startR: r,
-                                  startG: g,
-                                  startB: b,
-                                  startW: w,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                        <Input.Wrapper label=" " description=" " error=" ">
-                          <Button
-                            w="100%"
-                            h="auto"
-                            mih={36}
-                            styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
-                            onClick={() =>
-                              dispatch({
-                                ...led,
-                                device: {
-                                  ...led.device,
-                                  rgb: {
-                                    ...led.device.rgb!,
-                                    endR: led.device.rgb!.startR,
-                                    endG: led.device.rgb!.startG,
-                                    endB: led.device.rgb!.startB,
-                                    endW: led.device.rgb!.startW,
-                                  },
-                                },
-                              })
-                            }
-                          >
-                            {t('leds.copyToPressed')}
-                          </Button>
-                        </Input.Wrapper>
-                      </Group>
-                    </>
-                  )) ||
-                  undefined}
-                <Space h="md" />
-                {led.mapping.patternMapping?.pattern !== proto.RgbPatternType.PatternRainbow &&
-                  !hostSetsColour && (
-                    <Group grow>
-                      <LedColorInput
-                        label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
-                        r={led.device.rgb?.endR}
-                        g={led.device.rgb?.endG}
-                        b={led.device.rgb?.endB}
-                        w={led.device.rgb?.endW}
-                        onChange={({ r, g, b, w }) => {
-                          dispatch({
-                            ...led,
-                            device: {
-                              ...led.device,
-                              rgb: {
-                                ...led.device.rgb!,
-                                endR: r,
-                                endG: g,
-                                endB: b,
-                                endW: w,
-                              },
-                            },
-                          });
-                        }}
-                      />
-                      {!led.mapping.staticMapping && led.device.rgb.hasStart && (
-                        <Input.Wrapper label=" " description=" " error=" " mr="0">
-                          <Button
-                            w="100%"
-                            h="auto"
-                            mih={36}
-                            styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
-                            onClick={() =>
-                              dispatch({
-                                ...led,
-                                device: {
-                                  ...led.device,
-                                  rgb: {
-                                    ...led.device.rgb!,
-                                    startR: led.device.rgb!.endR,
-                                    startG: led.device.rgb!.endG,
-                                    startB: led.device.rgb!.endB,
-                                    startW: led.device.rgb!.endW,
-                                  },
-                                },
-                              })
-                            }
-                          >
-                            {t('leds.copyToReleased')}
-                          </Button>
-                        </Input.Wrapper>
-                      )}
-                    </Group>
-                  )}
               </>
             )}
             {led.mapping.inputMapping && analog && (
@@ -11441,7 +11494,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                   <Group justify="space-between" align="center" gap="sm">
                     <Group gap="sm" align="center">
                       <Title order={2} size="h3">
-                        {t('leds.label')}
+                        {t('leds.section_title')}
                       </Title>
                       {!simpleMode && (
                         <>

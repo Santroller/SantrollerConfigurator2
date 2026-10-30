@@ -43,6 +43,9 @@ type DeviceDefinitions = {
     // pins
     formatStatus?: (status: DeviceStatusSnapshot) => string;
     detail?: (device: NonNullable<proto.IDevice[Kind]>) => string;
+    // What a configured one is called, for kinds that cover more than one part. Otherwise it's the
+    // kind's own name.
+    name?: (device: NonNullable<proto.IDevice[Kind]>) => string;
   };
 };
 
@@ -272,6 +275,24 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi }) => [spi.mosi, spi.sck],
     formatStatus: () => '',
   },
+  display: {
+    category: 'lighting',
+    create: () => ({
+      i2c: i2c(400000),
+      controller: proto.DisplayController.DisplaySSD1306,
+      address: 0x3c,
+      height: 64,
+    }),
+    pins: ({ i2c }) => [i2c.sda, i2c.scl],
+    detail: ({ address }) => `0x${(address ?? 0x3c).toString(16).toUpperCase()}`,
+    name: ({ controller }) =>
+      i18next.t('devices.display_named', {
+        controller: (proto.DisplayController[controller] ?? 'DisplaySSD1306').replace(
+          /^Display/,
+          ''
+        ),
+      }),
+  },
   stp16cpc: {
     category: 'lighting',
     create: () => ({ spi: spi(500000), oe: -1, le: -1, count: 0 }),
@@ -395,7 +416,13 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'adcBattery',
   'max1704x',
 ]);
-const ledDeviceKinds = new Set<DeviceKind>(['ws2812', 'apa102', 'vtechExpander', 'stp16cpc']);
+const ledDeviceKinds = new Set<DeviceKind>([
+  'ws2812',
+  'apa102',
+  'vtechExpander',
+  'stp16cpc',
+  'display',
+]);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([
   'crkdDrum',
   'crkdNeck',
@@ -469,6 +496,20 @@ export function getDevicePins(device: proto.IDevice): number[] {
   const pins = kind ? resolveDevicePins(kind, device) : [];
   // The gate's detect pin is often shared with the other devices it picks between
   return device.gate && device.gate.pin >= 0 ? [...pins, device.gate.pin] : pins;
+}
+
+function resolveDeviceName<Kind extends DeviceKind>(
+  kind: Kind,
+  device: proto.IDevice
+): string | undefined {
+  const value = device[kind];
+  return value ? deviceRegistry[kind].name?.(value) : undefined;
+}
+
+// What a configured device is called, eg "SH1107 Display" rather than the generic name for its kind
+export function getDeviceName(type: string, device: proto.IDevice): string {
+  const kind = deviceKinds.find((candidate) => device[candidate] != null);
+  return (kind && resolveDeviceName(kind, device)) || i18next.t(`devices.${type}`);
 }
 
 export function getDeviceStatusLabel(status: DeviceStatusSnapshot): string {
