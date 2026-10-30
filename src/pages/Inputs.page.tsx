@@ -96,8 +96,6 @@ import {
   isLed,
 } from '@/components/Devices/pinUtils';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
-import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
-import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -135,6 +133,8 @@ import {
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import { ledOverlaps } from '@/components/Inputs/ledOverlap';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
+import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
+import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
 import { useProfileLabels } from '@/components/Labels/useProfileLabels';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
@@ -178,7 +178,7 @@ import {
   midiNoteDisplayName,
   midiOutputLabel,
 } from '@/devices/midi';
-import { AllPinsNamed, AnalogPinsNamed } from '@/devices/pico/pins';
+import { AllPinsNamed, AnalogPinsNamed, LedPinsNamed } from '@/devices/pico/pins';
 
 // Lets the browser skip layout and painting for cards that are off screen. A profile can have
 // dozens of mapping cards, which made scrolling lag in WebKitGTK (the Linux desktop app). `auto`
@@ -6144,7 +6144,7 @@ function SantrollerLed({
                   <>
                     <PinBox
                       label="pin_label"
-                      valid={led.device.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
+                      valid={led.device.gpio.analog ? AnalogPinsNamed : LedPinsNamed}
                       pin={led.device.gpio.pin}
                       dispatch={(pin) =>
                         dispatch({ ...led, device: { gpio: { ...led.device.gpio!, pin } } })

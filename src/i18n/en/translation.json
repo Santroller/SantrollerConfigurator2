@@ -780,6 +780,7 @@
   "invalid_pin": "None",
   "invalid_pin_message": "No pin selected",
   "pin": "GP{{pin}}",
+  "pin_onboard_led": "GP{{pin}} (Onboard LED)",
   "pin_label": "Pin",
   "debounce": {
     "label": "Debounce",

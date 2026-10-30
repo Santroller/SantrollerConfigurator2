@@ -92,6 +92,12 @@ export const RxPins = Object.fromEntries(
 export const AllPins = [...Array(30).keys()];
 
 export const AllPinsNamed = Object.fromEntries(AllPins.map((pin) => [pin, { label: 'pin', pin }]));
+// The onboard LED is on GP25, and the firmware routes it to a Pico W's LED (which isn't on a pin) too
+export const OnboardLedPin = 25;
+export const LedPinsNamed = {
+  ...AllPinsNamed,
+  [OnboardLedPin]: { label: 'pin_onboard_led', pin: OnboardLedPin },
+};
 export const AnalogPinsNamed = Object.fromEntries(
   AnalogPins.map((pin) => [pin, { label: 'pin', pin }])
 );
