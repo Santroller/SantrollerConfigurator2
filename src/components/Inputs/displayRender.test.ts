@@ -51,6 +51,118 @@ describe('MonoFrame', () => {
     expect(rows(vertical, 3, 6)).toEqual(['###', '#.#', '#.#', '###', '###', '###']);
   });
 
+  // The same frames as the firmware's DrawsAStickWithUpAtTheTop
+  it('draws a joystick with up at the top', () => {
+    const frame = new MonoFrame();
+    frame.drawStick(0, 0, 11, 11, 0, 65535, false);
+    expect(rows(frame, 11, 11)).toEqual([
+      '###########',
+      '####......#',
+      '####......#',
+      '####......#',
+      '#.........#',
+      '#.........#',
+      '#.........#',
+      '#.........#',
+      '#.........#',
+      '#.........#',
+      '###########',
+    ]);
+    const centre = new MonoFrame();
+    centre.drawElement(
+      {
+        deviceId: 1,
+        type: proto.DisplayElementType.DisplayElementStick,
+        x: 0,
+        y: 0,
+        width: 11,
+        height: 11,
+      },
+      0
+    );
+    expect(rows(centre, 11, 11)[5]).toBe('#...###...#');
+    const small = new MonoFrame();
+    small.drawStick(0, 0, 5, 5, 65535, 0, false);
+    expect(rows(small, 5, 5)).toEqual(['#####', '#...#', '#...#', '#..##', '#####']);
+  });
+
+  // The same frames as the firmware's DrawsRectanglesFilledOrOutlined and DrawsCircles
+  it('draws rectangles filled or outlined', () => {
+    const frame = new MonoFrame();
+    frame.drawShape(1, 1, 5, 4, false, false, false);
+    expect(rows(frame, 7, 6)).toEqual([
+      '.......',
+      '.#####.',
+      '.#...#.',
+      '.#...#.',
+      '.#####.',
+      '.......',
+    ]);
+    const filled = new MonoFrame();
+    filled.drawShape(0, 0, 3, 2, false, true, false);
+    expect(rows(filled, 4, 3)).toEqual(['###.', '###.', '....']);
+  });
+
+  it('draws circles, filled while on', () => {
+    const frame = new MonoFrame();
+    frame.drawShape(0, 0, 9, 9, true, false, false);
+    expect(rows(frame, 9, 9)).toEqual([
+      '..#####..',
+      '.#.....#.',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '.#.....#.',
+      '..#####..',
+    ]);
+    const element = {
+      deviceId: 1,
+      type: proto.DisplayElementType.DisplayElementCircle,
+      x: 0,
+      y: 0,
+      width: 9,
+      height: 9,
+    };
+    const on = new MonoFrame();
+    on.drawElement(element, 1);
+    expect(rows(on, 9, 9)[4]).toBe('#########');
+    const off = new MonoFrame();
+    off.drawElement(element, 0);
+    expect(rows(off, 9, 9)[4]).toBe('#.......#');
+  });
+
+  it('fills ellipses by their pixel centres and outlines the pixels next to the outside', () => {
+    for (let w = 1; w <= 40; w++) {
+      for (let h = 1; h <= 40; h++) {
+        const inside = (x: number, y: number) => {
+          if (x < 0 || y < 0 || x >= w || y >= h) {
+            return false;
+          }
+          const dx = 2 * x + 1 - w;
+          const dy = 2 * y + 1 - h;
+          return dx * dx * h * h + dy * dy * w * w <= w * w * h * h;
+        };
+        const filled = new MonoFrame();
+        filled.drawShape(2, 3, w, h, true, true, false);
+        const outline = new MonoFrame();
+        outline.drawShape(2, 3, w, h, true, false, false);
+        for (let y = -1; y <= h; y++) {
+          for (let x = -1; x <= w; x++) {
+            const isInside = inside(x, y);
+            const edge =
+              isInside &&
+              (!inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1));
+            if (filled.pixel(x + 2, y + 3) !== isInside || outline.pixel(x + 2, y + 3) !== edge) {
+              throw new Error(`${w}x${h} at ${x},${y}`);
+            }
+          }
+        }
+      }
+    }
+  });
+
   it('draws images packed by packBitmap', () => {
     // 3 x 2: white, black, white / black, white, see through
     const rgba = new Uint8ClampedArray([

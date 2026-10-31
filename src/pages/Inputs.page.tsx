@@ -3417,7 +3417,6 @@ function SantrollerInput({
         input.usbAxis ||
         input.usbButton) && (
         <>
-          <Space h="md" />
           <OutputBox
             label="outputs"
             title="input"
@@ -3483,7 +3482,6 @@ function SantrollerInput({
         input.btAxis ||
         input.btButton) && (
         <>
-          <Space h="md" />
           <OutputBox
             label="outputs"
             title="input"
@@ -6167,6 +6165,20 @@ function SantrollerLed({
                         (other): other is proto.IDisplayLedDevice => other?.deviceId === deviceId
                       )}
                     dispatch={(display) => dispatch({ ...led, device: { display } })}
+                    renderInput={(axis, input, dispatchInput) => (
+                      // Told apart from the mapping's own input when detecting by innerIdx
+                      <SantrollerInput
+                        axis
+                        button={false}
+                        mode={mode}
+                        legendMode={legendMode}
+                        type={type}
+                        input={input}
+                        dispatch={dispatchInput}
+                        ledIdx={ledIdx}
+                        innerIdx={axis === 'x' ? 0 : 1}
+                      />
+                    )}
                   />
                 )}
               </>

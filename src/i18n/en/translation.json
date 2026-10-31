@@ -1440,10 +1440,18 @@
     "types": {
       "text": "Text",
       "image": "Image",
-      "bar": "Bar"
+      "bar": "Bar",
+      "stick": "Joystick",
+      "rectangle": "Rectangle",
+      "circle": "Circle"
     },
     "shown_description": "Shown while this LED would be on, eg while its button is held, once authentication is done, or whenever this profile is active for an always on LED. Later LEDs are drawn over earlier ones.",
     "bar_description": "Filled by how bright this LED would be, eg how far an axis is pushed or how full star power is. Later LEDs are drawn over earlier ones.",
+    "stick_description": "A box with a dot that follows a joystick, from the two axes below. Shown while this LED would be on, so make it always on to keep it up. Later LEDs are drawn over earlier ones.",
+    "stick_x": "Left and right",
+    "stick_y": "Up and down",
+    "shape_description": "Filled in while this LED would be on, eg while its button is held. Circles fill their width and height, so make them square for a round one. Later LEDs are drawn over earlier ones, so text can go on top.",
+    "outline_when_off": "Show an outline while off",
     "x": "X",
     "y": "Y",
     "width": "Width",
@@ -1659,6 +1667,9 @@
       "display_image": "{{width}} x {{height}} image at {{x}}, {{y}}",
       "display_no_image": "No image uploaded",
       "display_bar": "{{width}} x {{height}} bar at {{x}}, {{y}}",
+      "display_stick": "{{width}} x {{height}} joystick at {{x}}, {{y}}",
+      "display_rectangle": "{{width}} x {{height}} rectangle at {{x}}, {{y}}",
+      "display_circle": "{{width}} x {{height}} circle at {{x}}, {{y}}",
       "player": "Player {{player}}"
     },
     "device": "LED Device",

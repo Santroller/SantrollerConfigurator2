@@ -77,6 +77,20 @@ describe('LED summaries', () => {
         t
       )
     ).toBe('SSD1306 Display: No image uploaded');
+    expect(
+      ledOutputSummary(
+        display({ type: proto.DisplayElementType.DisplayElementStick, width: 24, height: 20 }),
+        'SH1106 Display',
+        t
+      )
+    ).toBe('SH1106 Display: 24 x 20 joystick at 4, 8');
+    expect(
+      ledOutputSummary(
+        display({ type: proto.DisplayElementType.DisplayElementCircle, width: 16, height: 16 }),
+        'SH1106 Display',
+        t
+      )
+    ).toBe('SH1106 Display: 16 x 16 circle at 4, 8');
   });
 
   it('says what turns it on', () => {

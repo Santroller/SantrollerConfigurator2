@@ -59,6 +59,22 @@ export function ledOutputSummary(
           ? t('leds.summary.display_image', { ...at, width: element.width, height: element.height })
           : t('leds.summary.display_no_image');
         break;
+      case proto.DisplayElementType.DisplayElementRectangle:
+      case proto.DisplayElementType.DisplayElementCircle:
+        target = t(
+          element.type === proto.DisplayElementType.DisplayElementCircle
+            ? 'leds.summary.display_circle'
+            : 'leds.summary.display_rectangle',
+          { ...at, width: element.width, height: element.height }
+        );
+        break;
+      case proto.DisplayElementType.DisplayElementStick:
+        target = t('leds.summary.display_stick', {
+          ...at,
+          width: element.width,
+          height: element.height,
+        });
+        break;
       case proto.DisplayElementType.DisplayElementBar:
         target = t('leds.summary.display_bar', {
           ...at,

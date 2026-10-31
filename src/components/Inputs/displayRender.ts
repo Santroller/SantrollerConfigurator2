@@ -238,6 +238,87 @@ export class MonoFrame {
   }
 
   // value is what its LED mapping set it to, out of 65535
+  // An outline with a dot where a joystick is, larger values right and up, like the firmware's draw_stick
+  drawStick(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    stickX: number,
+    stickY: number,
+    invert: boolean
+  ) {
+    if (w < 3 || h < 3 || w > this.width || h > this.height) {
+      return;
+    }
+    this.fillRect(x, y, w, h, invert);
+    this.drawOutline(x, y, w, h, !invert);
+    const dot = stickDot(w, h, stickX, stickY);
+    this.fillRect(x + dot.x, y + dot.y, dot.size, dot.size, !invert);
+  }
+
+  private drawOutline(x: number, y: number, w: number, h: number, on: boolean) {
+    this.fillRect(x, y, w, 1, on);
+    this.fillRect(x, y + h - 1, w, 1, on);
+    this.fillRect(x, y, 1, h, on);
+    this.fillRect(x + w - 1, y, 1, h, on);
+  }
+
+  // A w x h rectangle, or the ellipse that fits in it, filled or as a 1 pixel outline, like the
+  // firmware's draw_shape
+  drawShape(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    ellipse: boolean,
+    filled: boolean,
+    invert: boolean
+  ) {
+    if (w <= 0 || h <= 0 || w > this.width || h > this.height) {
+      return;
+    }
+    if (invert) {
+      this.fillRect(x, y, w, h, true);
+    }
+    if (!ellipse) {
+      if (filled || w < 3 || h < 3) {
+        this.fillRect(x, y, w, h, !invert);
+      } else {
+        this.drawOutline(x, y, w, h, !invert);
+      }
+      return;
+    }
+    for (let row = 0; row < h; row++) {
+      const { left, right } = ellipseSpan(w, h, row);
+      if (left > right) {
+        continue;
+      }
+      if (filled) {
+        this.fillRect(x + left, y + row, right - left + 1, 1, !invert);
+        continue;
+      }
+      // The edge is what's inside this row but not the rows either side
+      let innerLeft = w;
+      let innerRight = -1;
+      if (row > 0 && row < h - 1) {
+        const above = ellipseSpan(w, h, row - 1);
+        const below = ellipseSpan(w, h, row + 1);
+        innerLeft = Math.max(above.left, below.left);
+        innerRight = Math.min(above.right, below.right);
+      }
+      if (innerLeft > innerRight) {
+        this.fillRect(x + left, y + row, right - left + 1, 1, !invert);
+        continue;
+      }
+      const edgeLeft = Math.max(innerLeft, left + 1);
+      const edgeRight = Math.min(innerRight, right - 1);
+      this.fillRect(x + left, y + row, edgeLeft - left, 1, !invert);
+      this.fillRect(x + edgeRight + 1, y + row, right - edgeRight, 1, !invert);
+    }
+  }
+
+  // Elements are drawn as if they're on with this value, joysticks centred
   drawElement(element: proto.IDisplayLedDevice, value: number) {
     const invert = !!element.invert;
     switch (element.type) {
@@ -265,8 +346,54 @@ export class MonoFrame {
           invert
         );
         break;
+      case proto.DisplayElementType.DisplayElementRectangle:
+      case proto.DisplayElementType.DisplayElementCircle:
+        this.drawShape(
+          element.x,
+          element.y,
+          element.width ?? 0,
+          element.height ?? 0,
+          element.type === proto.DisplayElementType.DisplayElementCircle,
+          value !== 0,
+          invert
+        );
+        break;
+      case proto.DisplayElementType.DisplayElementStick:
+        this.drawStick(
+          element.x,
+          element.y,
+          element.width ?? 0,
+          element.height ?? 0,
+          STICK_CENTRE,
+          STICK_CENTRE,
+          invert
+        );
+        break;
     }
   }
+}
+
+export const STICK_CENTRE = 32767;
+
+// The columns of row (0 to h - 1) inside the ellipse that fits a w x h box, none when left > right. A
+// pixel is inside when its centre is, measured in half pixels from the middle so it's all whole numbers.
+export function ellipseSpan(w: number, h: number, row: number) {
+  const dy = 2 * row + 1 - h;
+  const reach = Math.floor(Math.floor(Math.sqrt(w * w * (h * h - dy * dy))) / h);
+  return { left: Math.floor((w - reach) / 2), right: Math.floor((w - 1 + reach) / 2) };
+}
+
+// Where draw_stick puts the dot in its w x h box, and how big it is
+export function stickDot(w: number, h: number, stickX: number, stickY: number) {
+  // Inside the outline, a 3 pixel dot once there's room to see it move
+  const innerW = w - 2;
+  const innerH = h - 2;
+  const size = innerW >= 9 && innerH >= 9 ? 3 : 1;
+  return {
+    x: 1 + Math.floor(((innerW - size) * stickX + 32767) / 65535),
+    y: 1 + Math.floor(((innerH - size) * (65535 - stickY) + 32767) / 65535),
+    size,
+  };
 }
 
 // Packs an RGBA image into the firmware's format: row by row, each row starting on a new byte, most

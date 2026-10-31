@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -7,6 +7,7 @@ import {
   NumberInput,
   Select,
   Space,
+  Stack,
   Switch,
   Text,
   TextInput,
@@ -25,6 +26,11 @@ import {
 import { proto } from '@/components/SettingsContext/config';
 
 const PREVIEW_SCALE = 3;
+
+// A joystick axis that hasn't been picked yet
+function newStickInput(): proto.IInput {
+  return { gpio: { pin: -1, analog: true, pinMode: proto.PinMode.Floating } };
+}
 
 export function newDisplayElement(deviceId: number): proto.IDisplayLedDevice {
   return {
@@ -227,6 +233,7 @@ export function DisplayElementEditor({
   display,
   elements,
   dispatch,
+  renderInput,
 }: {
   element: proto.IDisplayLedDevice;
   // The display it's on, undefined while that device is missing
@@ -234,6 +241,12 @@ export function DisplayElementEditor({
   // Every element on that display in this profile, in order, including this one
   elements: proto.IDisplayLedDevice[];
   dispatch: (element: proto.IDisplayLedDevice) => void;
+  // A picker for one of a joystick's axes
+  renderInput?: (
+    axis: 'x' | 'y',
+    input: proto.IInput,
+    dispatch: (input: proto.IInput) => void
+  ) => ReactNode;
 }) {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
@@ -244,6 +257,12 @@ export function DisplayElementEditor({
   const isText = element.type === proto.DisplayElementType.DisplayElementText;
   const isImage = element.type === proto.DisplayElementType.DisplayElementImage;
   const isBar = element.type === proto.DisplayElementType.DisplayElementBar;
+  const isStick = element.type === proto.DisplayElementType.DisplayElementStick;
+  const isShape =
+    element.type === proto.DisplayElementType.DisplayElementRectangle ||
+    element.type === proto.DisplayElementType.DisplayElementCircle;
+  // A joystick needs room for its outline and dot
+  const minSize = isStick ? 3 : 1;
   const resizeImage = (side: 'width' | 'height', value: number) => {
     const current = {
       image: element.image!,
@@ -278,6 +297,18 @@ export function DisplayElementEditor({
             label: t('display.types.image'),
           },
           { value: `${proto.DisplayElementType.DisplayElementBar}`, label: t('display.types.bar') },
+          {
+            value: `${proto.DisplayElementType.DisplayElementStick}`,
+            label: t('display.types.stick'),
+          },
+          {
+            value: `${proto.DisplayElementType.DisplayElementRectangle}`,
+            label: t('display.types.rectangle'),
+          },
+          {
+            value: `${proto.DisplayElementType.DisplayElementCircle}`,
+            label: t('display.types.circle'),
+          },
         ]}
         value={`${element.type}`}
         onChange={(val) => {
@@ -285,17 +316,55 @@ export function DisplayElementEditor({
             return;
           }
           const type = parseInt(val, 10) as proto.DisplayElementType;
+          // Only what the new type uses is kept
+          const cleared = {
+            image: null,
+            text: null,
+            scale: null,
+            stickX: null,
+            stickY: null,
+            outlineWhenOff: null,
+          };
           if (type === proto.DisplayElementType.DisplayElementBar) {
-            update({ type, width: 64, height: 8, image: null, text: null });
+            update({ ...cleared, type, width: 64, height: 8 });
           } else if (type === proto.DisplayElementType.DisplayElementImage) {
-            update({ type, width: 0, height: 0, text: null });
+            update({ ...cleared, type, width: 0, height: 0 });
+          } else if (
+            type === proto.DisplayElementType.DisplayElementRectangle ||
+            type === proto.DisplayElementType.DisplayElementCircle
+          ) {
+            // Keeps the size when going between the two
+            update({
+              ...cleared,
+              type,
+              width: isShape ? element.width : 16,
+              height: isShape ? element.height : 16,
+              outlineWhenOff: isShape ? element.outlineWhenOff : true,
+            });
+          } else if (type === proto.DisplayElementType.DisplayElementStick) {
+            update({
+              ...cleared,
+              type,
+              width: 24,
+              height: 24,
+              stickX: newStickInput(),
+              stickY: newStickInput(),
+            });
           } else {
-            update({ type, text: 'Santroller', scale: 1, image: null, width: null, height: null });
+            update({ ...cleared, type, text: 'Santroller', scale: 1, width: null, height: null });
           }
         }}
       />
       <Text size="xs" c="dimmed" mt={4}>
-        {t(isBar ? 'display.bar_description' : 'display.shown_description')}
+        {t(
+          isBar
+            ? 'display.bar_description'
+            : isStick
+              ? 'display.stick_description'
+              : isShape
+                ? 'display.shape_description'
+                : 'display.shown_description'
+        )}
       </Text>
       <Group grow mt="xs">
         <NumberInput
@@ -335,30 +404,55 @@ export function DisplayElementEditor({
           />
         </>
       )}
-      {isBar && (
+      {(isBar || isStick || isShape) && (
         <>
           <Group grow mt="xs">
             <NumberInput
               label={t('display.width')}
-              min={1}
+              min={minSize}
               max={width}
               value={element.width ?? 0}
-              onChange={(val) => update({ width: Number(val) || 1 })}
+              onChange={(val) => update({ width: Math.max(minSize, Number(val) || 1) })}
             />
             <NumberInput
               label={t('display.height')}
-              min={1}
+              min={minSize}
               max={height}
               value={element.height ?? 0}
-              onChange={(val) => update({ height: Number(val) || 1 })}
+              onChange={(val) => update({ height: Math.max(minSize, Number(val) || 1) })}
             />
           </Group>
-          <Switch
-            mt="sm"
-            label={t('display.vertical')}
-            checked={!!element.vertical}
-            onChange={(event) => update({ vertical: event.currentTarget.checked })}
-          />
+          {isShape && (
+            <Switch
+              mt="sm"
+              label={t('display.outline_when_off')}
+              checked={!!element.outlineWhenOff}
+              onChange={(event) => update({ outlineWhenOff: event.currentTarget.checked })}
+            />
+          )}
+          {isBar && (
+            <Switch
+              mt="sm"
+              label={t('display.vertical')}
+              checked={!!element.vertical}
+              onChange={(event) => update({ vertical: event.currentTarget.checked })}
+            />
+          )}
+          {isStick &&
+            renderInput &&
+            (['x', 'y'] as const).map((axis) => {
+              const key = axis === 'x' ? 'stickX' : 'stickY';
+              return (
+                <Stack key={axis} gap={4} mt="sm">
+                  <Text size="sm" fw={500}>
+                    {t(`display.stick_${axis}`)}
+                  </Text>
+                  {renderInput(axis, element[key] ?? newStickInput(), (input) =>
+                    update({ [key]: input })
+                  )}
+                </Stack>
+              );
+            })}
         </>
       )}
       {isImage && !!element.width && (
