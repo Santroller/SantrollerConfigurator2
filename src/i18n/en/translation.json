@@ -1453,13 +1453,14 @@
     "scale": "Size",
     "vertical": "Fill from the bottom up",
     "upload_image": "Upload image",
-    "image_description": "Scaled down to fit the display. Bright pixels light up, turn on Invert for dark images on a light background.",
+    "image_description": "Scaled down to fit the display, and can be resized once it's uploaded. Bright pixels light up, turn on Invert for dark images on a light background.",
     "image_size": "{{width}} x {{height}} pixels",
     "image_error": "That image couldn't be read",
     "invert": "Invert",
     "preview": "Preview",
     "preview_description": "Every LED on this display in this profile, as if they were all on. The outline is this one, drag it to move it, or use the arrow keys (hold Shift for 8 pixels at a time).",
-    "preview_move": "Display preview, drag or use the arrow keys to move this LED"
+    "preview_move": "Display preview, drag or use the arrow keys to move this LED",
+    "keep_proportions": "Keep proportions"
   },
   "snes": {
     "clock_pin": "Clock Pin",

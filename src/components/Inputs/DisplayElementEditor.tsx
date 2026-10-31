@@ -13,10 +13,13 @@ import {
 } from '@mantine/core';
 import {
   displaySize,
+  imageAspect,
   loadDisplayImage,
   MAX_SCALE,
   MAX_TEXT_LENGTH,
   MonoFrame,
+  proportionalSize,
+  resizeDisplayImage,
   sanitiseDisplayText,
 } from '@/components/Inputs/displayRender';
 import { proto } from '@/components/SettingsContext/config';
@@ -234,12 +237,32 @@ export function DisplayElementEditor({
 }) {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
+  const [keepProportions, setKeepProportions] = useState(true);
   const { width, height } = displaySize(display);
   const update = (changes: Partial<proto.IDisplayLedDevice>) =>
     dispatch({ ...element, ...changes });
   const isText = element.type === proto.DisplayElementType.DisplayElementText;
   const isImage = element.type === proto.DisplayElementType.DisplayElementImage;
   const isBar = element.type === proto.DisplayElementType.DisplayElementBar;
+  const resizeImage = (side: 'width' | 'height', value: number) => {
+    const current = {
+      image: element.image!,
+      width: element.width ?? 0,
+      height: element.height ?? 0,
+    };
+    if (!element.image || !current.width || !current.height) {
+      return;
+    }
+    const size = keepProportions
+      ? proportionalSize(side, value, imageAspect(current), width, height)
+      : {
+          width: side === 'width' ? Math.max(1, Math.min(width, value)) : current.width,
+          height: side === 'height' ? Math.max(1, Math.min(height, value)) : current.height,
+        };
+    if (size.width !== current.width || size.height !== current.height) {
+      update(resizeDisplayImage(current, size.width, size.height));
+    }
+  };
   return (
     <>
       <Select
@@ -335,6 +358,32 @@ export function DisplayElementEditor({
             label={t('display.vertical')}
             checked={!!element.vertical}
             onChange={(event) => update({ vertical: event.currentTarget.checked })}
+          />
+        </>
+      )}
+      {isImage && !!element.width && (
+        <>
+          <Group grow mt="xs">
+            <NumberInput
+              label={t('display.width')}
+              min={1}
+              max={width}
+              value={element.width ?? 0}
+              onChange={(val) => resizeImage('width', Number(val) || 1)}
+            />
+            <NumberInput
+              label={t('display.height')}
+              min={1}
+              max={height}
+              value={element.height ?? 0}
+              onChange={(val) => resizeImage('height', Number(val) || 1)}
+            />
+          </Group>
+          <Switch
+            mt="sm"
+            label={t('display.keep_proportions')}
+            checked={keepProportions}
+            onChange={(event) => setKeepProportions(event.currentTarget.checked)}
           />
         </>
       )}

@@ -1628,11 +1628,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
       );
       try {
         await withHidTimeout(keepalive, 'keepalive acknowledgement');
-        // The controller can stop answering for a while (e.g. the PC slept) and then come back
+        // The controller can stop answering for a while (e.g. the PC slept) and then come back,
+        // and it may have switched profiles in the meantime
         if (get().hung) {
           set((state) => {
             state.hung = false;
           });
+          void get().refreshActiveProfiles();
         }
       } catch (e) {
         const updating = get().updating;

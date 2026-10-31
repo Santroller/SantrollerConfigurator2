@@ -95,6 +95,31 @@ describe('display element preview', () => {
     expect(dispatch).toHaveBeenLastCalledWith({ ...element, x: 116, y: 56 });
   });
 
+  it('resizes an uploaded image, keeping its proportions', async () => {
+    // 4 x 2, left half lit, packed a row per byte
+    const image = new Uint8Array([0xc0, 0xc0]);
+    await render({
+      ...element,
+      type: proto.DisplayElementType.DisplayElementImage,
+      text: null,
+      scale: null,
+      width: 4,
+      height: 2,
+      image,
+    });
+    const label = [...container.querySelectorAll('label')].find(
+      (l) => l.textContent === 'display.width'
+    )!;
+    const input = document.getElementById(label.htmlFor) as HTMLInputElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '8');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const resized = dispatch.mock.lastCall![0];
+    expect(resized).toMatchObject({ width: 8, height: 4, x: 10, y: 20 });
+    expect([...resized.image!]).toEqual([0xf0, 0xf0, 0xf0, 0xf0]);
+  });
+
   it('nudges with the arrow keys, 8 at a time with shift', async () => {
     const canvas = await render();
     await act(async () => {

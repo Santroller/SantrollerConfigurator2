@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   displaySize,
+  imageAspect,
   MonoFrame,
   packBitmap,
+  proportionalSize,
+  resizeBitmap,
+  resizeDisplayImage,
   sanitiseDisplayText,
 } from '@/components/Inputs/displayRender';
 import { proto } from '@/components/SettingsContext/config';
@@ -110,5 +114,60 @@ describe('displaySize', () => {
       width: 128,
       height: 128,
     });
+  });
+});
+
+// A packed image from rows of '#' and '.'
+function bitmap(picture: string[]) {
+  const width = picture[0].length;
+  const stride = Math.ceil(width / 8);
+  const image = new Uint8Array(stride * picture.length);
+  picture.forEach((row, y) =>
+    [...row].forEach((pixel, x) => {
+      if (pixel === '#') {
+        image[y * stride + (x >> 3)] |= 0x80 >> (x & 7);
+      }
+    })
+  );
+  return { image, width, height: picture.length };
+}
+
+function picture({ image, width, height }: { image: Uint8Array; width: number; height: number }) {
+  const stride = Math.ceil(width / 8);
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) =>
+      image[y * stride + (x >> 3)] & (0x80 >> (x & 7)) ? '#' : '.'
+    ).join('')
+  );
+}
+
+describe('resizing images', () => {
+  it('stretches a packed image by its nearest pixels', () => {
+    const small = bitmap(['#.', '.#']);
+    expect(
+      picture({ ...small, image: resizeBitmap(small.image, 2, 2, 4, 4), width: 4, height: 4 })
+    ).toEqual(['##..', '##..', '..##', '..##']);
+  });
+
+  it('handles rows wider than a byte', () => {
+    const wide = bitmap(['#........#']);
+    expect(
+      picture({ image: resizeBitmap(wide.image, 10, 1, 20, 1), width: 20, height: 1 })
+    ).toEqual(['##................##']);
+  });
+
+  it('keeps going from the first image so passing through a small size loses nothing', () => {
+    const original = bitmap(['#..#', '.##.', '.##.', '#..#']);
+    const tiny = resizeDisplayImage(original, 1, 1);
+    const back = resizeDisplayImage(tiny, 4, 4);
+    expect(picture(back)).toEqual(picture(original));
+    expect(imageAspect(back)).toBe(1);
+  });
+
+  it('keeps proportions within the display', () => {
+    expect(proportionalSize('width', 64, 2, 128, 64)).toEqual({ width: 64, height: 32 });
+    expect(proportionalSize('height', 50, 2, 128, 64)).toEqual({ width: 100, height: 50 });
+    // Too wide for the display at that height, so both shrink to fit
+    expect(proportionalSize('height', 64, 4, 128, 64)).toEqual({ width: 128, height: 32 });
   });
 });

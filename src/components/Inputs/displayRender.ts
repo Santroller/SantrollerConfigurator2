@@ -291,6 +291,105 @@ export function packBitmap(
   return out;
 }
 
+// What each uploaded image was made from, while it's still loaded, so it can be resized from the original
+// rather than from its pixels on the display. Kept by the packed image, which stays the same object until
+// the image changes.
+const imageSources = new WeakMap<Uint8Array, HTMLImageElement>();
+
+export function imageSource(image?: Uint8Array | null) {
+  return image ? imageSources.get(image) : undefined;
+}
+
+// Draws an image at width x height and packs it
+export function renderDisplayImage(source: HTMLImageElement, width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Unable to read image');
+  }
+  context.drawImage(source, 0, 0, width, height);
+  const image = packBitmap(context.getImageData(0, 0, width, height).data, width, height);
+  imageSources.set(image, source);
+  return { width, height, image };
+}
+
+// When the original isn't loaded, the packed image that later sizes were stretched from, so going through
+// sizes on the way to another (eg typing 40 goes through 4) doesn't lose detail
+const bitmapSources = new WeakMap<
+  Uint8Array,
+  { image: Uint8Array; width: number; height: number }
+>();
+
+// An image at a new size, redrawn from the original while it's loaded, otherwise stretched from its pixels
+export function resizeDisplayImage(
+  current: { image: Uint8Array; width: number; height: number },
+  width: number,
+  height: number
+) {
+  const source = imageSource(current.image);
+  if (source) {
+    return renderDisplayImage(source, width, height);
+  }
+  const from = bitmapSources.get(current.image) ?? current;
+  const image = resizeBitmap(from.image, from.width, from.height, width, height);
+  bitmapSources.set(image, from);
+  return { width, height, image };
+}
+
+// The width / height of what an image was made from
+export function imageAspect(current: { image: Uint8Array; width: number; height: number }) {
+  const source = imageSource(current.image);
+  const from = source
+    ? { width: source.naturalWidth, height: source.naturalHeight }
+    : (bitmapSources.get(current.image) ?? current);
+  return from.width / from.height;
+}
+
+// Resizes a packed image to width x height by its nearest pixels
+export function resizeBitmap(
+  image: Uint8Array,
+  fromWidth: number,
+  fromHeight: number,
+  width: number,
+  height: number
+) {
+  const fromStride = Math.ceil(fromWidth / 8);
+  const stride = Math.ceil(width / 8);
+  const out = new Uint8Array(stride * height);
+  for (let y = 0; y < height; y++) {
+    const fy = Math.min(fromHeight - 1, Math.floor(((y + 0.5) * fromHeight) / height));
+    for (let x = 0; x < width; x++) {
+      const fx = Math.min(fromWidth - 1, Math.floor(((x + 0.5) * fromWidth) / width));
+      if (image[fy * fromStride + (fx >> 3)] & (0x80 >> (fx & 7))) {
+        out[y * stride + (x >> 3)] |= 0x80 >> (x & 7);
+      }
+    }
+  }
+  return out;
+}
+
+// The size to resize an image to when one side is changed and its proportions are kept, fitting within
+// maxWidth x maxHeight. aspect is width / height.
+export function proportionalSize(
+  side: 'width' | 'height',
+  value: number,
+  aspect: number,
+  maxWidth: number,
+  maxHeight: number
+) {
+  let width = side === 'width' ? value : value * aspect;
+  let height = side === 'height' ? value : value / aspect;
+  const fit = Math.min(1, maxWidth / width, maxHeight / height);
+  width *= fit;
+  height *= fit;
+  return {
+    width: Math.max(1, Math.min(maxWidth, Math.round(width))),
+    height: Math.max(1, Math.min(maxHeight, Math.round(height))),
+  };
+}
+
 // Scales an image file down to fit the display (never up), then packs it
 export async function loadDisplayImage(file: File, maxWidth: number, maxHeight: number) {
   const url = URL.createObjectURL(file);
@@ -304,16 +403,7 @@ export async function loadDisplayImage(file: File, maxWidth: number, maxHeight: 
     const scale = Math.min(1, maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
     const height = Math.max(1, Math.round(image.naturalHeight * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('Unable to read image');
-    }
-    context.drawImage(image, 0, 0, width, height);
-    const data = context.getImageData(0, 0, width, height).data;
-    return { width, height, image: packBitmap(data, width, height) };
+    return renderDisplayImage(image, width, height);
   } finally {
     URL.revokeObjectURL(url);
   }
