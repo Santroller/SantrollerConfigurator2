@@ -272,6 +272,15 @@
       "label": "Invert Y Axis for HID mode",
       "description": "Invert the Y Axis when in HID mode, as some apps expect it to be inverted."
     },
+    "socdMode": {
+      "label": "SOCD cleaning",
+      "description": "What the D-pad sends when opposite directions are held at the same time, such as left and right on a hitbox. Opposite directions pressed at exactly the same time send neither in the last input and first input modes.",
+      "SocdOff": "Off (send both where the output can, otherwise neutral)",
+      "SocdNeutral": "Neutral (send neither direction)",
+      "SocdUpPriority": "Up priority (up wins, left + right is neutral)",
+      "SocdLastInput": "Last input wins",
+      "SocdFirstInput": "First input wins"
+    },
     "syncCalibrations": {
       "label": "Sync calibrations across inputs",
       "description": "Synchronise calibrations across inputs that are used multiple times. For example if you have whammy on multiple profiles, turning this on will keep your whammy calibration synchronised, while turning it off means you can have different calibrations per profile."

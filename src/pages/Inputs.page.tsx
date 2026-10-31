@@ -10700,6 +10700,23 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
         </>
       )}
+      {!standby &&
+        (profile.opts.deviceToEmulate === proto.SubType.Gamepad ||
+          profile.opts.deviceToEmulate === proto.SubType.FightStick) && (
+          <>
+            <Space h="md" />
+            <DropdownBox
+              title="main.socdMode.label"
+              description="main.socdMode.description"
+              e={proto.SocdMode}
+              val={profile.opts.socdMode ?? proto.SocdMode.SocdOff}
+              label="main.socdMode"
+              dispatch={(socdMode) =>
+                updateProfile({ ...profile, opts: { ...profile.opts, socdMode } }, profileIdx)
+              }
+            />
+          </>
+        )}
 
       {!standby && (
         <>
