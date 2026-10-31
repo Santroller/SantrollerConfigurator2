@@ -283,8 +283,12 @@ const deviceRegistry: DeviceDefinitions = {
       address: 0x3c,
       height: 64,
     }),
-    pins: ({ i2c }) => [i2c.sda, i2c.scl],
-    detail: ({ address }) => `0x${(address ?? 0x3c).toString(16).toUpperCase()}`,
+    pins: ({ i2c, spi, dcPin, csPin, resetPin }) =>
+      spi
+        ? [spi.mosi, spi.sck, dcPin ?? -1, csPin ?? -1, resetPin ?? -1]
+        : [i2c?.sda ?? -1, i2c?.scl ?? -1],
+    detail: ({ spi, address }) =>
+      spi ? 'SPI' : `0x${(address ?? 0x3c).toString(16).toUpperCase()}`,
     name: ({ controller }) =>
       i18next.t('devices.display_named', {
         controller: (proto.DisplayController[controller] ?? 'DisplaySSD1306').replace(

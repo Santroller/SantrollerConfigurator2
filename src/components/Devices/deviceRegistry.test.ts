@@ -199,6 +199,22 @@ describe('device names', () => {
     ).toBe('SSD1306 Display');
   });
 
+  it("lists a display's pins for the bus it's on", () => {
+    const display = { controller: proto.DisplayController.DisplaySH1106 };
+    expect(getDevicePins({ deviceid: 0, display: { ...display, i2c } })).toEqual([4, 5]);
+    expect(
+      getDevicePins({
+        deviceid: 0,
+        display: {
+          ...display,
+          spi: { block: 0, mosi: 3, miso: -1, sck: 2, clock: 8000000 },
+          dcPin: 6,
+          resetPin: 7,
+        },
+      })
+    ).toEqual([3, 2, 6, 7]);
+  });
+
   it("uses the kind's own name otherwise", () => {
     expect(
       getDeviceName('mpr121', { deviceid: 0, mpr121: createDeviceConfig('mpr121', 0).mpr121 })

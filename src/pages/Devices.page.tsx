@@ -842,7 +842,76 @@ function DisplayDevice({ id }: { id: string }) {
       image="covers/devices/display.svg"
       deleteDevice={() => deleteDevice(id)}
     >
-      <I2CDevice device={display.i2c} dispatch={(i2c) => update({ i2c })} />
+      <LabeledSegmentedControl
+        label="display.bus"
+        description="display.bus_description"
+        data={[
+          { label: 'display.buses.i2c', value: 'i2c' },
+          { label: 'display.buses.spi', value: 'spi' },
+        ]}
+        value={display.spi ? 'spi' : 'i2c'}
+        dispatch={(bus) => {
+          if ((bus === 'spi') === !!display.spi) {
+            return;
+          }
+          // The firmware picks the SPI clock from the controller
+          update(
+            bus === 'spi'
+              ? {
+                  i2c: null,
+                  address: null,
+                  spi: { mosi: -1, miso: -1, sck: -1, block: 0, clock: 8000000 },
+                  dcPin: -1,
+                }
+              : {
+                  i2c: { sda: -1, scl: -1, block: 0, clock: 400000 },
+                  spi: null,
+                  dcPin: null,
+                  csPin: null,
+                  resetPin: null,
+                }
+          );
+        }}
+      />
+      {display.spi ? (
+        <>
+          <SPIDevice
+            device={display.spi}
+            mosiLabel="display.mosi"
+            sckLabel="display.sck"
+            noMiso
+            dispatch={(spi) => update({ spi })}
+          />
+          <PinBox
+            label="display.dc"
+            pin={display.dcPin ?? -1}
+            valid={AllPinsNamed}
+            dispatch={(dcPin) => update({ dcPin })}
+          />
+          <PinBox
+            label="display.cs"
+            pin={display.csPin ?? -1}
+            valid={AllPinsNamed}
+            optional
+            dispatch={(csPin) => update({ csPin })}
+          />
+          <PinBox
+            label="display.reset"
+            pin={display.resetPin ?? -1}
+            valid={AllPinsNamed}
+            optional
+            dispatch={(resetPin) => update({ resetPin })}
+          />
+          <Text size="xs" c="dimmed" mt={4} mb="xs">
+            {t('display.spi_pins_description')}
+          </Text>
+        </>
+      ) : (
+        <I2CDevice
+          device={display.i2c ?? { sda: -1, scl: -1, block: 0, clock: 400000 }}
+          dispatch={(i2c) => update({ i2c })}
+        />
+      )}
       <Select
         label={t('display.controller')}
         description={t('display.controller_description')}
@@ -868,15 +937,17 @@ function DisplayDevice({ id }: { id: string }) {
           );
         }}
       />
-      <Select
-        mt="xs"
-        label={t('display.address')}
-        description={t('display.address_description')}
-        allowDeselect={false}
-        data={['0x3C', '0x3D']}
-        value={`0x${(display.address ?? 0x3c).toString(16).toUpperCase()}`}
-        onChange={(val) => val != null && update({ address: parseInt(val, 16) })}
-      />
+      {!display.spi && (
+        <Select
+          mt="xs"
+          label={t('display.address')}
+          description={t('display.address_description')}
+          allowDeselect={false}
+          data={['0x3C', '0x3D']}
+          value={`0x${(display.address ?? 0x3c).toString(16).toUpperCase()}`}
+          onChange={(val) => val != null && update({ address: parseInt(val, 16) })}
+        />
+      )}
       <Select
         mt="xs"
         label={t('display.size')}

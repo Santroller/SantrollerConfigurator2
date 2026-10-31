@@ -1415,6 +1415,18 @@
     "digital_description": "Only electrodes 4 to 11 support GPIO. Touch sensing must stop before the first electrode used as GPIO."
   },
   "display": {
+    "bus": "Connection",
+    "bus_description": "Displays with 4 pins (VCC, GND, SCL, SDA) are I2C. Displays with 7 pins (GND, VCC, D0, D1, RES, DC, CS) are SPI.",
+    "buses": {
+      "i2c": "I2C",
+      "spi": "SPI"
+    },
+    "sck": "SCK Pin (D0, or SCL on some displays)",
+    "mosi": "MOSI Pin (D1, or SDA on some displays)",
+    "dc": "DC Pin",
+    "cs": "CS Pin (optional)",
+    "reset": "RES Pin (optional)",
+    "spi_pins_description": "CS can be wired to GND and RES to 3V3 instead of using pins, but with RES on a pin the display is reset properly every time it starts.",
     "controller": "Controller",
     "controller_description": "The chip on the display. Most 0.96\" displays are SSD1306, most 1.3\" displays are SH1106, 2.42\" displays are usually SSD1309, and 128 x 128 or 128 x 64 portrait displays (eg the Adafruit 128 x 64 FeatherWing) are usually SH1107. If the picture is shifted by a couple of pixels with a column of noise at the edge, try SH1106 or SSD1306 instead.",
     "address": "I2C address",

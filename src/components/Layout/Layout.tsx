@@ -401,7 +401,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </Flex>
       </Modal>
       <AppShell
-        header={{ height: showSave ? 80 : 50 }}
+        // The header never changes height, so the page doesn't jump (eg mid drag) when there's something to save
+        header={{ height: 50 }}
         navbar={{
           width: navbarWidth,
           breakpoint: 'sm',
@@ -429,6 +430,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   fit="scale-down"
                   alt="santroller"
                 />
+              </Flex>
+            </Grid.Col>
+            <Grid.Col span="auto">
+              <Flex justify="flex-end" align="center" direction="row" gap="xs" wrap="nowrap">
                 {showSave && (
                   <Group gap="xs" wrap="nowrap">
                     <Button
@@ -483,10 +488,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     )}
                   </Group>
                 )}
-              </Flex>
-            </Grid.Col>
-            <Grid.Col span="auto">
-              <Flex justify="flex-end" align="center" direction="row" wrap="wrap">
                 <ActionIcon
                   variant="filled"
                   aria-label={t('layout.theme', 'Theme')}

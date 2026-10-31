@@ -167,7 +167,7 @@ function DisplayPreview({
   );
 }
 
-// Just this element on its display, small, for the collapsed card
+// Just this element on its display, for the collapsed card
 export function DisplayThumbnail({
   element,
   display,
@@ -199,8 +199,10 @@ export function DisplayThumbnail({
       height={height}
       role="img"
       aria-label={t('display.preview')}
+      // One pixel per display pixel, shrinking it loses the 1 pixel strokes of the text
       style={{
-        height: Math.min(height, 32),
+        width,
+        height,
         imageRendering: 'pixelated',
         borderRadius: 2,
         alignSelf: 'flex-start',
