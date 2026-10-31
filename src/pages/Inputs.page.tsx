@@ -96,6 +96,13 @@ import {
   hasDefaults,
   isLed,
 } from '@/components/Devices/pinUtils';
+import {
+  actionHoldMs,
+  actionOutputLabel,
+  actionOutputValue,
+  getActionOptions,
+  isActionOutput,
+} from '@/components/Inputs/actionOutputs';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
 import {
   DisplayElementEditor,
@@ -867,6 +874,19 @@ function StateSlider({
     </>
   );
 }
+// The slots of the profile being edited, for the actions that turn off the controller in one
+function useActionSlots() {
+  const { t } = useTranslation();
+  const profile = useConfigStore((state) => state.config.profiles?.[state.currentProfile]);
+  return useMemo(() => getProfileSlots(profile, t), [profile, t]);
+}
+
+function useActionOptions() {
+  const { t } = useTranslation();
+  const slots = useActionSlots();
+  return useMemo(() => getActionOptions(slots, t), [slots, t]);
+}
+
 function OutputBox({
   mapping,
   type,
@@ -897,10 +917,11 @@ function OutputBox({
   dispatchMidi?: (input: Omit<proto.IMidiInput, 'deviceid'>) => void;
 }) {
   const { t } = useTranslation();
+  const actionOptions = useActionOptions();
   const actionProps = actions
     ? {
-        valAction: mapping?.action ?? undefined,
-        dispatchAction: (action: proto.ActionType) => dispatch({ action }, false, false),
+        valAction: actionOutputValue(mapping),
+        dispatchAction: (output: proto.IOutput) => dispatch(output, false, false),
       }
     : {};
   const boxProps = { ...actionProps, hostInput };
@@ -944,6 +965,8 @@ function OutputBox({
         />
       );
     case proto.SubType.Gamepad:
+    // A fight stick sends a gamepad report
+    case proto.SubType.FightStick:
     case proto.SubType.Dancepad:
     case proto.SubType.Taiko:
     case proto.SubType.StageKit:
@@ -1386,9 +1409,10 @@ function OutputBox({
         />
       );
     case proto.SubType.KeyboardMouse: {
+      const actionValue = actionOutputValue(mapping);
       const kind =
-        mapping?.action != null
-          ? `action:${mapping.action}`
+        actionValue != null
+          ? `action:${actionValue}`
           : mapping?.mouseButton != null
             ? `button:${mapping.mouseButton}`
             : mapping?.mouseAxis != null
@@ -1417,12 +1441,7 @@ function OutputBox({
                 .filter(([, v]) => typeof v === 'number')
                 .map(([name, v]) => ({ value: `axis:${v}`, label: t(`keyboard.mouse.${name}`) })),
               ...(actions
-                ? Object.entries(proto.ActionType)
-                    .filter(([, v]) => typeof v === 'number')
-                    .map(([name, v]) => ({
-                      value: `action:${v}`,
-                      label: t(`outputs.${name}`, name),
-                    }))
+                ? actionOptions.map((x) => ({ value: `action:${x.value}`, label: x.label }))
                 : []),
             ]}
             value={kind}
@@ -1430,13 +1449,15 @@ function OutputBox({
               if (!value || value === kind) {
                 return;
               }
-              const [type, id] = value.split(':');
+              const [type, ...rest] = value.split(':');
+              const id = rest.join(':');
+              const action = actionOptions.find((x) => x.value === id);
               if (type === 'button') {
                 dispatch({ mouseButton: parseInt(id, 10) }, false, false);
               } else if (type === 'axis') {
                 dispatch({ mouseAxis: parseInt(id, 10) }, false, true);
-              } else if (type === 'action') {
-                dispatch({ action: parseInt(id, 10) }, false, false);
+              } else if (type === 'action' && action) {
+                dispatch(action.output, false, false);
               } else if (type === 'media') {
                 dispatch({ consumerKey: MEDIA_KEYS.PlayPause }, true, false);
               } else if (type === 'passthrough') {
@@ -1489,9 +1510,11 @@ function MidiOutputBox({
   dispatch: (mapping: proto.IOutput, trigger: boolean, analog: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const actionOptions = useActionOptions();
+  const actionValue = actionOutputValue(mapping);
   const kind =
-    mapping?.action != null
-      ? `action:${mapping.action}`
+    actionValue != null
+      ? `action:${actionValue}`
       : mapping?.midiControl
         ? 'control'
         : mapping?.midiPitchBend != null
@@ -1529,12 +1552,7 @@ function MidiOutputBox({
           { value: 'control', label: t('midiOutput.control') },
           { value: 'pitchBend', label: t('midiOutput.pitchBend') },
           ...(actions
-            ? Object.entries(proto.ActionType)
-                .filter(([, v]) => typeof v === 'number')
-                .map(([name, v]) => ({
-                  value: `action:${v}`,
-                  label: t(`outputs.${name}`, name),
-                }))
+            ? actionOptions.map((x) => ({ value: `action:${x.value}`, label: x.label }))
             : []),
         ]}
         value={kind}
@@ -1542,9 +1560,12 @@ function MidiOutputBox({
           if (!value || value === kind) {
             return;
           }
-          const [type, id] = value.split(':');
+          const [type, ...rest] = value.split(':');
+          const action = actionOptions.find((x) => x.value === rest.join(':'));
           if (type === 'action') {
-            dispatch({ action: parseInt(id, 10) }, false, false);
+            if (action) {
+              dispatch(action.output, false, false);
+            }
           } else if (type === 'control') {
             setControl({ channel, control: 4 });
           } else if (type === 'pitchBend') {
@@ -1554,7 +1575,7 @@ function MidiOutputBox({
           }
         }}
       />
-      {kind != null && mapping?.action == null && (
+      {kind != null && actionValue == null && (
         <NumberInput
           label={t('midiOutput.channel')}
           description={t('midiOutput.channel_desc')}
@@ -1622,21 +1643,15 @@ const RPCS3_PASSTHROUGH_SUBTYPES: proto.SubType[] = [
   proto.SubType.ProGuitarSquier,
 ];
 
-// How long an action's input has to be held by default, so a stray press can't trigger it
-const ACTION_HOLD_MS: Record<proto.ActionType, number> = {
-  [proto.ActionType.ActionRestartDeviceStack]: 1000,
-  [proto.ActionType.ActionBootloader]: 3000,
-};
-
-function actionInput(mapping: proto.IMapping, action: proto.ActionType): proto.IInput {
+function actionInput(mapping: proto.IMapping, action: proto.IOutput): proto.IInput {
   const held = mapping.input.held;
   if (!held) {
-    return { held: { input: mapping.input, time: ACTION_HOLD_MS[action] } };
+    return { held: { input: mapping.input, time: actionHoldMs(action) } };
   }
   // Follow the new action's default, unless the time was changed by hand
-  const previous = mapping.mapping.action;
-  if (previous != null && held.time === ACTION_HOLD_MS[previous]) {
-    return { held: { ...held, time: ACTION_HOLD_MS[action] } };
+  const previous = mapping.mapping;
+  if (isActionOutput(previous) && held.time === actionHoldMs(previous)) {
+    return { held: { ...held, time: actionHoldMs(action) } };
   }
   return mapping.input;
 }
@@ -1644,8 +1659,11 @@ function actionInput(mapping: proto.IMapping, action: proto.ActionType): proto.I
 // Undo the hold actionInput added, unless the time was changed by hand
 function outputInput(mapping: proto.IMapping): proto.IInput {
   const held = mapping.input.held;
-  const action = mapping.mapping.action;
-  if (held?.input && action != null && held.time === ACTION_HOLD_MS[action]) {
+  if (
+    held?.input &&
+    isActionOutput(mapping.mapping) &&
+    held.time === actionHoldMs(mapping.mapping)
+  ) {
     return held.input;
   }
   return mapping.input;
@@ -1692,8 +1710,8 @@ function MappingBox({
         legendMode={legendMode}
         actions
         dispatch={(m, trigger, _) =>
-          m.action != null
-            ? dispatch({ ...mapping, input: actionInput(mapping, m.action), mapping: m })
+          isActionOutput(m)
+            ? dispatch({ ...mapping, input: actionInput(mapping, m), mapping: m })
             : dispatch({
                 center: trigger ? 0 : 32767,
                 min: 0,
@@ -1705,7 +1723,7 @@ function MappingBox({
               })
         }
       />
-      {mapping.mapping.action != null && (
+      {isActionOutput(mapping.mapping) && (
         <Text size="xs" c="dimmed">
           {t(
             'inputs.action_hold_hint',
@@ -1802,8 +1820,8 @@ function DropdownOutputBox<
   extraOptions?: { value: string; label: string }[];
   valExtra?: string;
   dispatchExtra?: (val: string) => void;
-  valAction?: proto.ActionType;
-  dispatchAction?: (action: proto.ActionType) => void;
+  valAction?: string;
+  dispatchAction?: (output: proto.IOutput) => void;
   hostInput?: boolean;
 }) {
   const { t } = useTranslation();
@@ -1812,22 +1830,15 @@ function DropdownOutputBox<
       inputCombobox.updateSelectedOptionIndex('selected', { scrollIntoView: true }),
   });
   const v = (valExtra ||
-    (valAction != null && proto.ActionType[valAction]) ||
+    valAction ||
     (e && e[val as keyof T]) ||
     (e2 && e2[val2 as keyof T2]) ||
     (e3 && e3[val3 as keyof T3]) ||
     (e4 && e4[val4 as keyof T4]) ||
     (valMidi && MIDI_INPUT_KINDS.find((kind) => valMidi[kind]))) as string;
   const listed = (key: string) => hostInput || key === v || !HOST_ONLY_OUTPUTS.has(key);
-  const actionOptions = dispatchAction
-    ? Object.entries(proto.ActionType)
-        .filter(([, value]) => typeof value === 'number')
-        .map(([name, value]) => ({
-          value: name,
-          action: value as proto.ActionType,
-          label: t(`outputs.${name}`, name),
-        }))
-    : [];
+  const allActionOptions = useActionOptions();
+  const actionOptions = dispatchAction ? allActionOptions : [];
   const extraLabel = [...(extraOptions ?? []), ...actionOptions].find((x) => x.value === v)?.label;
   const midiKindLabel =
     valMidi && MIDI_INPUT_KINDS.includes(v as MidiInputKind)
@@ -1877,7 +1888,7 @@ function DropdownOutputBox<
         }
         const action = actionOptions.find((x) => x.value === val);
         if (action && dispatchAction) {
-          dispatchAction(action.action);
+          dispatchAction(action.output);
         }
         if (e && dispatch) {
           const button = e[val as keyof T];
@@ -4114,21 +4125,25 @@ function SantrollerMapping({
       : undefined) ||
     (mapping.mapping.keyboardPassthrough ? 'KeyboardPassthrough' : undefined) ||
     midiOutputLabel(mapping.mapping, t) ||
-    proto.ActionType[mapping.mapping.action ?? -1];
+    actionOutputValue(mapping.mapping);
   const fixedLabel = FixLabel(mode, type, label || '', legendMode);
   const keyLabel =
     mapping.mapping.keycode != null
       ? getKeyboardKeyLabel(guiDevices, mapping.mapping.keycode, simpleMode)
       : '';
-  const outputText = fixedLabel
-    ? [t(`outputs.${fixedLabel}`, label ?? ''), keyLabel].filter(Boolean).join(' ')
-    : t('inputs.unmapped');
+  const actionSlots = useActionSlots();
+  const actionLabel = actionOutputLabel(mapping.mapping, actionSlots, t);
+  const outputText = actionLabel
+    ? actionLabel
+    : fixedLabel
+      ? [t(`outputs.${fixedLabel}`, label ?? ''), keyLabel].filter(Boolean).join(' ')
+      : t('inputs.unmapped');
   const img = `Icons/Input/${FixIcon(mode, type, label || '', legendMode)}.png`;
   const button =
     mapping.mapping.keycode != null ||
     mapping.mapping.consumerKey != null ||
     !!mapping.mapping.keyboardPassthrough ||
-    mapping.mapping.action != null ||
+    isActionOutput(mapping.mapping) ||
     mapping.mapping.midiNote != null ||
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Button') && v != null);
   const axis =

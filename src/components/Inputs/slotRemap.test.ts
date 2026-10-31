@@ -154,6 +154,25 @@ describe('editing slots', () => {
     expect(deviceIds(next)).toEqual([0, 1]);
   });
 
+  it('moves a turn off action to the id its slot gets', () => {
+    const withAction = (p: proto.IProfile): proto.IProfile => ({
+      ...p,
+      mappings: [
+        {
+          mapping: { turnOffController: { usb: 1 } },
+          input: { usbButton: { deviceid: 1, button: { gamepadButton: 1 } } },
+        },
+      ],
+    });
+    // The gamepad becomes a BeatMania controller, which sorts after the keyboard
+    const moved = remapEditedSlotIds(
+      withAction(profile([[gamepad, keyboard]])),
+      withAction(profile([[beatmania, keyboard]]))
+    );
+    expect(moved.mappings![0].mapping).toEqual({ turnOffController: { usb: 2 } });
+    expect(moved.mappings![0].input?.usbButton?.deviceid).toBe(2);
+  });
+
   it('keeps inputs on their devices when lists are reordered', () => {
     const prev = profile([[gamepad], [guitar]]);
     const next = remapEditedSlotIds(prev, {

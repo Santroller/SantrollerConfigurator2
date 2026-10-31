@@ -635,6 +635,8 @@ export interface Actions {
   refreshBluetoothPairings: () => Promise<void>;
   removeBluetoothPairing: (id: number) => Promise<void>;
   forgetBluetoothHosts: () => Promise<void>;
+  // Turn off a wireless controller on the USB host port or over bluetooth, by its hotplug event's sourceId
+  turnOffController: (sourceId: number) => Promise<void>;
   checkLogin: () => void;
   setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
@@ -2777,6 +2779,27 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }
       await delay(250);
       await get().refreshBluetoothPairings();
+    },
+    turnOffController: async (sourceId: number) => {
+      const state = get();
+      if (!state.hidDevice || !state.connected) {
+        return;
+      }
+      // The controller drops off once it has turned off, which removes it from the list
+      try {
+        const cmdBuffer = proto.Command.encode(
+          proto.Command.create({
+            turnOffController: proto.TurnOffControllerCommand.create({ sourceId }),
+          })
+        )
+          .ldelim()
+          .finish();
+        const outBuffer = new ArrayBuffer(63);
+        new Uint8Array(outBuffer).set(cmdBuffer);
+        await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
+      } catch (e) {
+        console.error('Failed to send turn off command', e);
+      }
     },
     scanBluetooth: async () => {
       const state = get();

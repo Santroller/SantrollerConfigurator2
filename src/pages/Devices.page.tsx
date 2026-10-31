@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { IconBluetooth, IconCpu, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconBluetooth, IconCpu, IconPlus, IconPower, IconTrash } from '@tabler/icons-react';
 import {
   Accordion,
   ActionIcon,
@@ -31,6 +31,7 @@ import {
   TagsInput,
   Text,
   Title,
+  Tooltip,
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
@@ -2381,6 +2382,23 @@ const usbHostData = [
   { label: 'usb.selector.dpFirst', value: 'false' },
   { label: 'usb.selector.dmFirst', value: 'true' },
 ];
+// Turns off a wireless controller listed as connected to the USB host port or over bluetooth
+function TurnOffControllerButton({ sourceId }: { sourceId: number | null | undefined }) {
+  const { t } = useTranslation();
+  const turnOffController = useConfigStore((state) => state.turnOffController);
+  if (sourceId == null) {
+    return null;
+  }
+  const label = t('devices.turn_off_controller', 'Turn off');
+  return (
+    <Tooltip label={label}>
+      <ActionIcon variant="subtle" aria-label={label} onClick={() => turnOffController(sourceId)}>
+        <IconPower size={16} />
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
 function USBHostDevice({ id }: { id: string }) {
   const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
@@ -2410,6 +2428,7 @@ function USBHostDevice({ id }: { id: string }) {
               <Table.Tr>
                 <Table.Th>{t('devices.usb_device_name')}</Table.Th>
                 <Table.Th>{t('devices.usb_device_type')}</Table.Th>
+                <Table.Th />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -2437,6 +2456,9 @@ function USBHostDevice({ id }: { id: string }) {
                           {t(`subType.${subtypeName}`, subtypeName)}
                         </Badge>
                       )}
+                    </Table.Td>
+                    <Table.Td>
+                      {x.canTurnOff && <TurnOffControllerButton sourceId={x.sourceId} />}
                     </Table.Td>
                   </Table.Tr>
                 );
@@ -3042,6 +3064,7 @@ function BluetoothDevice({ id }: { id: string }) {
               <Table.Tr>
                 <Table.Th>{t('devices.bluetooth_device_name')}</Table.Th>
                 <Table.Th>{t('devices.bluetooth_device_type')}</Table.Th>
+                <Table.Th />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -3059,6 +3082,9 @@ function BluetoothDevice({ id }: { id: string }) {
                         {t(`subType.${proto.SubType[x.subtype]}`, proto.SubType[x.subtype])}
                       </Badge>
                     )}
+                  </Table.Td>
+                  <Table.Td>
+                    <TurnOffControllerButton sourceId={x.sourceId} />
                   </Table.Td>
                 </Table.Tr>
               ))}

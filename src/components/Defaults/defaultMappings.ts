@@ -3252,6 +3252,7 @@ function outputRoles(
     case proto.SubType.ProGuitarSquier:
       return PRO_GUITAR_ROLES;
     case proto.SubType.Gamepad:
+    case proto.SubType.FightStick:
       return GAMEPAD_ROLES;
     default:
       return undefined;
@@ -3347,25 +3348,27 @@ function getHostDefaults(
           center: 32767,
         }))
       : [];
-  return getGpioDefaults(hostType).flatMap((m) => {
-    const mapping = convertHostOutput(m.mapping!, hostType, emulatedType);
-    if (!mapping) {
-      return [];
-    }
-    if (m.input?.gpio?.analog) {
-      return [
-        {
-          mapping,
-          input: makeInput(m.mapping!, true),
-          min: m.min ?? 0,
-          max: m.max ?? 65535,
-          center: m.center ?? 0,
-          debounce: m.debounce,
-        },
-      ];
-    }
-    return [{ mapping, input: makeInput(m.mapping!, false) }];
-  }).concat(motion);
+  return getGpioDefaults(hostType)
+    .flatMap((m) => {
+      const mapping = convertHostOutput(m.mapping!, hostType, emulatedType);
+      if (!mapping) {
+        return [];
+      }
+      if (m.input?.gpio?.analog) {
+        return [
+          {
+            mapping,
+            input: makeInput(m.mapping!, true),
+            min: m.min ?? 0,
+            max: m.max ?? 65535,
+            center: m.center ?? 0,
+            debounce: m.debounce,
+          },
+        ];
+      }
+      return [{ mapping, input: makeInput(m.mapping!, false) }];
+    })
+    .concat(motion);
 }
 
 export function getUsbHostDefaults(

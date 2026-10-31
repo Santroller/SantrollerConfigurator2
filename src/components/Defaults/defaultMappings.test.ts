@@ -100,9 +100,7 @@ describe('DJ Hero turntable defaults', () => {
     const mappings = getDefaultMappings('gpio', proto.SubType.DjHeroTurntable);
 
     expect(
-      mappings
-        .map((mapping) => mapping.mapping?.gamepadButton)
-        .filter((button) => button != null)
+      mappings.map((mapping) => mapping.mapping?.gamepadButton).filter((button) => button != null)
     ).toEqual([
       proto.GamepadButtonType.Gamepad_A,
       proto.GamepadButtonType.Gamepad_B,

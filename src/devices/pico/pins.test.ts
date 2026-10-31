@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  AllPinsNamed,
-  I2CGroups,
-  MosiPins,
-  SckPins,
-  SclPins,
-  SdaPins,
-  SPIGroups,
-} from './pins';
+import { AllPinsNamed, I2CGroups, MosiPins, SckPins, SclPins, SdaPins, SPIGroups } from './pins';
 
 describe('Pico GPIO peripheral pin options', () => {
   it('offers GPIO22/23 for their supported I2C1 and SPI0 functions', () => {

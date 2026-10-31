@@ -124,6 +124,28 @@ export function remapSlotInputs(
   return input;
 }
 
+// Returns the output with the slot a turn off controller action points at changed by `remap`. The
+// slot is passed on as an input reading it, for remaps that look at what the input reads.
+export function remapSlotOutput(
+  output: proto.IOutput,
+  remap: (kind: string, slotId: number, input: proto.IInput) => number
+): proto.IOutput {
+  const turnOff = output.turnOffController;
+  if (turnOff?.usb != null) {
+    const usb = remap('usbHost', turnOff.usb, { usbButton: { deviceid: turnOff.usb, button: {} } });
+    return usb === turnOff.usb ? output : { ...output, turnOffController: { usb } };
+  }
+  if (turnOff?.bluetooth != null) {
+    const bluetooth = remap('bt', turnOff.bluetooth, {
+      btButton: { deviceid: turnOff.bluetooth, button: {} },
+    });
+    return bluetooth === turnOff.bluetooth
+      ? output
+      : { ...output, turnOffController: { bluetooth } };
+  }
+  return output;
+}
+
 // Returns the profile with the slot ids of every input in it changed by `remap`
 export function remapProfileSlotInputs(
   profile: proto.IProfile,
@@ -133,9 +155,11 @@ export function remapProfileSlotInputs(
     x ? (remapSlotInputs(x, remap) as T) : x;
   return {
     ...profile,
-    mappings: profile.mappings?.map((m) =>
-      m.input ? { ...m, input: remapSlotInputs(m.input, remap) } : m
-    ),
+    mappings: profile.mappings?.map((m) => {
+      const mapping = m.mapping ? remapSlotOutput(m.mapping, remap) : m.mapping;
+      const input = m.input ? remapSlotInputs(m.input, remap) : m.input;
+      return mapping === m.mapping && input === m.input ? m : { ...m, mapping, input };
+    }),
     leds: profile.leds?.map((led) =>
       led.mapping?.inputMapping?.input
         ? {
@@ -347,6 +371,7 @@ export function remapSlotChoices(
     });
     return Array.from({ length: copies }, (_, index) => ({
       ...mapping,
+      mapping: mapping.mapping ? remapSlotOutput(mapping.mapping, pick(index)) : mapping.mapping,
       input: remapSlotInputs(mapping.input!, pick(index)),
     }));
   });
