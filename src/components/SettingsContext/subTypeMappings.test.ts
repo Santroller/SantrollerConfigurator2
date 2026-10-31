@@ -101,6 +101,43 @@ describe('remapMappingsForSubType', () => {
     expect(remapMappingsForSubType(proto.SubType.ProGuitarMustang, profile)).toHaveLength(1);
   });
 
+  it('turns the sticks and triggers a wheel uses into wheel axes when switching to a wheel', () => {
+    const profile = profileWith(proto.SubType.Wheel, [
+      {
+        mapping: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+        input: gpio(2),
+        center: 2000,
+      },
+      { mapping: { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger }, input: gpio(3) },
+      { mapping: { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger }, input: gpio(4) },
+      { mapping: { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY }, input: gpio(5) },
+      start,
+    ]);
+    const mappings = remapMappingsForSubType(proto.SubType.Gamepad, profile)!;
+    expect(mappings.map((m) => m.mapping)).toEqual([
+      { wheelAxis: proto.WheelAxisType.Wheel_Steering },
+      { wheelAxis: proto.WheelAxisType.Wheel_Accelerator },
+      { wheelAxis: proto.WheelAxisType.Wheel_Brake },
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickY },
+      start.mapping,
+    ]);
+    expect(mappings[0].center).toBe(2000);
+  });
+
+  it('turns wheel axes back into gamepad axes, dropping the clutch and handbrake', () => {
+    const profile = profileWith(proto.SubType.Gamepad, [
+      { mapping: { wheelAxis: proto.WheelAxisType.Wheel_Steering }, input: gpio(2) },
+      { mapping: { wheelAxis: proto.WheelAxisType.Wheel_Brake }, input: gpio(3) },
+      { mapping: { wheelAxis: proto.WheelAxisType.Wheel_Clutch }, input: gpio(4) },
+      { mapping: { wheelAxis: proto.WheelAxisType.Wheel_Handbrake }, input: gpio(5) },
+    ]);
+    const mappings = remapMappingsForSubType(proto.SubType.Wheel, profile)!;
+    expect(mappings.map((m) => m.mapping)).toEqual([
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX },
+      { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
+    ]);
+  });
+
   it('leaves mappings alone when the device type is unchanged', () => {
     const mappings: proto.IMapping[] = [
       {

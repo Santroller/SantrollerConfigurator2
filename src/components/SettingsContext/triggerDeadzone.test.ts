@@ -24,6 +24,19 @@ describe('calibratesAsTrigger', () => {
     expect(calibratesAsTrigger({ mapping: GH_TILT } as proto.IMapping)).toBe(false);
   });
 
+  it('treats a wheel pedal as a trigger and its steering as a stick', () => {
+    expect(
+      calibratesAsTrigger({
+        mapping: { wheelAxis: proto.WheelAxisType.Wheel_Brake },
+      } as proto.IMapping)
+    ).toBe(true);
+    expect(
+      calibratesAsTrigger({
+        mapping: { wheelAxis: proto.WheelAxisType.Wheel_Steering },
+      } as proto.IMapping)
+    ).toBe(false);
+  });
+
   it('treats any section as a trigger', () => {
     expect(
       calibratesAsTrigger({

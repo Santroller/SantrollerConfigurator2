@@ -117,6 +117,25 @@ describe('DJ Hero turntable defaults', () => {
   });
 });
 
+describe('wheel defaults', () => {
+  it('centres the steering and rests the pedals at 0', () => {
+    const mappings = getDefaultMappings('gpio', proto.SubType.Wheel);
+
+    expect(
+      mappings
+        .filter((mapping) => mapping.mapping?.wheelAxis != null)
+        .map((mapping) => [mapping.mapping?.wheelAxis, mapping.center])
+    ).toEqual([
+      [proto.WheelAxisType.Wheel_Steering, 32767],
+      [proto.WheelAxisType.Wheel_Accelerator, 0],
+      [proto.WheelAxisType.Wheel_Brake, 0],
+      [proto.WheelAxisType.Wheel_Clutch, 0],
+    ]);
+    // the wheel's own axes replace the gamepad's
+    expect(mappings.some((mapping) => mapping.mapping?.gamepadAxis != null)).toBe(false);
+  });
+});
+
 // An axis output driven by a digital input needs a pressed value, and an analog one needs a
 // range: with neither, the firmware calibrates against 0-0 and the axis never moves.
 const isAxisOutput = (m: proto.IMapping) =>
@@ -224,6 +243,51 @@ describe('USB host defaults for a different emulated type', () => {
         (m) => m.input?.usbButton?.button?.gamepadButton === proto.GamepadButtonType.Gamepad_Start
       )?.mapping
     ).toEqual({ gamepadButton: proto.GamepadButtonType.Gamepad_Start });
+  });
+
+  it('reads a wheel by its wheel axes and sends them as gamepad axes on a gamepad', () => {
+    const mappings = getDefaultMappings(
+      'usbHost',
+      proto.SubType.Gamepad,
+      3,
+      undefined,
+      proto.SubType.Wheel
+    );
+    const output = (wheelAxis: proto.WheelAxisType) =>
+      mappings.find((m) => m.input?.usbAxis?.axis?.wheelAxis === wheelAxis)?.mapping;
+    expect(output(proto.WheelAxisType.Wheel_Steering)).toEqual({
+      gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX,
+    });
+    expect(output(proto.WheelAxisType.Wheel_Accelerator)).toEqual({
+      gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger,
+    });
+    expect(output(proto.WheelAxisType.Wheel_Brake)).toEqual({
+      gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger,
+    });
+    // a gamepad has nowhere for the clutch
+    expect(output(proto.WheelAxisType.Wheel_Clutch)).toBeUndefined();
+  });
+
+  it('turns a gamepad host into a wheel on a wheel profile', () => {
+    const mappings = getDefaultMappings(
+      'bt',
+      proto.SubType.Wheel,
+      1,
+      undefined,
+      proto.SubType.Gamepad
+    );
+    const output = (gamepadAxis: proto.GamepadAxisType) =>
+      mappings.find((m) => m.input?.btAxis?.axis?.gamepadAxis === gamepadAxis)?.mapping;
+    expect(output(proto.GamepadAxisType.Gamepad_LeftStickX)).toEqual({
+      wheelAxis: proto.WheelAxisType.Wheel_Steering,
+    });
+    expect(output(proto.GamepadAxisType.Gamepad_RightTrigger)).toEqual({
+      wheelAxis: proto.WheelAxisType.Wheel_Accelerator,
+    });
+    // the other stick has no wheel equivalent, so it stays a gamepad axis
+    expect(output(proto.GamepadAxisType.Gamepad_RightStickX)).toEqual({
+      gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX,
+    });
   });
 
   it('maps solo frets to tap frets on a Guitar Hero guitar', () => {

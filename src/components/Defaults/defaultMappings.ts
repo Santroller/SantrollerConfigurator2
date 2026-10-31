@@ -1,4 +1,5 @@
 import { proto } from '@/components/SettingsContext/config';
+import { convertWheelOutput } from '@/components/SettingsContext/subTypeMappings';
 
 export interface DeviceStatusLike {
   id?: string;
@@ -666,6 +667,32 @@ export function getGpioDefaults(subType: proto.SubType): proto.IMapping[] {
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
         gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+      ];
+
+    // Microsoft's wheel layout: the paddles are the shoulder buttons
+    case proto.SubType.Wheel:
+      return [
+        gpioAxis({ wheelAxis: proto.WheelAxisType.Wheel_Steering }, 32767),
+        gpioAxis({ wheelAxis: proto.WheelAxisType.Wheel_Accelerator }, 0),
+        gpioAxis({ wheelAxis: proto.WheelAxisType.Wheel_Brake }, 0),
+        gpioAxis({ wheelAxis: proto.WheelAxisType.Wheel_Clutch }, 0),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_A }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_B }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_X }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Y }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_LeftShoulder }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_RightShoulder }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Back }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Start }),
+        gpioButton({ gamepadButton: proto.GamepadButtonType.Gamepad_Guide }),
+        // only PS4 and PS5 wheels (G29s) send these
+        ...Object.values(proto.WheelButtonType)
+          .filter((v): v is proto.WheelButtonType => typeof v === 'number')
+          .map((wheelButton) => gpioButton({ wheelButton })),
       ];
 
     case proto.SubType.Gamepad:
@@ -3277,8 +3304,13 @@ export function convertHostOutput(
   if (emulatedType === proto.SubType.KeyboardMania && hostType !== emulatedType) {
     return convertToKeyboardMania(output);
   }
-  if (hostType === emulatedType || output.gamepadButton != null || output.gamepadAxis != null) {
+  if (hostType === emulatedType) {
     return output;
+  }
+  // A wheel's steering and pedals are gamepad axes to everything else, and the reverse
+  const wheelOutput = convertWheelOutput(output, emulatedType);
+  if (wheelOutput !== output || output.gamepadButton != null || output.gamepadAxis != null) {
+    return wheelOutput;
   }
   const hostRoles = outputRoles(hostType);
   const emulatedRoles = outputRoles(emulatedType);
@@ -3485,6 +3517,7 @@ export const USB_HOST_SUBTYPES: proto.SubType[] = [
   proto.SubType.ProKeys,
   proto.SubType.Dancepad,
   proto.SubType.Taiko,
+  proto.SubType.Wheel,
   proto.SubType.KeyboardMouse,
 ];
 
@@ -3501,6 +3534,7 @@ export const USB_HOST_INPUT_SUBTYPES: proto.SubType[] = [
   proto.SubType.ProKeys,
   proto.SubType.Dancepad,
   proto.SubType.Taiko,
+  proto.SubType.Wheel,
   proto.SubType.KeyboardMouse,
   proto.SubType.Midi,
 ];
@@ -3522,6 +3556,7 @@ const SUBTYPE_OUTPUT_KEYS: Partial<Record<keyof proto.IOutput, proto.SubType>> =
     proto.SubType.ProGuitarMustang,
     proto.SubType.ProKeys,
     proto.SubType.KeyboardMania,
+    proto.SubType.Wheel,
   ];
   for (const st of specificSubTypes) {
     for (const m of getGpioDefaults(st)) {

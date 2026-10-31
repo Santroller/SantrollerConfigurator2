@@ -1491,8 +1491,35 @@ function OutputBox({
         </>
       );
     }
+    // A wheel sends a gamepad report, so gamepad outputs (e.g. a passed through controller's) work too
     case proto.SubType.Wheel:
-      break;
+      return (
+        <DropdownOutputBox
+          {...boxProps}
+          label={label}
+          title={title}
+          mode={mode}
+          legendMode={legendMode}
+          type={type}
+          midi={midi}
+          e={proto.WheelAxisType}
+          e2={proto.WheelButtonType}
+          val={mapping?.wheelAxis ?? undefined}
+          val2={mapping?.wheelButton ?? undefined}
+          e3={proto.GamepadAxisType}
+          e4={proto.GamepadButtonType}
+          val3={mapping?.gamepadAxis ?? undefined}
+          val4={mapping?.gamepadButton ?? undefined}
+          valMidi={valMidi}
+          dispatch={(axis) =>
+            dispatch({ wheelAxis: axis }, axis !== proto.WheelAxisType.Wheel_Steering, true)
+          }
+          dispatch2={(button) => dispatch({ wheelButton: button }, false, false)}
+          dispatch3={gamepadAxisCallback}
+          dispatch4={gamepadButtonCallback}
+          dispatchMidi={dispatchMidi}
+        />
+      );
     case proto.SubType.DisneyInfinity:
     case proto.SubType.Skylanders:
     case proto.SubType.LegoDimensions:
@@ -2026,6 +2053,14 @@ function DropdownOutputBox<
   );
 }
 
+const WHEEL_ICONS: Record<string, string> = {
+  Wheel_Steering: 'Gamepad_LeftStickX',
+  Wheel_Accelerator: 'Gamepad_RightTrigger',
+  Wheel_Brake: 'Gamepad_LeftTrigger',
+  Wheel_Clutch: 'Gamepad_LeftStickY',
+  Wheel_Handbrake: 'Gamepad_RightStickY',
+};
+
 function FixIcon(
   mode: proto.FaceButtonMappingMode,
   subtype: proto.SubType,
@@ -2048,6 +2083,10 @@ function FixIcon(
     if (calcLabel === 'Gamepad_DpadDown') {
       calcLabel = 'GuitarHeroGuitar_StrumDown';
     }
+  }
+  // No wheel art either, so show the gamepad axis each wheel axis is sent on
+  if (icon && calcLabel in WHEEL_ICONS) {
+    calcLabel = WHEEL_ICONS[calcLabel];
   }
   // No GHL art of its own, so borrow the GH guitar icons where one fits
   if (
@@ -4105,6 +4144,8 @@ function SantrollerMapping({
     proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
     proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
     proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+    proto.WheelAxisType[mapping.mapping.wheelAxis ?? -1] ||
+    proto.WheelButtonType[mapping.mapping.wheelButton ?? -1] ||
     (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
     (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
     proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
@@ -4151,8 +4192,11 @@ function SantrollerMapping({
     mapping.mapping.midiControl != null ||
     mapping.mapping.midiPitchBend != null ||
     Object.entries(mapping.mapping).find(([k, v]) => k.endsWith('Axis') && v);
-  // pitch bend rests in the middle like a stick does
-  const stick = (axis && label?.includes('Stick')) || mapping.mapping.midiPitchBend != null;
+  // pitch bend and steering rest in the middle like a stick does
+  const stick =
+    (axis && label?.includes('Stick')) ||
+    mapping.mapping.midiPitchBend != null ||
+    mapping.mapping.wheelAxis === proto.WheelAxisType.Wheel_Steering;
   const triggerAxis = !!axis && calibratesAsTrigger(mapping);
   // a trigger's deadzone is a distance from min, so it can't be more than the travel
   const deadzoneMax = triggerAxis ? Math.abs((mapping.max ?? 0) - (mapping.min ?? 0)) : 65535;
@@ -5510,6 +5554,8 @@ function SantrollerLed({
           proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
           proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
           proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+          proto.WheelAxisType[mapping.mapping.wheelAxis ?? -1] ||
+          proto.WheelButtonType[mapping.mapping.wheelButton ?? -1] ||
           (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
           (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
           proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||
@@ -5636,6 +5682,8 @@ function SantrollerLed({
       proto.ProGuitarAxisType[mapping.mapping.proAxis ?? -1] ||
       proto.DJHTurntableButtonType[mapping.mapping.djhButton ?? -1] ||
       proto.DJHTurntableAxisType[mapping.mapping.djhAxis ?? -1] ||
+      proto.WheelAxisType[mapping.mapping.wheelAxis ?? -1] ||
+      proto.WheelButtonType[mapping.mapping.wheelButton ?? -1] ||
       (mapping.mapping.proKeyMultiple != null ? 'ProKeyboard_Keys' : undefined) ||
       (mapping.mapping.proKeySingle != null ? 'ProKeyboard_Key' : undefined) ||
       proto.ProKeyboardAxisType[mapping.mapping.proKeyboardAxis ?? -1] ||

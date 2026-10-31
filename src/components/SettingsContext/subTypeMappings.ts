@@ -30,6 +30,8 @@ const INSTRUMENT_OUTPUTS: Partial<Record<OutputKey, proto.SubType[]>> = {
   proKeyMultiple: [proto.SubType.ProKeys, proto.SubType.KeyboardMania],
   proKeyboardAxis: [proto.SubType.ProKeys],
   proKeyboardButton: [proto.SubType.ProKeys],
+  wheelAxis: [proto.SubType.Wheel],
+  wheelButton: [proto.SubType.Wheel],
 };
 
 function setOutputKey(output: proto.IOutput | null | undefined): OutputKey | undefined {
@@ -65,6 +67,33 @@ function convertGuitarFamily(m: proto.IMapping, subType: proto.SubType): proto.I
   return m;
 }
 
+// The gamepad axes a wheel sends its steering and pedals on, see the firmware's WheelAxisMapping
+const WHEEL_GAMEPAD_AXES: [proto.WheelAxisType, proto.GamepadAxisType][] = [
+  [proto.WheelAxisType.Wheel_Steering, proto.GamepadAxisType.Gamepad_LeftStickX],
+  [proto.WheelAxisType.Wheel_Accelerator, proto.GamepadAxisType.Gamepad_RightTrigger],
+  [proto.WheelAxisType.Wheel_Brake, proto.GamepadAxisType.Gamepad_LeftTrigger],
+];
+
+/**
+ * Swaps a gamepad axis for the wheel axis sent on it when the output is for a wheel, and a wheel
+ * axis back to its gamepad axis for anything else. Both calibrate the same way (the steering is
+ * centred, pedals rest at 0). The clutch and handbrake have no gamepad equivalent, so they are
+ * left as they are, to be dropped. Any other output is returned unchanged.
+ */
+export function convertWheelOutput(output: proto.IOutput, subType: proto.SubType): proto.IOutput {
+  if (subType === proto.SubType.Wheel) {
+    const pair = WHEEL_GAMEPAD_AXES.find(([, gamepadAxis]) => gamepadAxis === output.gamepadAxis);
+    return pair ? { wheelAxis: pair[0] } : output;
+  }
+  const pair = WHEEL_GAMEPAD_AXES.find(([wheelAxis]) => wheelAxis === output.wheelAxis);
+  return pair ? { gamepadAxis: pair[1] } : output;
+}
+
+function convertWheelAxes(m: proto.IMapping, subType: proto.SubType): proto.IMapping {
+  const mapping = m.mapping && convertWheelOutput(m.mapping, subType);
+  return mapping === m.mapping ? m : { ...m, mapping };
+}
+
 function suitsSubType(m: proto.IMapping, subType: proto.SubType | null | undefined): boolean {
   const key = setOutputKey(m.mapping);
   const allowed = key && INSTRUMENT_OUTPUTS[key];
@@ -85,7 +114,7 @@ export function remapMappingsForSubType(
     return profile.mappings;
   }
   return profile.mappings
-    .map((m) => (subType != null ? convertGuitarFamily(m, subType) : m))
+    .map((m) => (subType != null ? convertWheelAxes(convertGuitarFamily(m, subType), subType) : m))
     .filter((m) => suitsSubType(m, subType));
 }
 

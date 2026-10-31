@@ -15,12 +15,24 @@ describe('inputDetection', () => {
       axes: false,
     });
     expect(
-      detectInputRequest(proto.InputDetectKind.DetectUsb, 1, true, proto.SubType.Wheel)
+      detectInputRequest(proto.InputDetectKind.DetectUsb, 1, true, proto.SubType.FlightStick)
     ).toBeUndefined();
     // GH drum pads are all axes, so there's nothing to find from a button mapping
     expect(
       detectInputRequest(proto.InputDetectKind.DetectUsb, 1, false, proto.SubType.GuitarHeroDrums)
     ).toBeUndefined();
+  });
+
+  it('looks for wheel axes and gamepad buttons on a wheel', () => {
+    const request = detectInputRequest(
+      proto.InputDetectKind.DetectBluetooth,
+      1,
+      true,
+      proto.SubType.Wheel
+    )!;
+    expect(request.buttonField).toBe('gamepadButton');
+    expect(request.axisField).toBe('wheelAxis');
+    expect(detectInputCommand(request).axisOutput).toBe(43);
   });
 
   it('sends the Output field tags and enum ranges', () => {

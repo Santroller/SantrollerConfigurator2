@@ -27,6 +27,8 @@ export function calibratesAsTrigger(mapping: proto.IMapping): boolean {
     output.ghDrumAxis != null ||
     output.rbDrumAxis != null ||
     output.ghaAxis != null ||
+    // everything on a wheel but the steering is a pedal or lever
+    (output.wheelAxis != null && output.wheelAxis !== proto.WheelAxisType.Wheel_Steering) ||
     output.midiControl != null
   );
 }

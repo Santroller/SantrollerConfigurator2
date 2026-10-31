@@ -26,7 +26,8 @@ export type OutputEnumField =
   | 'dmButton'
   | 'kbmButton'
   | 'mouseButton'
-  | 'mouseAxis';
+  | 'mouseAxis'
+  | 'wheelAxis';
 
 const outputEnums: Record<OutputEnumField, Record<string, string | number>> = {
   gamepadButton: proto.GamepadButtonType,
@@ -54,6 +55,7 @@ const outputEnums: Record<OutputEnumField, Record<string, string | number>> = {
   kbmButton: proto.KeyboardManiaButtonType,
   mouseButton: proto.MouseButtonType,
   mouseAxis: proto.MouseAxisType,
+  wheelAxis: proto.WheelAxisType,
 };
 
 interface OutputFields {
@@ -69,6 +71,7 @@ const outputFieldsBySubType: Partial<Record<proto.SubType, OutputFields>> = {
   [proto.SubType.Dancepad]: { button: 'gamepadButton', axis: 'gamepadAxis' },
   [proto.SubType.Taiko]: { button: 'gamepadButton', axis: 'gamepadAxis' },
   [proto.SubType.StageKit]: { button: 'gamepadButton', axis: 'gamepadAxis' },
+  [proto.SubType.Wheel]: { button: 'gamepadButton', axis: 'wheelAxis' },
   [proto.SubType.GuitarHeroGuitar]: { button: 'ghButton', axis: 'ghAxis' },
   [proto.SubType.RockBandGuitar]: { button: 'rbButton', axis: 'rbAxis' },
   [proto.SubType.GuitarHeroDrums]: { axis: 'ghDrumAxis' },
