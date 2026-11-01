@@ -147,15 +147,15 @@ export function GuideCatalogPage() {
 
                 <div>
                   <Title order={3} size="h4" fw={600} mb={4}>
-                    {t(`guides.${guide.id}.title`, guide.title)}
+                    {guide.title}
                   </Title>
                   <Text size="xs" c="dimmed" lineClamp={2}>
-                    {t(`guides.${guide.id}.subtitle`, guide.subtitle)}
+                    {guide.subtitle}
                   </Text>
                 </div>
 
                 <Text size="xs" lineClamp={3} c="dimmed">
-                  {t(`guides.${guide.id}.description`, guide.description)}
+                  {guide.description}
                 </Text>
               </Stack>
 
@@ -167,7 +167,7 @@ export function GuideCatalogPage() {
                 style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
               >
                 <Text size="xs" c="dimmed">
-                  {t(`guides.${guide.id}.estimatedTime`, guide.estimatedTime)}
+                  {guide.estimatedTime}
                 </Text>
 
                 <Button

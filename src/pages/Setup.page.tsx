@@ -5,15 +5,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { GuideStepNav } from '@/guides/components/GuideStepNav';
-import { getLocalizedGuide } from '@/guides/registry';
-import { SETUP_GUIDE } from '@/guides/setup/setupGuide';
+import { GuideStepNav, topLevelPosition } from '@/guides/components/GuideStepNav';
+import { getLocalizedGuide, GUIDE_REGISTRY } from '@/guides/registry';
+import { getSetupGuide, withBuildGuide } from '@/guides/setup/setupGuide';
+import { useSetupPath } from '@/guides/setup/setupPath';
 import { useGuideSteps } from '@/guides/useGuideSteps';
 
 export function SetupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const guide = useMemo(() => getLocalizedGuide(SETUP_GUIDE, t), [t]);
+  const path = useSetupPath((state) => state.path);
+  const build = useSetupPath((state) => state.build);
+  const guide = useMemo(() => {
+    const buildGuide = path === 'fresh' && build ? GUIDE_REGISTRY[build] : undefined;
+    return withBuildGuide(
+      getLocalizedGuide(getSetupGuide(path, build), t),
+      buildGuide && getLocalizedGuide(buildGuide, t),
+      build ? t(`guides.setup.build.names.${build}`, '') || undefined : undefined
+    );
+  }, [t, path, build]);
   // A controller that came from a seller is already configured and mapped. Sellers setting
   // up their own devices don't need telling.
   const sellerName = useConfigStore((state) => state.toolInfo?.name);
@@ -44,7 +54,7 @@ export function SetupPage() {
 
             <Group gap="xs" align="center">
               <Text size="xs" c="dimmed">
-                {t('guides.stepOf', { current: activeStep + 1, total: guide.steps.length })}
+                {t('guides.stepOf', topLevelPosition(guide.steps, activeStep))}
               </Text>
               <Button
                 variant="light"

@@ -113,52 +113,50 @@ export function InputTestRow({
       }}
     >
       <Stack gap={6}>
-        <Group justify="space-between" wrap="nowrap" align="center">
-          <Group gap="xs" wrap="nowrap">
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: isPressed
-                  ? `var(--mantine-color-${color}-filled, var(--mantine-color-blue-filled))`
-                  : 'var(--mantine-color-default-border)',
-                flexShrink: 0,
-                transition: 'background-color 0.1s ease',
-              }}
-            />
+        {/* The name gets a line of its own, so it's never squeezed by the pin picker */}
+        <Group gap="xs" wrap="nowrap" align="center">
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              backgroundColor: isPressed
+                ? `var(--mantine-color-${color}-filled, var(--mantine-color-blue-filled))`
+                : 'var(--mantine-color-default-border)',
+              flexShrink: 0,
+              transition: 'background-color 0.1s ease',
+            }}
+          />
+          <Text fw={500} size="sm">
+            {label}
+          </Text>
+          {recommendedPin !== undefined && (
+            <Badge
+              size="xs"
+              variant={isRecommendedMatched ? 'filled' : 'subtle'}
+              color={isRecommendedMatched ? 'teal' : 'gray'}
+              style={{ fontFamily: 'monospace', flexShrink: 0 }}
+            >
+              GP{recommendedPin}
+            </Badge>
+          )}
+        </Group>
 
-            <div>
-              <Group gap={6} align="center">
-                <Text fw={500} size="sm">
-                  {label}
-                </Text>
-                {recommendedPin !== undefined && (
-                  <Badge
-                    size="xs"
-                    variant={isRecommendedMatched ? 'filled' : 'subtle'}
-                    color={isRecommendedMatched ? 'teal' : 'gray'}
-                    style={{ fontFamily: 'monospace' }}
-                  >
-                    GP{recommendedPin}
-                  </Badge>
-                )}
-              </Group>
+        <Group justify="space-between" wrap="wrap" align="center" gap="xs">
+          {/* Lines up under the name, past the status dot */}
+          <Text size="xs" c={isPressed ? 'blue' : 'dimmed'} pl={20}>
+            {isPressed
+              ? t('guides.activePressed')
+              : currentPin >= 0
+                ? t('guides.assignedTo', { pin: currentPin })
+                : t('guides.unassigned')}
+          </Text>
 
-              <Text size="xs" c={isPressed ? 'blue' : 'dimmed'}>
-                {isPressed
-                  ? t('guides.activePressed')
-                  : currentPin >= 0
-                    ? t('guides.assignedTo', { pin: currentPin })
-                    : t('guides.unassigned')}
-              </Text>
-            </div>
-          </Group>
-
-          <Group gap={6} wrap="nowrap">
+          <Group gap={6} wrap="nowrap" ml="auto">
             <Select
               size="xs"
-              w={105}
+              // Fits the placeholder and the longest label (GP28 (ADC2)) beside the chevron
+              w={130}
               placeholder={t('guides.selectPin')}
               data={pinOptions}
               value={currentPin >= 0 ? String(currentPin) : null}

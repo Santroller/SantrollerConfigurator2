@@ -49,10 +49,10 @@ export function GuidePage() {
 
           <div>
             <Title order={1} size="h3" fw={700}>
-              {t(`guides.${guide.id}.title`, guide.title)}
+              {guide.title}
             </Title>
             <Text size="sm" c="dimmed" mt={2}>
-              {t(`guides.${guide.id}.subtitle`, guide.subtitle)}
+              {guide.subtitle}
             </Text>
           </div>
         </Stack>

@@ -1,13 +1,4 @@
 import React from 'react';
-import { ConfigState } from '@/components/SettingsContext/SettingsContext';
-
-export interface RecommendedPin {
-  pin: number;
-  physicalPin?: number;
-  label: string;
-  type: 'digital' | 'analog' | 'i2c' | 'power' | 'ground';
-  color?: string;
-}
 
 export interface GuideStepProps {
   onNext?: () => void;
@@ -16,28 +7,35 @@ export interface GuideStepProps {
   isLastStep?: boolean;
 }
 
-export interface GuideStep {
+// A step as a guide defines it. Its text comes from the translations, under
+// guides.<guide id>.steps.<step id>
+export interface GuideStepSource {
   id: string;
+  render: React.ComponentType<GuideStepProps>;
+}
+
+export interface GuideStep extends GuideStepSource {
   title: string;
   shortTitle: string;
   description: string;
-  badge?: string;
-  recommendedPins?: RecommendedPin[];
-  render: React.ComponentType<GuideStepProps>;
-  isVerified?: (state: ConfigState) => boolean;
+  // The guide this step comes from, when it runs inside another one
+  group?: string;
 }
 
 export type GuideCategory = 'guitar' | 'drums' | 'adapters' | 'turntable' | 'mods';
 
-export interface GuideDefinition {
+// A guide as it's defined. Its text comes from the translations, under guides.<id>
+export interface GuideSource {
   id: string;
+  category: GuideCategory;
+  steps: GuideStepSource[];
+}
+
+// A guide with its text filled in from the translations
+export interface GuideDefinition extends Omit<GuideSource, 'steps'> {
   title: string;
   subtitle: string;
   description: string;
-  category: GuideCategory;
   estimatedTime: string;
-  badge?: string;
-  featured?: boolean;
-  supplies?: string[];
   steps: GuideStep[];
 }

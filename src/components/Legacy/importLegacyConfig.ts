@@ -354,6 +354,10 @@ function remapProfileDeviceIds(profile: proto.IProfile, remap: (id: number) => n
   };
 }
 
+// Santroller 1 named exported configs after the board ("." + board + "config"), so a Pico W or
+// Pico 2 config isn't a .picoconfig
+export const LEGACY_CONFIG_ACCEPT = '.picoconfig,.picowconfig,.pico2config,.pico2wconfig';
+
 // Converts several Santroller 1 .picoconfig files into one config, with a profile for each. A
 // device that more than one of them set up the same way is shared, the rest are given new ids.
 export function importLegacyConfigs(

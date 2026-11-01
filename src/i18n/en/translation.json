@@ -966,21 +966,9 @@
         "title": "Map your inputs",
         "body": "In the <strong>Inputs</strong> section, click <strong>Add Input</strong>, choose where the input comes from and set its <strong>Target Output</strong>. <strong>Detect Pin</strong> finds a pin for you when you press or move the control. For analog inputs such as whammy or tilt, open <strong>Axis Calibration</strong> and use <strong>Use current value</strong> to set the min, max and centre while watching the live value."
       },
-      "assignments": {
-        "title": "Check the assignments",
-        "body": "The <strong>Assignments</strong> section controls when this profile is used. The wizard adds one for you; use <strong>Add Assignment</strong> for more, such as a Bluetooth or console-specific profile. A profile with no assignment is never used."
-      },
       "leds": {
         "title": "Set up LEDs (optional)",
         "body": "If you added an LED device, use <strong>Add LED / Display Mapping</strong> in the <strong>LEDs & Displays</strong> section to link LEDs to inputs and choose colours. <strong>Test All LEDs</strong> confirms the wiring and LED order."
-      },
-      "standby": {
-        "title": "Standby profile (optional)",
-        "body": "A standby profile sets what the controller does when it isn't in use. Click <strong>Add standby profile</strong> under <strong>Profiles</strong> in the sidebar. Its LEDs light up while no other profile is active, like when the controller isn't plugged into anything or is only charging. Turn on <strong>Also light up while the console or PC is asleep</strong> to have them light up then too."
-      },
-      "standbyWake": {
-        "title": "Wake a sleeping console or PC (optional)",
-        "body": "The controller only wakes up a sleeping console or PC with the standby profile's <strong>Wake-up buttons</strong>. Without any, it won't wake it at all. If a button is on a controller plugged into this device (like a USB guitar), add that controller under <strong>Connected controllers</strong> first."
       },
       "save": {
         "title": "Save changes",
@@ -989,6 +977,18 @@
       "backup": {
         "title": "Back up your config",
         "body": "On the main page, <strong>Export Current Config</strong> downloads your settings as a file. <strong>Load Config from File</strong> restores it later, including onto another board. Bluetooth pairings aren't included."
+      },
+      "santroller1Import": {
+        "title": "Import your settings",
+        "body": "Click <strong>Import Santroller 1 Config</strong> and pick every file you exported, all at once. Each file becomes a profile, and hardware they share, like a Wii extension or LEDs, is only added once. The same button is on the main page."
+      },
+      "santroller1Warnings": {
+        "title": "Check what didn't come across exactly",
+        "body": "A few Santroller 1 settings don't have an exact match in Santroller 2. Anything that didn't import exactly is listed below and on the main page, so you know what to set up by hand."
+      },
+      "santroller1Check": {
+        "title": "Check the result",
+        "body": "Your hardware is now on the <strong>Devices</strong> page rather than inside the config, and each file you imported is a profile. Open a profile to check its inputs. If you held a button while plugging in to pick a console mode, or had a Fortnite Festival mode, that's now a separate profile with an assignment that matches while the button is held. The next step explains how that works."
       }
     },
     "links": {
@@ -1034,164 +1034,272 @@
     },
     "santroller1": {
       "title": "Coming from Santroller 1?",
-      "body": "If your Pico is already running Santroller 1, you don't need to hold BOOTSEL. Connect to it in Santroller 1 and click \"Revert Device to Arduino\", which puts the Pico into bootloader mode so the RPI-RP2 or RP2350 drive shows up. If you want to bring your config with you, make sure you export your presets from Santroller 1. You can then import the .picoconfig files into Santroller 2."
+      "flash": "In the Santroller 1 configurator, click <strong>Revert Device to Arduino</strong>. The Pico restarts into its bootloader and a drive called <strong>RPI-RP2</strong> or <strong>RP2350</strong> shows up, with no need to hold BOOTSEL. Download the UF2 for your chip (<strong>Pico 1 / RP2040</strong> or <strong>Pico 2 / RP2350</strong>) and drag it onto that drive. The board restarts by itself when the copy finishes.",
+      "export": {
+        "warningTitle": "Do this before flashing",
+        "warning": "Santroller 2 can't read your settings off the board, so the exported files are the only way to bring them across. Export them while the board is still running Santroller 1.",
+        "body": "Open the Santroller 1 configurator and connect to your controller, then open the <strong>Presets</strong> section, just below <strong>Controller Poll Settings</strong>:",
+        "markers": {
+          "export": {
+            "title": "Export Current Settings to File",
+            "body": "Saves the settings your controller is using now. Each file starts out named <strong>controller</strong>, so give it a name you'll recognise. In Santroller 2 the file name becomes the profile's name."
+          },
+          "pick": {
+            "title": "Presets",
+            "body": "If you saved other presets, pick one here. Skip this and the next one if you never made any."
+          },
+          "load": {
+            "title": "Load Settings from…",
+            "body": "Loads that preset into the configurator. Then click <strong>Export Current Settings to File</strong> again and save it under a new name. Do this for each preset, and each file becomes its own profile in Santroller 2."
+          }
+        },
+        "files": "The file ends in <strong>.picoconfig</strong> on a Pico, or <strong>.picowconfig</strong>, <strong>.pico2config</strong> or <strong>.pico2wconfig</strong> on a Pico W, Pico 2 or Pico 2 W.",
+        "wiring": "Your wiring stays as it is, so there's nothing to change on the hardware."
+      },
+      "sketch": {
+        "addSetting": "Add Setting",
+        "saveSettings": "Save Settings",
+        "loadDefaults": "Load Defaults",
+        "configureAll": "Configure All Inputs",
+        "revert": "Revert Device to Arduino",
+        "backToMenu": "Back to main menu",
+        "controllerSettings": "Controller Settings",
+        "pollSettings": "Controller Poll Settings",
+        "presets": "Presets",
+        "ledSettings": "LED Settings",
+        "importSettings": "Import Settings from File",
+        "exportSettings": "Export Current Settings to File",
+        "createPreset": "Create Preset",
+        "loadPreset": "Load Preset",
+        "deletePreset": "Delete Preset",
+        "presetName": "Rock Band setup",
+        "loadFrom": "Load Settings from {{name}}",
+        "deleteNamed": "Delete {{name}}"
+      },
+      "import": {
+        "replaces": "Importing replaces whatever is on the controller now, so do it before changing anything else."
+      },
+      "overview": {
+        "intro": "Most of what's new replaces something you already know, so each card also says what it replaces from Santroller 1.",
+        "firmware": "In Santroller 1, every change meant building a new firmware and flashing it. Now the firmware stays the same and your settings are sent to it, so a change works as soon as you make it. It's only kept once you click <strong>Save changes</strong>, though.",
+        "devices": "In Santroller 1, hardware like a Wii extension, USB host or LEDs was set up inside your one config. Now it's added once on the <strong>Devices</strong> page, and every profile can use it.",
+        "profiles": "A Santroller 1 config is roughly one profile: the controller type, its bindings and its LEDs. You can now keep several on one controller and switch between them without re-flashing.",
+        "assignments": "These replace holding a button while plugging in to pick a console mode. That still works, as one kind of assignment, but a profile can also be picked by USB or Bluetooth, by console, or by what's plugged in, like which guitar is in an adapter.",
+        "more": "See everything that changed"
+      },
+      "save": "Santroller 1 only changed anything once you saved and it re-flashed. Here, edits work straight away but are lost when the controller restarts unless you click <strong>Save changes</strong>."
+    },
+    "standby": {
+      "intro": "A standby profile sets what the controller does when it isn't in use: its LEDs light up while no other profile is active, like when it isn't plugged into anything or is only charging, and it picks the buttons that wake a sleeping console or PC. It's optional, and there's only ever one.",
+      "added": "It's at the bottom of Profiles in the sidebar.",
+      "mock": {
+        "wakeInput": "Start",
+        "ledRow": "Breathes slowly in blue"
+      },
+      "parts": {
+        "whileSuspended": "Normally the LEDs go dark while the console or PC is asleep. Turn this on to light the standby LEDs then too, but keep it to a few, as a sleeping console gives out very little power.",
+        "controllers": "Add the same connected controllers your other profiles use, like a Wii guitar, so their buttons can light LEDs or wake the console. Buttons wired straight to the board work without this.",
+        "wake": "Only these buttons wake a sleeping console or PC. Without any, the controller won't wake it at all.",
+        "leds": "Works like any other profile's LEDs, but only input, pattern, static and status LEDs light up here, as there's no game or console to drive the rest."
+      }
+    },
+    "layout": {
+      "intro": "The configurator is split into two halves: settings for the board itself, and the profiles it can act as. Once you know which half something belongs to, it's easy to find.",
+      "mock": {
+        "page": "The page you picked opens here",
+        "profileBluetooth": "Wii Guitar (Bluetooth)",
+        "profileWii": "Wii Guitar",
+        "ledRow": "Lights up green while Green Fret is held"
+      },
+      "regions": {
+        "save": {
+          "title": "Save changes",
+          "body": "Appears at the top once you've changed something. Edits work on the controller straight away, but only <strong>Save changes</strong> keeps them. <strong>Discard changes</strong> goes back to what was last saved."
+        },
+        "main": {
+          "title": "Main",
+          "body": "Connecting, firmware updates, exporting and loading config files, importing Santroller 1 configs, and switching between Simple and Advanced mode."
+        },
+        "board": {
+          "title": "The board",
+          "body": "<strong>Devices</strong>, <strong>Pin Labels</strong> and <strong>Debug</strong> are about the board itself, so they're the same whichever profile is in use. Devices is where you say what hardware is attached, and Debug has the firmware's logs and a MIDI monitor."
+        },
+        "profiles": {
+          "title": "Profiles",
+          "body": "Everything the controller can act as. Click one to edit it. <strong>Active</strong> means its assignments match right now, so it's the one being used. The buttons next to each profile move it up or down, copy it or delete it, and the order matters when more than one could match."
+        },
+        "docs": {
+          "title": "Documentation",
+          "body": "This guide, the build guides, supported hardware and console compatibility. These work without a controller connected."
+        }
+      },
+      "profilePage": {
+        "title": "Inside a profile",
+        "intro": "Clicking a profile opens one long page with four sections, from top to bottom. Here's one for a Wii guitar plugged into the board's Wii extension port:",
+        "sections": {
+          "settings": "The profile's name and the controller type it emulates, under <strong>Device to emulate</strong>.",
+          "assignments": "When this profile is used, and which connected controllers it reads from. This rule says: use this profile over USB while a Wii guitar is plugged in. Adding the Wii guitar here gives it a slot, <strong>Slot 1</strong>.",
+          "inputs": "What each button and axis does: where it comes from, and what it sends. These read from <strong>Slot 1</strong>, the Wii guitar from the rule above, which is why Assignments comes first. Buttons wired straight to the board's pins don't need a slot.",
+          "leds": "What the lights and displays show, if you added any."
+        }
+      },
+      "keyIdea": {
+        "title": "Board or profile?",
+        "body": "If it's about the hardware wired to the board, it's under <strong>Devices</strong>. If it's about what the controller does, it's in a <strong>profile</strong>."
+      }
     }
   },
   "assignmentsGuide": {
-    "subtitle": "Santroller 2 can hold many profiles. Assignments are the rules that decide which profiles are active, what each one talks to, and which connected controllers it reads from.",
+    "subtitle": "Assignments are the rules that decide when each profile is used.",
     "openProfiles": "Go to Profiles",
-    "summary": {
-      "title": "The short version",
-      "rules": {
-        "title": "A profile is only used when one of its rules matches",
-        "body": "Each profile has one or more <strong>rules</strong>. A profile with no rules is never used, and a profile whose rules don't match right now sits idle until they do."
-      },
-      "and": {
-        "title": "Everything in a rule must be true",
-        "body": "A rule is a list of conditions, such as <strong>USB</strong> and <strong>a Wii guitar is plugged into the adapter</strong>. The rule only matches when all of them are true at once."
-      },
-      "or": {
-        "title": "Any one rule is enough",
-        "body": "Extra rules are alternatives, shown with <strong>OR</strong> between them. The first rule that matches is used and the rest are ignored."
-      },
-      "claim": {
-        "title": "A matching profile claims what it uses",
-        "body": "When a rule matches, its profile claims the connected controllers in that rule and any <strong>Bluetooth</strong> or console port it outputs to. Nothing else can use a claimed device, so profiles higher in the sidebar get first pick. <strong>USB</strong> output is the exception: any number of profiles can share it."
-      },
-      "pins": {
-        "title": "Board pins don't need assigning",
-        "body": "Buttons, sensors and peripherals wired directly to the board are available to every profile unless a profile claims them with <strong>Claim directly wired inputs</strong>. Only external controllers and adapters need to be added to a rule."
-      }
-    },
-    "anatomy": {
-      "title": "What goes in a rule",
-      "description": "Every rule on the Profiles page is a card with the same three steps. A rule needs at least one condition, and the target connection is the one almost every rule has.",
-      "target": {
-        "body": "How this device presents itself to the console or PC: <strong>USB</strong>, <strong>Bluetooth</strong>, the <strong>PS1/2 port</strong>, a <strong>Wii extension</strong>, the <strong>GameCube / N64 port</strong> or the <strong>SNES / NES port</strong>. Bluetooth needs a board with Bluetooth, and the console port targets only match once a console is actually talking to the device on that port."
-      },
-      "source": {
-        "body": "An external controller this profile reads from: a Wii extension, a PS1/2 controller, a USB or Bluetooth controller (by type or a specific device), or a MIDI channel. The rule only matches while a matching controller is connected and no other profile has claimed it, and each one gets a <strong>slot number</strong> that your inputs use to read from it."
-      },
-      "trigger": {
-        "body": "An optional button condition, either <strong>held at startup</strong> or <strong>pressed any time</strong>. Use it to switch between profiles from the controller itself."
-      },
-      "exampleTitle": "Example: a profile with two rules",
-      "exampleCaption": "This profile is used over USB when a Wii guitar is plugged in, or over Bluetooth with no Wii guitar needed. Here a Wii guitar is plugged in over USB, so Rule #1 shows as matching. If both could match, Rule #1 wins because it comes first. The bar at the top of each card sums up the whole rule."
-    },
-    "multiSource": {
-      "title": "Several controllers in one rule",
-      "description": "A rule can list more than one connected controller. The profile then reads from all of them at once, and you can map each input from whichever controller suits it best.",
-      "exampleTitle": "Example: MIDI drum kit with a gamepad for navigation",
-      "exampleIntro": "An electronic drum kit is great for playing but has no way to press Start or move through menus. Put the kit and a USB gamepad in the same rule, and the console sees one drum controller that gets its pads from the kit and its buttons from the gamepad.",
-      "mappingTitle": "Then map your inputs from the matching slot",
-      "mappingMidi": "<strong>Drum pads and cymbals</strong> come from <strong>{{slot}}</strong>, using the kit's note numbers.",
-      "mappingGamepad": "<strong>Start, Select, Home and the D-pad</strong> come from <strong>{{slot}}</strong>.",
-      "notesTitle": "Things to know",
-      "notes": {
-        "allRequired": "Every controller in a rule has to be connected and unclaimed for it to match, which is why Rule #2 is there. Slot numbers are shared between rules, so your pad mappings keep working whichever rule matched.",
-        "midiSeen": "A MIDI channel only counts as connected once the kit has sent something on it. After plugging in, hit a pad and the profile will pick it up.",
-        "hub": "Two USB devices on the host port need a USB hub. If your kit has a 5-pin MIDI output, you can use a MIDI DIN input instead and leave the USB port free for the gamepad.",
-        "anyCombo": "The same idea works with any mix of sources, such as a Wii guitar with a USB gamepad for navigation."
-      },
-      "exampleCaption": "Rule #2 is optional. It lets the kit work on its own when the gamepad isn't plugged in."
-    },
-    "selection": {
-      "title": "How profiles get chosen",
-      "description": "Assignments are re-checked whenever the device starts, a controller is plugged in or unplugged, the console mode changes, or an any-time trigger is pressed.",
-      "steps": {
-        "order": {
-          "title": "Profiles are checked from top to bottom",
-          "body": "Each profile tries its rules in order and uses the first one that matches. Profile order is the order they appear in the sidebar."
+    "rule": {
+      "title": "A rule is one sentence",
+      "lead": "Use this profile when",
+      "and": "and",
+      "triggerExample": "{{button}} is held at startup",
+      "triggerButton": "Green Fret",
+      "parts": {
+        "target": {
+          "title": "How it connects",
+          "body": "<strong>USB</strong>, <strong>Bluetooth</strong> or a console port. Almost every rule has one."
         },
-        "exclusive": {
-          "title": "Bluetooth, PS1/2, Wii, GameCube / N64 and SNES / NES targets go to one profile",
-          "body": "Those ports can only act as one controller, so the first matching profile claims the port. Later profiles that ask for the same target won't match while it's claimed."
+        "source": {
+          "title": "What's plugged into it (optional)",
+          "body": "A controller plugged into the board, like a Wii guitar or a USB drum kit. The rule only matches while it's plugged in, and adding it here is what lets the profile's inputs read from it."
         },
-        "usb": {
-          "title": "USB can be shared",
-          "body": "Every profile whose rule matches over USB becomes active at the same time, and the console or PC sees one controller per profile on the same cable. This is how a single board can act as several players, but it also means two profiles with plain USB rules will <strong>both</strong> show up."
+        "trigger": {
+          "title": "A button (optional)",
+          "body": "Held as the controller starts up, or pressed at any time, to switch to this profile from the controller itself."
         },
         "claim": {
-          "title": "Each connected controller is claimed by one profile",
-          "body": "When a rule matches, its profile claims the controllers it used, and a claimed controller can't be read by any other profile. If more identical controllers are still unclaimed, the same profile is used again for each of them, so two USB guitars through a hub give you two players from one profile."
-        },
-        "localInputs": {
-          "title": "Directly wired inputs can be claimed too",
-          "body": "Turn on <strong>Claim directly wired inputs</strong> in a rule and it claims the buttons and sensors wired to this board, so it only matches if no profile above it has already claimed them. Use it when several profiles output the same inputs over different connections but only one should be active at a time. USB rules only match while a PC or console is connected, so a USB profile placed above a Bluetooth one takes over when plugged in and hands back to Bluetooth when running from a battery or charger."
+          "body": "Lets profiles that use the same wired buttons take turns, so only the highest one in the sidebar is used. The wizard turns it on when a profile has no connected controller, and it's off here because this rule reads from a Wii guitar. You'll rarely need to change it."
         }
-      }
-    },
-    "triggers": {
-      "title": "Console modes and triggers",
-      "headers": {
-        "option": "Option",
-        "behaviour": "What it does"
       },
-      "rows": {
-        "auto": {
-          "behaviour": "Matches on any console or PC, and the device works out which console it is plugged into. This is the right choice for most profiles."
-        },
-        "forced": {
-          "behaviour": "Skips console detection and always uses the chosen mode while this profile is active. If the configurator is open, the switch waits until you close it."
-        },
-        "specific": {
-          "behaviour": "Only matches once the device has detected that console. Use it for a profile that should only apply on, say, a PS3."
-        },
-        "boot": {
-          "behaviour": "Only matches if the button is held as the device starts up or changes console mode. The choice lasts until the next restart."
-        },
-        "anytime": {
-          "behaviour": "Pressing the button re-checks the assignments straight away with this rule matching, so you can switch profiles mid-session. The profile stays active until the next re-check."
-        },
-        "inverted": {
-          "behaviour": "Flips the button condition, so the rule matches when the button is <strong>not</strong> held. Pair it with a normal trigger to make an either-or switch."
-        }
-      }
+      "alsoOnCard": "Also on the card",
+      "caption": "On the Profiles page each rule is a card with these three parts in the same order. A profile can have several rules, and any one of them matching is enough."
     },
-    "slots": {
-      "title": "Slots",
-      "body": "Every connected controller or adapter you add to a profile gets a slot number, such as <strong>Slot 1: USB Host (Guitar)</strong>. When you map an input from an external controller, you pick the slot it comes from. Slot numbers are counted per kind of controller across the whole profile, so the same slot means the same controller whichever rule matched.",
-      "migrate": "Profiles made with older versions numbered slots separately in each rule. The Profiles page shows a <strong>Migrate slot numbering</strong> button for these, and it moves your inputs across for you."
+    "remember": {
+      "title": "Two things to remember",
+      "noRule": "A profile with no rule is never used.",
+      "pins": "Buttons and sensors wired straight to the board work in every profile. Only controllers plugged into the board go in a rule."
     },
     "recipes": {
-      "title": "Common setups",
+      "title": "Pick the setup closest to yours",
+      "fitTitle": "Setups that fit your {{name}}",
+      "otherTitle": "Other setups",
       "usb": {
         "title": "A plain USB controller",
         "body": "One profile with one rule: <strong>USB (Auto-detect)</strong>. Everything wired to the board's pins just works."
       },
       "adapter": {
         "title": "A Wii or PS1/2 adapter",
-        "body": "One rule with <strong>USB</strong> and the controller type as a connected controller, for example <strong>Wii Extension: Guitar</strong>. The adapter only works with the controller types your profiles list, so add another profile with <strong>Wii Extension: Drums</strong> if you want it to support drums, and one for each other controller type you want to use."
+        "body": "One rule with <strong>USB</strong> and the controller type, like <strong>Wii Extension: Guitar</strong>. Add a profile for each other type you want the adapter to take, such as drums."
       },
       "wiredWireless": {
         "title": "Different settings over USB and Bluetooth",
-        "body": "Make two profiles: one with a <strong>USB</strong> rule and one with a <strong>Bluetooth</strong> rule, and turn on <strong>Claim directly wired inputs</strong> in both. Put the USB profile first. While plugged into a PC or console the USB profile claims the inputs and Bluetooth stays off, and on a battery or charger the Bluetooth profile takes over. Without the toggle, both are active while plugged in and you'd get two controllers."
+        "body": "Two profiles, one with a <strong>USB</strong> rule and one with <strong>Bluetooth</strong>. Put the USB one first: it takes over while plugged in, and Bluetooth takes over on battery. They take turns because both have <strong>Claim directly wired inputs</strong> on, which the wizard does for profiles with no connected controller."
       },
       "festivalWired": {
         "title": "Holding a button at startup to change profiles (direct wired)",
-        "body": "For a guitar with everything wired to the board's pins, make a keyboard profile such as a Fortnite Festival layout and a normal guitar profile, and turn on <strong>Claim directly wired inputs</strong> in both. Put the keyboard profile first and give it <strong>Hold Button at Startup</strong>. Holding the button while plugging in makes the keyboard profile claim the inputs, so the guitar profile can't match and the PC only sees a keyboard. Plug in without holding it and the guitar profile claims them instead. The choice lasts until the guitar is unplugged."
+        "body": "Two profiles: put the keyboard one first and give it <strong>Hold Button at Startup</strong>. Hold the button while plugging in for the keyboard, or plug in normally for the guitar. Both need <strong>Claim directly wired inputs</strong> on, which the wizard does for you."
       },
       "festivalAdapter": {
         "title": "Holding a button at startup to change profiles (adapter)",
-        "body": "When the guitar comes through an adapter, such as a Wii guitar on a Wii adapter, add it as a connected controller to both profiles instead, for example <strong>Wii Extension: Guitar</strong>. Put the keyboard profile first with <strong>Hold Button at Startup</strong>, using a button on the guitar. Once the keyboard profile has claimed the adapter's controller, the guitar profile can't match. <strong>Claim directly wired inputs</strong> isn't needed here, since the inputs come from the adapter rather than the board's pins."
+        "body": "The same, but add the adapter's controller, like <strong>Wii Extension: Guitar</strong>, to both rules instead of claiming the wired inputs, and use a button on the guitar as the trigger."
       },
       "twoPlayers": {
         "title": "Two USB guitars through one board",
-        "body": "One profile with <strong>USB</strong> and <strong>USB Host (By Type): Guitar</strong>. Each guitar plugged in is claimed by its own copy of the profile, and the console sees two guitars."
+        "body": "One profile with <strong>USB</strong> and <strong>USB Host (By Type): Guitar</strong>. Each guitar plugged in gets its own copy of the profile, so the console sees two players."
       },
       "profileA": "Profile A",
       "profileB": "Profile B",
       "triggerButton": "Green Fret"
     },
-    "troubleshooting": {
-      "title": "When something doesn't show up",
-      "items": {
-        "noRule": "A profile with no rules, or no target connection, is never used. The Profiles page warns about both.",
-        "notConnected": "A rule with a connected controller only matches while that controller is plugged in, detected, and not claimed by a profile higher up the list. Check the Devices page to see what the board can see.",
-        "taken": "If a profile never activates over Bluetooth or a console port, a profile higher up the list probably claimed that port first.",
-        "duplicate": "If the PC sees more controllers than you expect, more than one profile matched over USB. Add a trigger or a connected-controller condition so only the one you want matches.",
-        "slotMissing": "If a controller doesn't appear when mapping an input, add it under Connected Controller / Adapter in that profile's rules first.",
-        "localInputs": "If a profile with Claim directly wired inputs turned on never activates, a profile higher up the list with the same toggle probably claimed the inputs first. Reorder them so the one you'd rather use comes first."
+    "santroller1": {
+      "parts": {
+        "target": "In Santroller 1 this was the console mode. It was worked out for you unless you held a button to force one, and here forcing a mode is an option on the connection.",
+        "source": "In Santroller 1 a Wii extension or USB host controller was part of your one config. Here the rule says which controller the profile reads from, and the profile only runs while it's plugged in.",
+        "trigger": "This is what the Santroller 1 startup button combos became."
+      },
+      "imported": {
+        "title": "What your Santroller 1 settings became",
+        "intro": "If you held buttons while plugging in to pick a console mode, your imported profile has a rule for each one, followed by the normal rule. A config that could be switched to PS3 mode looks like this:",
+        "button": "Blue Fret",
+        "notes": {
+          "order": "Rules are tried from the first one down, so the normal rule comes last. Plug in holding Blue Fret and the first rule matches, so it's forced into PS3 mode. Plug in normally and the second one does.",
+          "bluetooth": "If your controller used Bluetooth, each USB rule also got a <strong>Bluetooth</strong> copy right after it, so it's USB while plugged in and Bluetooth otherwise.",
+          "festival": "A Fortnite Festival mode became its own keyboard profile, above this one in the sidebar, with the same held-button rule."
+        }
+      }
+    },
+    "issues": {
+      "intro": "Most of the time assignments just work. Open whichever of these matches what you're seeing.",
+      "fixLabel": "Fix",
+      "twoControllers": {
+        "title": "Two controllers show up on the PC or console",
+        "body": "Every profile whose rule matches over <strong>USB</strong> is used at the same time, and each one shows up as its own controller. That's how one board can be several players, but it also means two plain USB rules give you two controllers.",
+        "fix": "Make the rules different so only one matches. Profiles from the wizard that only use wired buttons already have <strong>Claim directly wired inputs</strong> on, so the first one takes them; check it's on in both. Otherwise add a button trigger or a connected controller to one of them."
+      },
+      "notUsed": {
+        "title": "A profile never turns on",
+        "body": "Profiles are checked from the top of the sidebar down, and each uses the first of its rules that matches. A profile is skipped when:",
+        "causes": {
+          "noRule": "It has no rule, or a rule with no connection. The Profiles page warns about both.",
+          "notConnected": "A controller in its rule isn't plugged in or detected. The <strong>Devices</strong> page shows what the board can see.",
+          "taken": "A profile above it already took what it needs. <strong>Bluetooth</strong> and the console ports can only be one controller, each connected controller belongs to one profile, and <strong>Claim directly wired inputs</strong> can only be held by one. If you want two wired profiles running at once, turn it off in both."
+        },
+        "fix": "Move the profile you want above the one in its way, with the arrows next to it in the sidebar."
+      },
+      "missingController": {
+        "title": "A controller isn't in the list when mapping an input",
+        "body": "Every connected controller or adapter you add to a profile gets a slot number, such as <strong>Slot 1: USB Host (Guitar)</strong>. When you map an input from an external controller, you pick the slot it comes from. Slot numbers are counted per kind of controller across the whole profile, so the same slot means the same controller whichever rule matched.",
+        "fix": "Add it under <strong>Connected Controller / Adapter</strong> in one of the profile's rules first.",
+        "migrate": "Profiles made with older versions numbered slots separately in each rule. The Profiles page shows a <strong>Migrate slot numbering</strong> button for these, and it moves your inputs across for you."
+      },
+      "multiSource": {
+        "title": "Using two controllers as one, like a drum kit and a gamepad",
+        "description": "A rule can list more than one connected controller. The profile then reads from all of them at once, and you can map each input from whichever controller suits it best.",
+        "exampleTitle": "Example: MIDI drum kit with a gamepad for navigation",
+        "exampleIntro": "An electronic drum kit is great for playing but has no way to press Start or move through menus. Put the kit and a USB gamepad in the same rule, and the console sees one drum controller that gets its pads from the kit and its buttons from the gamepad.",
+        "mappingTitle": "Then map your inputs from the matching slot",
+        "mappingMidi": "<strong>Drum pads and cymbals</strong> come from <strong>{{slot}}</strong>, using the kit's note numbers.",
+        "mappingGamepad": "<strong>Start, Select, Home and the D-pad</strong> come from <strong>{{slot}}</strong>.",
+        "notesTitle": "Things to know",
+        "notes": {
+          "allRequired": "Every controller in a rule has to be connected and unclaimed for it to match, which is why Rule #2 is there. Slot numbers are shared between rules, so your pad mappings keep working whichever rule matched.",
+          "midiSeen": "A MIDI channel only counts as connected once the kit has sent something on it. After plugging in, hit a pad and the profile will pick it up.",
+          "hub": "Two USB devices on the host port need a USB hub. If your kit has a 5-pin MIDI output, you can use a MIDI DIN input instead and leave the USB port free for the gamepad.",
+          "anyCombo": "The same idea works with any mix of sources, such as a Wii guitar with a USB gamepad for navigation."
+        },
+        "exampleCaption": "Rule #2 is optional. It lets the kit work on its own when the gamepad isn't plugged in."
+      },
+      "triggers": {
+        "title": "Picking a console mode, or switching profiles with a button",
+        "recheck": "Rules are checked again when the controller starts, when something is plugged in or unplugged, when the console mode changes, or when an any-time button is pressed.",
+        "headers": {
+          "option": "Option",
+          "behaviour": "What it does"
+        },
+        "rows": {
+          "auto": {
+            "behaviour": "Matches on any console or PC, and the device works out which console it is plugged into. This is the right choice for most profiles."
+          },
+          "forced": {
+            "behaviour": "Skips console detection and always uses the chosen mode while this profile is active. If the configurator is open, the switch waits until you close it."
+          },
+          "specific": {
+            "behaviour": "Only matches once the device has detected that console. Use it for a profile that should only apply on, say, a PS3."
+          },
+          "boot": {
+            "behaviour": "Only matches if the button is held as the device starts up or changes console mode. The choice lasts until the next restart."
+          },
+          "anytime": {
+            "behaviour": "Pressing the button re-checks the assignments straight away with this rule matching, so you can switch profiles mid-session. The profile stays active until the next re-check."
+          },
+          "inverted": {
+            "behaviour": "Flips the button condition, so the rule matches when the button is <strong>not</strong> held. Pair it with a normal trigger to make an either-or switch."
+          }
+        }
       }
     }
   },
@@ -3078,7 +3186,7 @@
       }
     },
     "direct-pico-guitar": {
-      "title": "Direct-Wired Guitar (Raspberry Pi Pico)",
+      "title": "Direct-Wired Guitar",
       "subtitle": "Interactive Wiring & Configuration Walkthrough",
       "description": "Step-by-step interactive build guide for rewiring any Guitar Hero or Rock Band guitar with mechanical or original switches to a Raspberry Pi Pico or Pico 2.",
       "badge": "Mechanical / Direct Wire",
@@ -3580,7 +3688,7 @@
       }
     },
     "drum-kit": {
-      "title": "Drum Kit & E-Drums (Piezo & Multiplexer)",
+      "title": "Direct-Wired Drum Kit",
       "subtitle": "Velocity-Sensitive Drum Kit with Multiplexers",
       "description": "Build a custom velocity-sensitive electronic drum kit or rewire an existing Rock Band or Guitar Hero kit to a Raspberry Pi Pico.",
       "badge": "Velocity Sensing",
@@ -4906,6 +5014,31 @@
           "shortTitle": "Overview",
           "description": "How the firmware, devices, profiles and assignments fit together."
         },
+        "layout": {
+          "title": "Find your way around",
+          "shortTitle": "Layout",
+          "description": "Where everything lives in the configurator."
+        },
+        "export": {
+          "title": "Save your Santroller 1 settings",
+          "shortTitle": "Export",
+          "description": "Export your settings from Santroller 1 before anything gets replaced."
+        },
+        "import": {
+          "title": "Bring your settings across",
+          "shortTitle": "Import",
+          "description": "Import your Santroller 1 settings, then check what came across."
+        },
+        "yourProfile": {
+          "title": "Your profile",
+          "shortTitle": "Your profile",
+          "description": "What the build guide set up."
+        },
+        "build": {
+          "title": "What are you building?",
+          "shortTitle": "Build",
+          "description": "Pick what you're making, and its build guide runs right here."
+        },
         "flash": {
           "title": "Put Santroller on your board",
           "shortTitle": "Flash",
@@ -4937,9 +5070,9 @@
           "description": "Decide when each profile is used."
         },
         "assignmentsAdvanced": {
-          "title": "How a profile gets picked",
-          "shortTitle": "More on assignments",
-          "description": "Reading several controllers in one profile, the order profiles are checked in, and console modes."
+          "title": "When it doesn't do what you expected",
+          "shortTitle": "Fixing assignments",
+          "description": "The usual surprises with assignments, and the less common setups."
         },
         "standby": {
           "title": "Standby profile",
@@ -4952,15 +5085,13 @@
           "description": "Store your settings on the controller and keep a copy."
         }
       },
-      "workbench": {
+      "actions": {
         "needTitle": "What you need",
         "needItems": [
           "A Raspberry Pi Pico or Pico 2",
           "A USB cable that carries data, not just power",
           "Chrome, Edge or another Chromium-based browser, or the desktop app"
         ],
-        "skipToConnect": "Skip to Connect",
-        "downloadTitle": "Download the firmware for your board",
         "upToDate": "Connected, and the firmware is up to date.",
         "deviceCount_one": "{{count}} device added",
         "deviceCount_other": "{{count}} devices added",
@@ -4968,7 +5099,52 @@
         "profilesTitle": "Your profiles",
         "addProfile": "Add profile",
         "openStandby": "Open the standby profile",
-        "allSaved": "Everything is saved."
+        "allSaved": "Everything is saved.",
+        "connect": "Connect",
+        "connectPrompt": "Connect your controller to do this from here.",
+        "connectStepPrompt": "Plug your controller in, then connect to it here or from the main page."
+      },
+      "build": {
+        "intro": "Pick what you're making. Its build guide runs as the next few steps, wiring up and setting up each part with the controller connected, so you can test as you go.",
+        "other": {
+          "title": "Something else",
+          "body": "Set up the devices and inputs yourself. The build guides are still there if part of your build matches one."
+        },
+        "profile": "The build guide sets up your <strong>{{name}}</strong> profile.",
+        "newProfile": "Moving on adds a profile for the build guide to set up.",
+        "useNew": "Use a new profile instead",
+        "names": {
+          "direct-pico-guitar": "Guitar",
+          "wii-adapter": "Wii Guitar",
+          "ps2-adapter": "PS2 Guitar",
+          "usb-host": "USB Controller",
+          "drum-kit": "Drums",
+          "wt-drums": "World Tour Drums",
+          "bh-drums": "Band Hero Drums",
+          "midi-din": "MIDI Drums",
+          "dj-turntable": "Turntable"
+        }
+      },
+      "yourProfile": {
+        "intro": "This is the profile the build guide set up.",
+        "rulesTitle": "When it's used",
+        "wired": "Everything comes from the board's own pins, so it has <strong>Claim directly wired inputs</strong> on. If you add a second profile like it, for Bluetooth or a keyboard layout, the two take turns instead of both showing up.",
+        "wiredNoClaim": "Everything comes from the board's own pins. Turning on <strong>Claim directly wired inputs</strong> in its rule lets a second profile like it, for Bluetooth or a keyboard layout, take turns with it instead of both showing up.",
+        "source": "Its rule includes the controller the build guide added, so the profile only runs while that's plugged in, and its inputs read from that controller's slot.",
+        "open": "Open this profile",
+        "next": "The next step explains these rules, and the setups that fit your build."
+      },
+      "path": {
+        "title": "How are you starting?",
+        "fresh": {
+          "title": "Starting fresh",
+          "body": "A new build, or a board that has never run Santroller 1."
+        },
+        "santroller1": {
+          "title": "Coming from Santroller 1",
+          "body": "A Pico controller already set up with the Santroller 1 configurator. The guide brings your settings across instead of starting over."
+        },
+        "avr": "Only Pico-based controllers can move to Santroller 2. If yours is built on an Arduino, like a Pro Micro or an Uno, keep using Santroller 1 at <legacyLink>legacy.santroller.com</legacyLink>."
       },
       "seller": {
         "tipTitle": "Bought it from a seller?",

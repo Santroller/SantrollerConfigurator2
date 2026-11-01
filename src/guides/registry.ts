@@ -10,14 +10,14 @@ import { DIRECT_PICO_GUITAR_GUIDE } from './guitar/guitarGuide';
 import { RGB_LED_GUIDE } from './leds/ledGuide';
 import { MIDI_DIN_GUIDE } from './mididin/midiDinGuide';
 import { DJ_TURNTABLE_GUIDE } from './turntable/turntableGuide';
-import { GuideCategory, GuideDefinition } from './types';
+import { GuideCategory, GuideDefinition, GuideSource } from './types';
 import { USB_HOST_GUIDE } from './usb/usbHostGuide';
 import { WIRELESS_GUIDE } from './wireless/wirelessGuide';
 import { WT_DRUM_GUIDE } from './wtdrums/wtDrumGuide';
 import { XBOX360_RF_GUIDE } from './xbox360rf/xbox360RfGuide';
 import { XBOX_AUTH_GUIDE } from './xboxauth/xboxAuthGuide';
 
-export const GUIDE_REGISTRY: Record<string, GuideDefinition> = {
+export const GUIDE_REGISTRY: Record<string, GuideSource> = {
   [DIRECT_PICO_GUITAR_GUIDE.id]: DIRECT_PICO_GUITAR_GUIDE,
   [WII_ADAPTER_GUITAR_GUIDE.id]: WII_ADAPTER_GUITAR_GUIDE,
   [PS2_ADAPTER_GUIDE.id]: PS2_ADAPTER_GUIDE,
@@ -71,34 +71,21 @@ export function useGuideCategories(): CategoryInfo[] {
   return useMemo(() => getGuideCategories(t), [t]);
 }
 
-export function getLocalizedGuide(guide: GuideDefinition, t?: TFunction): GuideDefinition {
+export function getLocalizedGuide(guide: GuideSource, t?: TFunction): GuideDefinition {
   const translate = t ?? i18next.t.bind(i18next);
-  const localizedTitle = translate(`guides.${guide.id}.title`, guide.title);
-  const localizedSubtitle = translate(`guides.${guide.id}.subtitle`, guide.subtitle);
-  const localizedDesc = translate(`guides.${guide.id}.description`, guide.description);
-  const localizedTime = translate(`guides.${guide.id}.estimatedTime`, guide.estimatedTime);
-  const localizedBadge = guide.badge
-    ? translate(`guides.${guide.id}.badge`, guide.badge)
-    : undefined;
-
-  const localizedSteps = guide.steps.map((step) => ({
-    ...step,
-    title: translate(`guides.${guide.id}.steps.${step.id}.title`, step.title),
-    shortTitle: translate(`guides.${guide.id}.steps.${step.id}.shortTitle`, step.shortTitle),
-    description: translate(`guides.${guide.id}.steps.${step.id}.description`, step.description),
-    badge: step.badge
-      ? translate(`guides.${guide.id}.steps.${step.id}.badge`, step.badge)
-      : undefined,
-  }));
-
+  const text = (key: string) => String(translate(`guides.${guide.id}.${key}`));
   return {
     ...guide,
-    title: String(localizedTitle),
-    subtitle: String(localizedSubtitle),
-    description: String(localizedDesc),
-    estimatedTime: String(localizedTime),
-    badge: localizedBadge ? String(localizedBadge) : undefined,
-    steps: localizedSteps,
+    title: text('title'),
+    subtitle: text('subtitle'),
+    description: text('description'),
+    estimatedTime: text('estimatedTime'),
+    steps: guide.steps.map((step) => ({
+      ...step,
+      title: text(`steps.${step.id}.title`),
+      shortTitle: text(`steps.${step.id}.shortTitle`),
+      description: text(`steps.${step.id}.description`),
+    })),
   };
 }
 

@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, ReactNode } from 'react';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,6 +31,11 @@ export interface PreviewRule {
   triggerButton?: string;
   /** Shows the editor's matching badge, left out when unset since docs have no live state */
   active?: boolean;
+  /**
+   * Shown beside the target, connected controller and trigger headings, then the claim directly
+   * wired inputs switch, for docs pointing them out
+   */
+  markers?: [ReactNode, ReactNode, ReactNode, ReactNode?];
 }
 
 // Each target the editor's segmented control can show, keyed by the assignment field that selects it
@@ -55,6 +60,19 @@ const SOURCE_FIELDS: Partial<
   bluetoothType: { field: 'bluetoothType', enumKey: 'subType', values: proto.SubType },
   midiProGuitar: { field: 'midiProGuitar', enumKey: 'subType', values: proto.SubType },
 };
+
+// A section heading with a marker at its far end, or just the heading without one
+function withMarker(title: string, marker: ReactNode) {
+  if (!marker) {
+    return title;
+  }
+  return (
+    <Group component="span" justify="space-between" wrap="nowrap" gap="xs">
+      <span>{title}</span>
+      {marker}
+    </Group>
+  );
+}
 
 function RulePreviewCard({
   rule,
@@ -116,7 +134,11 @@ function RulePreviewCard({
 
       <Stack gap="sm">
         <Stack gap={4}>
-          <Input.Wrapper size="xs" label={t('assignments.step1_title')}>
+          <Input.Wrapper
+            size="xs"
+            label={withMarker(t('assignments.step1_title'), rule.markers?.[0])}
+            labelProps={{ w: '100%' }}
+          >
             <SegmentedControl
               fullWidth
               size="xs"
@@ -139,11 +161,29 @@ function RulePreviewCard({
               ]}
             />
           )}
+          {/* The console a forced or specific rule picks, like the editor's field under the mode */}
+          {consoleType?.forcedType ? (
+            <InputBase
+              size="xs"
+              readOnly
+              label={t('activation.forcedType')}
+              value={t(`consoleMode.${proto.ConsoleMode[consoleType.forcedType]}`)}
+            />
+          ) : (
+            consoleType?.consoleType && (
+              <InputBase
+                size="xs"
+                readOnly
+                label={t('activation.consoleType')}
+                value={t(`consoleType.${proto.ConsoleType[consoleType.consoleType]}`)}
+              />
+            )
+          )}
         </Stack>
 
         <Stack gap="xs">
           <Text size="xs" fw={500}>
-            {t('assignments.step2_title')}
+            {withMarker(t('assignments.step2_title'), rule.markers?.[1])}
           </Text>
 
           {sources.map(({ item, slotId, type }) => {
@@ -191,12 +231,15 @@ function RulePreviewCard({
           </Button>
         </Stack>
 
-        <Switch
-          size="xs"
-          readOnly
-          label={t('assignments.localInputs')}
-          checked={assignments.some((x) => x.localInputs != null)}
-        />
+        <Group justify="space-between" wrap="nowrap" gap="xs">
+          <Switch
+            size="xs"
+            readOnly
+            label={t('assignments.localInputs')}
+            checked={assignments.some((x) => x.localInputs != null)}
+          />
+          {rule.markers?.[3]}
+        </Group>
 
         {assignments.some((x) => x.xboxOneAuth != null) && (
           <Switch size="xs" readOnly label={t('assignments.xboxOneAuth')} checked />
@@ -206,7 +249,7 @@ function RulePreviewCard({
 
         <Stack gap={4}>
           <Text size="sm" fw={600}>
-            {t('assignments.step3_title')}
+            {withMarker(t('assignments.step3_title'), rule.markers?.[2])}
           </Text>
           <Select
             size="xs"

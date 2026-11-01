@@ -1,96 +1,103 @@
-import { GuideDefinition } from '../types';
+import { GuideDefinition, GuideSource, GuideStepSource } from '../types';
 import { AssignmentsAdvancedStep, AssignmentsBasicsStep } from './assignmentsSteps';
 import {
+  SetupBuildStep,
   SetupConnectStep,
   SetupDevicesStep,
+  SetupExportStep,
   SetupFlashStep,
+  SetupImportStep,
+  SetupLayoutStep,
   SetupOverviewStep,
   SetupProfileStep,
   SetupSaveStep,
   SetupStandbyStep,
   SetupWireStep,
+  SetupYourProfileStep,
 } from './setupGuideSteps';
+import { OTHER_BUILD, SetupBuild, SetupPath } from './setupPath';
+
+// The setup guide's steps, by id. Their text is under guides.setup.steps.<id>
+const STEPS: Record<string, GuideStepSource> = {
+  overview: { id: 'overview', render: SetupOverviewStep },
+  layout: { id: 'layout', render: SetupLayoutStep },
+  build: { id: 'build', render: SetupBuildStep },
+  yourProfile: { id: 'yourProfile', render: SetupYourProfileStep },
+  export: { id: 'export', render: SetupExportStep },
+  flash: { id: 'flash', render: SetupFlashStep },
+  wire: { id: 'wire', render: SetupWireStep },
+  connect: { id: 'connect', render: SetupConnectStep },
+  import: { id: 'import', render: SetupImportStep },
+  devices: { id: 'devices', render: SetupDevicesStep },
+  profile: { id: 'profile', render: SetupProfileStep },
+  assignments: { id: 'assignments', render: AssignmentsBasicsStep },
+  assignmentsAdvanced: { id: 'assignmentsAdvanced', render: AssignmentsAdvancedStep },
+  standby: { id: 'standby', render: SetupStandbyStep },
+  save: { id: 'save', render: SetupSaveStep },
+};
+
+// A controller coming from Santroller 1 is already wired, and its devices and profiles come from
+// the import rather than being set up by hand. A fresh one connects first, so a build guide can
+// test as it goes, and only wires up and adds devices by hand when it isn't one of the builds.
+function pathSteps(path: SetupPath, build: SetupBuild | null): string[] {
+  if (path === 'santroller1') {
+    return [
+      'overview',
+      'layout',
+      'export',
+      'flash',
+      'connect',
+      'import',
+      'assignments',
+      'assignmentsAdvanced',
+      'standby',
+      'save',
+    ];
+  }
+  const guided = build != null && build !== OTHER_BUILD;
+  return [
+    'overview',
+    'layout',
+    'flash',
+    'connect',
+    'build',
+    // A build guide's steps go in after the build step, so before its profile step
+    ...(guided ? ['yourProfile'] : ['wire', 'devices', 'profile']),
+    'assignments',
+    'assignmentsAdvanced',
+    'standby',
+    'save',
+  ];
+}
 
 // Shown on the Setup a new device page rather than in the build guide catalog
-export const SETUP_GUIDE: GuideDefinition = {
-  id: 'setup',
-  title: 'Getting Started with Santroller',
-  subtitle: 'Everything you need to set up a new controller',
-  description: 'From getting the firmware onto your board to saving a working config.',
-  category: 'mods',
-  estimatedTime: '15 - 30 mins',
-  steps: [
-    {
-      id: 'overview',
-      title: 'Before you start',
-      shortTitle: 'Overview',
-      description: 'How the firmware, devices, profiles and assignments fit together.',
-      render: SetupOverviewStep,
-    },
-    {
-      id: 'flash',
-      title: 'Put Santroller on your board',
-      shortTitle: 'Flash',
-      description: 'Copy the Santroller firmware onto your Pico.',
-      render: SetupFlashStep,
-    },
-    {
-      id: 'wire',
-      title: 'Wire up your hardware',
-      shortTitle: 'Wire',
-      description: 'Find the pinout and wiring for your controller.',
-      render: SetupWireStep,
-    },
-    {
-      id: 'connect',
-      title: 'Connect and update',
-      shortTitle: 'Connect',
-      description: 'Connect the configurator to your controller and update its firmware if asked.',
-      render: SetupConnectStep,
-    },
-    {
-      id: 'devices',
-      title: 'Add your devices',
-      shortTitle: 'Devices',
-      description: 'Tell the firmware what hardware is attached to the board.',
-      render: SetupDevicesStep,
-    },
-    {
-      id: 'profile',
-      title: 'Set up a profile',
-      shortTitle: 'Profile',
-      description: 'Pick a controller type, then map your inputs and LEDs.',
-      render: SetupProfileStep,
-    },
-    {
-      id: 'assignments',
-      title: 'Assignments',
-      shortTitle: 'Assignments',
-      description: 'Decide when each profile is used.',
-      render: AssignmentsBasicsStep,
-    },
-    {
-      id: 'assignmentsAdvanced',
-      title: 'How a profile gets picked',
-      shortTitle: 'More on assignments',
-      description:
-        'Reading several controllers in one profile, the order profiles are checked in, and console modes.',
-      render: AssignmentsAdvancedStep,
-    },
-    {
-      id: 'standby',
-      title: 'Standby profile',
-      shortTitle: 'Standby',
-      description:
-        "Light up when the controller isn't in use, and pick the buttons that wake a sleeping console or PC.",
-      render: SetupStandbyStep,
-    },
-    {
-      id: 'save',
-      title: 'Save and back up',
-      shortTitle: 'Save',
-      description: 'Store your settings on the controller and keep a copy.',
-      render: SetupSaveStep,
-    },
-  ],
-};
+export function getSetupGuide(path: SetupPath, build: SetupBuild | null): GuideSource {
+  return {
+    id: 'setup',
+    category: 'mods',
+    steps: pathSteps(path, build).map((id) => STEPS[id]),
+  };
+}
+
+// Runs a build guide's steps right after the build step, both already localised. Their ids are
+// prefixed with the build guide's, as several guides use the same step ids.
+export function withBuildGuide(
+  guide: GuideDefinition,
+  buildGuide: GuideDefinition | undefined,
+  // A short name for the build, as its steps are shown together under it
+  label?: string
+): GuideDefinition {
+  const at = guide.steps.findIndex((step) => step.id === 'build');
+  if (!buildGuide || at === -1) {
+    return guide;
+  }
+  const nested = buildGuide.steps.map((step) => ({
+    ...step,
+    id: `${buildGuide.id}__${step.id}`,
+    group: label ?? buildGuide.title,
+  }));
+  return {
+    ...guide,
+    steps: [...guide.steps.slice(0, at + 1), ...nested, ...guide.steps.slice(at + 1)],
+  };
+}

@@ -32,6 +32,7 @@ import {
   RELEASES_URL,
 } from '@/components/DesktopDownload/DesktopDownloadButton';
 import { Layout } from '@/components/Layout/Layout';
+import { LEGACY_CONFIG_ACCEPT } from '@/components/Legacy/importLegacyConfig';
 import { translateLegacyWarning } from '@/components/Legacy/warnings';
 import { NixosUdevSnippet } from '@/components/NixosUdev/NixosUdevSnippet';
 import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothConfigDevice';
@@ -316,7 +317,7 @@ export function ConnectPage() {
             <FileButton
               disabled={updating || noConfig}
               onChange={importLegacy}
-              accept=".picoconfig"
+              accept={LEGACY_CONFIG_ACCEPT}
               multiple
             >
               {(props) => (

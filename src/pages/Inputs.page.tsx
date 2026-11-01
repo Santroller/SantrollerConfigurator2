@@ -14,7 +14,9 @@ import {
 import { rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  IconAdjustmentsHorizontal,
   IconBluetooth,
+  IconCheck,
   IconChevronDown,
   IconCopy,
   IconDeviceGamepad,
@@ -23,7 +25,7 @@ import {
   IconMoon,
   IconPencil,
   IconPlus,
-  IconSparkles,
+  IconTemplate,
   IconTrash,
   IconUsb,
 } from '@tabler/icons-react';
@@ -965,8 +967,7 @@ function OutputBox({
         />
       );
     case proto.SubType.Gamepad:
-    // A fight stick sends a gamepad report
-    case proto.SubType.FightStick:
+    case proto.SubType.FightStick: // A fight stick sends a gamepad report
     case proto.SubType.Dancepad:
     case proto.SubType.Taiko:
     case proto.SubType.StageKit:
@@ -8763,7 +8764,7 @@ function SantrollerAssignmentList({
               <Menu shadow="md" width={220}>
                 <Menu.Target>
                   <ActionIcon variant="subtle" color="blue" title={t('assignments.presets_title')}>
-                    <IconSparkles size={18} />
+                    <IconTemplate size={18} />
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
@@ -8802,7 +8803,7 @@ function SantrollerAssignmentList({
                   )}
                   {hasWii && (
                     <Menu.Item
-                      leftSection={<IconSparkles size={14} />}
+                      leftSection={<IconTemplate size={14} />}
                       onClick={() => applyPreset('wii_adapter')}
                     >
                       {t('assignments.preset_wii_adapter')}
@@ -8810,14 +8811,14 @@ function SantrollerAssignmentList({
                   )}
                   {hasPsx && (
                     <Menu.Item
-                      leftSection={<IconSparkles size={14} />}
+                      leftSection={<IconTemplate size={14} />}
                       onClick={() => applyPreset('ps2_adapter')}
                     >
                       {t('assignments.preset_ps2_adapter')}
                     </Menu.Item>
                   )}
                   <Menu.Item
-                    leftSection={<IconSparkles size={14} />}
+                    leftSection={<IconTemplate size={14} />}
                     onClick={() => applyPreset('boot_switch')}
                   >
                     {t('assignments.preset_boot_switch')}
@@ -9540,6 +9541,7 @@ function BlankProfileWizard({
     ps4: boolean,
     btMode: proto.BluetoothMode,
     hosts: proto.IProfileAssignmentInfo[],
+    claimLocal: boolean,
     tType: 'always' | 'input' | 'inputAnyTime',
     tInput: proto.IInput | undefined
   ): proto.IProfileAssignmentInfo[] => {
@@ -9578,6 +9580,9 @@ function BlankProfileWizard({
     hosts.forEach((item) => {
       assignments.push(item);
     });
+    if (claimLocal) {
+      assignments.push({ localInputs: {} });
+    }
 
     // Trigger
     if (tType === 'input') {
@@ -9600,6 +9605,7 @@ function BlankProfileWizard({
     ps4OrPs5Mode?: boolean;
     bluetoothMode?: proto.BluetoothMode;
     hostAssignments?: proto.IProfileAssignmentInfo[];
+    claimLocalInputs?: boolean;
     triggerType?: 'always' | 'input' | 'inputAnyTime';
     triggerInput?: proto.IInput | undefined;
   }) => {
@@ -9621,6 +9627,8 @@ function BlankProfileWizard({
       params && 'bluetoothMode' in params ? params.bluetoothMode! : bluetoothMode;
     const updatedHostAssignments =
       params && 'hostAssignments' in params ? params.hostAssignments! : hostAssignments;
+    const updatedClaimLocalInputs =
+      params && 'claimLocalInputs' in params ? params.claimLocalInputs! : claimLocalInputs;
     const updatedTriggerType =
       params && 'triggerType' in params ? params.triggerType! : triggerType;
     const updatedTriggerInput =
@@ -9635,6 +9643,7 @@ function BlankProfileWizard({
       updatedPs4OrPs5Mode,
       updatedBluetoothMode,
       updatedHostAssignments,
+      updatedClaimLocalInputs,
       updatedTriggerType,
       updatedTriggerInput
     );
@@ -9655,19 +9664,36 @@ function BlankProfileWizard({
     );
   };
 
+  // Profiles that only use the board's own pins claim them unless told otherwise, so a second such
+  // profile (Bluetooth, a keyboard layout) takes turns with this one instead of showing up as a
+  // second controller. A profile reading a connected controller is copied for each one plugged in,
+  // and the copies couldn't all claim the pins, so those don't.
+  const [claimLocalInputs, setClaimLocalInputs] = useState<boolean>(
+    initialHost.length === 0 || initialRule.some((x) => x.localInputs != null)
+  );
+  // Once the switch has been changed by hand it no longer follows the connected controllers
+  const [claimLocalInputsSet, setClaimLocalInputsSet] = useState(false);
+
+  const updateHostAssignments = (updated: proto.IProfileAssignmentInfo[]) => {
+    setHostAssignments(updated);
+    if (claimLocalInputsSet) {
+      syncToProfile({ hostAssignments: updated });
+      return;
+    }
+    const claim = updated.length === 0;
+    setClaimLocalInputs(claim);
+    syncToProfile({ hostAssignments: updated, claimLocalInputs: claim });
+  };
+
   const addHostSource = (sourceType: string) => {
     const next = defaultHostSource(sourceType);
     if (next) {
-      const updated = [...hostAssignments, next];
-      setHostAssignments(updated);
-      syncToProfile({ hostAssignments: updated });
+      updateHostAssignments([...hostAssignments, next]);
     }
   };
 
   const removeHostSource = (idx: number) => {
-    const updated = hostAssignments.filter((_, i) => i !== idx);
-    setHostAssignments(updated);
-    syncToProfile({ hostAssignments: updated });
+    updateHostAssignments(hostAssignments.filter((_, i) => i !== idx));
   };
 
   const updateHostSource = (idx: number, updated: proto.IProfileAssignmentInfo) => {
@@ -9714,6 +9740,7 @@ function BlankProfileWizard({
       ps4OrPs5Mode,
       bluetoothMode,
       hostAssignments,
+      claimLocalInputs,
       triggerType,
       triggerInput
     );
@@ -9832,7 +9859,7 @@ function BlankProfileWizard({
         <Group justify="space-between" align="flex-start">
           <Group gap="xs">
             <ThemeIcon size="lg" radius="md" variant="light" color="blue">
-              <IconSparkles size={20} />
+              <IconAdjustmentsHorizontal size={20} />
             </ThemeIcon>
             <Stack gap={0}>
               <Title order={4}>{t('assignments.setup_wizard_title')}</Title>
@@ -10031,6 +10058,19 @@ function BlankProfileWizard({
           hasJoybus={hasJoybus}
         />
 
+        <Switch
+          size="xs"
+          label={t('assignments.localInputs')}
+          description={t('assignments.localInputsDesc')}
+          checked={claimLocalInputs}
+          onChange={(evt) => {
+            const claim = evt.currentTarget.checked;
+            setClaimLocalInputs(claim);
+            setClaimLocalInputsSet(true);
+            syncToProfile({ claimLocalInputs: claim });
+          }}
+        />
+
         <Divider />
 
         {/* Step 3: Activation Trigger */}
@@ -10081,7 +10121,7 @@ function BlankProfileWizard({
           <Button
             variant="filled"
             color="blue"
-            leftSection={<IconSparkles size={16} />}
+            leftSection={<IconCheck size={16} />}
             onClick={handleApply}
           >
             {t('assignments.setup_wizard_apply')}
@@ -11128,7 +11168,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           )}
                           {hasWii && (
                             <Menu.Item
-                              leftSection={<IconSparkles size={14} />}
+                              leftSection={<IconTemplate size={14} />}
                               onClick={() =>
                                 updateProfile(
                                   {
@@ -11160,7 +11200,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
 
                           {hasPsx && (
                             <Menu.Item
-                              leftSection={<IconSparkles size={14} />}
+                              leftSection={<IconTemplate size={14} />}
                               onClick={() =>
                                 updateProfile(
                                   {
@@ -11192,7 +11232,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                             </Menu.Item>
                           )}
                           <Menu.Item
-                            leftSection={<IconSparkles size={14} />}
+                            leftSection={<IconTemplate size={14} />}
                             onClick={() =>
                               updateProfile(
                                 {
