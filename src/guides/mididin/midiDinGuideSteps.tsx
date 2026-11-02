@@ -118,10 +118,10 @@ export function MidiDinIntroStep(props: GuideStepProps) {
     <Stack gap="md">
       <Text size="sm">{t(`${P}.din-intro.intro`)}</Text>
 
-      <Title order={4}>{t(`${P}.din-intro.howTitle`)}</Title>
+      <Title order={4}>{t('guides.common.howTitle')}</Title>
       <Text size="sm">{t(`${P}.din-intro.howText`)}</Text>
 
-      <Title order={4}>{t(`${P}.din-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="orange" items={t(`${P}.din-intro.supplies`, { returnObjects: true })} />
 
       <Alert
@@ -523,7 +523,7 @@ function MidiActivity() {
     GM_DRUM_NOTES.has(note) ? t(`${S}.gm.${note}`) : t(`${S}.unknownNote`);
 
   const status = !connected
-    ? t(`${S}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !device
       ? t(`${S}.notAdded`)
       : last
@@ -610,7 +610,7 @@ export function MidiDinCheck() {
       </Text>
       <MidiActivity />
       <Text size="sm" fw={600} mt="xs">
-        {t(`${C}.tipsTitle`)}
+        {t('guides.common.tipsTitle')}
       </Text>
       <GuideList type="ordered" items={t(`${C}.tips`, { returnObjects: true })} />
     </Stack>

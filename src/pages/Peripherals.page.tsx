@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconDownload, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconDownload, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
@@ -36,6 +36,7 @@ import {
 import { DeviceContext } from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
+import { IdSelectionContext, SelectionBar } from '@/components/Selection/Selection';
 import { proto } from '@/components/SettingsContext/config';
 import { buildUf2FromConfig, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { deviceEditors } from '@/pages/Devices.page';
@@ -89,6 +90,7 @@ export function PeripheralsPage() {
   const [sclPin, setSclPin] = useState<number>(status?.device?.peripheral?.i2c?.scl ?? 1);
   const [idPin, setIdPin] = useState<number>(2);
   const [pico2, setPico2] = useState<boolean>(false);
+  const [selection, setSelection] = useState<string[]>([]);
 
   const mounted = useMounted();
 
@@ -112,10 +114,13 @@ export function PeripheralsPage() {
     addDevice(type, id);
   };
 
-  const deleteAllSubDevices = () => {
-    for (const sub of subDevices) {
-      deleteDevice(sub.id);
-    }
+  // Devices deleted elsewhere drop out of the selection
+  const subDeviceIds = subDevices.map((sub) => sub.id);
+  const selected = selection.filter((sel) => subDeviceIds.includes(sel));
+  const selectionContext = {
+    isSelected: (sel: string) => selected.includes(sel),
+    select: (sel: string, on: boolean) =>
+      setSelection(on ? [...selected, sel] : selected.filter((other) => other !== sel)),
   };
 
   const handleDownloadUf2 = async () => {
@@ -313,19 +318,34 @@ export function PeripheralsPage() {
         {subDevices.length === 0 ? (
           <Text c="dimmed">{t('peripherals.empty')}</Text>
         ) : (
-          <SimpleGrid cols={3}>
-            {subDevices.map((subStatus) => {
-              const DeviceEditor = deviceEditors[subStatus.type];
-              if (!DeviceEditor) {
-                return null;
-              }
-              return (
-                <DeviceContext.Provider value={subStatus.id} key={subStatus.id}>
-                  <DeviceEditor id={subStatus.id} />
-                </DeviceContext.Provider>
-              );
-            })}
-          </SimpleGrid>
+          <>
+            <SelectionBar
+              total={subDeviceIds.length}
+              selected={selected.length}
+              onSelectAll={(all) => setSelection(all ? subDeviceIds : [])}
+              onDelete={() => {
+                selected.forEach(deleteDevice);
+                setSelection([]);
+              }}
+              deleteTitle={t('selection.devices.deleteTitle')}
+              deleteDesc={t('selection.devices.deleteDesc', { count: selected.length })}
+            />
+            <IdSelectionContext.Provider value={selectionContext}>
+              <SimpleGrid cols={3}>
+                {subDevices.map((subStatus) => {
+                  const DeviceEditor = deviceEditors[subStatus.type];
+                  if (!DeviceEditor) {
+                    return null;
+                  }
+                  return (
+                    <DeviceContext.Provider value={subStatus.id} key={subStatus.id}>
+                      <DeviceEditor id={subStatus.id} />
+                    </DeviceContext.Provider>
+                  );
+                })}
+              </SimpleGrid>
+            </IdSelectionContext.Provider>
+          </>
         )}
 
         <Affix position={{ bottom: 40, right: 40 }}>
@@ -339,9 +359,6 @@ export function PeripheralsPage() {
             <Menu.Dropdown>
               <Menu.Item leftSection={<IconPlus size={14} />} onClick={handleOpenAdd}>
                 {t('add_device_dialog.title')}
-              </Menu.Item>
-              <Menu.Item leftSection={<IconTrash size={14} />} onClick={deleteAllSubDevices}>
-                {t('add_device_dialog.remove_all')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

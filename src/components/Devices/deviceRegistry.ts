@@ -185,7 +185,7 @@ const deviceRegistry: DeviceDefinitions = {
     formatStatus: (status) =>
       status.snesCntType !== proto.SNESControllerType.SNESControllerNone
         ? i18next.t('connected_with_type', {
-            type: i18next.t(`snes.devices.${proto.SNESControllerType[status.snesCntType]}`),
+            type: i18next.t(`snesCnt.${proto.SNESControllerType[status.snesCntType]}`),
           })
         : i18next.t('disconnected', 'Disconnected'),
   },
@@ -196,7 +196,7 @@ const deviceRegistry: DeviceDefinitions = {
     formatStatus: (status) =>
       status.joybusCntType !== proto.JoybusControllerType.JoybusControllerNone
         ? i18next.t('connected_with_type', {
-            type: i18next.t(`joybus.devices.${proto.JoybusControllerType[status.joybusCntType]}`),
+            type: i18next.t(`joybusCnt.${proto.JoybusControllerType[status.joybusCntType]}`),
           })
         : i18next.t('disconnected', 'Disconnected'),
   },

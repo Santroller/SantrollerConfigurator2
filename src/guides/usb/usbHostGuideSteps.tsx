@@ -30,7 +30,7 @@ export function UsbHostIntroStep(props: GuideStepProps) {
         {t('guides.usb-host.steps.usb-intro.cableCaption')}
       </Text>
 
-      <Title order={4}>{t('guides.usb-host.steps.usb-intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="teal"
         items={t('guides.usb-host.steps.usb-intro.supplies', { returnObjects: true })}
@@ -54,7 +54,7 @@ export function UsbHostIntroStep(props: GuideStepProps) {
               <Table.Tr>
                 <Table.Th>{t('guides.usb-host.steps.usb-intro.thWireColor')}</Table.Th>
                 <Table.Th>{t('guides.usb-host.steps.usb-intro.thUsbSignal')}</Table.Th>
-                <Table.Th>{t('guides.usb-host.steps.usb-intro.thPicoPin')}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -126,7 +126,7 @@ export function UsbHostWiringStep(props: GuideStepProps) {
 
   const guideContent = (
     <Stack gap="md">
-      <Title order={4}>{t('guides.usb-host.steps.usb-wiring.wiringTitle')}</Title>
+      <Title order={4}>{t('guides.common.wiringTitle')}</Title>
       <GuideList
         type="ordered"
         items={t('guides.usb-host.steps.usb-wiring.wiringSteps', {

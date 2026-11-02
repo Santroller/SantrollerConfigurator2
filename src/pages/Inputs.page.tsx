@@ -4273,7 +4273,7 @@ function SantrollerMapping({
             >
               {t('delete_device_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_device_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -5766,7 +5766,7 @@ function SantrollerLed({
             >
               {t('delete_device_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_device_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -7218,7 +7218,7 @@ export function SantrollerAssignment({
             >
               {t('delete_assignment_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_assignment_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -8729,7 +8729,7 @@ function SantrollerAssignmentList({
             >
               {t('delete_assignment_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_assignment_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -10492,7 +10492,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             >
               {t('defaults_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('defaults_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -10527,9 +10527,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             >
               {t('change_subtype_dialog.confirm')}
             </Button>
-            <Button onClick={() => setPendingSubType(null)}>
-              {t('change_subtype_dialog.cancel')}
-            </Button>
+            <Button onClick={() => setPendingSubType(null)}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -10557,7 +10555,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             >
               {t('delete_profile_dialog.confirm')}
             </Button>
-            <Button onClick={closeDeleteProfile}>{t('delete_profile_dialog.cancel')}</Button>
+            <Button onClick={closeDeleteProfile}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>

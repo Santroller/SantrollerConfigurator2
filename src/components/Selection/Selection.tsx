@@ -181,7 +181,7 @@ export function SelectionBar({
             >
               {t('selection.deleteConfirm')}
             </Button>
-            <Button onClick={deleteModal.close}>{t('selection.cancel')}</Button>
+            <Button onClick={deleteModal.close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>

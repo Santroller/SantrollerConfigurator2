@@ -152,7 +152,7 @@ export function ConnectPage() {
                 {t('connect.factoryReset.confirm')}
               </Button>
               <Button variant="default" onClick={closeResetModal}>
-                {t('connect.factoryReset.cancel')}
+                {t('common.cancel')}
               </Button>
             </Group>
           </Flex>

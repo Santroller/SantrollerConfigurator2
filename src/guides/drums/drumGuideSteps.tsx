@@ -126,7 +126,7 @@ export function DrumIntroStep(props: GuideStepProps) {
         {t(`${P}.drum-intro.otherKitsText`)}
       </Alert>
 
-      <Title order={4}>{t(`${P}.drum-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="orange"
         items={t(`${P}.drum-intro.supplies`, { returnObjects: true })}
@@ -399,7 +399,7 @@ export function DrumCheck() {
   const mapped = useConfigStore((state) => countMappedPads(state, family));
   const muxDevice = mux?.device.multiplexer;
   const status = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !muxDevice
       ? t(`${C}.muxMissing`)
       : t(`${C}.muxConfigured`, {

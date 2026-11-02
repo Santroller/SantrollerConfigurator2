@@ -38,7 +38,7 @@ export function NavStep(props: GuideStepProps) {
         </Stack>
       </Group>
 
-      <Title order={4}>{t('guides.direct-pico-guitar.steps.nav.wiringTitle')}</Title>
+      <Title order={4}>{t('guides.common.wiringTitle')}</Title>
       <List type="ordered" spacing="xs" size="sm">
         <List.Item>{t('guides.direct-pico-guitar.steps.nav.navGround')}</List.Item>
         <List.Item>{t('guides.direct-pico-guitar.steps.nav.startSignal')}</List.Item>

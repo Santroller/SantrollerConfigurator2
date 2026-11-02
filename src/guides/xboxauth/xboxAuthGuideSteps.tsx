@@ -189,8 +189,8 @@ function UsbHostSetup() {
         <Table striped withTableBorder withColumnBorders>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>{t(`${P}.auth-wiring.thSignal`)}</Table.Th>
-              <Table.Th>{t(`${P}.auth-wiring.thPicoPin`)}</Table.Th>
+              <Table.Th>{t('guides.common.thSignal')}</Table.Th>
+              <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -253,8 +253,8 @@ function AuthChipSetup() {
         <Table striped withTableBorder withColumnBorders>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>{t(`${P}.auth-wiring.thSignal`)}</Table.Th>
-              <Table.Th>{t(`${P}.auth-wiring.thPicoPin`)}</Table.Th>
+              <Table.Th>{t('guides.common.thSignal')}</Table.Th>
+              <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -512,7 +512,7 @@ export function XboxAuthTestStep(props: GuideStepProps) {
           leftSection={<IconDeviceFloppy size={18} />}
           onClick={handleSave}
         >
-          {saved ? t(`${P}.auth-test.btnSaved`) : t(`${P}.auth-test.btnSave`)}
+          {saved ? t('guides.common.btnSaved') : t(`${P}.auth-test.btnSave`)}
         </Button>
       )}
 

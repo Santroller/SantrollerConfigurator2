@@ -372,9 +372,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               {t('delete_profile_dialog.confirm')}
             </Button>
-            <Button onClick={() => setProfileToDelete(null)}>
-              {t('delete_profile_dialog.cancel')}
-            </Button>
+            <Button onClick={() => setProfileToDelete(null)}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -395,7 +393,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {t('save.discardConfirm', 'Discard changes')}
             </Button>
             <Button onClick={() => setDiscardOpened(false)} disabled={discarding}>
-              {t('save.discardCancel', 'Cancel')}
+              {t('common.cancel')}
             </Button>
           </Group>
         </Flex>

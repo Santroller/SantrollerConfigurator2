@@ -37,7 +37,7 @@ export function BrainStatusBadge({
   const brain = useConfigStore(findBrain);
   const detected = connected && brain?.connected;
   const status = !connected
-    ? t(`${prefix}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !brain
       ? t(`${prefix}.driverNotAdded`)
       : brain.connected
@@ -83,7 +83,7 @@ export function BhDrumIntroStep(props: GuideStepProps) {
       <Title order={4}>{t(`${P}.bh-intro.howTitle`)}</Title>
       <Text size="sm">{t(`${P}.bh-intro.howText`)}</Text>
 
-      <Title order={4}>{t(`${P}.bh-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="orange" items={t(`${P}.bh-intro.supplies`, { returnObjects: true })} />
 
       <Alert
@@ -109,7 +109,7 @@ export function BhDrumIntroStep(props: GuideStepProps) {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>{t(`${P}.bh-intro.thBoardPad`)}</Table.Th>
-              <Table.Th>{t(`${P}.bh-intro.thPicoPin`)}</Table.Th>
+              <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -177,8 +177,8 @@ function DriverSetup() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>{t(`${P}.bh-wiring.thConnector`)}</Table.Th>
-              <Table.Th>{t(`${P}.bh-wiring.thPicoPin`)}</Table.Th>
-              <Table.Th>{t(`${P}.bh-wiring.thType`)}</Table.Th>
+              <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
+              <Table.Th>{t('guides.common.thType')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -325,7 +325,7 @@ export function BhDrumCheck() {
       </Text>
       <BrainStatusBadge prefix={C} findBrain={findBhDrum} />
       <Text size="sm" fw={600} mt="xs">
-        {t(`${C}.tipsTitle`)}
+        {t('guides.common.tipsTitle')}
       </Text>
       <Text size="xs">{t(`${C}.tipsText`, pins)}</Text>
     </Stack>

@@ -664,7 +664,7 @@ function DevicesSketch() {
         <MockDeviceCard
           image="/covers/devices/wii.svg"
           title={t('devices.wii')}
-          status={t('connected_with_type', { type: t('wii.extensions.WiiGuitarHeroGuitar') })}
+          status={t('connected_with_type', { type: t('wiiExt.WiiGuitarHeroGuitar') })}
           connected
         >
           <Group align="flex-end" gap="xs" wrap="nowrap">

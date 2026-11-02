@@ -47,7 +47,7 @@ export function WiiIntroStep(props: GuideStepProps) {
         {t('guides.wii-adapter.steps.wii-intro.adapterCaption')}
       </Text>
 
-      <Title order={4}>{t('guides.wii-adapter.steps.wii-intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="cyan"
         items={t('guides.wii-adapter.steps.wii-intro.supplies', { returnObjects: true })}
@@ -77,7 +77,7 @@ export function WiiIntroStep(props: GuideStepProps) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t('guides.wii-adapter.steps.wii-intro.thWiiPin')}</Table.Th>
-                <Table.Th>{t('guides.wii-adapter.steps.wii-intro.thPicoPin')}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
                 <Table.Th>{t('guides.wii-adapter.steps.wii-intro.thFunction')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -267,7 +267,7 @@ export function WiiCheck() {
     extType !== proto.WiiExtType.WiiNoExtension &&
     extType !== proto.WiiExtType.WiiNotInitialised;
   const label = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !wiiDevice
       ? t(`${C}.driverMissing`)
       : extDetected

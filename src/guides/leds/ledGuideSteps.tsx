@@ -113,7 +113,7 @@ export function LedIntroStep(props: GuideStepProps) {
 
       <LedChipTypeSelect chipType={chipType} onChange={setChipType} disabled={device != null} />
 
-      <Title order={4}>{t('guides.rgb-leds.steps.led-intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="pink"
         items={t('guides.rgb-leds.steps.led-intro.supplies', { returnObjects: true })}
@@ -171,7 +171,7 @@ export function LedIntroStep(props: GuideStepProps) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t('guides.rgb-leds.steps.led-intro.thLedPin')}</Table.Th>
-                <Table.Th>{t('guides.rgb-leds.steps.led-intro.thPicoPin')}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
                 <Table.Th>{t('guides.rgb-leds.steps.led-intro.thDescription')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -271,7 +271,7 @@ export function LedWiringStep(props: GuideStepProps) {
     <Stack gap="md">
       <LedChipTypeSelect chipType={chipType} onChange={setChipType} disabled={device != null} />
 
-      <Title order={4}>{t('guides.rgb-leds.steps.led-wiring.wiringTitle')}</Title>
+      <Title order={4}>{t('guides.common.wiringTitle')}</Title>
       <GuideList
         type="ordered"
         items={
@@ -430,9 +430,7 @@ export function LedReviewStep(props: GuideStepProps) {
           leftSection={<IconDeviceFloppy size={18} />}
           onClick={handleSave}
         >
-          {saved
-            ? t('guides.rgb-leds.steps.led-test.btnSaved')
-            : t('guides.rgb-leds.steps.led-test.btnSave')}
+          {saved ? t('guides.common.btnSaved') : t('guides.rgb-leds.steps.led-test.btnSave')}
         </Button>
       )}
     </Stack>

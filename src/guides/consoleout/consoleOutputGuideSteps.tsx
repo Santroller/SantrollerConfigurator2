@@ -262,12 +262,12 @@ export function ConsoleOutputIntroStep(props: GuideStepProps) {
 
       <ConsoleChoice {...choice} />
 
-      <Title order={4}>{t(`${K}.console-intro.howTitle`)}</Title>
+      <Title order={4}>{t('guides.common.howTitle')}</Title>
       <Text size="sm">
         {t(target === 'wii' ? `${K}.console-intro.howWii` : `${K}.console-intro.howPs2`)}
       </Text>
 
-      <Title order={4}>{t(`${K}.console-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="grape" items={supplies} />
 
       {target === 'ps2' ? (
@@ -569,9 +569,9 @@ export function ConsoleOutputWiringStep(props: GuideStepProps) {
           <Table striped withTableBorder withColumnBorders>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t(`${K}.console-wiring.thSignal`)}</Table.Th>
+                <Table.Th>{t('guides.common.thSignal')}</Table.Th>
                 <Table.Th>{t(`${K}.console-wiring.thPlugPin`)}</Table.Th>
-                <Table.Th>{t(`${K}.console-wiring.thPicoPin`)}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -653,7 +653,7 @@ export function ConsoleOutputTestStep(props: GuideStepProps) {
           leftSection={<IconDeviceFloppy size={18} />}
           onClick={handleSave}
         >
-          {saved ? t(`${K}.console-test.btnSaved`) : t(`${K}.console-test.btnSave`)}
+          {saved ? t('guides.common.btnSaved') : t(`${K}.console-test.btnSave`)}
         </Button>
       )}
 

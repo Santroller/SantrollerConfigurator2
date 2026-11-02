@@ -53,7 +53,7 @@ export function PS2IntroStep(props: GuideStepProps) {
         </Text>
       </Stack>
 
-      <Title order={4}>{t('guides.ps2-adapter.steps.ps2-intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="blue"
         items={t('guides.ps2-adapter.steps.ps2-intro.supplies', { returnObjects: true })}
@@ -83,9 +83,9 @@ export function PS2IntroStep(props: GuideStepProps) {
           <Table striped highlightOnHover withTableBorder withColumnBorders>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t('guides.ps2-adapter.steps.ps2-intro.thSignal')}</Table.Th>
+                <Table.Th>{t('guides.common.thSignal')}</Table.Th>
                 <Table.Th>{t('guides.ps2-adapter.steps.ps2-intro.thPs2Pin')}</Table.Th>
-                <Table.Th>{t('guides.ps2-adapter.steps.ps2-intro.thPicoPin')}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -280,7 +280,7 @@ export function Ps2Check() {
   const detected =
     connected && !!ps2Device && cntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown;
   const label = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !ps2Device
       ? t(`${C}.driverMissing`)
       : detected

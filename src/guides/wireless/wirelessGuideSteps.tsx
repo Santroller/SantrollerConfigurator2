@@ -146,7 +146,7 @@ export function WirelessIntroStep(props: GuideStepProps) {
       <Title order={4}>{t(`${S}.requiresTitle`)}</Title>
       <GuideList iconColor="grape" items={t(`${S}.requiresList`, { returnObjects: true })} />
 
-      <Title order={4}>{t(`${S}.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="teal" items={t(`${S}.supplies`, { returnObjects: true })} />
     </Stack>
   );
@@ -414,7 +414,7 @@ export function WirelessBluetoothStep(props: GuideStepProps) {
 
   const guideContent = (
     <Stack gap="md">
-      <Title order={4}>{t(`${S}.howTitle`)}</Title>
+      <Title order={4}>{t('guides.common.howTitle')}</Title>
       <Text size="sm">{t(`${S}.howText`)}</Text>
 
       <Title order={4}>{t(`${S}.pairTitle`)}</Title>
@@ -715,7 +715,7 @@ export function WirelessTestStep(props: GuideStepProps) {
           leftSection={<IconDeviceFloppy size={18} />}
           onClick={handleSave}
         >
-          {saved ? t(`${S}.btnSaved`) : t(`${S}.btnSave`)}
+          {saved ? t('guides.common.btnSaved') : t(`${S}.btnSave`)}
         </Button>
       )}
     </Stack>

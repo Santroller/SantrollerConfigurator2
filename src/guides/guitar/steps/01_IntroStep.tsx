@@ -78,7 +78,7 @@ export function IntroStep(props: GuideStepProps) {
         {t('guides.direct-pico-guitar.steps.intro.directRewireCaption')}
       </Text>
 
-      <Title order={4}>{t('guides.direct-pico-guitar.steps.intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="blue"
         items={t('guides.direct-pico-guitar.steps.intro.supplies', { returnObjects: true })}

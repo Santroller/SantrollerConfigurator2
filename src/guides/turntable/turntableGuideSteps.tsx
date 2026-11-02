@@ -74,7 +74,7 @@ function PlatterStatus({ left }: { left: boolean }) {
   const side = left ? t(`${P}.tt-wiring.leftPlatter`) : t(`${P}.tt-wiring.rightPlatter`);
   const C = 'guides.dj-turntable.check';
   const status = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !platter
       ? t(`${C}.platterNotAdded`)
       : platter.connected
@@ -110,7 +110,7 @@ export function TurntableIntroStep(props: GuideStepProps) {
     <Stack gap="md">
       <Text size="sm">{t(`${P}.tt-intro.intro`)}</Text>
 
-      <Title order={4}>{t(`${P}.tt-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="grape" items={t(`${P}.tt-intro.supplies`, { returnObjects: true })} />
 
       <Title order={4}>{t(`${P}.tt-intro.subsystemsTitle`)}</Title>
@@ -137,8 +137,8 @@ export function TurntableIntroStep(props: GuideStepProps) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t(`${P}.tt-intro.thFeature`)}</Table.Th>
-                <Table.Th>{t(`${P}.tt-intro.thPicoPin`)}</Table.Th>
-                <Table.Th>{t(`${P}.tt-intro.thType`)}</Table.Th>
+                <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
+                <Table.Th>{t('guides.common.thType')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

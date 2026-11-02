@@ -382,7 +382,7 @@ function DeviceCard({
             >
               {t('delete_device_dialog.confirm')}
             </Button>
-            <Button onClick={close}>{t('delete_device_dialog.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -572,7 +572,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
         status.wiiExtType !== proto.WiiExtType.WiiNoExtension &&
         status.wiiExtType !== proto.WiiExtType.WiiNotInitialised
       }
-      type_prefix="wii.extensions"
+      type_prefix="wiiExt"
       title="devices.wii"
       type={proto.WiiExtType[status.wiiExtType]}
       image="covers/devices/wii.svg"
@@ -1787,7 +1787,7 @@ function PSXDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.ps2CntType !== proto.PS2ControllerType.PS2ControllerTypeUnknown}
       type={proto.PS2ControllerType[status.ps2CntType]}
-      type_prefix="psx.devices"
+      type_prefix="ps2Cnt"
       title="devices.psx"
       image="covers/devices/psx.svg"
       deleteDevice={() => deleteDevice(id)}
@@ -2098,7 +2098,7 @@ function SNESDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.snesCntType !== proto.SNESControllerType.SNESControllerNone}
       type={proto.SNESControllerType[status.snesCntType]}
-      type_prefix="snes.devices"
+      type_prefix="snesCnt"
       title="devices.snes"
       image="covers/devices/snes.svg"
       deleteDevice={() => deleteDevice(id)}
@@ -2144,7 +2144,7 @@ function JoybusDevice({ id }: { id: string }) {
     <DeviceCard
       connected={status.joybusCntType !== proto.JoybusControllerType.JoybusControllerNone}
       type={proto.JoybusControllerType[status.joybusCntType]}
-      type_prefix="joybus.devices"
+      type_prefix="joybusCnt"
       title="devices.joybus"
       image="covers/devices/joybus.svg"
       deleteDevice={() => deleteDevice(id)}
@@ -3049,7 +3049,7 @@ function BluetoothDevice({ id }: { id: string }) {
             {t('devices.bluetooth_forget_hosts.confirm')}
           </Button>
           <Button variant="default" onClick={closeForgetHosts}>
-            {t('devices.bluetooth_forget_hosts.cancel')}
+            {t('common.cancel')}
           </Button>
         </Group>
       </Modal>

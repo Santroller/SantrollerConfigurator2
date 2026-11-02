@@ -91,7 +91,7 @@ function Label({ id, label, deleteLabel, selected, onSelect }: LabelEditorProps)
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -201,7 +201,7 @@ function LedLabel({ id, label, deleteLabel, selected, onSelect }: LabelEditorPro
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -366,7 +366,7 @@ function MatrixLabel({ id, label, deleteLabel, selected, onSelect }: LabelEditor
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -541,7 +541,7 @@ function SwitchNetworkLabel({ id, label, deleteLabel, selected, onSelect }: Labe
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -647,7 +647,7 @@ function KeyboardKeyLabel({ id, label, deleteLabel, selected, onSelect }: LabelE
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -763,7 +763,7 @@ function MultiplexerLabel({ id, label, deleteLabel, selected, onSelect }: LabelE
             >
               {t('labels.remove.confirm')}
             </Button>
-            <Button onClick={close}>{t('labels.remove.cancel')}</Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
           </Group>
         </Flex>
       </Modal>
@@ -1029,7 +1029,7 @@ function BulkLabelActions({
               {t('labels.bulk.apply')}
             </Button>
             <Button variant="default" onClick={profilesModal.close}>
-              {t('labels.remove.cancel')}
+              {t('common.cancel')}
             </Button>
           </Group>
         </Flex>

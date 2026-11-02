@@ -214,7 +214,7 @@ export function BtReceiverCheck() {
   const bluetooth = useConfigStore(findBluetooth);
   const controllers = connectedBluetoothControllers(bluetooth);
   const status = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !bluetooth
       ? t(`${C}.driverMissing`)
       : !bluetooth.connected

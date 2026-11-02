@@ -148,7 +148,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
         {t('guides.xbox360-rf.steps.rf-intro.voltageWarningText')}
       </Alert>
 
-      <Title order={4}>{t('guides.xbox360-rf.steps.rf-intro.suppliesTitle')}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList
         iconColor="green"
         items={t('guides.xbox360-rf.steps.rf-intro.supplies', { returnObjects: true })}
@@ -187,7 +187,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
           <Table striped highlightOnHover withTableBorder withColumnBorders>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t('guides.xbox360-rf.steps.rf-intro.thSignal')}</Table.Th>
+                <Table.Th>{t('guides.common.thSignal')}</Table.Th>
                 <Table.Th>{t('guides.xbox360-rf.steps.rf-intro.thTarget')}</Table.Th>
                 <Table.Th>{t('guides.xbox360-rf.steps.rf-intro.thPurpose')}</Table.Th>
               </Table.Tr>
@@ -859,7 +859,7 @@ export function Xbox360RfCheck() {
   const usbHostStatus = useConfigStore((state) => findDeviceStatus(state, 'usbHost'));
   const count = Object.keys(usbHostStatus?.usbDevices ?? {}).length;
   const status = !connected
-    ? t(`${C}.picoNotConnected`)
+    ? t('guides.common.picoNotConnected')
     : !rf || !usbHostStatus
       ? t(`${C}.notAdded`)
       : count > 0

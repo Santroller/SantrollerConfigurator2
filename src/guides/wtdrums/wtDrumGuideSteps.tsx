@@ -36,8 +36,8 @@ function ConnectorTable({ withType }: { withType?: boolean }) {
       <Table.Thead>
         <Table.Tr>
           <Table.Th>{t(`${P}.wt-wiring.thConnector`)}</Table.Th>
-          <Table.Th>{t(`${P}.wt-wiring.thPicoPin`)}</Table.Th>
-          {withType && <Table.Th>{t(`${P}.wt-wiring.thType`)}</Table.Th>}
+          <Table.Th>{t('guides.common.thPicoPin')}</Table.Th>
+          {withType && <Table.Th>{t('guides.common.thType')}</Table.Th>}
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
@@ -72,7 +72,7 @@ export function WtDrumIntroStep(props: GuideStepProps) {
       <Title order={4}>{t(`${P}.wt-intro.howTitle`)}</Title>
       <Text size="sm">{t(`${P}.wt-intro.howText`)}</Text>
 
-      <Title order={4}>{t(`${P}.wt-intro.suppliesTitle`)}</Title>
+      <Title order={4}>{t('guides.common.suppliesTitle')}</Title>
       <GuideList iconColor="orange" items={t(`${P}.wt-intro.supplies`, { returnObjects: true })} />
 
       <Alert
@@ -246,7 +246,7 @@ export function WtDrumCheck() {
       </Text>
       <BrainStatusBadge prefix={C} findBrain={findWtDrum} />
       <Text size="sm" fw={600} mt="xs">
-        {t(`${C}.tipsTitle`)}
+        {t('guides.common.tipsTitle')}
       </Text>
       <Text size="xs">{t(`${C}.tipsText`)}</Text>
     </Stack>

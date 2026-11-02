@@ -67,7 +67,7 @@ export default function DevicePicker() {
       )}
       <Flex justify="flex-end" mt="md">
         <Button variant="default" onClick={() => closeDevicePicker()}>
-          {t('devicePicker.cancel')}
+          {t('common.cancel')}
         </Button>
       </Flex>
     </Modal>
