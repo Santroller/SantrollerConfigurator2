@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import '@/i18n/config';
 
@@ -7,6 +7,10 @@ import { getLocalizedGuide, GUIDE_REGISTRY } from './registry';
 import { getSetupGuide, withBuildGuide } from './setup/setupGuide';
 import { OTHER_BUILD } from './setup/setupPath';
 import { GuideSource } from './types';
+
+vi.hoisted(() => {
+  vi.stubGlobal('localStorage', { getItem: () => null });
+}); 
 
 // Guides only hold their structure, so every bit of text they show has to be in the translations
 function missingKeys(guide: GuideSource) {
