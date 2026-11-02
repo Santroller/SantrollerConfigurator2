@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconAlertTriangle, IconCheck } from '@tabler/icons-react';
 import { Trans, useTranslation } from 'react-i18next';
 import {
@@ -7,7 +7,6 @@ import {
   Checkbox,
   Group,
   Paper,
-  SegmentedControl,
   Select,
   SimpleGrid,
   Stack,
@@ -24,6 +23,7 @@ import {
   FestivalChoice,
   FestivalPart,
   festivalPlan,
+  festivalProfileName,
   instrumentOf,
 } from './festivalSetup';
 import { useFinishText } from './text';
@@ -47,7 +47,8 @@ function FestivalCard({
     state.config.profiles?.find((p) => p.opts?.uid === uid)
   );
   const plan = festivalPlan(profile, choice);
-  const { drums, buttons, part, consoleChoice, pcChoice, wantConsole, wantPc, clash } = plan;
+  const { drums, buttons, allParts, parts, partChoice, pcChoice, wantConsole, wantPc, clash } =
+    plan;
   const G = 'guides.finish.games';
   // What's said about the guitar or drums themselves
   const I = `${G}.${drums ? 'drums' : 'guitar'}`;
@@ -101,22 +102,39 @@ function FestivalCard({
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
               {wantConsole && (
                 <Stack gap="sm">
-                  <SegmentedControl
-                    value={part}
-                    onChange={(value) => set({ part: value as FestivalPart })}
-                    data={(drums
-                      ? ['festival_pro_drums', 'festival_drums']
-                      : ['festival_pro_guitar', 'festival_guitar']
-                    ).map((value) => ({ value, label: t(`defaults_dialog.presets.${value}`) }))}
-                  />
-                  <Select
-                    label={t(`${G}.console.holdLabel`)}
+                  {/* Each part ticked gets a keyboard profile of its own, picked by its own button */}
+                  <Checkbox.Group
+                    label={t(`${G}.console.partsLabel`)}
                     description={t(`${G}.console.holdDesc`)}
-                    data={buttonData}
-                    value={consoleChoice}
-                    onChange={(consoleButton) => set({ consoleButton })}
-                    allowDeselect={false}
-                  />
+                    value={parts}
+                    onChange={(value) =>
+                      value.length > 0 && set({ parts: value as FestivalPart[] })
+                    }
+                  >
+                    <Group gap="md" mt={6}>
+                      {allParts.map((part) => (
+                        <Checkbox
+                          key={part}
+                          value={part}
+                          label={t(`defaults_dialog.presets.${part}`)}
+                        />
+                      ))}
+                    </Group>
+                  </Checkbox.Group>
+                  {parts.map((part) => (
+                    <Select
+                      key={part}
+                      label={t(`${G}.console.holdLabel`, {
+                        part: t(`defaults_dialog.presets.${part}`),
+                      })}
+                      data={buttonData}
+                      value={partChoice(part)}
+                      onChange={(button) =>
+                        set({ partButtons: { ...choice.partButtons, [part]: button } })
+                      }
+                      allowDeselect={false}
+                    />
+                  ))}
                 </Stack>
               )}
               {wantPc && (
@@ -148,15 +166,19 @@ function FestivalCard({
         {!!result?.done.length && (
           <Alert variant="light" color="teal" icon={<IconCheck size={18} />}>
             <Stack gap={4}>
-              {result.done.includes('console') && (
-                <Text size="sm">
-                  <Trans
-                    i18nKey={`${I}.consoleDone`}
-                    values={{ button: labelFor(consoleChoice), name: profile?.opts?.name }}
-                    components={strong}
-                  />
-                </Text>
-              )}
+              {result.done.includes('console') &&
+                parts.map((part) => (
+                  <Text key={part} size="sm">
+                    <Trans
+                      i18nKey={`${I}.consoleDone`}
+                      values={{
+                        button: labelFor(partChoice(part)),
+                        profile: festivalProfileName(profile?.opts?.name, part),
+                      }}
+                      components={strong}
+                    />
+                  </Text>
+                ))}
               {result.done.includes('pc') && (
                 <Text size="sm">
                   <Trans
@@ -203,11 +225,14 @@ export function GamesStep(props: GuideStepProps) {
     );
   const ticked = instruments.filter(({ uid }) => choiceFor(uid).games.length > 0);
   const clash = ticked.some(({ uid }) => planFor(uid).clash);
+  // The choices last set up, so leaving the step doesn't redo them
+  const applied = useRef<string>(undefined);
 
   // Sets up each profile that has something ticked. The button says what it did, moving on doesn't,
   // as the guide's step change waits for a transition, so the confirmation would flash up just
   // before the page changes. Returns whether it all worked, so moving on can stop to say what didn't.
   const apply = (confirm: boolean) => {
+    applied.current = JSON.stringify(choices);
     let ok = true;
     const next: Record<number, { done: string[]; failed: boolean }> = {};
     for (const { uid } of ticked) {
@@ -218,14 +243,17 @@ export function GamesStep(props: GuideStepProps) {
       const idx = () =>
         (useConfigStore.getState().config.profiles ?? []).findIndex((p) => p.opts?.uid === uid);
       const pcInput = plan.inputFor(plan.pcChoice);
-      const consoleInput = plan.inputFor(plan.consoleChoice);
       if (plan.wantPc && pcInput) {
         addPcFestivalRule(idx(), pcInput);
       }
-      const converted =
-        !plan.wantConsole ||
-        !consoleInput ||
-        addConsoleFestivalProfile(idx(), plan.part, consoleInput);
+      // Each part's profile goes above the guitar's, so they're redone one at a time
+      let converted = true;
+      for (const part of plan.wantConsole ? plan.parts : []) {
+        const input = plan.inputFor(plan.partChoice(part));
+        if (input) {
+          converted &&= addConsoleFestivalProfile(idx(), part, input);
+        }
+      }
       ok &&= converted;
       const games = choiceFor(uid).games;
       next[uid] = {
@@ -237,6 +265,21 @@ export function GamesStep(props: GuideStepProps) {
     setResults(next);
     return ok;
   };
+
+  // Leaving the step any way, not just by Next (the step bar, Previous, another page), sets up
+  // whatever's ticked, unless two choices use the same button, which only Next can stop to say
+  const leave = useRef(() => {});
+  leave.current = () => {
+    if (
+      useConfigStore.getState().connected &&
+      ticked.length > 0 &&
+      !clash &&
+      applied.current !== JSON.stringify(choices)
+    ) {
+      apply(false);
+    }
+  };
+  useEffect(() => () => leave.current(), []);
 
   const single = instruments.length === 1 ? instruments[0].instrument : undefined;
   const guideContent = (

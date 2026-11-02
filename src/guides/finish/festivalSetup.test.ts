@@ -8,6 +8,7 @@ vi.hoisted(() => {
 await import('@/i18n/config');
 const { initialConfig, useConfigStore } =
   await import('@/components/SettingsContext/SettingsContext');
+type FestivalChoice = import('./festivalSetup').FestivalChoice;
 const { addConsoleFestivalProfile, addPcFestivalRule, festivalPlan, holdButtons, instrumentOf } =
   await import('./festivalSetup');
 
@@ -198,23 +199,61 @@ describe('Fortnite Festival setup', () => {
     // The first guitar is now second, below its Festival profile
     addConsoleFestivalProfile(2, 'festival_guitar', pin(6));
     expect(profiles().map((p) => p.opts?.name)).toEqual([
-      'Guitar (Festival)',
+      'Guitar (Festival Lead)',
       'Guitar',
-      'USB Guitar (Festival)',
+      'USB Guitar (Festival Lead)',
       'USB Guitar',
     ]);
   });
 
   it('defaults to different buttons for consoles and PC', () => {
     const plan = festivalPlan(profiles()[0], { games: ['console', 'pc'] });
-    expect([plan.consoleChoice, plan.pcChoice]).toEqual([
+    expect(plan.parts).toEqual(['festival_pro_guitar']);
+    expect([plan.partChoice('festival_pro_guitar'), plan.pcChoice]).toEqual([
       'GuitarHeroGuitar_Orange',
       'GuitarHeroGuitar_Green',
     ]);
     expect(plan.clash).toBe(false);
+    // Picking one's button moves the other's default off it, so only two picks can clash
+    const pcOrange = festivalPlan(profiles()[0], {
+      games: ['console', 'pc'],
+      pcButton: 'GuitarHeroGuitar_Orange',
+    });
+    expect(pcOrange.partChoice('festival_pro_guitar')).toBe('GuitarHeroGuitar_Green');
+    expect(pcOrange.clash).toBe(false);
     expect(
-      festivalPlan(profiles()[0], { games: ['console', 'pc'], pcButton: 'GuitarHeroGuitar_Orange' })
-        .clash
+      festivalPlan(profiles()[0], {
+        games: ['console', 'pc'],
+        pcButton: 'GuitarHeroGuitar_Orange',
+        partButtons: { festival_pro_guitar: 'GuitarHeroGuitar_Orange' },
+      }).clash
     ).toBe(true);
+  });
+
+  it('sets up both parts with a button each, taking the next free one', () => {
+    const both: FestivalChoice = {
+      games: ['console'],
+      parts: ['festival_pro_guitar', 'festival_guitar'],
+    };
+    const plan = festivalPlan(profiles()[0], both);
+    // Pro and PC keep their usual defaults, so Lead gets the fret after them, which this guitar
+    // doesn't have
+    expect(plan.partChoice('festival_pro_guitar')).toBe('GuitarHeroGuitar_Orange');
+    expect(plan.partChoice('festival_guitar')).toBe(null);
+    const picked = festivalPlan(profiles()[0], {
+      ...both,
+      partButtons: { festival_guitar: 'GuitarHeroGuitar_Green' },
+    });
+    expect(picked.partChoice('festival_guitar')).toBe('GuitarHeroGuitar_Green');
+    // Picking Green for Lead moves the PC default off it, and nothing clashes without PC ticked
+    expect(picked.clash).toBe(false);
+
+    addConsoleFestivalProfile(0, 'festival_pro_guitar', pin(6));
+    addConsoleFestivalProfile(1, 'festival_guitar', pin(2));
+    expect(profiles().map((p) => p.opts?.name)).toEqual([
+      'Guitar (Festival Pro)',
+      'Guitar (Festival Lead)',
+      'Guitar',
+    ]);
   });
 });

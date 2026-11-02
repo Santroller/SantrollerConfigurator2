@@ -25,16 +25,36 @@ export function instrumentOf(profile: proto.IProfile | undefined): Instrument | 
 // What's been picked for one guitar or drum profile on the setup guide's games step
 export interface FestivalChoice {
   games: string[];
-  part?: FestivalPart;
-  consoleButton?: string | null;
+  // The Festival parts to play on consoles, each getting a keyboard profile of its own
+  parts?: FestivalPart[];
+  // The button held for each part, and for PC, when not the default
+  partButtons?: Partial<Record<FestivalPart, string | null>>;
   pcButton?: string | null;
+}
+
+// The Festival parts an instrument can play, the first being the default
+export const FESTIVAL_PARTS: Record<Instrument, FestivalPart[]> = {
+  guitar: ['festival_pro_guitar', 'festival_guitar'],
+  drums: ['festival_pro_drums', 'festival_drums'],
+};
+
+// The keyboard profile a part gets, named after the profile it's made from, so each guitar or drum
+// kit, and each part, can have its own
+export function festivalProfileName(name: string | null | undefined, part: FestivalPart) {
+  return truncateProfileName(
+    i18next.t('guides.finish.games.profileName', {
+      name,
+      part: i18next.t(`guides.finish.games.partShort.${part}`),
+    })
+  );
 }
 
 /**
  * What a choice comes to for a profile: the buttons it can be held with, and the ones picked or
- * defaulted to. The defaults differ, so the console and PC setups aren't picked by the same button:
- * a guitar's last two frets, or Select and Start for drums, which kits have and nobody hits by
- * accident.
+ * defaulted to for each console part and for PC. The defaults all differ, so no two setups are
+ * picked by the same button: a guitar's frets from the last one down, or Select then Start for
+ * drums, which kits have and nobody hits by accident. They're handed out in the same order whatever
+ * is ticked (the first part, PC, then the other part), so ticking another doesn't move them.
  */
 export function festivalPlan(profile: proto.IProfile | undefined, choice: FestivalChoice) {
   const instrument = instrumentOf(profile) ?? 'guitar';
@@ -42,26 +62,40 @@ export function festivalPlan(profile: proto.IProfile | undefined, choice: Festiv
   const buttons = holdButtons(profile);
   const frets = buttons.filter((button) => button.kind === 'fret');
   const named = (name: string) => buttons.find((button) => button.name === name);
-  const consoleDefault = drums
-    ? (named('Gamepad_Back') ?? buttons[0])
-    : (frets[frets.length - 1] ?? buttons[0]);
-  const pcDefault =
-    (drums ? named('Gamepad_Start') : frets[frets.length - 2]) ??
-    buttons.find((button) => button !== consoleDefault);
-  const consoleChoice = choice.consoleButton ?? consoleDefault?.name ?? null;
-  const pcChoice = choice.pcButton ?? pcDefault?.name ?? null;
-  const wantConsole = choice.games.includes('console');
+  const preferred = [
+    ...(drums ? [named('Gamepad_Back'), named('Gamepad_Start')] : [...frets].reverse()),
+    ...buttons,
+  ].filter((button) => button != null);
+  const allParts = FESTIVAL_PARTS[instrument];
+  const parts = allParts.filter((part) => (choice.parts ?? allParts.slice(0, 1)).includes(part));
+  const slots: (FestivalPart | 'pc')[] = [allParts[0], 'pc', ...allParts.slice(1)];
+  const explicit = (slot: FestivalPart | 'pc') =>
+    slot === 'pc' ? choice.pcButton : choice.partButtons?.[slot];
+  const used = new Set(slots.map(explicit).filter((name) => name != null));
+  const chosen = {} as Record<FestivalPart | 'pc', string | null>;
+  for (const slot of slots) {
+    const name = explicit(slot) ?? preferred.find((button) => !used.has(button.name))?.name ?? null;
+    if (name) {
+      used.add(name);
+    }
+    chosen[slot] = name;
+  }
+  const wantConsole = choice.games.includes('console') && parts.length > 0;
   const wantPc = choice.games.includes('pc');
+  const active = [...(wantConsole ? parts : []), ...(wantPc ? ['pc' as const] : [])].map(
+    (slot) => chosen[slot]
+  );
   return {
     instrument,
     drums,
     buttons,
-    part: choice.part ?? (drums ? 'festival_pro_drums' : 'festival_pro_guitar'),
-    consoleChoice,
-    pcChoice,
+    allParts,
+    parts,
+    partChoice: (part: FestivalPart) => chosen[part],
+    pcChoice: chosen.pc,
     wantConsole,
     wantPc,
-    clash: wantConsole && wantPc && consoleChoice === pcChoice,
+    clash: new Set(active).size < active.length,
     inputFor: (name: string | null) => buttons.find((button) => button.name === name)?.input,
   };
 }
@@ -164,7 +198,7 @@ export function addPcFestivalRule(profileIdx: number, button: proto.IInput) {
 }
 
 // Festival on consoles needs a keyboard, as consoles only let keyboards skip authentication. This
-// adds (or redoes) a keyboard profile above the guitar one, with the guitar's buttons converted to
+// adds (or redoes) a keyboard profile for a part above the guitar one, with the guitar's buttons converted to
 // Festival's keys, used while a button is held at startup. Returns false, adding nothing, when none
 // of the profile's buttons have a Festival key, eg as it isn't the guitar or drums.
 export function addConsoleFestivalProfile(
@@ -178,10 +212,7 @@ export function addConsoleFestivalProfile(
   if (!guitar || !preset) {
     return false;
   }
-  // Named after the profile it's made from, so each guitar or drum kit can have its own
-  const name = truncateProfileName(
-    i18next.t('guides.finish.games.profileName', { name: guitar.opts?.name })
-  );
+  const name = festivalProfileName(guitar.opts?.name, part);
   const seen = new Set<string>();
   const mappings = (guitar.mappings ?? []).flatMap(preset.convert).filter((mapping) => {
     const key = JSON.stringify(mapping);

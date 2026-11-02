@@ -5210,7 +5210,7 @@
       "games": {
         "intro": "Your guitar already works with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it and it's set up for you.",
         "introDrums": "Your drums already work with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it and it's set up for you.",
-        "profileName": "{{name}} (Festival)",
+        "profileName": "{{name}} (Festival {{part}})",
         "introAll": "Your guitars and drums already work with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it for each one and it's set up for you.",
         "noInstruments": "None of your profiles are a guitar or drum kit, so there's nothing to set up for Fortnite Festival.",
         "noFrets": "The guitar profile has no frets mapped yet. Go back through the build guide's fret step first.",
@@ -5221,8 +5221,9 @@
         "console": {
           "title": "Fortnite Festival on PlayStation or Xbox",
           "body": "Adds a keyboard profile, as consoles only let keyboards skip authentication. Hold a button while plugging in to use it.",
-          "holdDesc": "Hold this while plugging in to play Festival. Plug in normally for everything else.",
-          "holdLabel": "Button to hold for PlayStation or Xbox"
+          "holdDesc": "Each part gets a keyboard profile of its own. Hold its button while plugging in to play Festival, or plug in normally for everything else.",
+          "holdLabel": "Button to hold for {{part}}",
+          "partsLabel": "Parts to set up"
         },
         "pc": {
           "title": "Fortnite Festival on PC",
@@ -5231,15 +5232,21 @@
         },
         "guitar": {
           "pcBody": "Adds an Xbox One rule to your guitar profile, as that's how Festival on PC recognises a guitar. Hold a button while plugging in to use it.",
-          "consoleDone": "Added a <strong>{{name}} (Festival)</strong> keyboard profile, above the guitar's. Hold <strong>{{button}}</strong> while plugging in to use it.",
+          "consoleDone": "Added a <strong>{{profile}}</strong> keyboard profile, above the guitar's. Hold <strong>{{button}}</strong> while plugging in to use it.",
           "pcDone": "Added a rule to your guitar profile: hold <strong>{{button}}</strong> while plugging in and it shows up as an Xbox One guitar.",
-          "copyNote": "Its keys are copied from your guitar's buttons. If you remap the guitar later, load the Fortnite Festival preset on the Festival profile again."
+          "copyNote": "Their keys are copied from your guitar's buttons. If you remap the guitar later, load the Fortnite Festival preset on each Festival profile again."
         },
         "drums": {
           "pcBody": "Adds an Xbox One rule to your drum profile, as that's how Festival on PC recognises a drum kit. Hold a button while plugging in to use it.",
-          "consoleDone": "Added a <strong>{{name}} (Festival)</strong> keyboard profile, above the drums'. Hold <strong>{{button}}</strong> while plugging in to use it.",
+          "consoleDone": "Added a <strong>{{profile}}</strong> keyboard profile, above the drums'. Hold <strong>{{button}}</strong> while plugging in to use it.",
           "pcDone": "Added a rule to your drum profile: hold <strong>{{button}}</strong> while plugging in and it shows up as an Xbox One drum kit.",
-          "copyNote": "Its keys are copied from your drums' pads. If you remap them later, load the Fortnite Festival preset on the Festival profile again."
+          "copyNote": "Their keys are copied from your drums' pads. If you remap them later, load the Fortnite Festival preset on each Festival profile again."
+        },
+        "partShort": {
+          "festival_pro_guitar": "Pro",
+          "festival_guitar": "Lead",
+          "festival_pro_drums": "Pro Drums",
+          "festival_drums": "Drums"
         }
       },
       "test": {

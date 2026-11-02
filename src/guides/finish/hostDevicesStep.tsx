@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Checkbox, Group, Paper, SimpleGrid, Stack, Switch, Text } from '@mantine/core';
@@ -68,6 +68,20 @@ export function HostDevicesStep({ plugIn, ...props }: GuideStepProps & { plugIn:
     setPicked([]);
     setGamepad(false);
   };
+
+  // Leaving the step any way, not just by Next (the step bar, Previous, another page), sets up
+  // whatever's still ticked, so it isn't lost. Profiles that already exist are skipped, so running
+  // it again after Next does nothing.
+  const leave = useRef(() => {});
+  leave.current = () => {
+    if (
+      useConfigStore.getState().connected &&
+      (adding.length > 0 || (gamepad && !navigationDone))
+    ) {
+      apply();
+    }
+  };
+  useEffect(() => () => leave.current(), []);
 
   const card = (device: HostDevice) => (
     <Checkbox.Card
