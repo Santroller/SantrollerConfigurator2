@@ -6,6 +6,7 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { LiveAxis, LiveButtons, LiveInput } from '../adapters/adapterLiveStatus';
 import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
+import { InputTestRow } from '../components/InputTestRow';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
 import { gpPin, gpWithPin, labelWithPin } from '../wiringText';
@@ -13,6 +14,7 @@ import {
   addPlatter,
   applyBasePinout,
   BASE_PINOUT,
+  baseTarget,
   findPlatter,
   isBasePinoutApplied,
   PLATTER_SCL,
@@ -21,6 +23,19 @@ import {
 
 const P = 'guides.dj-turntable.steps';
 
+const BASE_COLORS: Record<string, string> = {
+  crossfader: 'grape',
+  effectsDial: 'violet',
+  euphoria: 'yellow',
+};
+
+// Built once, as the pin pickers watch their target for changes
+const BASE_ROWS = BASE_PINOUT.map((base) => ({
+  base,
+  target: baseTarget(base),
+  color: BASE_COLORS[base.key] ?? 'teal',
+}));
+
 function platterInput(left: boolean, type: proto.DJHeroPlatterInputType) {
   return (m: proto.IMapping) => {
     const status = useConfigStore.getState().deviceStatus[m.input?.djhPlatter?.deviceid ?? ''];
@@ -28,12 +43,6 @@ function platterInput(left: boolean, type: proto.DJHeroPlatterInputType) {
       m.input?.djhPlatter?.type === type && (status?.device.djhTurntable?.left ?? true) === left
     );
   };
-}
-
-function gpioOutput(output: proto.IOutput) {
-  const [key, value] = Object.entries(output)[0];
-  return (m: proto.IMapping) =>
-    m.input?.gpio != null && m.mapping?.[key as keyof proto.IOutput] === value;
 }
 
 function usePlatterButtons(left: boolean): LiveInput[] {
@@ -221,10 +230,16 @@ export function TurntableWiringStep(props: GuideStepProps) {
   const baseApplied = useConfigStore(isBasePinoutApplied);
   const leftButtons = usePlatterButtons(true);
   const rightButtons = usePlatterButtons(false);
-  const crossfader: LiveInput = {
-    label: t(`${P}.tt-wiring.crossfaderHeader`),
+  const T = proto.DJHeroPlatterInputType;
+  const leftVelocity: LiveInput = {
+    label: t(`${P}.tt-wiring.leftPlatter`),
     color: 'grape',
-    match: gpioOutput(BASE_PINOUT[0].output),
+    match: platterInput(true, T.DJHeroPlatterVelocity),
+  };
+  const rightVelocity: LiveInput = {
+    label: t(`${P}.tt-wiring.rightPlatter`),
+    color: 'grape',
+    match: platterInput(false, T.DJHeroPlatterVelocity),
   };
 
   const guideContent = (
@@ -301,8 +316,34 @@ export function TurntableWiringStep(props: GuideStepProps) {
       </Paper>
 
       <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-body)">
-        <LiveAxis input={crossfader} notMappedLabel={t(`${P}.tt-wiring.notMapped`)} />
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed">
+            {t(`${P}.tt-wiring.scratchHeader`)}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t(`${P}.tt-wiring.scratchDesc`)}
+          </Text>
+          <LiveAxis input={leftVelocity} notMappedLabel={t(`${P}.tt-wiring.notMapped`)} />
+          <LiveAxis input={rightVelocity} notMappedLabel={t(`${P}.tt-wiring.notMapped`)} />
+        </Stack>
       </Paper>
+
+      <Text fw={700} size="sm">
+        {t(`${P}.tt-wiring.baseControlsHeader`)}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {t(`${P}.tt-wiring.baseControlsDesc`)}
+      </Text>
+      {BASE_ROWS.map(({ base, target, color }) => (
+        <InputTestRow
+          key={base.key}
+          label={t(`${P}.tt-intro.base.${base.key}`)}
+          target={target}
+          color={color}
+          recommendedPin={base.pin}
+          isAnalog={base.analog}
+        />
+      ))}
     </Stack>
   );
 

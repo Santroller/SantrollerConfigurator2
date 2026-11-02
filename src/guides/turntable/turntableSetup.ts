@@ -1,6 +1,7 @@
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { ensureDeviceToEmulate } from '../adapters/adapterLiveStatus';
+import { PinMappingTarget } from '../guitar/guitarMappingUtils';
 
 // The platters talk to the base over I2C, so both share I2C1 on GP18 (SDA) / GP19 (SCL). Each
 // platter answers on its own address (left 0x0E, right 0x0D), picked by the device's left flag.
@@ -88,6 +89,12 @@ export const BASE_PINOUT: BasePin[] = [
     output: { gamepadButton: proto.GamepadButtonType.Gamepad_DpadRight },
   },
 ];
+
+/** The base control as a pin picker target, so its pin can be changed on the wiring step */
+export function baseTarget(base: BasePin): PinMappingTarget {
+  const [type, id] = Object.entries(base.output)[0];
+  return { name: base.key, type: type as PinMappingTarget['type'], id: id as number };
+}
 
 function sameOutput(a: proto.IOutput | null | undefined, b: proto.IOutput) {
   const [key, value] = Object.entries(b)[0];

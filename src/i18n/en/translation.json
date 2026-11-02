@@ -937,7 +937,6 @@
       }
     },
     "steps": {
-      "description": "If your controller came from a seller with Santroller already installed, skip the first two steps.",
       "flash": {
         "title": "Put Santroller on your board",
         "body": "Hold <strong>BOOTSEL</strong> while plugging the Pico in, download the UF2 for your chip (<strong>Pico 1 / RP2040</strong> or <strong>Pico 2 / RP2350</strong>), and drag it onto the drive that appears (<strong>RPI-RP2</strong> or <strong>RP2350</strong>). The board restarts by itself when the copy finishes."
@@ -999,7 +998,6 @@
       "body": "The <strong>Save changes</strong> button only appears when there is something to save. If you unplug the controller before saving, it goes back to its last saved config."
     },
     "goodToKnow": {
-      "title": "Good to know",
       "simpleMode": {
         "title": "Simple mode and Advanced mode",
         "body": "Controllers set up by a seller may open in Simple mode, which hides the Devices, Pin Labels and Debug pages so you can't break the wiring setup by accident. Click <strong>Switch to Advanced Mode</strong> on the main page to see everything."
@@ -3004,7 +3002,6 @@
     "finishGuide": "Finish Guide",
     "configAndVerification": "Live Pin Test & Setup",
     "plugInPicoPrompt": "Connect your Pico via USB to test switches and probe pins live as you wire.",
-    "webHidNotSupported": "WebHID is not supported by your browser. Please use Chrome, Edge, or an Opera-based browser.",
     "probe": "Probe",
     "pressNow": "Press now",
     "probeTooltip": "Click and press the button on your guitar to auto-detect its pin",
@@ -3033,7 +3030,6 @@
       "title": "Wireless: Bluetooth & Battery (Pico W)",
       "subtitle": "LiPo Battery Power and Bluetooth Output on a Pico W / Pico 2 W",
       "description": "Run your controller from a single-cell LiPo battery and pair it with a PC or phone over Bluetooth, with battery level reporting and sleep when idle. USB keeps working too.",
-      "badge": "Bluetooth",
       "estimatedTime": "45 - 60 mins",
       "board": {
         "title": "Which Pico is this?",
@@ -3214,7 +3210,6 @@
       "title": "Direct-Wired Guitar",
       "subtitle": "Replace a guitar's board with a Pico wired to its frets, strum and whammy",
       "description": "Take the original board out of a Guitar Hero or Rock Band guitar and wire its frets, strum bar, whammy, tilt and buttons straight to a Raspberry Pi Pico or Pico 2. Works with the original switches or mechanical ones.",
-      "badge": "Mechanical / Direct Wire",
       "estimatedTime": "1 - 2 hours",
       "steps": {
         "intro": {
@@ -3523,7 +3518,6 @@
       "title": "Wii Controller Adapter",
       "subtitle": "Plug Wii guitars, drums, turntables and other Wii controllers into a Pico",
       "description": "Build an adapter with a Wii extension socket, so the controllers that plug into a Wii Remote work on PC or console: Guitar Hero and Rock Band guitars, drums, DJ Hero turntables, Taiko drums, Classic Controllers and Nunchuks. Nothing on the controller itself is modified.",
-      "badge": "Beginner Friendly",
       "estimatedTime": "20 - 30 mins",
       "steps": {
         "wii-intro": {
@@ -3582,7 +3576,6 @@
       "title": "PS1/PS2 Controller Adapter",
       "subtitle": "Plug PlayStation 1 and 2 controllers, guitars and other instruments into a Pico",
       "description": "Build an adapter with a PlayStation controller socket, so PS1 and PS2 controllers work on PC or console: DualShock and DualShock 2 pads, Guitar Hero and Rock Band guitars, and Taiko, Pop'n Music, GuitarFreaks and DrumMania controllers. Nothing on the controller itself is modified.",
-      "badge": "SPI Bus",
       "estimatedTime": "30 - 45 mins",
       "steps": {
         "ps2-intro": {
@@ -3648,7 +3641,6 @@
       "title": "Direct-Wired Drum Kit",
       "subtitle": "Wire a drum kit's piezo pads and kick pedal to a Pico through multiplexers",
       "description": "Build a velocity-sensitive drum kit from piezo pads, or replace the board in a Guitar Hero or Rock Band kit, with every pad wired to a Raspberry Pi Pico through a multiplexer.",
-      "badge": "Velocity Sensing",
       "estimatedTime": "1 - 2 hours",
       "steps": {
         "drum-intro": {
@@ -3738,13 +3730,7 @@
       "title": "Band Hero Drum Kit",
       "subtitle": "Replace the chip in a Band Hero or Guitar Hero 5 drum kit's brain with a Pico",
       "description": "Replace the main microcontroller in a Band Hero or Guitar Hero 5 era drum kit brain with a Raspberry Pi Pico, reading the pads from the brain's own drum chip over I2C.",
-      "badge": "MIDI over I2C",
       "estimatedTime": "30 - 45 mins",
-      "supplies": [
-        "Raspberry Pi Pico 1 or Pico 2",
-        "Band Hero / Guitar Hero 5 era drum kit",
-        "Soldering Iron & Wire"
-      ],
       "steps": {
         "bh-intro": {
           "shortTitle": "Supplies",
@@ -3835,13 +3821,7 @@
       "title": "World Tour Drum Kit",
       "subtitle": "Replace a Guitar Hero World Tour drum kit's brain with a Pico",
       "description": "Replace the brain of a Guitar Hero World Tour drum kit with a Raspberry Pi Pico, reading the pads over the kit's own SPI cable.",
-      "badge": "MIDI over SPI",
       "estimatedTime": "20 - 30 mins",
-      "supplies": [
-        "Raspberry Pi Pico 1 or Pico 2",
-        "Guitar Hero World Tour drum kit",
-        "Wire, plus a connector or a soldering iron"
-      ],
       "steps": {
         "wt-intro": {
           "shortTitle": "Supplies",
@@ -3916,17 +3896,7 @@
       "title": "MIDI In (5-pin DIN)",
       "subtitle": "Add a MIDI IN socket for an e-drum kit, keyboard or other MIDI gear",
       "description": "Build a small opto-isolated MIDI input so an e-drum kit, keyboard or other device with a 5-pin MIDI OUT port can drive the Pico, which then acts as a Guitar Hero or Rock Band drum kit.",
-      "badge": "MIDI over UART",
       "estimatedTime": "30 - 45 mins",
-      "supplies": [
-        "Raspberry Pi Pico 1 or Pico 2",
-        "H11L1 optocoupler",
-        "1N914 diode",
-        "220Ω resistor",
-        "470Ω resistor",
-        "5-pin DIN MIDI socket (female)",
-        "A MIDI cable"
-      ],
       "steps": {
         "din-intro": {
           "shortTitle": "Supplies",
@@ -4091,7 +4061,6 @@
       "title": "DJ Hero Turntable Controller",
       "subtitle": "Replace a DJ Hero turntable's main board with a Pico",
       "description": "Replace the main board in a DJ Hero turntable (Xbox 360, PS3 or Wii) with a Raspberry Pi Pico, reading its platters, crossfader, effects dial and buttons.",
-      "badge": "Optical Scratching",
       "estimatedTime": "45 - 60 mins",
       "steps": {
         "tt-intro": {
@@ -4168,7 +4137,10 @@
           "btnGreen": "Green",
           "btnRed": "Red",
           "btnBlue": "Blue",
-          "crossfaderHeader": "Crossfader",
+          "scratchHeader": "SCRATCHING",
+          "scratchDesc": "Spin each platter: its bar moves away from the middle while it turns and settles back in the middle when it stops.",
+          "baseControlsHeader": "Base Controls",
+          "baseControlsDesc": "Pick the pin each control is wired to, or press Probe and then move the control to find it.",
           "notMapped": "Not mapped"
         }
       },
@@ -4186,7 +4158,6 @@
       "title": "USB Host Port",
       "subtitle": "Plug USB controllers, instruments and Xbox 360 wireless receivers into a Pico",
       "description": "Add a USB port to a Raspberry Pi Pico, so wired USB controllers and instruments, MIDI devices and Xbox 360 wireless receivers can be plugged into it.",
-      "badge": "Console Auth",
       "estimatedTime": "15 - 20 mins",
       "steps": {
         "usb-intro": {
@@ -4345,7 +4316,6 @@
       "title": "Console Authentication (PS4, PS5, Xbox One / Series)",
       "subtitle": "Pass auth to a real controller, an auth dongle or a harvested Xbox auth chip",
       "description": "PS4, PS5, Xbox One and Xbox Series consoles only accept genuine controllers. Let Santroller pass the console's auth requests to an official controller or auth dongle on the USB Host port, or, for Xbox, to an auth chip taken from an Xbox One controller and wired over I2C.",
-      "badge": "Console Auth",
       "estimatedTime": "15 - 45 mins",
       "steps": {
         "auth-intro": {
@@ -4473,15 +4443,7 @@
       "title": "Play on a Wii or PS2 (Console Output)",
       "subtitle": "Plug your Pico controller into a Wii Remote or a PS2 controller port",
       "description": "Wire a Wii extension plug or a PS2 controller plug to your Raspberry Pi Pico so it acts as a Wii extension or a PS2 controller on the real console, optionally with a USB host port so a USB controller can be played on the old console.",
-      "badge": "Wii / PS2",
       "estimatedTime": "30 - 45 mins",
-      "supplies": [
-        "Raspberry Pi Pico 1 or Pico 2 (with a controller already built on it, or a USB host port)",
-        "Wii extension plug or PS2 controller plug (e.g. from a broken controller or an extension cable)",
-        "Schottky diode (when powering from the console)",
-        "Optional for USB host: USB socket, plus an MT3608 boost converter when powering from the console",
-        "Soldering Iron & Wire"
-      ],
       "steps": {
         "console-intro": {
           "shortTitle": "Overview",
@@ -4665,7 +4627,6 @@
       "title": "Xbox 360 Wireless Receiver (RF Module)",
       "subtitle": "Connect Xbox 360 wireless controllers and instruments to a Pico through an original RF module",
       "description": "Repurpose an authentic Xbox 360 RF module (Original/Fat or Slim) as an ultra-low latency wireless receiver for Xbox 360 controllers with sync and Ring of Light support.",
-      "badge": "Wireless RF",
       "estimatedTime": "25 - 40 mins",
       "steps": {
         "rf-intro": {
@@ -4823,7 +4784,6 @@
       "title": "Addressable RGB & Fret LEDs (WS2812B / APA102)",
       "subtitle": "Fret Illumination & Game Sync Animations",
       "description": "Add addressable RGB LEDs to your guitar or drum kit that light up on button presses and sync with Star Power in games like YARG.",
-      "badge": "RGB Lighting",
       "estimatedTime": "30 - 45 mins",
       "steps": {
         "led-intro": {

@@ -7,7 +7,7 @@ import { gpPin } from '../wiringText';
 
 export interface PinMappingTarget {
   name: string;
-  type: 'ghButton' | 'rbButton' | 'gamepadButton' | 'ghAxis' | 'rbAxis';
+  type: 'ghButton' | 'rbButton' | 'gamepadButton' | 'ghAxis' | 'rbAxis' | 'djhAxis';
   id: number;
 }
 
@@ -338,6 +338,8 @@ export function findMappingIndex(
         return m.mapping.ghAxis === target.id || m.mapping.rbAxis === target.id;
       case 'rbAxis':
         return m.mapping.rbAxis === target.id || m.mapping.ghAxis === target.id;
+      case 'djhAxis':
+        return m.mapping.djhAxis === target.id;
       default:
         return false;
     }
@@ -386,7 +388,8 @@ function gpioMapping(
   existing?: proto.IMapping
 ): proto.IMapping {
   const resolved = targetForFamily(target, family);
-  const isAxis = resolved.type === 'ghAxis' || resolved.type === 'rbAxis';
+  const isAxis =
+    resolved.type === 'ghAxis' || resolved.type === 'rbAxis' || resolved.type === 'djhAxis';
   const input: proto.IInput = {
     gpio: {
       pin,
@@ -396,7 +399,12 @@ function gpioMapping(
   };
   const mapping: proto.IMapping = existing
     ? { ...existing, mapping: { [resolved.type]: resolved.id }, input }
-    : { mapping: { [resolved.type]: resolved.id }, input, center: 0 };
+    : // The turntable's crossfader and effects dial rest in the middle of their travel
+      {
+        mapping: { [resolved.type]: resolved.id },
+        input,
+        center: resolved.type === 'djhAxis' ? 32767 : 0,
+      };
   if (isAxis && isAnalog) {
     mapping.min = existing?.min ?? 0;
     mapping.max = existing?.max ?? 65535;
