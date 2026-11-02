@@ -9903,7 +9903,11 @@ function BlankProfileWizard({
               const hosts = [{ usbType: proto.SubType.Microphone }];
               setHostAssignments(hosts);
               setClaimLocalInputs(false);
-              syncToProfile({ deviceToEmulate: val, hostAssignments: hosts, claimLocalInputs: false });
+              syncToProfile({
+                deviceToEmulate: val,
+                hostAssignments: hosts,
+                claimLocalInputs: false,
+              });
               return;
             }
             syncToProfile({ deviceToEmulate: val });
@@ -10331,6 +10335,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const profile = profiles[profileIdx];
   // Only lights its LEDs while no other profile is active, so it has no rules or inputs
   const standby = !!profile?.opts.standbyLighting;
+  const mic = profile.opts.deviceToEmulate === proto.SubType.Microphone;
   const standbySources = (profile?.assignments ?? []).flatMap((list) => list.assignments ?? []);
   const standbyWake = profile?.standbyWake ?? [];
   const updateStandbyWake = (wake: proto.IInputActivationTrigger[]) =>
@@ -10591,7 +10596,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
             </ActionIcon>
           </Group>
           {/* Device wide settings that are about the controller, which is never standby lighting */}
-          {!standby && (
+          {!standby && !mic && (
             <>
               <Space h="md" />
               <DeviceIdentitySettings />
@@ -10774,16 +10779,19 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </Input.Wrapper>
         </>
       )}
-
-      <Space h="md" />
-      <DropdownBox
-        title="main.legendMode.label"
-        description="main.legendMode.description"
-        e={LegendMode}
-        val={legendMode}
-        label="legendMode"
-        dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
-      />
+      {!mic && (
+        <>
+          <Space h="md" />
+          <DropdownBox
+            title="main.legendMode.label"
+            description="main.legendMode.description"
+            e={LegendMode}
+            val={legendMode}
+            label="legendMode"
+            dispatch={(deviceToEmulate) => setLegendMode(deviceToEmulate)}
+          />
+        </>
+      )}
 
       {!standby && profile.opts.deviceToEmulate === proto.SubType.Gamepad && (
         <>
@@ -10832,7 +10840,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </>
         )}
 
-      {!standby && (
+      {!standby && !mic && (
         <>
           <Space h="md" />
           <Switch
@@ -10843,13 +10851,13 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
         </>
       )}
-      {!simpleMode && (
+      {!simpleMode && !mic && (
         <>
           <Space h="md" />
           <InactivitySettings />
         </>
       )}
-      {hasBluetooth && !simpleMode && !standby && (
+      {hasBluetooth && !simpleMode && !standby && !mic && (
         <>
           <Space h="md" />
           <Switch
@@ -11379,7 +11387,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
         </>
       )}
 
-      {!standby && (
+      {!standby && !mic && (
         <>
           <Divider my="xl" />
           <Table
@@ -11690,7 +11698,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </Table>
         </>
       )}
-      {(!simpleMode || !!profile.leds?.length) && (
+      {(!simpleMode || !!profile.leds?.length) && !mic && (
         <>
           <Divider my="xl" />
           <Table
