@@ -3420,6 +3420,10 @@ export function getUsbHostDefaults(
         ]
       : [];
   }
+  // A microphone's audio is passed straight through, it has nothing to map
+  if (subType === proto.SubType.Microphone || emulatedType === proto.SubType.Microphone) {
+    return [];
+  }
   return getHostDefaults(subType, emulatedType, (output, analog) =>
     analog
       ? { usbAxis: { deviceid: deviceId, axis: output } }
@@ -3519,6 +3523,7 @@ export const USB_HOST_SUBTYPES: proto.SubType[] = [
   proto.SubType.Taiko,
   proto.SubType.Wheel,
   proto.SubType.KeyboardMouse,
+  proto.SubType.Microphone,
 ];
 
 export const USB_HOST_INPUT_SUBTYPES: proto.SubType[] = [

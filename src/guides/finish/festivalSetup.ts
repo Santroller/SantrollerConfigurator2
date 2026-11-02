@@ -229,6 +229,7 @@ export function addConsoleFestivalProfile(
       deviceToEmulate: proto.SubType.KeyboardMouse,
       faceButtonMappingMode: guitar.opts?.faceButtonMappingMode,
       deviceSlotIdVersion: guitar.opts?.deviceSlotIdVersion,
+      setUp: true,
     },
     assignments: [{ assignments: [usb(), ...inputParts(guitar), { input: { input: button } }] }],
     mappings,

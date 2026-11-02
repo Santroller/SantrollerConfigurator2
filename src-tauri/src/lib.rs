@@ -29,6 +29,9 @@ const READ_TIMEOUT_MS: i32 = 1;
 const SANTROLLER_VID: u16 = 0x1209;
 const SANTROLLER_V1_PID: u16 = 0x2882;
 const SANTROLLER_PID: u16 = 0x2883;
+// A Santroller that is only a microphone looks like a Logitech USB Microphone
+const LOGITECH_VID: u16 = 0x046d;
+const LOGITECH_MIC_PID: u16 = 0x0a03;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -176,6 +179,7 @@ fn hid_list(state: State<'_, HidState>) -> Result<Vec<HidDeviceInfo>, String> {
         api.reset_devices().map_err(|e| e.to_string())?;
         api.add_devices(SANTROLLER_VID, SANTROLLER_PID).map_err(|e| e.to_string())?;
         api.add_devices(SANTROLLER_VID, SANTROLLER_V1_PID).map_err(|e| e.to_string())?;
+        api.add_devices(LOGITECH_VID, LOGITECH_MIC_PID).map_err(|e| e.to_string())?;
         Ok(api
             .device_list()
             .map(|device| HidDeviceInfo {
@@ -210,8 +214,9 @@ fn hid_watch(app: AppHandle, state: State<'_, HidState>) -> Result<(), String> {
         while let Some(event) = watch.next().await {
             let changed = match event {
                 HotplugEvent::Connected(info) => {
-                    info.vendor_id() == SANTROLLER_VID
-                        && (info.product_id() == SANTROLLER_PID || info.product_id() == SANTROLLER_V1_PID)
+                    (info.vendor_id() == SANTROLLER_VID
+                        && (info.product_id() == SANTROLLER_PID || info.product_id() == SANTROLLER_V1_PID))
+                        || (info.vendor_id() == LOGITECH_VID && info.product_id() == LOGITECH_MIC_PID)
                 }
                 HotplugEvent::Disconnected(_) => true,
             };

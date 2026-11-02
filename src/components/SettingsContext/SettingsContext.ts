@@ -2094,6 +2094,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
             deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
             name: i18next.t('profileDefaults.name'),
             uid: Math.max(0, ...(state.config.profiles?.map((x) => x.opts.uid) || [])) + 1,
+            setUp: false,
           },
           assignments: [defaultAssignment],
           mappings: [],
@@ -3252,6 +3253,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
         filters: [
           { vendorId: 0x1209, productId: 0x2882, usagePage: 0xff00 },
           { vendorId: 0x1209, productId: 0x2883, usagePage: 0xff00 },
+          // A Santroller that is only a microphone looks like a Logitech USB Microphone, which has no
+          // HID interface of its own
+          { vendorId: 0x046d, productId: 0x0a03, usagePage: 0xff00 },
         ],
       });
       if (devices.length) {

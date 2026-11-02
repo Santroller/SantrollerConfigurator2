@@ -46,6 +46,9 @@ export const USB_DEVICES = [
   proto.SubType.Gamepad,
 ].map(usbDevice);
 
+// A USB microphone, passed through as a microphone of its own
+export const USB_AUDIO_DEVICES = [usbDevice(proto.SubType.Microphone)];
+
 // MIDI gear, through a 5-pin DIN port or plugged into the USB host port. The channels are the ones
 // the MIDI defaults use: 10 for percussion, 1 for a keyboard.
 export const MIDI_DRUMS: HostDevice = {
@@ -149,6 +152,7 @@ export const BT_DEVICES = [
 
 const ALL_DEVICES = () => [
   ...USB_DEVICES,
+  ...USB_AUDIO_DEVICES,
   ...MIDI_DEVICES,
   ...WII_DEVICES,
   ...PS2_DEVICES,
@@ -297,6 +301,7 @@ export function addHostDeviceProfiles(devices: HostDevice[]) {
           device.profileName ? i18next.t(device.profileName, { name: label }) : label
         ),
         deviceToEmulate: device.type,
+        setUp: true,
       },
       assignments: [{ assignments: rule }],
     };

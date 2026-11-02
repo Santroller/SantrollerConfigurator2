@@ -2409,7 +2409,8 @@
     "PowerGigDrum": "Power Gig Drum",
     "PowerGigGuitar": "Power Gig Guitar",
     "RockRevolutionGuitar": "Rock Revolution Guitar",
-    "Midi": "MIDI Instrument"
+    "Midi": "MIDI Instrument",
+    "Microphone": "Microphone"
   },
   "outputs": {
     "projectDivaTouch": "Slider touch {{index}}",
@@ -5052,6 +5053,7 @@
         "groups": {
           "usb": "USB controllers",
           "midiOverUsb": "USB MIDI gear",
+          "usbAudio": "USB microphones",
           "midi": "MIDI gear",
           "wii": "Wii extensions",
           "ps2": "PS1 and PS2 controllers",

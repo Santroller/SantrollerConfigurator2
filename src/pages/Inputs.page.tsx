@@ -9845,6 +9845,7 @@ function BlankProfileWizard({
           deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
           name: truncateProfileName(name),
           deviceToEmulate,
+          setUp: true,
         },
         assignments: [{ assignments: finalAssignments }],
         mappings: newMappings,
@@ -9893,6 +9894,18 @@ function BlankProfileWizard({
           dispatch={(val) => {
             setDeviceToEmulate(val);
             setDefaultPreset('');
+            // A microphone plays what a USB microphone on the host port picks up, so the profile
+            // follows one being plugged in
+            if (
+              val === proto.SubType.Microphone &&
+              !hostAssignments.some((a) => a.usbType === proto.SubType.Microphone)
+            ) {
+              const hosts = [{ usbType: proto.SubType.Microphone }];
+              setHostAssignments(hosts);
+              setClaimLocalInputs(false);
+              syncToProfile({ deviceToEmulate: val, hostAssignments: hosts, claimLocalInputs: false });
+              return;
+            }
             syncToProfile({ deviceToEmulate: val });
           }}
         />
@@ -11811,14 +11824,11 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   );
 }
 
-const skippedProfileUids = new Set<number>();
-
 export function InputsPage() {
   const activeProfile = useConfigStore((state) => state.currentProfile);
   const profiles = useConfigStore((state) => state.config.profiles!);
   const updateProfile = useConfigStore((state) => state.updateProfile);
   const pollInputs = useConfigStore((state) => state.pollInputs);
-  const [, setSkippedProfilesVersion] = useState(0);
 
   const [loaded, setLoaded] = useState(false);
   // Give the loader a sec to render before rendering the rest of the page
@@ -11844,11 +11854,14 @@ export function InputsPage() {
   }
 
   const profile = profiles[activeProfile];
-  // Standby lighting never has mappings, and has nothing for the wizard to set up
+  // Profiles from before setUp count as set up once they have mappings. Standby lighting and microphones
+  // never have any, and have nothing for the wizard to set up.
   const isBlank =
-    !profile.opts?.standbyLighting &&
-    (!profile.mappings || profile.mappings.length === 0) &&
-    !skippedProfileUids.has(profile.opts?.uid ?? activeProfile);
+    profile.opts?.setUp != null
+      ? !profile.opts.setUp
+      : !profile.opts?.standbyLighting &&
+        profile.opts?.deviceToEmulate !== proto.SubType.Microphone &&
+        (!profile.mappings || profile.mappings.length === 0);
 
   return (
     <Layout>
@@ -11858,10 +11871,9 @@ export function InputsPage() {
             key={`wizard-${profile.opts?.uid ?? activeProfile}`}
             profile={profile}
             profileIdx={activeProfile}
-            onSkip={() => {
-              skippedProfileUids.add(profile.opts?.uid ?? activeProfile);
-              setSkippedProfilesVersion((v) => v + 1);
-            }}
+            onSkip={() =>
+              updateProfile({ ...profile, opts: { ...profile.opts, setUp: true } }, activeProfile)
+            }
             updateProfile={updateProfile}
           />
         ) : (

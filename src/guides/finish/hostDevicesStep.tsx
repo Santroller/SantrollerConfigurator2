@@ -20,6 +20,7 @@ import {
   MIDI_DRUMS,
   midiDrumsProfile,
   PS2_DEVICES,
+  USB_AUDIO_DEVICES,
   USB_DEVICES,
   WII_DEVICES,
   XBOX360_RF_DEVICES,
@@ -42,6 +43,7 @@ export function HostDevicesStep({ plugIn, ...props }: GuideStepProps & { plugIn:
     usb: [
       { key: 'usb', devices: USB_DEVICES },
       { key: 'midiOverUsb', devices: MIDI_DEVICES },
+      { key: 'usbAudio', devices: USB_AUDIO_DEVICES },
     ],
     midi: [{ key: 'midi', devices: MIDI_DEVICES }],
     wii: [{ key: 'wii', devices: WII_DEVICES }],

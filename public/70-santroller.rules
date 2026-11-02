@@ -5,6 +5,8 @@
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2882", TAG+="uaccess", MODE="0660", GROUP="input"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2883", TAG+="uaccess", MODE="0660", GROUP="input"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2886", TAG+="uaccess", MODE="0660", GROUP="input"
+# A Santroller that is only a microphone, as a Logitech USB Microphone (the real one has no hidraw node)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0a03", TAG+="uaccess", MODE="0660", GROUP="input"
 
 # Switch
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0f0d", ATTRS{idProduct}=="0092", TAG+="uaccess", MODE="0660", GROUP="input"

@@ -1178,6 +1178,8 @@ function addBuildProfile(build: SetupBuild) {
       opts: {
         ...profile.opts,
         name: truncateProfileName(i18next.t(`guides.setup.build.names.${build}`)),
+        // the build guide sets it up
+        setUp: true,
       },
       assignments: BUILDS[build]?.wired
         ? [{ assignments: [...rule, { localInputs: {} }] }]
