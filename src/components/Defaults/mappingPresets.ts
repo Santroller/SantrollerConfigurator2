@@ -102,6 +102,23 @@ function festivalGuitar(pro: boolean) {
   };
 }
 
+// Festival only has Rock Band's four lanes, so a Guitar Hero kit's five are laid out the way games
+// usually convert them: the yellow and orange cymbals as Rock Band's yellow and green cymbals, and
+// the green pad as Rock Band's
+const GH_DRUMS_AS_RB: Partial<Record<proto.GuitarHeroDrumsAxisType, proto.RockBandDrumsAxisType>> =
+  {
+    [proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad]:
+      proto.RockBandDrumsAxisType.RockBandDrums_RedPad,
+    [proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad]:
+      proto.RockBandDrumsAxisType.RockBandDrums_YellowCymbal,
+    [proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad]:
+      proto.RockBandDrumsAxisType.RockBandDrums_BluePad,
+    [proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad]:
+      proto.RockBandDrumsAxisType.RockBandDrums_GreenCymbal,
+    [proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad]:
+      proto.RockBandDrumsAxisType.RockBandDrums_GreenPad,
+  };
+
 function festivalDrums(pro: boolean) {
   const pads: Partial<Record<proto.RockBandDrumsAxisType, keyof typeof CODE_TO_HID>> = pro
     ? {
@@ -134,10 +151,16 @@ function festivalDrums(pro: boolean) {
       };
   return (mapping: proto.IMapping): proto.IMapping[] => {
     const out = mapping.mapping ?? {};
-    const pad = out.rbDrumAxis != null ? pads[out.rbDrumAxis] : undefined;
+    const lane = out.rbDrumAxis ?? (out.ghDrumAxis != null ? GH_DRUMS_AS_RB[out.ghDrumAxis] : null);
+    const pad = lane != null ? pads[lane] : undefined;
     if (pad) {
       // any hit at all counts, the debounce keeps the key down long enough to register
       return [{ ...analogAsButton(mapping, key(pad), 0.1), debounce: mapping.debounce }];
+    }
+    // A Guitar Hero kit's kick is an axis, so it's a hit like the pads
+    if (out.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal) {
+      const kickKey = kicks[proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal]!;
+      return [{ ...analogAsButton(mapping, key(kickKey), 0.1), debounce: mapping.debounce }];
     }
     const kick = out.rbDrumButton != null ? kicks[out.rbDrumButton] : undefined;
     if (kick) {

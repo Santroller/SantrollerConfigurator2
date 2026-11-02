@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { PS2_ADAPTER_GUIDE } from './adapters/ps2AdapterGuide';
 import { WII_ADAPTER_GUITAR_GUIDE } from './adapters/wiiAdapterGuide';
 import { BH_DRUM_GUIDE } from './bhdrums/bhDrumGuide';
+import { BT_RECEIVER_GUIDE } from './btreceiver/btReceiverGuide';
 import { CONSOLE_OUTPUT_GUIDE } from './consoleout/consoleOutputGuide';
 import { DRUM_KIT_GUIDE } from './drums/drumGuide';
 import { DIRECT_PICO_GUITAR_GUIDE } from './guitar/guitarGuide';
@@ -27,6 +28,7 @@ export const GUIDE_REGISTRY: Record<string, GuideSource> = {
   [MIDI_DIN_GUIDE.id]: MIDI_DIN_GUIDE,
   [DJ_TURNTABLE_GUIDE.id]: DJ_TURNTABLE_GUIDE,
   [USB_HOST_GUIDE.id]: USB_HOST_GUIDE,
+  [BT_RECEIVER_GUIDE.id]: BT_RECEIVER_GUIDE,
   [CONSOLE_OUTPUT_GUIDE.id]: CONSOLE_OUTPUT_GUIDE,
   [RGB_LED_GUIDE.id]: RGB_LED_GUIDE,
   [WIRELESS_GUIDE.id]: WIRELESS_GUIDE,
@@ -80,12 +82,15 @@ export function getLocalizedGuide(guide: GuideSource, t?: TFunction): GuideDefin
     subtitle: text('subtitle'),
     description: text('description'),
     estimatedTime: text('estimatedTime'),
-    steps: guide.steps.map((step) => ({
-      ...step,
-      title: text(`steps.${step.id}.title`),
-      shortTitle: text(`steps.${step.id}.shortTitle`),
-      description: text(`steps.${step.id}.description`),
-    })),
+    steps: guide.steps.map((step) => {
+      const key = step.textKey ?? `guides.${guide.id}.steps.${step.id}`;
+      return {
+        ...step,
+        title: String(translate(`${key}.title`)),
+        shortTitle: String(translate(`${key}.shortTitle`)),
+        description: String(translate(`${key}.description`)),
+      };
+    }),
   };
 }
 

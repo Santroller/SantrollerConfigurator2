@@ -110,9 +110,13 @@ export function addPlatter(left: boolean) {
     return;
   }
   ensureDeviceToEmulate([proto.SubType.DjHeroTurntable], proto.SubType.DjHeroTurntable);
+  // The platters share one I2C bus, so a second one goes on the first one's pins
+  const other = findPlatter(store, !left)?.device.djhTurntable?.i2c;
   const id = store.addDevice('djhTurntable', undefined, (device) => {
     const djh = device.djhTurntable!;
-    djh.i2c = { ...djh.i2c, sda: PLATTER_SDA, scl: PLATTER_SCL, block: 1 };
+    djh.i2c = other
+      ? { ...djh.i2c, ...other }
+      : { ...djh.i2c, sda: PLATTER_SDA, scl: PLATTER_SCL, block: 1 };
     djh.left = left;
   });
   const status = useConfigStore.getState().deviceStatus[id];

@@ -27,10 +27,12 @@ import {
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
 import { GuideStepProps } from '../types';
+import { PICO_PHYSICAL_PINS } from '../wiringText';
 import {
   addAdcBattery,
   addFuelGauge,
@@ -39,7 +41,6 @@ import {
   enableBluetoothOutput,
   fuelGaugeConflicts,
   GAUGE_I2C,
-  GAUGE_I2C_PHYSICAL,
   profileBluetoothMode,
   profileHasBluetoothOutput,
   sleepConfigured,
@@ -50,8 +51,9 @@ import {
 const P = 'guides.wireless.steps';
 const B = 'guides.wireless.board';
 
-// The firmware can't report whether the wireless chip is fitted, so the user picks their board
-function BoardPicker() {
+// The firmware can't report whether the wireless chip is fitted, so the user picks their board. A
+// guide that works without it says what happens instead.
+export function BoardPicker({ plainNote }: { plainNote?: React.ReactNode }) {
   const { t } = useTranslation();
   const board = useWirelessBoard((state) => state.board);
   const setBoard = useWirelessBoard((state) => state.setBoard);
@@ -88,7 +90,8 @@ function BoardPicker() {
         <Text size="xs" c="dimmed">
           {t(`${B}.identify`)}
         </Text>
-        {board === 'plain' && (
+        {board === 'plain' && plainNote}
+        {board === 'plain' && !plainNote && (
           <Alert color="red" variant="light" icon={<IconAlertTriangle size={16} />}>
             {t(`${B}.plainWarning`)}
           </Alert>
@@ -230,10 +233,16 @@ export function WirelessBatteryStep(props: GuideStepProps) {
     () => fuelGaugeConflicts(deviceStatus, profiles),
     [deviceStatus, profiles]
   );
+  // The gauge's own pins once it's added, which can be changed below, or the ones it's added with
+  const gaugeI2c = gauge?.device.max1704x?.i2c;
+  const gaugeSda = gaugeI2c?.sda ?? GAUGE_I2C.sda;
+  const gaugeScl = gaugeI2c?.scl ?? GAUGE_I2C.scl;
   const gaugeParams = {
     ...GAUGE_I2C,
-    sdaPin: GAUGE_I2C_PHYSICAL.sda,
-    sclPin: GAUGE_I2C_PHYSICAL.scl,
+    sda: gaugeSda,
+    scl: gaugeScl,
+    sdaPin: PICO_PHYSICAL_PINS[gaugeSda],
+    sclPin: PICO_PHYSICAL_PINS[gaugeScl],
   };
   const pinRows = t(`${S}.pinRows`, { returnObjects: true });
 
@@ -338,6 +347,8 @@ export function WirelessBatteryStep(props: GuideStepProps) {
           {t(`${S}.addGaugeBtn`, GAUGE_I2C)}
         </Button>
       )}
+      {/* The gauge's pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind="max1704x" />
     </Stack>
   );
 
@@ -694,16 +705,19 @@ export function WirelessTestStep(props: GuideStepProps) {
       <Title order={4}>{t(`${S}.testTitle`)}</Title>
       <GuideList type="ordered" items={t(`${S}.testSteps`, { returnObjects: true })} />
 
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${S}.btnSaved`) : t(`${S}.btnSave`)}
-      </Button>
+      {/* The setup guide saves in a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t(`${S}.btnSaved`) : t(`${S}.btnSave`)}
+        </Button>
+      )}
     </Stack>
   );
 

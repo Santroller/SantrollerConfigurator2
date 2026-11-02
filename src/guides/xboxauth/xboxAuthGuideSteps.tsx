@@ -24,12 +24,13 @@ import {
   Title,
 } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
 import { GuideStepProps } from '../types';
-import { ensureUsbHost, profileHasUsbSlot, usbHostPins } from '../usb/usbHostUtils';
-import { gpWithPin, IMAGE_ALT, labelWithPin, pinWithLabel } from '../wiringText';
+import { ensureUsbHostDevice, usbHostPins } from '../usb/usbHostUtils';
+import { gpPin, IMAGE_ALT, labelWithPin, pinWithLabel } from '../wiringText';
 import {
   addAuthChip,
   authChipPinsSet,
@@ -37,7 +38,6 @@ import {
   getXboxAuthMethod,
   saveXboxAuthMethod,
   XBOX_AUTH_I2C,
-  XBOX_AUTH_I2C_PHYSICAL,
   XboxAuthMethod,
 } from './xboxAuthSetup';
 
@@ -152,11 +152,29 @@ export function XboxAuthIntroStep(props: GuideStepProps) {
   );
 }
 
+// The pins for each way of authenticating: the drivers' own once they're added, which can be changed
+// on the wiring step, or the ones they're added with
+function useAuthPins() {
+  const usbHost = useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost;
+  const i2c = useConfigStore(findAuthChip)?.device.xboxOneAuth?.i2c;
+  const usb = usbHostPins(usbHost);
+  const sda = i2c?.sda != null && i2c.sda >= 0 ? i2c.sda : XBOX_AUTH_I2C.sda;
+  const scl = i2c?.scl != null && i2c.scl >= 0 ? i2c.scl : XBOX_AUTH_I2C.scl;
+  return {
+    ...usb,
+    sda,
+    scl,
+    dpPin: gpPin(usb.dp),
+    dmPin: gpPin(usb.dm),
+    sdaPin: gpPin(sda),
+    sclPin: gpPin(scl),
+  };
+}
+
 function UsbHostSetup() {
   const { t } = useTranslation();
   const connected = useConfigStore((state) => state.connected);
   const usbHost = useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost;
-  const hasUsbSlot = useConfigStore(profileHasUsbSlot);
   const pins = usbHostPins(usbHost);
 
   return (
@@ -166,7 +184,7 @@ function UsbHostSetup() {
           {t(`${P}.auth-wiring.usbSetupTitle`)}
         </Text>
         <Text size="xs" c="dimmed">
-          {t(`${P}.auth-wiring.usbSetupDesc`)}
+          {t(`${P}.auth-wiring.usbSetupDesc`, pins)}
         </Text>
         <Table striped withTableBorder withColumnBorders>
           <Table.Thead>
@@ -194,7 +212,8 @@ function UsbHostSetup() {
             </Table.Tr>
           </Table.Tbody>
         </Table>
-        {usbHost && hasUsbSlot ? (
+        {/* A donor answers the console as soon as it's plugged in, so no profile needs a slot for it */}
+        {usbHost ? (
           <Badge color="teal" size="md" variant="filled" leftSection={<IconCheck size={14} />}>
             {t(`${P}.auth-wiring.usbConfiguredBadge`, pins)}
           </Badge>
@@ -203,7 +222,7 @@ function UsbHostSetup() {
             size="sm"
             color="teal"
             leftSection={<IconUsb size={16} />}
-            onClick={() => ensureUsbHost()}
+            onClick={ensureUsbHostDevice}
             disabled={!connected}
           >
             {t(`${P}.auth-wiring.usbEnableBtn`)}
@@ -220,6 +239,7 @@ function AuthChipSetup() {
   const chip = useConfigStore(findAuthChip)?.device.xboxOneAuth;
   const configured = authChipPinsSet(chip);
   const resetPin = chip?.resetPin ?? -1;
+  const pins = useAuthPins();
 
   return (
     <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
@@ -240,11 +260,11 @@ function AuthChipSetup() {
           <Table.Tbody>
             <Table.Tr>
               <Table.Td>SDA</Table.Td>
-              <Table.Td>{gpWithPin(XBOX_AUTH_I2C.sda, XBOX_AUTH_I2C_PHYSICAL.sda)}</Table.Td>
+              <Table.Td>{pins.sdaPin}</Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>SCL</Table.Td>
-              <Table.Td>{gpWithPin(XBOX_AUTH_I2C.scl, XBOX_AUTH_I2C_PHYSICAL.scl)}</Table.Td>
+              <Table.Td>{pins.sclPin}</Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>3.3V</Table.Td>
@@ -297,6 +317,7 @@ function AuthChipSetup() {
 // Step 2: Wiring
 export function XboxAuthWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useAuthPins();
   const [method, setMethod] = useAuthMethod();
 
   const guideContent = (
@@ -312,7 +333,7 @@ export function XboxAuthWiringStep(props: GuideStepProps) {
           <Title order={4}>{t(`${P}.auth-wiring.stepsTitle`)}</Title>
           <GuideList
             type="ordered"
-            items={t(`${P}.auth-wiring.usbSteps`, { returnObjects: true })}
+            items={t(`${P}.auth-wiring.usbSteps`, { returnObjects: true, ...pins })}
           />
           <Group gap="xs">
             <Button
@@ -342,7 +363,7 @@ export function XboxAuthWiringStep(props: GuideStepProps) {
           <Title order={4}>{t(`${P}.auth-wiring.stepsTitle`)}</Title>
           <GuideList
             type="ordered"
-            items={t(`${P}.auth-wiring.chipSteps`, { returnObjects: true })}
+            items={t(`${P}.auth-wiring.chipSteps`, { returnObjects: true, ...pins })}
           />
           <Alert color="yellow" variant="light" title={t(`${P}.auth-wiring.chipWarningTitle`)}>
             <Text size="xs">{t(`${P}.auth-wiring.chipWarning`)}</Text>
@@ -352,7 +373,19 @@ export function XboxAuthWiringStep(props: GuideStepProps) {
     </Stack>
   );
 
-  const workbenchContent = method === 'usb' ? <UsbHostSetup /> : <AuthChipSetup />;
+  // The driver's pins, which can be changed here once it's added, and the wiring follows them
+  const workbenchContent =
+    method === 'usb' ? (
+      <Stack gap="sm">
+        <UsbHostSetup />
+        <GuideDeviceEditor kind="usbHost" />
+      </Stack>
+    ) : (
+      <Stack gap="sm">
+        <AuthChipSetup />
+        <GuideDeviceEditor kind="xboxOneAuth" />
+      </Stack>
+    );
 
   return (
     <StepWorkbench
@@ -445,6 +478,7 @@ function AuthChipStatus() {
 // Step 3: Test & Save
 export function XboxAuthTestStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useAuthPins();
   const commitConfig = useConfigStore((state) => state.commitConfig);
   const connected = useConfigStore((state) => state.connected);
   const [method, setMethod] = useAuthMethod();
@@ -468,16 +502,19 @@ export function XboxAuthTestStep(props: GuideStepProps) {
     <Stack gap="md">
       <MethodPicker method={method} onChange={setMethod} />
       <Text size="sm">{t(`${P}.auth-test.saveText`)}</Text>
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.auth-test.btnSaved`) : t(`${P}.auth-test.btnSave`)}
-      </Button>
+      {/* The setup guide saves in a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t(`${P}.auth-test.btnSaved`) : t(`${P}.auth-test.btnSave`)}
+        </Button>
+      )}
 
       <Title order={4}>{t(`${P}.auth-test.consoleTitle`)}</Title>
       <GuideList
@@ -492,6 +529,7 @@ export function XboxAuthTestStep(props: GuideStepProps) {
         iconColor="orange"
         items={t(`${P}.auth-test.${method === 'usb' ? 'troubleUsb' : 'troubleChip'}`, {
           returnObjects: true,
+          ...pins,
         })}
       />
     </Stack>

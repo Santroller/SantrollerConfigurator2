@@ -3,7 +3,6 @@ import {
   IconAlertTriangle,
   IconCheck,
   IconCpu,
-  IconDeviceFloppy,
   IconInfoCircle,
   IconPlugConnected,
   IconRefresh,
@@ -26,12 +25,14 @@ import {
 } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
 import { GuideStepProps } from '../types';
-import { ensureUsbHost, profileHasUsbSlot, usbHostPins } from '../usb/usbHostUtils';
+import { ensureUsbHostDevice, usbHostPins } from '../usb/usbHostUtils';
 import {
+  gpPin,
   picoGpPinExample,
   picoPinWithLabel,
   picoUsbHostPin,
@@ -41,16 +42,46 @@ import {
   WIRING,
 } from '../wiringText';
 import {
+  addXbox360Rf,
   findXbox360RfDevice,
   getXbox360RfModel,
   setXbox360RfModel,
   Xbox360RfModel,
-  xbox360RfModuleType,
 } from './xbox360RfUtils';
 
 // Step 1: Model Selection & Supplies Overview
+// The RF module's pins and the USB host port's: the drivers' own once they're added, which can be
+// changed on the wiring step, or the ones they're added with
+function useRfPins() {
+  const rf = useConfigStore(findXbox360RfDevice)?.xbox360Rf;
+  const usb = usbHostPins(
+    useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost
+  );
+  const pin = (value: number | null | undefined, fallback: number) =>
+    value != null && value >= 0 ? value : fallback;
+  return {
+    ...usb,
+    data: pin(rf?.dataPin, 4),
+    clock: pin(rf?.clockPin, 5),
+    sync: pin(rf?.syncPin, 6),
+    dpPin: gpPin(usb.dp),
+    dmPin: gpPin(usb.dm),
+  };
+}
+
+// The drivers' pins, which can be changed once they're added
+function RfDeviceEditors() {
+  return (
+    <>
+      <GuideDeviceEditor kind="xbox360Rf" />
+      <GuideDeviceEditor kind="usbHost" />
+    </>
+  );
+}
+
 export function Xbox360RfIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useRfPins();
   const [model, setModelState] = useState<Xbox360RfModel>(() => getXbox360RfModel());
 
   const handleModelChange = (val: Xbox360RfModel) => {
@@ -127,7 +158,10 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
       <Text size="sm">{t('guides.xbox360-rf.steps.rf-intro.twoInterfacesText')}</Text>
       <GuideList
         iconColor="blue"
-        items={t('guides.xbox360-rf.steps.rf-intro.twoInterfacesList', { returnObjects: true })}
+        items={t('guides.xbox360-rf.steps.rf-intro.twoInterfacesList', {
+          returnObjects: true,
+          ...pins,
+        })}
       />
     </Stack>
   );
@@ -183,7 +217,9 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
                     USB D+ / D-
                   </Badge>
                 </Table.Td>
-                <Table.Td>Pico GP2 (D+) / GP3 (D-)</Table.Td>
+                <Table.Td>
+                  Pico GP{pins.dp} (D+) / GP{pins.dm} (D-)
+                </Table.Td>
                 <Table.Td>{t('guides.xbox360-rf.steps.rf-intro.descUsb')}</Table.Td>
               </Table.Tr>
               <Table.Tr>
@@ -192,7 +228,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
                     {t(`${WIRING}.serialData`)}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{picoGpPinExample('GP4')}</Table.Td>
+                <Table.Td>{picoGpPinExample(`GP${pins.data}`)}</Table.Td>
                 <Table.Td>{t('guides.xbox360-rf.steps.rf-intro.descSerialData')}</Table.Td>
               </Table.Tr>
               <Table.Tr>
@@ -201,7 +237,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
                     {t(`${WIRING}.serialClock`)}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{picoGpPinExample('GP5')}</Table.Td>
+                <Table.Td>{picoGpPinExample(`GP${pins.clock}`)}</Table.Td>
                 <Table.Td>{t('guides.xbox360-rf.steps.rf-intro.descSerialClock')}</Table.Td>
               </Table.Tr>
               <Table.Tr>
@@ -210,7 +246,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
                     {t('guides.xbox360-rf.pinout.syncButtonOpt')}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{picoGpPinExample('GP6')}</Table.Td>
+                <Table.Td>{picoGpPinExample(`GP${pins.sync}`)}</Table.Td>
                 <Table.Td>{t('guides.xbox360-rf.steps.rf-intro.descSync')}</Table.Td>
               </Table.Tr>
             </Table.Tbody>
@@ -243,6 +279,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
 // Step 2: Wiring Step (Dynamically renders chosen Fat or Slim pinout & diagram)
 export function Xbox360RfWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useRfPins();
   const [model, setModelState] = useState<Xbox360RfModel>(() => getXbox360RfModel());
 
   const handleModelChange = (val: Xbox360RfModel) => {
@@ -251,6 +288,10 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
   };
 
   const isFat = model === 'fat';
+  const connected = useConfigStore((state) => state.connected);
+  const rfDevice = useConfigStore(findXbox360RfDevice);
+  const usbHost = useConfigStore((state) => findDeviceStatus(state, 'usbHost'));
+  const added = !!rfDevice && !!usbHost;
 
   const guideContent = (
     <Stack gap="md">
@@ -304,7 +345,10 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
           <GuideList
             type="ordered"
             iconColor="green"
-            items={t('guides.xbox360-rf.steps.rf-fat.wiringSteps', { returnObjects: true })}
+            items={t('guides.xbox360-rf.steps.rf-fat.wiringSteps', {
+              returnObjects: true,
+              ...pins,
+            })}
           />
         </>
       ) : (
@@ -324,7 +368,10 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
           <GuideList
             type="ordered"
             iconColor="teal"
-            items={t('guides.xbox360-rf.steps.rf-slim.wiringSteps', { returnObjects: true })}
+            items={t('guides.xbox360-rf.steps.rf-slim.wiringSteps', {
+              returnObjects: true,
+              ...pins,
+            })}
           />
 
           <Alert
@@ -342,7 +389,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
         icon={<IconUsb size={16} />}
         title={t('guides.xbox360-rf.steps.rf-wiring.usbNoteTitle')}
       >
-        {t('guides.xbox360-rf.steps.rf-wiring.usbNoteText')}
+        {t('guides.xbox360-rf.steps.rf-wiring.usbNoteText', pins)}
       </Alert>
     </Stack>
   );
@@ -398,7 +445,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                       USB D-
                     </Badge>
                   </Table.Td>
-                  <Table.Td>{picoUsbHostPin('GP3', 'D-')}</Table.Td>
+                  <Table.Td>{picoUsbHostPin(`GP${pins.dm}`, 'D-')}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{t(`${WIRING}.topPin`, { n: 3 })}</Table.Td>
@@ -408,7 +455,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                       USB D+
                     </Badge>
                   </Table.Td>
-                  <Table.Td>{picoUsbHostPin('GP2', 'D+')}</Table.Td>
+                  <Table.Td>{picoUsbHostPin(`GP${pins.dp}`, 'D+')}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{t(`${WIRING}.topPin`, { n: 4 })}</Table.Td>
@@ -438,7 +485,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                       {t(`${WIRING}.serialData`)}
                     </Badge>
                   </Table.Td>
-                  <Table.Td>Pico GP4</Table.Td>
+                  <Table.Td>Pico GP{pins.data}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{t(`${WIRING}.bottomPin`, { n: 3 })}</Table.Td>
@@ -448,7 +495,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                       {t(`${WIRING}.serialClock`)}
                     </Badge>
                   </Table.Td>
-                  <Table.Td>Pico GP5</Table.Td>
+                  <Table.Td>Pico GP{pins.clock}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{t(`${WIRING}.bottomPin`, { n: 4 })}</Table.Td>
@@ -481,7 +528,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>{t(`${WIRING}.serialData`)}</Table.Td>
-                  <Table.Td>Pico GP4</Table.Td>
+                  <Table.Td>Pico GP{pins.data}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{pinNum(3)}</Table.Td>
@@ -491,7 +538,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>{t(`${WIRING}.serialClock`)}</Table.Td>
-                  <Table.Td>Pico GP5</Table.Td>
+                  <Table.Td>Pico GP{pins.clock}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{pinNum(5)}</Table.Td>
@@ -501,7 +548,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>{t(`${WIRING}.usbDataMinus`)}</Table.Td>
-                  <Table.Td>{picoUsbHostPin('GP3', 'D-')}</Table.Td>
+                  <Table.Td>{picoUsbHostPin(`GP${pins.dm}`, 'D-')}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{pinNum(6)}</Table.Td>
@@ -511,7 +558,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>{t(`${WIRING}.usbDataPlus`)}</Table.Td>
-                  <Table.Td>{picoUsbHostPin('GP2', 'D+')}</Table.Td>
+                  <Table.Td>{picoUsbHostPin(`GP${pins.dp}`, 'D+')}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{pinNum(12)}</Table.Td>
@@ -531,7 +578,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>{t('guides.xbox360-rf.pinout.syncPowerButton')}</Table.Td>
-                  <Table.Td>{picoGpPinExample('GP6')}</Table.Td>
+                  <Table.Td>{picoGpPinExample(`GP${pins.sync}`)}</Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td>{t('guides.xbox360-rf.pinout.mountingPad')}</Table.Td>
@@ -548,6 +595,35 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
           )}
         </Stack>
       </Card>
+      <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
+        <Stack gap="xs">
+          <Text fw={700} size="sm">
+            {t('guides.xbox360-rf.steps.rf-wiring.driverTitle')}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t('guides.xbox360-rf.steps.rf-wiring.driverDesc', pins)}
+          </Text>
+          {added ? (
+            <Badge color="teal" size="md" variant="filled" leftSection={<IconCheck size={14} />}>
+              {t('guides.xbox360-rf.steps.rf-wiring.driverAdded')}
+            </Badge>
+          ) : (
+            <Button
+              size="sm"
+              color={isFat ? 'green' : 'teal'}
+              leftSection={<IconCpu size={16} />}
+              onClick={() => addXbox360Rf(model)}
+              disabled={!connected}
+            >
+              {isFat
+                ? t('guides.xbox360-rf.steps.rf-sync.addFatBtn')
+                : t('guides.xbox360-rf.steps.rf-sync.addSlimBtn')}
+            </Button>
+          )}
+        </Stack>
+      </Card>
+      {/* Their pins, which can be changed here once they're added, and the wiring follows them */}
+      <RfDeviceEditors />
     </Stack>
   );
 
@@ -573,28 +649,31 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on adds the module and its USB port too, so they aren't missed by not pressing the button
+      onNext={() => {
+        if (connected && !added) {
+          addXbox360Rf(model);
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
 // Step 3: Live Configuration, Sync & Save
-export function Xbox360RfReviewStep(props: GuideStepProps) {
+// Step 3: Adding the module and syncing controllers to it. Their profiles are made in the next step.
+export function Xbox360RfSyncStep(props: GuideStepProps) {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
   const connected = useConfigStore((state) => state.connected);
-  const addDevice = useConfigStore((state) => state.addDevice);
   const existingRfEntry = useConfigStore(findXbox360RfDevice);
+  const pins = useRfPins();
   const usbHost = useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost;
-  const hasUsbSlot = useConfigStore(profileHasUsbSlot);
-  const usbReady = usbHost != null && hasUsbSlot;
+  const usbReady = usbHost != null;
   const usbPins = usbHostPins(usbHost);
   const scanBluetooth = useConfigStore((state) => state.scanBluetooth);
   const scanningBluetooth = useConfigStore((state) => state.scanningBluetooth);
 
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [model, setModelState] = useState<Xbox360RfModel>(() => getXbox360RfModel());
 
   const handleModelChange = (val: Xbox360RfModel) => {
@@ -607,37 +686,7 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
   const hasRfDevice = existingRfEntry !== undefined;
   const rfData = existingRfEntry?.xbox360Rf;
 
-  const handleAddDevice = () => {
-    if (!hasRfDevice) {
-      // Data on GP4, clock on GP5 and sync on GP6, matching the wiring steps
-      addDevice('xbox360Rf', undefined, (device) => {
-        device.xbox360Rf = {
-          ...device.xbox360Rf,
-          type: xbox360RfModuleType(model),
-          dataPin: 4,
-          clockPin: 5,
-          syncPin: 6,
-        };
-      });
-    }
-    // The xbox360Rf device only drives the serial bus (LEDs, sync). Controller data comes from the
-    // module's built in wireless receiver over USB, so it also needs a USB host port (GP2/GP3)
-    // and a USB slot in the profile.
-    ensureUsbHost();
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
+  const handleAddDevice = () => addXbox360Rf(model);
 
   const guideContent = (
     <Stack gap="md">
@@ -662,27 +711,14 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
         />
       </Stack>
 
-      <Text size="sm">{t('guides.xbox360-rf.steps.rf-test.intro')}</Text>
+      <Text size="sm">{t('guides.xbox360-rf.steps.rf-sync.intro')}</Text>
 
-      <Title order={4}>{t('guides.xbox360-rf.steps.rf-test.syncInstructionsTitle')}</Title>
+      <Title order={4}>{t('guides.xbox360-rf.steps.rf-sync.syncInstructionsTitle')}</Title>
       <GuideList
         type="ordered"
         iconColor="green"
-        items={t('guides.xbox360-rf.steps.rf-test.syncSteps', { returnObjects: true })}
+        items={t('guides.xbox360-rf.steps.rf-sync.syncSteps', { returnObjects: true, ...pins })}
       />
-
-      <Button
-        size="md"
-        color="green"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved
-          ? t('guides.xbox360-rf.steps.rf-test.btnSaved')
-          : t('guides.xbox360-rf.steps.rf-test.btnSave')}
-      </Button>
     </Stack>
   );
 
@@ -692,7 +728,7 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
         <Stack gap="sm">
           <Group justify="space-between" align="center">
             <Text size="xs" fw={600} c="dimmed">
-              {t('guides.xbox360-rf.steps.rf-test.deviceControlTitle')}
+              {t('guides.xbox360-rf.steps.rf-sync.deviceControlTitle')}
             </Text>
             <Badge color={isFat ? 'green' : 'teal'} size="xs" variant="light">
               {isFat
@@ -711,8 +747,8 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
                   leftSection={<IconCheck size={14} />}
                 >
                   {rfData?.type === proto.Xbox360RfModuleType.Xbox360RfSlim
-                    ? t('guides.xbox360-rf.steps.rf-test.moduleConfiguredSlim')
-                    : t('guides.xbox360-rf.steps.rf-test.moduleConfiguredFat')}
+                    ? t('guides.xbox360-rf.steps.rf-sync.moduleConfiguredSlim')
+                    : t('guides.xbox360-rf.steps.rf-sync.moduleConfiguredFat')}
                 </Badge>
                 <Text size="xs" c="dimmed">
                   {t('guides.xbox360-rf.pinout.dataClockPins', {
@@ -724,22 +760,22 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
 
               {usbReady ? (
                 <Badge size="md" color="teal" variant="light" leftSection={<IconUsb size={14} />}>
-                  {t('guides.xbox360-rf.steps.rf-test.usbHostReady', usbPins)}
+                  {t('guides.xbox360-rf.steps.rf-sync.usbHostReady', usbPins)}
                 </Badge>
               ) : (
                 <Stack gap={4}>
                   <Text size="xs" c="dimmed">
-                    {t('guides.xbox360-rf.steps.rf-test.usbHostMissing')}
+                    {t('guides.xbox360-rf.steps.rf-sync.usbHostMissing', pins)}
                   </Text>
                   <Button
                     size="xs"
                     color="teal"
                     variant="light"
                     leftSection={<IconUsb size={14} />}
-                    onClick={() => ensureUsbHost()}
+                    onClick={ensureUsbHostDevice}
                     disabled={!connected}
                   >
-                    {t('guides.xbox360-rf.steps.rf-test.addUsbHostBtn')}
+                    {t('guides.xbox360-rf.steps.rf-sync.addUsbHostBtn')}
                   </Button>
                 </Stack>
               )}
@@ -758,7 +794,7 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
           ) : (
             <Stack gap="xs">
               <Text size="xs" c="dimmed">
-                {t('guides.xbox360-rf.steps.rf-test.addDevicePrompt')}
+                {t('guides.xbox360-rf.steps.rf-sync.addDevicePrompt')}
               </Text>
               <Button
                 size="xs"
@@ -768,8 +804,8 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
                 disabled={!connected}
               >
                 {isFat
-                  ? t('guides.xbox360-rf.steps.rf-test.addFatBtn')
-                  : t('guides.xbox360-rf.steps.rf-test.addSlimBtn')}
+                  ? t('guides.xbox360-rf.steps.rf-sync.addFatBtn')
+                  : t('guides.xbox360-rf.steps.rf-sync.addSlimBtn')}
               </Button>
             </Stack>
           )}
@@ -782,8 +818,8 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
               leftSection={<IconPlugConnected size={14} />}
             >
               {connected
-                ? t('guides.xbox360-rf.steps.rf-test.picoConnected')
-                : t('guides.xbox360-rf.steps.rf-test.picoDisconnected')}
+                ? t('guides.xbox360-rf.steps.rf-sync.picoConnected')
+                : t('guides.xbox360-rf.steps.rf-sync.picoDisconnected')}
             </Badge>
           </Group>
         </Stack>
@@ -793,16 +829,59 @@ export function Xbox360RfReviewStep(props: GuideStepProps) {
 
   return (
     <StepWorkbench
-      title={t('guides.xbox360-rf.steps.rf-test.title')}
-      badge={t('guides.xbox360-rf.steps.rf-test.badge')}
+      title={t('guides.xbox360-rf.steps.rf-sync.title')}
+      badge={t('guides.xbox360-rf.steps.rf-sync.badge')}
       badgeColor="green"
-      description={t('guides.xbox360-rf.steps.rf-test.description')}
+      description={t('guides.xbox360-rf.steps.rf-sync.description')}
       guideContent={guideContent}
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on adds the module and its USB port too, so they aren't missed by not pressing the button
+      onNext={() => {
+        if (connected && (!hasRfDevice || !usbReady)) {
+          handleAddDevice();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
+  );
+}
+
+// Whether the module and its receiver are set up, and how many controllers are connected through it,
+// shown alongside the test step
+export function Xbox360RfCheck() {
+  const { t } = useTranslation();
+  const C = 'guides.xbox360-rf.check';
+  const connected = useConfigStore((state) => state.connected);
+  const rf = useConfigStore(findXbox360RfDevice);
+  const usbHostStatus = useConfigStore((state) => findDeviceStatus(state, 'usbHost'));
+  const count = Object.keys(usbHostStatus?.usbDevices ?? {}).length;
+  const status = !connected
+    ? t(`${C}.picoNotConnected`)
+    : !rf || !usbHostStatus
+      ? t(`${C}.notAdded`)
+      : count > 0
+        ? t(`${C}.detected`, { count })
+        : t(`${C}.waiting`);
+  return (
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <Badge
+        size="lg"
+        color={count > 0 ? 'teal' : rf ? 'yellow' : 'gray'}
+        variant="light"
+        leftSection={<IconUsb size={16} />}
+        tt="none"
+      >
+        {status}
+      </Badge>
+      <Text size="xs" c="dimmed">
+        {t(`${C}.prompt`)}
+      </Text>
+    </Stack>
   );
 }

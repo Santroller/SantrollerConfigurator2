@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import '@/i18n/config';
 
-import { GUIDE_REGISTRY } from './registry';
-import { getSetupGuide } from './setup/setupGuide';
+import { getLocalizedGuide, GUIDE_REGISTRY } from './registry';
+import { getSetupGuide, withBuildGuide } from './setup/setupGuide';
 import { OTHER_BUILD } from './setup/setupPath';
 import { GuideSource } from './types';
 
@@ -16,7 +16,7 @@ function missingKeys(guide: GuideSource) {
     ),
     ...guide.steps.flatMap((step) =>
       ['title', 'shortTitle', 'description'].map(
-        (key) => `guides.${guide.id}.steps.${step.id}.${key}`
+        (key) => `${step.textKey ?? `guides.${guide.id}.steps.${step.id}`}.${key}`
       )
     ),
   ];
@@ -39,5 +39,62 @@ describe('guide text', () => {
       getSetupGuide('santroller1', null),
     ];
     expect(paths.flatMap(missingKeys)).toEqual([]);
+  });
+
+  it('build guides end with the shared steps that fit them', () => {
+    const ending = (id: string) => GUIDE_REGISTRY[id].steps.slice(-3).map((step) => step.id);
+    expect(ending('wii-adapter')).toEqual(['hostDevices', 'games', 'test']);
+    expect(ending('direct-pico-guitar').slice(-2)).toEqual(['games', 'test']);
+    expect(ending('dj-turntable').slice(-2)).toEqual(['tt-wiring', 'test']);
+  });
+
+  it('runs a build guide whole inside the setup guide, testing once', () => {
+    const guide = withBuildGuide(getLocalizedGuide(getSetupGuide('fresh', 'wii-adapter')), {
+      guide: getLocalizedGuide(GUIDE_REGISTRY['wii-adapter']),
+    });
+    const ids = guide.steps.map((step) => step.id);
+    expect(ids.filter((id) => id.endsWith('test'))).toEqual(['wii-adapter__test']);
+    expect(ids.slice(ids.indexOf('wii-adapter__test'))).toEqual([
+      'wii-adapter__test',
+      'yourProfiles',
+      'standby',
+      'save',
+    ]);
+  });
+
+  it('runs the extras after the build, before the steps it ends with', () => {
+    const guide = withBuildGuide(
+      getLocalizedGuide(getSetupGuide('fresh', 'direct-pico-guitar')),
+      { guide: getLocalizedGuide(GUIDE_REGISTRY['direct-pico-guitar']) },
+      [{ guide: getLocalizedGuide(GUIDE_REGISTRY['xbox-auth']) }]
+    );
+    const ids = guide.steps.map((step) => step.id);
+    expect(ids.slice(ids.indexOf('direct-pico-guitar__nav'))).toEqual([
+      'direct-pico-guitar__nav',
+      'xbox-auth__auth-intro',
+      'xbox-auth__auth-wiring',
+      'xbox-auth__auth-test',
+      'direct-pico-guitar__games',
+      'direct-pico-guitar__test',
+      'yourProfiles',
+      'standby',
+      'save',
+    ]);
+  });
+
+  it('runs the extras before the test step without a build guide', () => {
+    const guide = withBuildGuide(
+      getLocalizedGuide(getSetupGuide('fresh', OTHER_BUILD)),
+      undefined,
+      [{ guide: getLocalizedGuide(GUIDE_REGISTRY['rgb-leds']) }]
+    );
+    const ids = guide.steps.map((step) => step.id);
+    expect(ids.slice(ids.indexOf('profile'), ids.indexOf('test') + 1)).toEqual([
+      'profile',
+      'rgb-leds__led-intro',
+      'rgb-leds__led-wiring',
+      'rgb-leds__led-test',
+      'test',
+    ]);
   });
 });

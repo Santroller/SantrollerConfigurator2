@@ -25,6 +25,7 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
+import { GuideDeviceEditor } from '../../components/GuideDeviceEditor';
 import { IMAGE_ALT } from '../../wiringText';
 import {
   configureDirectGpioFrets,
@@ -41,6 +42,7 @@ import {
   isTargetPressed,
   removeRbMatrixFrets,
   removeRbShiftedFrets,
+  useGuitarI2cPins,
 } from '../guitarMappingUtils';
 
 export type FretWiringMode = 'direct' | 'gh5' | 'mpr121' | 'rb_solo' | 'rb_shifted';
@@ -190,6 +192,7 @@ export function SoloFretsVisualizer() {
 
 export function FretsStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const i2cPins = useGuitarI2cPins();
   const connected = useConfigStore((state) => state.connected);
   const isGh5Active = useConfigStore((state) => isGh5NeckConfigured(state));
   const isMatrixActive = useConfigStore(isRbMatrixConfigured);
@@ -447,7 +450,9 @@ export function FretsStep(props: GuideStepProps) {
                         {t('guides.direct-pico-guitar.steps.frets.neckSda')}
                       </Badge>
                     </Table.Td>
-                    <Table.Td>{t('guides.direct-pico-guitar.steps.frets.gh5PinSda')}</Table.Td>
+                    <Table.Td>
+                      {t('guides.direct-pico-guitar.steps.frets.gh5PinSda', i2cPins)}
+                    </Table.Td>
                   </Table.Tr>
                   <Table.Tr>
                     <Table.Td>
@@ -455,7 +460,9 @@ export function FretsStep(props: GuideStepProps) {
                         {t('guides.direct-pico-guitar.steps.frets.neckScl')}
                       </Badge>
                     </Table.Td>
-                    <Table.Td>{t('guides.direct-pico-guitar.steps.frets.gh5PinScl')}</Table.Td>
+                    <Table.Td>
+                      {t('guides.direct-pico-guitar.steps.frets.gh5PinScl', i2cPins)}
+                    </Table.Td>
                   </Table.Tr>
                 </Table.Tbody>
               </Table>
@@ -809,7 +816,7 @@ export function FretsStep(props: GuideStepProps) {
                 {t('guides.direct-pico-guitar.steps.frets.mpr121I2cTitle')}
               </Text>
               <Text size="xs" c="dimmed">
-                {t('guides.direct-pico-guitar.steps.frets.mpr121StepI2c')}
+                {t('guides.direct-pico-guitar.steps.frets.mpr121StepI2c', i2cPins)}
               </Text>
               <Group gap={6} wrap="wrap">
                 <Badge color="red" size="sm">
@@ -819,10 +826,10 @@ export function FretsStep(props: GuideStepProps) {
                   {t('guides.direct-pico-guitar.steps.frets.mpr121Gnd')}
                 </Badge>
                 <Badge color="blue" size="sm">
-                  {t('guides.direct-pico-guitar.steps.frets.mpr121Sda')}
+                  {t('guides.direct-pico-guitar.steps.frets.mpr121Sda', i2cPins)}
                 </Badge>
                 <Badge color="yellow" size="sm">
-                  {t('guides.direct-pico-guitar.steps.frets.mpr121Scl')}
+                  {t('guides.direct-pico-guitar.steps.frets.mpr121Scl', i2cPins)}
                 </Badge>
               </Group>
             </Stack>
@@ -947,7 +954,7 @@ export function FretsStep(props: GuideStepProps) {
                 {t('guides.direct-pico-guitar.steps.frets.gh5DriverCardTitle')}
               </Text>
               <Text size="xs" c="dimmed">
-                {t('guides.direct-pico-guitar.steps.frets.gh5DriverCardDesc')}
+                {t('guides.direct-pico-guitar.steps.frets.gh5DriverCardDesc', i2cPins)}
               </Text>
 
               {isGh5Active ? (
@@ -957,7 +964,7 @@ export function FretsStep(props: GuideStepProps) {
                   variant="filled"
                   leftSection={<IconCheck size={14} />}
                 >
-                  {t('guides.direct-pico-guitar.steps.frets.gh5DriverActive')}
+                  {t('guides.direct-pico-guitar.steps.frets.gh5DriverActive', i2cPins)}
                 </Badge>
               ) : (
                 <Button
@@ -972,6 +979,8 @@ export function FretsStep(props: GuideStepProps) {
               )}
             </Stack>
           </Card>
+          {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+          <GuideDeviceEditor kind="gh5Neck" />
 
           <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-body)">
             <Stack gap="xs">
@@ -1060,7 +1069,7 @@ export function FretsStep(props: GuideStepProps) {
                 {t('guides.direct-pico-guitar.steps.frets.mpr121DriverTitle')}
               </Text>
               <Text size="xs" c="dimmed">
-                {t('guides.direct-pico-guitar.steps.frets.mpr121DriverDesc')}
+                {t('guides.direct-pico-guitar.steps.frets.mpr121DriverDesc', i2cPins)}
               </Text>
 
               {isMpr121Active ? (
@@ -1070,7 +1079,7 @@ export function FretsStep(props: GuideStepProps) {
                   variant="filled"
                   leftSection={<IconCheck size={14} />}
                 >
-                  {t('guides.direct-pico-guitar.steps.frets.mpr121DriverActive')}
+                  {t('guides.direct-pico-guitar.steps.frets.mpr121DriverActive', i2cPins)}
                 </Badge>
               ) : (
                 <Button
@@ -1085,6 +1094,7 @@ export function FretsStep(props: GuideStepProps) {
               )}
             </Stack>
           </Card>
+          <GuideDeviceEditor kind="mpr121" />
 
           <SliderBarVisualizer />
 

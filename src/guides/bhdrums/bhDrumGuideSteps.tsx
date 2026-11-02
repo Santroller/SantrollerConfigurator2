@@ -1,71 +1,29 @@
-import React from 'react';
 import {
   IconAlertTriangle,
   IconCheck,
-  IconDeviceFloppy,
   IconInfoCircle,
   IconMusic,
   IconPlugConnected,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Image,
-  Paper,
-  Progress,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Badge, Button, Card, Image, Stack, Table, Text, Title } from '@mantine/core';
 import {
   ConfigState,
   DeviceStatus,
   useConfigStore,
 } from '@/components/SettingsContext/SettingsContext';
-import { LiveButtons, LiveInput } from '../adapters/adapterLiveStatus';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { InputTestRow } from '../components/InputTestRow';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
-import { gpWithPin, labelWithPin } from '../wiringText';
-import {
-  addBhDrumDriver,
-  BH_BUTTONS,
-  BH_I2C,
-  BH_PADS,
-  bhDrumFamily,
-  BhPad,
-  findBhDrum,
-  isBhDrumConfigured,
-  padMappingIndices,
-  sameOutput,
-} from './bhDrumSetup';
+import { gpPin, gpWithPin, labelWithPin } from '../wiringText';
+import { addBhDrumDriver, BH_BUTTONS, BH_I2C, findBhDrum, isBhDrumConfigured } from './bhDrumSetup';
 
 const P = 'guides.bh-drums.steps';
 
-// Hits only last a few milliseconds, so hold the highest reading long enough to see it
-function usePeakHold(value: number, holdMs = 500) {
-  const [peak, setPeak] = React.useState(0);
-  React.useEffect(() => {
-    setPeak((current) => Math.max(current, value));
-  }, [value]);
-  React.useEffect(() => {
-    if (peak === 0) {
-      return;
-    }
-    const timer = setTimeout(() => setPeak(0), holdMs);
-    return () => clearTimeout(timer);
-  }, [peak, holdMs]);
-  return Math.max(peak, value);
-}
-
 interface BrainLiveProps {
-  // Translation prefix of the guide's test step, which holds the status and pad labels
+  // Translation prefix of the guide's check, which holds the status labels
   prefix: string;
 }
 
@@ -91,67 +49,24 @@ export function BrainStatusBadge({
       color={detected ? 'teal' : brain && connected ? 'orange' : 'gray'}
       variant="light"
       leftSection={<IconMusic size={16} />}
+      tt="none"
     >
       {status}
     </Badge>
   );
 }
 
-function PadMonitor({ pad, prefix }: BrainLiveProps & { pad: BhPad }) {
-  const { t } = useTranslation();
-  const count = useConfigStore((state) => padMappingIndices(state, pad).length);
-  // Several notes drive each pad, so show whichever of its mappings reads highest
-  const raw = useConfigStore((state) => {
-    const statuses = state.mappingStatus[state.currentProfile];
-    return Math.max(
-      0,
-      ...padMappingIndices(state, pad).map((i) => {
-        const status = statuses?.[i];
-        return Math.max(status?.stateRaw ?? 0, status?.state ?? 0);
-      })
-    );
-  });
-  const value = usePeakHold(Math.min(raw, 65535));
-  return (
-    <Stack gap={4}>
-      <Group justify="space-between">
-        <Badge color={pad.color} size="sm" variant={count ? 'filled' : 'outline'}>
-          {t(`${prefix}.pad.${pad.key}`)}
-        </Badge>
-        <Text size="xs" c="dimmed">
-          {count ? t(`${prefix}.padNotes`, { count }) : t(`${prefix}.notMapped`)}
-        </Text>
-      </Group>
-      <Progress value={(value / 65535) * 100} color={pad.color} size="sm" radius="xl" />
-    </Stack>
-  );
-}
-
-/** Live bars for each pad the MIDI drum defaults map to */
-export function PadMonitors({ prefix }: BrainLiveProps) {
-  const family = useConfigStore(bhDrumFamily);
-  return (
-    <Stack gap="xs">
-      {BH_PADS[family].map((pad) => (
-        <PadMonitor key={pad.key} pad={pad} prefix={prefix} />
-      ))}
-    </Stack>
-  );
-}
-
-function useButtonInputs(): LiveInput[] {
-  const { t } = useTranslation();
-  return BH_BUTTONS.map((button) => ({
-    label: t(`${P}.bh-wiring.button.${button.key}`),
-    color: button.color,
-    match: (m) =>
-      m.input?.gpio != null && sameOutput(m.mapping, { gamepadButton: button.target.id }),
-  }));
-}
-
 // Step 1: Supplies & Overview
+// The brain's I2C pins: the driver's own once it's added, which can be changed on the wiring step,
+// or the ones it's added with
+function useBhPins() {
+  const i2c = useConfigStore((state) => findBhDrum(state)?.device.bhDrum?.i2c);
+  return { sda: i2c?.sda ?? BH_I2C.sda, scl: i2c?.scl ?? BH_I2C.scl };
+}
+
 export function BhDrumIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useBhPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -188,7 +103,7 @@ export function BhDrumIntroStep(props: GuideStepProps) {
           {t(`${P}.bh-intro.pinoutTitle`)}
         </Text>
         <Text size="xs" c="dimmed">
-          {t(`${P}.bh-intro.pinoutDesc`)}
+          {t(`${P}.bh-intro.pinoutDesc`, pins)}
         </Text>
         <Table striped highlightOnHover withTableBorder withColumnBorders>
           <Table.Thead>
@@ -200,11 +115,11 @@ export function BhDrumIntroStep(props: GuideStepProps) {
           <Table.Tbody>
             <Table.Tr>
               <Table.Td>DATA</Table.Td>
-              <Table.Td>{gpWithPin(BH_I2C.sda, 24)}</Table.Td>
+              <Table.Td>{gpPin(pins.sda)}</Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>CLK</Table.Td>
-              <Table.Td>{gpWithPin(BH_I2C.scl, 25)}</Table.Td>
+              <Table.Td>{gpPin(pins.scl)}</Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>+V</Table.Td>
@@ -248,6 +163,7 @@ function DriverSetup() {
   const brain = useConfigStore(findBhDrum);
   const configured = useConfigStore(isBhDrumConfigured);
   const i2c = brain?.device.bhDrum?.i2c;
+  const pins = useBhPins();
   return (
     <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
       <Stack gap="xs">
@@ -255,7 +171,7 @@ function DriverSetup() {
           {t(`${P}.bh-wiring.setupTitle`)}
         </Text>
         <Text size="xs" c="dimmed">
-          {t(`${P}.bh-wiring.setupDesc`)}
+          {t(`${P}.bh-wiring.setupDesc`, pins)}
         </Text>
         <Table withTableBorder withColumnBorders>
           <Table.Thead>
@@ -273,12 +189,12 @@ function DriverSetup() {
             </Table.Tr>
             <Table.Tr>
               <Table.Td>CLK</Table.Td>
-              <Table.Td>{gpWithPin(BH_I2C.scl, 25)}</Table.Td>
+              <Table.Td>{gpPin(pins.scl)}</Table.Td>
               <Table.Td>{t(`${P}.bh-wiring.typeI2cClock`)}</Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>DATA</Table.Td>
-              <Table.Td>{gpWithPin(BH_I2C.sda, 24)}</Table.Td>
+              <Table.Td>{gpPin(pins.sda)}</Table.Td>
               <Table.Td>{t(`${P}.bh-wiring.typeI2cData`)}</Table.Td>
             </Table.Tr>
             <Table.Tr>
@@ -311,6 +227,9 @@ function DriverSetup() {
 // Step 2: Wiring
 export function BhDrumWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useBhPins();
+  const connected = useConfigStore((state) => state.connected);
+  const configured = useConfigStore(isBhDrumConfigured);
 
   const guideContent = (
     <Stack gap="md">
@@ -326,7 +245,14 @@ export function BhDrumWiringStep(props: GuideStepProps) {
       </Stack>
 
       <Title order={4}>{t(`${P}.bh-wiring.brainTitle`)}</Title>
-      <GuideList type="ordered" items={t(`${P}.bh-wiring.brainSteps`, { returnObjects: true })} />
+      <GuideList
+        type="ordered"
+        items={t(`${P}.bh-wiring.brainSteps`, {
+          returnObjects: true,
+          sdaPin: gpPin(pins.sda),
+          sclPin: gpPin(pins.scl),
+        })}
+      />
 
       <Title order={4}>{t(`${P}.bh-wiring.buttonsTitle`)}</Title>
       <GuideList type="ordered" items={t(`${P}.bh-wiring.buttonSteps`, { returnObjects: true })} />
@@ -344,6 +270,8 @@ export function BhDrumWiringStep(props: GuideStepProps) {
   const workbenchContent = (
     <Stack gap="sm">
       <DriverSetup />
+      {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind="bhDrum" />
 
       <Text fw={700} size="sm">
         {t(`${P}.bh-wiring.buttonsHeader`)}
@@ -373,93 +301,33 @@ export function BhDrumWiringStep(props: GuideStepProps) {
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the driver up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (connected && !configured) {
+          addBhDrumDriver();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
-// Step 3: Live Test & Save
-export function BhDrumReviewStep(props: GuideStepProps) {
+// Whether the Pico sees the drum brain, shown alongside the test step
+export function BhDrumCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
-  const connected = useConfigStore((state) => state.connected);
-  const buttons = useButtonInputs();
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${P}.bh-test.configuredText`)}</Text>
-
-      <Title order={4}>{t(`${P}.bh-test.tipsTitle`)}</Title>
-      <Text size="sm">{t(`${P}.bh-test.tipsText`)}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.bh-test.btnSaved`) : t(`${P}.bh-test.btnSave`)}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.bh-test.telemetryTitle`)}
-          </Text>
-          <BrainStatusBadge prefix={`${P}.bh-test`} findBrain={findBhDrum} />
-          <Text size="xs" c="dimmed">
-            {t(`${P}.bh-test.verifyPrompt`)}
-          </Text>
-          <PadMonitors prefix={`${P}.bh-test`} />
-        </Stack>
-      </Paper>
-
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.bh-test.buttonsTitle`)}
-          </Text>
-          <LiveButtons inputs={buttons} />
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
+  const pins = useBhPins();
+  const C = 'guides.bh-drums.check';
   return (
-    <StepWorkbench
-      title={t(`${P}.bh-test.title`)}
-      badge={t(`${P}.bh-test.badge`)}
-      badgeColor="green"
-      description={t(`${P}.bh-test.description`)}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <BrainStatusBadge prefix={C} findBrain={findBhDrum} />
+      <Text size="sm" fw={600} mt="xs">
+        {t(`${C}.tipsTitle`)}
+      </Text>
+      <Text size="xs">{t(`${C}.tipsText`, pins)}</Text>
+    </Stack>
   );
 }

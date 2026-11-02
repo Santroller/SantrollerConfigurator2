@@ -1,5 +1,6 @@
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { ensureUsbHostDevice } from '../usb/usbHostUtils';
 
 export type Xbox360RfModel = 'fat' | 'slim';
 
@@ -56,4 +57,23 @@ export function setXbox360RfModel(model: Xbox360RfModel): void {
       String(existing.deviceid)
     );
   }
+}
+
+// Adds the RF module on GP4 (data), GP5 (clock) and GP6 (sync) unless it's already there, and the USB
+// host port its receiver's controller data arrives on. The module's own device only drives the
+// serial bus (LEDs, sync).
+export function addXbox360Rf(model: Xbox360RfModel) {
+  const store = useConfigStore.getState();
+  if (!findXbox360RfDevice(store)) {
+    store.addDevice('xbox360Rf', undefined, (device) => {
+      device.xbox360Rf = {
+        ...device.xbox360Rf,
+        type: xbox360RfModuleType(model),
+        dataPin: 4,
+        clockPin: 5,
+        syncPin: 6,
+      };
+    });
+  }
+  ensureUsbHostDevice();
 }

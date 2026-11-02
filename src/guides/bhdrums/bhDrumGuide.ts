@@ -1,5 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import { BhDrumIntroStep, BhDrumReviewStep, BhDrumWiringStep } from './bhDrumGuideSteps';
+import { BhDrumCheck, BhDrumIntroStep, BhDrumWiringStep } from './bhDrumGuideSteps';
 
 export const BH_DRUM_GUIDE: GuideSource = {
   id: 'bh-drums',
@@ -7,6 +8,6 @@ export const BH_DRUM_GUIDE: GuideSource = {
   steps: [
     { id: 'bh-intro', render: BhDrumIntroStep },
     { id: 'bh-wiring', render: BhDrumWiringStep },
-    { id: 'bh-test', render: BhDrumReviewStep },
+    ...finishSteps('bh-drums', BhDrumCheck),
   ],
 };

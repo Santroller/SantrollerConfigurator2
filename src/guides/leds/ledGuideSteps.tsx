@@ -24,10 +24,11 @@ import {
 } from '@mantine/core';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
-import { gpWithPin, IMAGE_ALT, pinWithLabel, WIRING } from '../wiringText';
+import { gpPin, IMAGE_ALT, pinWithLabel, WIRING } from '../wiringText';
 import {
   addLedDevice,
   APA102_MOSI_PIN,
@@ -41,9 +42,22 @@ import {
   WS2812_DATA_PIN,
 } from './ledUtils';
 
-// Pico physical pin numbers for the GPIOs this guide uses
-const PHYSICAL_PIN: Record<number, number> = { 16: 21, 18: 24, 19: 25 };
-const pinLabel = (gp: number) => gpWithPin(gp, PHYSICAL_PIN[gp]);
+// The LEDs' pins: the device's own once it's added, which can be changed on the wiring step, or the
+// ones it's added with
+function useLedPins() {
+  const device = useConfigStore(findLedDevice);
+  const data = device?.ws2812?.pin ?? WS2812_DATA_PIN;
+  const sck = device?.apa102?.spi?.sck ?? APA102_SCK_PIN;
+  const mosi = device?.apa102?.spi?.mosi ?? APA102_MOSI_PIN;
+  return {
+    data,
+    sck,
+    mosi,
+    dataPin: gpPin(data),
+    sckPin: gpPin(sck),
+    mosiPin: gpPin(mosi),
+  };
+}
 
 function useLedChipType() {
   const device = useConfigStore(findLedDevice);
@@ -89,6 +103,7 @@ function LedChipTypeSelect({
 // Step 1: Supplies & Intro
 export function LedIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useLedPins();
   const { device, chipType, setChipType } = useLedChipType();
   const isApa102 = chipType === 'apa102';
 
@@ -149,7 +164,7 @@ export function LedIntroStep(props: GuideStepProps) {
           <Text size="xs" c="dimmed">
             {isApa102
               ? t('guides.rgb-leds.steps.led-intro.pinoutDescApa102')
-              : t('guides.rgb-leds.steps.led-intro.pinoutDescWs2812')}
+              : t('guides.rgb-leds.steps.led-intro.pinoutDescWs2812', pins)}
           </Text>
 
           <Table striped highlightOnHover withTableBorder withColumnBorders>
@@ -185,7 +200,7 @@ export function LedIntroStep(props: GuideStepProps) {
                     {t(`${WIRING}.dataIn`, { id: isApa102 ? 'DI' : 'DIN' })}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{pinLabel(isApa102 ? APA102_MOSI_PIN : WS2812_DATA_PIN)}</Table.Td>
+                <Table.Td>{isApa102 ? pins.mosiPin : pins.dataPin}</Table.Td>
                 <Table.Td>
                   {isApa102
                     ? t('guides.rgb-leds.steps.led-intro.descDataApa102')
@@ -199,7 +214,7 @@ export function LedIntroStep(props: GuideStepProps) {
                       {t(`${WIRING}.clockIn`, { id: 'CI' })}
                     </Badge>
                   </Table.Td>
-                  <Table.Td>{pinLabel(APA102_SCK_PIN)}</Table.Td>
+                  <Table.Td>{pins.sckPin}</Table.Td>
                   <Table.Td>{t('guides.rgb-leds.steps.led-intro.descClock')}</Table.Td>
                 </Table.Tr>
               )}
@@ -235,6 +250,7 @@ export function LedIntroStep(props: GuideStepProps) {
 // Step 2: Wiring
 export function LedWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useLedPins();
   const connected = useConfigStore((state) => state.connected);
   const { device, chipType, setChipType } = useLedChipType();
   const isApa102 = chipType === 'apa102';
@@ -260,8 +276,11 @@ export function LedWiringStep(props: GuideStepProps) {
         type="ordered"
         items={
           isApa102
-            ? t('guides.rgb-leds.steps.led-wiring.wiringStepsApa102', { returnObjects: true })
-            : t('guides.rgb-leds.steps.led-wiring.wiringSteps', { returnObjects: true })
+            ? t('guides.rgb-leds.steps.led-wiring.wiringStepsApa102', {
+                returnObjects: true,
+                ...pins,
+              })
+            : t('guides.rgb-leds.steps.led-wiring.wiringSteps', { returnObjects: true, ...pins })
         }
       />
 
@@ -284,8 +303,8 @@ export function LedWiringStep(props: GuideStepProps) {
           </Text>
           <Text size="xs" c="dimmed">
             {isApa102
-              ? t('guides.rgb-leds.steps.led-wiring.driverConfigDescApa102')
-              : t('guides.rgb-leds.steps.led-wiring.driverConfigDescWs2812')}
+              ? t('guides.rgb-leds.steps.led-wiring.driverConfigDescApa102', pins)
+              : t('guides.rgb-leds.steps.led-wiring.driverConfigDescWs2812', pins)}
           </Text>
 
           <NumberInput
@@ -316,6 +335,8 @@ export function LedWiringStep(props: GuideStepProps) {
           )}
         </Stack>
       </Card>
+      {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind={isApa102 ? 'apa102' : 'ws2812'} />
 
       <Text fw={700} size="sm">
         {t('guides.rgb-leds.steps.led-wiring.previewTitle')}
@@ -399,18 +420,21 @@ export function LedReviewStep(props: GuideStepProps) {
       <Text size="sm">{t('guides.rgb-leds.steps.led-test.syncText')}</Text>
       <InactivitySettings ledOnly />
 
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved
-          ? t('guides.rgb-leds.steps.led-test.btnSaved')
-          : t('guides.rgb-leds.steps.led-test.btnSave')}
-      </Button>
+      {/* The setup guide saves in a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved
+            ? t('guides.rgb-leds.steps.led-test.btnSaved')
+            : t('guides.rgb-leds.steps.led-test.btnSave')}
+        </Button>
+      )}
     </Stack>
   );
 

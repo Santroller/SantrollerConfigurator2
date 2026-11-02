@@ -161,12 +161,16 @@ export function configureDrumMux(family: DrumFamily, chip: MuxChip) {
   let id: string;
   if (existing) {
     id = existing.id;
-    useConfigStore
-      .getState()
-      .updateDevice(
-        { ...existing.device, multiplexer: { ...existing.device.multiplexer, ...muxSettings } },
-        id
-      );
+    // Pins changed on the wiring step stay where they are, only the chip's settings change
+    const current = existing.device.multiplexer!;
+    const s3Pin = sixteen ? (current.s3Pin >= 0 ? current.s3Pin : MUX_SELECT_PINS[3]) : -1;
+    useConfigStore.getState().updateDevice(
+      {
+        ...existing.device,
+        multiplexer: { ...current, sixteenChannel: sixteen, slow, s3Pin },
+      },
+      id
+    );
   } else {
     id = useConfigStore.getState().addDevice('multiplexer', undefined, (device) => {
       device.multiplexer = { ...device.multiplexer, ...muxSettings } as proto.IMultiplexerDevice;

@@ -1,3 +1,4 @@
+import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import {
   assignMidiDrumSlot,
@@ -5,7 +6,7 @@ import {
   hasMidiPadMappings,
 } from '../bhdrums/bhDrumSetup';
 import { findDeviceStatus } from '../guideConfig';
-import { gpWithPin, labelWithPin } from '../wiringText';
+import { gpPin, labelWithPin } from '../wiringText';
 
 // The cable from the drum pads carries the kit's SPI bus. The Pico is the SPI master on SPI0:
 // SCK GP2 (pin 4), MOSI / TX GP3 (pin 5), MISO / RX GP4 (pin 6), with chip select as a plain GPIO.
@@ -15,20 +16,38 @@ export const WT_CS_PIN = 5;
 export interface WtConnectorPin {
   // The pad's label on the original brain's silkscreen
   label: string;
-  // Rendered at display time so the "Pin" wording follows the current language
-  pico: () => string;
+  // Rendered at display time so the "Pin" wording follows the current language, from the driver's
+  // pins, which can be changed on the wiring step
+  pico: (pins: WtPins) => string;
   type: string;
 }
 
 // In the order the original brain's connector lists them
 export const WT_CONNECTOR: WtConnectorPin[] = [
-  { label: 'CS', pico: () => gpWithPin(WT_CS_PIN, 7), type: 'typeCs' },
+  { label: 'CS', pico: (pins) => gpPin(pins.cs), type: 'typeCs' },
   { label: '+3V3', pico: () => labelWithPin('3V3(OUT)', 36), type: 'typePower' },
-  { label: 'MOSI', pico: () => gpWithPin(WT_SPI.mosi, 5), type: 'typeMosi' },
+  { label: 'MOSI', pico: (pins) => gpPin(pins.mosi), type: 'typeMosi' },
   { label: '0V', pico: () => labelWithPin('GND', 38), type: 'typeGround' },
-  { label: 'MISO', pico: () => gpWithPin(WT_SPI.miso, 6), type: 'typeMiso' },
-  { label: 'CLK', pico: () => gpWithPin(WT_SPI.sck, 4), type: 'typeClock' },
+  { label: 'MISO', pico: (pins) => gpPin(pins.miso), type: 'typeMiso' },
+  { label: 'CLK', pico: (pins) => gpPin(pins.sck), type: 'typeClock' },
 ];
+
+export interface WtPins {
+  sck: number;
+  mosi: number;
+  miso: number;
+  cs: number;
+}
+
+// The driver's pins once it's added, or the ones it's added with
+export function wtPins(device: proto.IWorldTourDrumDevice | null | undefined): WtPins {
+  return {
+    sck: device?.spi?.sck ?? WT_SPI.sck,
+    mosi: device?.spi?.mosi ?? WT_SPI.mosi,
+    miso: device?.spi?.miso ?? WT_SPI.miso,
+    cs: device?.csPin ?? WT_CS_PIN,
+  };
+}
 
 export function findWtDrum(state: ConfigState) {
   return findDeviceStatus(state, 'worldTourDrum');

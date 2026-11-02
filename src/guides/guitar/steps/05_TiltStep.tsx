@@ -17,15 +17,18 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
+import { GuideDeviceEditor } from '../../components/GuideDeviceEditor';
 import {
   configureAccelerometerTilt,
   getTargetAnalogValue,
   GUITAR_TARGETS,
   isAccelerometerTiltConfigured,
+  useGuitarI2cPins,
 } from '../guitarMappingUtils';
 
 export function TiltStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const i2cPins = useGuitarI2cPins();
   const connected = useConfigStore((state) => state.connected);
   const isAccelActive = useConfigStore(isAccelerometerTiltConfigured);
   const tiltValue = useConfigStore((s) =>
@@ -71,8 +74,8 @@ export function TiltStep(props: GuideStepProps) {
             <List type="ordered" spacing="xs" size="sm">
               <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cVcc')}</List.Item>
               <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cGnd')}</List.Item>
-              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cSda')}</List.Item>
-              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cScl')}</List.Item>
+              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cSda', i2cPins)}</List.Item>
+              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cScl', i2cPins)}</List.Item>
             </List>
             <Text size="xs" c="dimmed">
               {t('guides.direct-pico-guitar.steps.tilt.i2cShared')}
@@ -115,11 +118,11 @@ export function TiltStep(props: GuideStepProps) {
             {t('guides.direct-pico-guitar.steps.tilt.accelDriverTitle')}
           </Text>
           <Text size="xs" c="dimmed">
-            {t('guides.direct-pico-guitar.steps.tilt.accelDriverDesc')}
+            {t('guides.direct-pico-guitar.steps.tilt.accelDriverDesc', i2cPins)}
           </Text>
           {isAccelActive ? (
             <Badge color="teal" size="md" variant="filled" leftSection={<IconCheck size={14} />}>
-              {t('guides.direct-pico-guitar.steps.tilt.accelDriverActive')}
+              {t('guides.direct-pico-guitar.steps.tilt.accelDriverActive', i2cPins)}
             </Badge>
           ) : (
             <Button
@@ -134,6 +137,8 @@ export function TiltStep(props: GuideStepProps) {
           )}
         </Stack>
       </Card>
+      {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind="accelerometer" />
 
       {isAccelActive && (
         <Stack gap={2}>

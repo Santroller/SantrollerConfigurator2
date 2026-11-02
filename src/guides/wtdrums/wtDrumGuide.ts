@@ -1,5 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import { WtDrumIntroStep, WtDrumReviewStep, WtDrumWiringStep } from './wtDrumGuideSteps';
+import { WtDrumCheck, WtDrumIntroStep, WtDrumWiringStep } from './wtDrumGuideSteps';
 
 export const WT_DRUM_GUIDE: GuideSource = {
   id: 'wt-drums',
@@ -7,6 +8,6 @@ export const WT_DRUM_GUIDE: GuideSource = {
   steps: [
     { id: 'wt-intro', render: WtDrumIntroStep },
     { id: 'wt-wiring', render: WtDrumWiringStep },
-    { id: 'wt-test', render: WtDrumReviewStep },
+    ...finishSteps('wt-drums', WtDrumCheck),
   ],
 };

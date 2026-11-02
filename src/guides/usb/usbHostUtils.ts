@@ -18,18 +18,25 @@ export function profileHasUsbSlot(state: ConfigState): boolean {
   );
 }
 
-/**
- * Adds a usbHost device on GP2 (D+) / GP3 (D-) unless one already exists, then makes sure the
- * active profile has a USB slot for it so the plugged in controller actually drives the profile.
- */
-export function ensureUsbHost(): string {
+// Adds a usbHost device on GP2 (D+) / GP3 (D-) unless one already exists
+export function ensureUsbHostDevice(): string {
   const store = useConfigStore.getState();
-  const id =
+  return (
     findDeviceStatus(store, 'usbHost')?.id ??
     store.addDevice('usbHost', undefined, (device) => {
       device.usbHost!.firstPin = USB_HOST_DP_PIN;
       device.usbHost!.dmFirst = false;
-    });
+    })
+  );
+}
+
+/**
+ * Adds the usbHost device, then makes sure the active profile has a USB slot for it so the plugged
+ * in controller actually drives the profile.
+ */
+export function ensureUsbHost(): string {
+  const id = ensureUsbHostDevice();
+  const store = useConfigStore.getState();
   const profile = store.config.profiles?.[store.currentProfile];
   // A usbType slot only matches a plugged in controller of exactly that subtype. Using the type
   // the profile emulates means e.g. a guitar plugged into a guitar profile maps 1:1 with the

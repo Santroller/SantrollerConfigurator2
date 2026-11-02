@@ -1,5 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import { DrumIntroStep, DrumPadWiringStep, DrumReviewStep } from './drumGuideSteps';
+import { DrumCheck, DrumIntroStep, DrumPadWiringStep } from './drumGuideSteps';
 
 export const DRUM_KIT_GUIDE: GuideSource = {
   id: 'drum-kit',
@@ -7,6 +8,6 @@ export const DRUM_KIT_GUIDE: GuideSource = {
   steps: [
     { id: 'drum-intro', render: DrumIntroStep },
     { id: 'drum-wiring', render: DrumPadWiringStep },
-    { id: 'drum-test', render: DrumReviewStep },
+    ...finishSteps('drum-kit', DrumCheck),
   ],
 };

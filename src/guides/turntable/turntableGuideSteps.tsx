@@ -1,20 +1,14 @@
-import React from 'react';
-import {
-  IconCheck,
-  IconDeviceFloppy,
-  IconDisc,
-  IconInfoCircle,
-  IconPlugConnected,
-} from '@tabler/icons-react';
+import { IconCheck, IconDisc, IconInfoCircle, IconPlugConnected } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Badge, Button, Card, Group, Paper, Stack, Table, Text, Title } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { LiveAxis, LiveButtons, LiveInput } from '../adapters/adapterLiveStatus';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
-import { gpWithPin, labelWithPin } from '../wiringText';
+import { gpPin, gpWithPin, labelWithPin } from '../wiringText';
 import {
   addPlatter,
   applyBasePinout,
@@ -69,13 +63,14 @@ function PlatterStatus({ left }: { left: boolean }) {
   const connected = useConfigStore((state) => state.connected);
   const platter = useConfigStore((state) => findPlatter(state, left));
   const side = left ? t(`${P}.tt-wiring.leftPlatter`) : t(`${P}.tt-wiring.rightPlatter`);
+  const C = 'guides.dj-turntable.check';
   const status = !connected
-    ? t(`${P}.tt-test.picoNotConnected`)
+    ? t(`${C}.picoNotConnected`)
     : !platter
-      ? t(`${P}.tt-test.platterNotAdded`)
+      ? t(`${C}.platterNotAdded`)
       : platter.connected
-        ? t(`${P}.tt-test.platterConnected`)
-        : t(`${P}.tt-test.platterNotDetected`);
+        ? t(`${C}.platterConnected`)
+        : t(`${C}.platterNotDetected`);
   return (
     <Badge
       size="lg"
@@ -89,8 +84,18 @@ function PlatterStatus({ left }: { left: boolean }) {
 }
 
 // Step 1: Supplies & Intro
+// The platters' I2C pins: a platter's own once one is added, which can be changed on the wiring step,
+// or the ones they're added with
+function usePlatterPins() {
+  const i2c = useConfigStore(
+    (state) => (findPlatter(state, true) ?? findPlatter(state, false))?.device.djhTurntable?.i2c
+  );
+  return { sda: i2c?.sda ?? PLATTER_SDA, scl: i2c?.scl ?? PLATTER_SCL };
+}
+
 export function TurntableIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = usePlatterPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -130,12 +135,12 @@ export function TurntableIntroStep(props: GuideStepProps) {
             <Table.Tbody>
               <Table.Tr>
                 <Table.Td>{t(`${P}.tt-intro.featurePlatterSda`)}</Table.Td>
-                <Table.Td>{gpWithPin(PLATTER_SDA, 24)}</Table.Td>
+                <Table.Td>{gpPin(pins.sda)}</Table.Td>
                 <Table.Td>{t(`${P}.tt-intro.typeI2cData`)}</Table.Td>
               </Table.Tr>
               <Table.Tr>
                 <Table.Td>{t(`${P}.tt-intro.featurePlatterScl`)}</Table.Td>
-                <Table.Td>{gpWithPin(PLATTER_SCL, 25)}</Table.Td>
+                <Table.Td>{gpPin(pins.scl)}</Table.Td>
                 <Table.Td>{t(`${P}.tt-intro.typeI2cClock`)}</Table.Td>
               </Table.Tr>
               <Table.Tr>
@@ -211,6 +216,7 @@ function PlatterSetup({ left }: { left: boolean }) {
 // Step 2: Wiring
 export function TurntableWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = usePlatterPins();
   const connected = useConfigStore((state) => state.connected);
   const baseApplied = useConfigStore(isBasePinoutApplied);
   const leftButtons = usePlatterButtons(true);
@@ -224,7 +230,10 @@ export function TurntableWiringStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <Title order={4}>{t(`${P}.tt-wiring.wiringTitle`)}</Title>
-      <GuideList type="ordered" items={t(`${P}.tt-wiring.wiringSteps`, { returnObjects: true })} />
+      <GuideList
+        type="ordered"
+        items={t(`${P}.tt-wiring.wiringSteps`, { returnObjects: true, ...pins })}
+      />
       <Alert
         color="blue"
         icon={<IconInfoCircle size={16} />}
@@ -243,7 +252,7 @@ export function TurntableWiringStep(props: GuideStepProps) {
             {t(`${P}.tt-wiring.setupTitle`)}
           </Text>
           <Text size="xs" c="dimmed">
-            {t(`${P}.tt-wiring.setupDesc`)}
+            {t(`${P}.tt-wiring.setupDesc`, pins)}
           </Text>
           <PlatterSetup left />
           <PlatterSetup left={false} />
@@ -264,6 +273,8 @@ export function TurntableWiringStep(props: GuideStepProps) {
           )}
         </Stack>
       </Card>
+      {/* The platters' pins, which can be changed here once they're added */}
+      <GuideDeviceEditor kind="djhTurntable" />
 
       <Text fw={700} size="sm">
         {t(`${P}.tt-wiring.testBenchTitle`)}
@@ -311,85 +322,21 @@ export function TurntableWiringStep(props: GuideStepProps) {
   );
 }
 
-// Step 3: Review & Save
-export function TurntableReviewStep(props: GuideStepProps) {
+// Whether the Pico sees each platter, and how to check scratching, shown alongside the test step
+export function TurntableCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
-  const connected = useConfigStore((state) => state.connected);
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const velocity = (left: boolean): LiveInput => ({
-    label: left ? t(`${P}.tt-test.leftVelocity`) : t(`${P}.tt-test.rightVelocity`),
-    color: 'grape',
-    match: platterInput(left, proto.DJHeroPlatterInputType.DJHeroPlatterVelocity),
-  });
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${P}.tt-test.configuredText`)}</Text>
-
-      <Title order={4}>{t(`${P}.tt-test.scratchTestTitle`)}</Title>
-      <Text size="sm">{t(`${P}.tt-test.scratchTestText`)}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.tt-test.btnSaved`) : t(`${P}.tt-test.btnSave`)}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.tt-test.telemetryTitle`)}
-          </Text>
-          <PlatterStatus left />
-          <PlatterStatus left={false} />
-          <Text size="xs" c="dimmed">
-            {t(`${P}.tt-test.verifyPrompt`)}
-          </Text>
-          <LiveAxis input={velocity(true)} notMappedLabel={t(`${P}.tt-wiring.notMapped`)} />
-          <LiveAxis input={velocity(false)} notMappedLabel={t(`${P}.tt-wiring.notMapped`)} />
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
+  const C = 'guides.dj-turntable.check';
   return (
-    <StepWorkbench
-      title={t(`${P}.tt-test.title`)}
-      badge={t(`${P}.tt-test.badge`)}
-      badgeColor="green"
-      description={t(`${P}.tt-test.description`)}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <PlatterStatus left />
+      <PlatterStatus left={false} />
+      <Text size="sm" fw={600} mt="xs">
+        {t(`${C}.scratchTestTitle`)}
+      </Text>
+      <Text size="xs">{t(`${C}.scratchTestText`)}</Text>
+    </Stack>
   );
 }

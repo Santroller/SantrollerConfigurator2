@@ -45,6 +45,39 @@ export const labelWithPin = (label: string, n: number | string | undefined) =>
 export const gpWithPin = (gp: number | string, n: number | string | undefined) =>
   labelWithPin(`GP${gp}`, n);
 
+// Where each GP pin is on the Pico's 40-pin header, so a guide can show a pin that's been changed
+export const PICO_PHYSICAL_PINS: Record<number, number> = {
+  0: 1,
+  1: 2,
+  2: 4,
+  3: 5,
+  4: 6,
+  5: 7,
+  6: 9,
+  7: 10,
+  8: 11,
+  9: 12,
+  10: 14,
+  11: 15,
+  12: 16,
+  13: 17,
+  14: 19,
+  15: 20,
+  16: 21,
+  17: 22,
+  18: 24,
+  19: 25,
+  20: 26,
+  21: 27,
+  22: 29,
+  26: 31,
+  27: 32,
+  28: 34,
+};
+
+/** "GP18 (Pin 24)", for any GP pin */
+export const gpPin = (gp: number) => gpWithPin(gp, PICO_PHYSICAL_PINS[gp]);
+
 /** "GP4 (Pin 6) + 1kΩ to 3V3" */
 export const withPullup = (pin: string) => tr(`${WIRING}.pullup1k`, { pin });
 

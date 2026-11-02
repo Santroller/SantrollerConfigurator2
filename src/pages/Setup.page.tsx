@@ -8,7 +8,7 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideStepNav, topLevelPosition } from '@/guides/components/GuideStepNav';
 import { getLocalizedGuide, GUIDE_REGISTRY } from '@/guides/registry';
 import { getSetupGuide, withBuildGuide } from '@/guides/setup/setupGuide';
-import { useSetupPath } from '@/guides/setup/setupPath';
+import { extrasFor, useSetupPath } from '@/guides/setup/setupPath';
 import { useGuideSteps } from '@/guides/useGuideSteps';
 
 export function SetupPage() {
@@ -16,14 +16,23 @@ export function SetupPage() {
   const navigate = useNavigate();
   const path = useSetupPath((state) => state.path);
   const build = useSetupPath((state) => state.build);
+  const extras = useSetupPath((state) => state.extras);
   const guide = useMemo(() => {
     const buildGuide = path === 'fresh' && build ? GUIDE_REGISTRY[build] : undefined;
+    // Extras are picked with the build, so only a fresh controller has them
+    const picked = path === 'fresh' ? extrasFor(build).filter((id) => extras.includes(id)) : [];
     return withBuildGuide(
       getLocalizedGuide(getSetupGuide(path, build), t),
-      buildGuide && getLocalizedGuide(buildGuide, t),
-      build ? t(`guides.setup.build.names.${build}`, '') || undefined : undefined
+      buildGuide && {
+        guide: getLocalizedGuide(buildGuide, t),
+        label: t(`guides.setup.build.names.${build}`, '') || undefined,
+      },
+      picked.map((id) => ({
+        guide: getLocalizedGuide(GUIDE_REGISTRY[id], t),
+        label: t(`guides.setup.build.extras.${id}.name`),
+      }))
     );
-  }, [t, path, build]);
+  }, [t, path, build, extras]);
   // A controller that came from a seller is already configured and mapped. Sellers setting
   // up their own devices don't need telling.
   const sellerName = useConfigStore((state) => state.toolInfo?.name);
@@ -106,7 +115,7 @@ export function SetupPage() {
         />
 
         <Box mt="md">
-          <StepComponent {...stepProps} />
+          <StepComponent {...stepProps} nested />
         </Box>
       </Container>
     </Layout>

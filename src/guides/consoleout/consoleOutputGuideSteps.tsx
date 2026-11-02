@@ -25,6 +25,7 @@ import {
 } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
@@ -589,6 +590,9 @@ export function ConsoleOutputWiringStep(props: GuideStepProps) {
           </Table>
         </Stack>
       </Card>
+      {/* The drivers' pins, which can be changed here once they're added, and the wiring follows */}
+      <GuideDeviceEditor kind={target === 'wii' ? 'wiiEmulation' : 'psxEmulation'} />
+      {usbHost && <GuideDeviceEditor kind="usbHost" />}
     </Stack>
   );
 
@@ -639,16 +643,19 @@ export function ConsoleOutputTestStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <Text size="sm">{t(`${K}.console-test.saveText`)}</Text>
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${K}.console-test.btnSaved`) : t(`${K}.console-test.btnSave`)}
-      </Button>
+      {/* The setup guide saves in a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t(`${K}.console-test.btnSaved`) : t(`${K}.console-test.btnSave`)}
+        </Button>
+      )}
 
       <Title order={4}>{t(`${K}.console-test.expectTitle`)}</Title>
       <GuideList

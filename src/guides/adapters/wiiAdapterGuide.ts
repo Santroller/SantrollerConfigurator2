@@ -1,5 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import { WiiIntroStep, WiiReviewStep, WiiWiringStep } from './wiiAdapterGuideSteps';
+import { WiiCheck, WiiIntroStep, WiiWiringStep } from './wiiAdapterGuideSteps';
 
 export const WII_ADAPTER_GUITAR_GUIDE: GuideSource = {
   id: 'wii-adapter',
@@ -7,6 +8,6 @@ export const WII_ADAPTER_GUITAR_GUIDE: GuideSource = {
   steps: [
     { id: 'wii-intro', render: WiiIntroStep },
     { id: 'wii-wiring', render: WiiWiringStep },
-    { id: 'wii-test', render: WiiReviewStep },
+    ...finishSteps('wii-adapter', WiiCheck),
   ],
 };

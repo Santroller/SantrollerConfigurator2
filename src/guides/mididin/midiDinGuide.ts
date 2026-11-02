@@ -1,8 +1,9 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
 import {
+  MidiDinCheck,
   MidiDinIntroStep,
   MidiDinSetupStep,
-  MidiDinTestStep,
   MidiDinWiringStep,
 } from './midiDinGuideSteps';
 
@@ -13,6 +14,6 @@ export const MIDI_DIN_GUIDE: GuideSource = {
     { id: 'din-intro', render: MidiDinIntroStep },
     { id: 'din-wiring', render: MidiDinWiringStep },
     { id: 'din-setup', render: MidiDinSetupStep },
-    { id: 'din-test', render: MidiDinTestStep },
+    ...finishSteps('midi-din', MidiDinCheck),
   ],
 };

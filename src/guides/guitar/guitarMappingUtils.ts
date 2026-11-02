@@ -3,6 +3,7 @@ import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { AnalogPins } from '@/devices/pico/pins';
 import { findDeviceStatus } from '../guideConfig';
+import { gpPin } from '../wiringText';
 
 export interface PinMappingTarget {
   name: string;
@@ -644,6 +645,35 @@ function removeNeckMappings(ids: number[], remove: (input: proto.IInput) => bool
   return true;
 }
 
+const GUITAR_I2C_KINDS = ['gh5Neck', 'mpr121', 'accelerometer'] as const;
+
+/**
+ * The I2C bus the guitar's add-ons share: the pins of one that's already added, which can be changed
+ * in the guide, or I2C1's header pins otherwise
+ */
+export function guitarI2cBus(state: ConfigState): { sda: number; scl: number; block: number } {
+  for (const kind of GUITAR_I2C_KINDS) {
+    const i2c = findDeviceStatus(state, kind)?.device[kind]?.i2c;
+    if (i2c) {
+      return { sda: i2c.sda, scl: i2c.scl, block: i2c.block };
+    }
+  }
+  return { sda: PICO_I2C1.sda, scl: PICO_I2C1.scl, block: PICO_I2C1.block };
+}
+
+// The add-ons' shared I2C pins, for the guide's wiring text, its own words for them included
+export function useGuitarI2cPins() {
+  const gh5 = useConfigStore((state) => findDeviceStatus(state, 'gh5Neck')?.device.gh5Neck?.i2c);
+  const mpr121 = useConfigStore((state) => findDeviceStatus(state, 'mpr121')?.device.mpr121?.i2c);
+  const accel = useConfigStore(
+    (state) => findDeviceStatus(state, 'accelerometer')?.device.accelerometer?.i2c
+  );
+  const i2c = gh5 ?? mpr121 ?? accel;
+  const sda = i2c?.sda ?? PICO_I2C1.sda;
+  const scl = i2c?.scl ?? PICO_I2C1.scl;
+  return { sda, scl, sdaPin: gpPin(sda), sclPin: gpPin(scl) };
+}
+
 /**
  * Adds a device on the I2C1 header pins. The firmware shares the bus between devices at different
  * addresses, but runs it at the clock of whichever device starts first, so every device on it is
@@ -653,17 +683,17 @@ function addI2c1Device(
   kind: 'gh5Neck' | 'mpr121' | 'accelerometer',
   fill?: (device: proto.IDevice) => void
 ): string {
+  // Joins the bus an add-on already on the guitar is using, as its pins may have been changed
+  const bus = guitarI2cBus(useConfigStore.getState());
   const id = useConfigStore.getState().addDevice(kind, undefined, (device) => {
-    device[kind]!.i2c = { ...device[kind]!.i2c, ...PICO_I2C1 };
+    device[kind]!.i2c = { ...device[kind]!.i2c, ...bus };
     fill?.(device);
   });
   const store = useConfigStore.getState();
   const onBus = Object.values(store.deviceStatus).flatMap((status) =>
     Object.entries(status.device).flatMap(([field, config]) => {
       const i2c = (config as { i2c?: proto.II2CDevice } | null)?.i2c;
-      return i2c?.block === PICO_I2C1.block &&
-        i2c.sda === PICO_I2C1.sda &&
-        i2c.scl === PICO_I2C1.scl
+      return i2c?.block === bus.block && i2c.sda === bus.sda && i2c.scl === bus.scl
         ? [{ status, field, i2c }]
         : [];
     })

@@ -24,7 +24,6 @@ import {
   IconSettings,
   IconTag,
   IconUpload,
-  IconUsb,
 } from '@tabler/icons-react';
 import i18next from 'i18next';
 import { Trans, useTranslation } from 'react-i18next';
@@ -38,6 +37,7 @@ import {
   Button,
   Card,
   Center,
+  Checkbox,
   Divider,
   FileButton,
   Group,
@@ -51,16 +51,10 @@ import {
   Stack,
   Switch,
   Text,
-  TextInput,
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import {
-  getHostSourceType,
-  getProfileSlotLabel,
-  getRuleSummaryParts,
-} from '@/components/Inputs/inputRegistry';
-import { PreviewRule, RulePreview } from '@/components/Inputs/RulePreview';
+import { getProfileSlotLabel, getRuleSummaryParts } from '@/components/Inputs/inputRegistry';
 import { LEGACY_CONFIG_ACCEPT } from '@/components/Legacy/importLegacyConfig';
 import { translateLegacyWarning } from '@/components/Legacy/warnings';
 import { proto } from '@/components/SettingsContext/config';
@@ -68,10 +62,19 @@ import { truncateProfileName } from '@/components/SettingsContext/profileName';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { Uf2UpdateAlert } from '@/components/Uf2Update/Uf2UpdateAlert';
 import { GuideList } from '../components/GuideList';
+import { ConnectPrompt, StepActions } from '../components/StepActions';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GUIDE_REGISTRY } from '../registry';
 import { GuideStepProps } from '../types';
-import { BUILDS, MAIN_BUILDS, OTHER_BUILD, SetupBuild, SetupPath, useSetupPath } from './setupPath';
+import {
+  BUILDS,
+  extrasFor,
+  MAIN_BUILDS,
+  OTHER_BUILD,
+  SetupBuild,
+  SetupPath,
+  useSetupPath,
+} from './setupPath';
 
 const strong = { strong: <strong /> };
 
@@ -169,54 +172,12 @@ export function Santroller1Note({ step }: { step: string }) {
   );
 }
 
-function useStepText(id: string) {
+export function useStepText(id: string) {
   const { t } = useTranslation();
   return {
     title: t(`guides.setup.steps.${id}.title`),
     description: t(`guides.setup.steps.${id}.description`),
   };
-}
-
-// Asks for the controller to be connected, for the actions that need it
-function ConnectPrompt({
-  promptKey = 'guides.setup.actions.connectPrompt',
-}: {
-  promptKey?: string;
-}) {
-  const { t } = useTranslation();
-  const connect = useConfigStore((state) => state.connect);
-  const updating = useConfigStore((state) => state.updating);
-  return (
-    <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-default-hover)">
-      <Group justify="space-between" gap="sm">
-        <Text size="sm" c="dimmed">
-          {t(promptKey)}
-        </Text>
-        {typeof navigator !== 'undefined' && 'hid' in navigator && (
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconUsb size={14} />}
-            onClick={connect}
-            loading={updating}
-          >
-            {t('guides.setup.actions.connect')}
-          </Button>
-        )}
-      </Group>
-    </Paper>
-  );
-}
-
-// A step's actions, placed right after the instructions they go with. Without a controller they
-// ask for one, unless another set of actions on the step already did.
-function StepActions({ children, prompt = true }: { children: React.ReactNode; prompt?: boolean }) {
-  const connected = useConfigStore((state) => state.connected);
-  const hung = useConfigStore((state) => state.hung);
-  if (!connected) {
-    return prompt ? <ConnectPrompt /> : null;
-  }
-  return hung ? null : <>{children}</>;
 }
 
 // Picks the guide's path. Starting fresh is the default, so the guide works without choosing.
@@ -643,22 +604,150 @@ export function SetupLayoutStep(props: GuideStepProps) {
           <Trans i18nKey="gettingStarted.layout.keyIdea.body" components={strong} />
         </Text>
       </Alert>
-      <Title order={4} mt="sm">
-        {t('gettingStarted.layout.profilePage.title')}
-      </Title>
-      <Text size="sm">{t('gettingStarted.layout.profilePage.intro')}</Text>
-      <ProfileSketch />
-      <LayoutMarkerList
-        items={PROFILE_SECTIONS.map(({ key, label }) => ({
-          title: t(label),
-          bodyKey: `gettingStarted.layout.profilePage.sections.${key}`,
-        }))}
-      />
       <GoodToKnow keys={['simpleMode']} />
     </Stack>
   );
 
   return <StepWorkbench {...props} {...useStepText('layout')} guideContent={guideContent} />;
+}
+
+const DEVICE_PARTS = ['status', 'pins', 'add'] as const;
+
+// A device card in the devices sketch, drawn like the real one: its artwork, name and status
+function MockDeviceCard({
+  image,
+  title,
+  status,
+  connected,
+  children,
+}: {
+  image: string;
+  title: string;
+  status: string;
+  connected: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Stack gap="xs" align="stretch">
+        {/* The covers are monochrome glyphs, masked so they follow the colour scheme */}
+        <Box
+          h={48}
+          aria-hidden
+          style={{
+            backgroundColor: 'var(--mantine-color-text)',
+            mask: `url(${image}) center / contain no-repeat`,
+            WebkitMask: `url(${image}) center / contain no-repeat`,
+          }}
+        />
+        <Text size="sm" fw={700} ta="center">
+          {title}
+        </Text>
+        <Group justify="center" gap={6} wrap="nowrap">
+          <Badge size="sm" color={connected ? 'blue' : 'red'} tt="none">
+            {status}
+          </Badge>
+          <LayoutMarker n={1} />
+        </Group>
+        {children}
+      </Stack>
+    </Paper>
+  );
+}
+
+// The Devices page, with a Wii guitar plugged into the board and nothing in its USB host port yet
+function DevicesSketch() {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
+        <MockDeviceCard
+          image="/covers/devices/wii.svg"
+          title={t('devices.wii')}
+          status={t('connected_with_type', { type: t('wii.extensions.WiiGuitarHeroGuitar') })}
+          connected
+        >
+          <Group align="flex-end" gap="xs" wrap="nowrap">
+            <SimpleGrid cols={2} spacing="xs" style={{ flex: 1 }}>
+              <MockField
+                label={t('i2c.sda.label')}
+                value={t('i2c.sda.pin', { pin: 18, channel: 1 })}
+              />
+              <MockField
+                label={t('i2c.scl.label')}
+                value={t('i2c.scl.pin', { pin: 19, channel: 1 })}
+              />
+            </SimpleGrid>
+            <LayoutMarker n={2} />
+          </Group>
+        </MockDeviceCard>
+        <MockDeviceCard
+          image="/covers/devices/usbHost.svg"
+          title={t('devices.usbHost')}
+          status={t('disconnected')}
+          connected={false}
+        />
+      </SimpleGrid>
+      <Group justify="flex-end" gap={6} mt="sm">
+        <LayoutMarker n={3} />
+        <ThemeIcon radius="xl" size={36}>
+          <IconPlus size={20} stroke={1.5} />
+        </ThemeIcon>
+      </Group>
+    </Paper>
+  );
+}
+
+// What the Devices page holds, before any are added, so the build steps that add them make sense
+export function SetupDevicesIntroStep(props: GuideStepProps) {
+  const { t } = useTranslation();
+  const D = 'gettingStarted.devicesPage';
+
+  const guideContent = (
+    <Stack gap="md">
+      <Text size="sm">{t(`${D}.intro`)}</Text>
+      <DevicesSketch />
+      <LayoutMarkerList
+        items={DEVICE_PARTS.map((key) => ({
+          title: t(`${D}.parts.${key}.title`),
+          bodyKey: `${D}.parts.${key}.body`,
+        }))}
+      />
+      <Alert
+        variant="light"
+        color="blue"
+        title={t(`${D}.shared.title`)}
+        icon={<IconBulb size={18} />}
+      >
+        <Text size="sm">
+          <Trans i18nKey={`${D}.shared.body`} components={strong} />
+        </Text>
+      </Alert>
+    </Stack>
+  );
+
+  return <StepWorkbench {...props} {...useStepText('devicesIntro')} guideContent={guideContent} />;
+}
+
+// What's inside a profile, from top to bottom, ending on the assignments the next step explains
+export function SetupProfilesIntroStep(props: GuideStepProps) {
+  const { t } = useTranslation();
+  const P = 'gettingStarted.profilePage';
+
+  const guideContent = (
+    <Stack gap="md">
+      <Text size="sm">{t(`${P}.intro`)}</Text>
+      <ProfileSketch />
+      <LayoutMarkerList
+        items={PROFILE_SECTIONS.map(({ key, label }) => ({
+          title: t(label),
+          bodyKey: `${P}.sections.${key}`,
+        }))}
+      />
+    </Stack>
+  );
+
+  return <StepWorkbench {...props} {...useStepText('profilesIntro')} guideContent={guideContent} />;
 }
 
 export function SetupFlashStep(props: GuideStepProps) {
@@ -1129,8 +1218,15 @@ export function SetupBuildStep(props: GuideStepProps) {
   const { t } = useTranslation();
   const build = useSetupPath((state) => state.build);
   const setBuild = useSetupPath((state) => state.setBuild);
+  const extras = useSetupPath((state) => state.extras);
+  const setExtras = useSetupPath((state) => state.setExtras);
   const { target, ensure, addNew } = useBuildProfile(build);
   const guided = build != null && build !== OTHER_BUILD;
+  // The USB host and adapter builds only add the driver, and a later step makes a profile for each
+  // kind of controller plugged in, so they need no profile of their own. MIDI DIN still does, as
+  // its guide sets the drum kit up itself.
+  const plugIn = guided ? BUILDS[build]?.plugIn : undefined;
+  const needsProfile = guided && (!plugIn || plugIn === 'midi');
   const B = 'guides.setup.build';
 
   const options = [
@@ -1170,7 +1266,48 @@ export function SetupBuildStep(props: GuideStepProps) {
           ))}
         </SimpleGrid>
       </Radio.Group>
-      {guided && (
+      {/* Parts that go on top of the build, whose guides then run as part of this one */}
+      {build && (
+        <div>
+          <Title order={4} mb={4}>
+            {t(`${B}.extrasTitle`)}
+          </Title>
+          <Text size="sm" c="dimmed" mb="sm">
+            {t(`${B}.extrasIntro`)}
+          </Text>
+          <Checkbox.Group value={extras} onChange={setExtras}>
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
+              {extrasFor(build).map((extra) => (
+                <Checkbox.Card
+                  key={extra}
+                  value={extra}
+                  radius="md"
+                  p="md"
+                  style={{ display: 'flex', alignItems: 'flex-start' }}
+                >
+                  <Group align="flex-start" gap="sm" wrap="nowrap">
+                    <Checkbox.Indicator mt={2} />
+                    <div>
+                      <Text size="sm" fw={600}>
+                        {t(`${B}.extras.${extra}.title`)}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {/* A USB host build already has the port the controller plugs into */}
+                        {t(
+                          extra === 'xbox-auth' && BUILDS[build]?.plugIn === 'usb'
+                            ? `${B}.extras.${extra}.bodyUsbHost`
+                            : `${B}.extras.${extra}.body`
+                        )}
+                      </Text>
+                    </div>
+                  </Group>
+                </Checkbox.Card>
+              ))}
+            </SimpleGrid>
+          </Checkbox.Group>
+        </div>
+      )}
+      {needsProfile && (
         <StepActions>
           <Paper withBorder radius="md" p="sm">
             <Group justify="space-between" gap="sm">
@@ -1208,7 +1345,7 @@ export function SetupBuildStep(props: GuideStepProps) {
       {...useStepText('build')}
       // The build guide's steps edit the current profile, so there has to be one by then
       onNext={() => {
-        if (guided) {
+        if (needsProfile) {
           ensure();
         }
         props.onNext?.();
@@ -1216,90 +1353,6 @@ export function SetupBuildStep(props: GuideStepProps) {
       guideContent={guideContent}
     />
   );
-}
-
-// What the build guide left the profile with, its rules showing live whether they match
-export function SetupYourProfileStep(props: GuideStepProps) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const profileIdx = useConfigStore((state) => state.currentProfile);
-  const profile = useConfigStore((state) => state.config.profiles?.[state.currentProfile]);
-  const activation = useConfigStore((state) => state.activationListStatus[state.currentProfile]);
-  const updateProfile = useConfigStore((state) => state.updateProfile);
-  const Y = 'guides.setup.yourProfile';
-
-  // Explained from what the rules actually have, as the guide may have used an existing profile
-  const items = (profile?.assignments ?? []).flatMap((list) => list.assignments ?? []);
-  const explanation = items.some((item) => getHostSourceType(item) !== null)
-    ? 'source'
-    : items.some((item) => item.localInputs != null)
-      ? 'wired'
-      : 'wiredNoClaim';
-
-  const rules: PreviewRule[] = (profile?.assignments ?? []).map((list, i) => ({
-    assignments: list.assignments ?? [],
-    active: activation?.[i]?.state ?? false,
-  }));
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${Y}.intro`)}</Text>
-      <StepActions>
-        {profile && (
-          <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-              <TextInput
-                label={t('main.profile_name.label')}
-                value={profile.opts?.name ?? ''}
-                onChange={(event) =>
-                  updateProfile(
-                    {
-                      ...profile,
-                      opts: {
-                        ...profile.opts,
-                        name: truncateProfileName(event.currentTarget.value),
-                      },
-                    },
-                    profileIdx
-                  )
-                }
-              />
-              <TextInput
-                label={t('main.device_to_emulate.label')}
-                value={t(
-                  `subType.${proto.SubType[profile.opts?.deviceToEmulate ?? proto.SubType.Gamepad]}`
-                )}
-                readOnly
-              />
-            </SimpleGrid>
-            <div>
-              <Title order={4} mb={4}>
-                {t(`${Y}.rulesTitle`)}
-              </Title>
-              <Text size="sm" mb="sm">
-                <Trans i18nKey={`${Y}.${explanation}`} components={strong} />
-              </Text>
-              <Box maw="100%" miw={0}>
-                <RulePreview rules={rules} />
-              </Box>
-            </div>
-            <Group>
-              <Button
-                variant="light"
-                leftSection={<IconDeviceGamepad3 size={16} />}
-                onClick={() => navigate('/profiles')}
-              >
-                {t(`${Y}.open`)}
-              </Button>
-            </Group>
-          </Stack>
-        )}
-      </StepActions>
-      <Text size="sm">{t(`${Y}.next`)}</Text>
-    </Stack>
-  );
-
-  return <StepWorkbench {...props} {...useStepText('yourProfile')} guideContent={guideContent} />;
 }
 
 export function SetupDevicesStep(props: GuideStepProps) {

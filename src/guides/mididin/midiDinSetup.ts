@@ -161,13 +161,10 @@ export function applyMidiChannel(channel: number) {
 }
 
 /**
- * Adds the 5-pin DIN MIDI input (a midiSerial device on the chosen UART RX pin at 31250 baud),
- * gives the profile a MIDI slot for it, loads the MIDI drum defaults and moves the slot and the
- * pad mappings onto the chosen channel. The profile is switched to a Guitar Hero kit first unless
- * it already emulates a drum kit.
+ * Adds the 5-pin DIN MIDI input (a midiSerial device on the chosen UART RX pin at 31250 baud), or
+ * moves it to that pin. This is all the wiring step does, as the pin is part of the wiring.
  */
-export function addMidiDinInput(option: MidiDinPinOption, channel: number) {
-  ensureDrumKitProfile();
+export function ensureMidiDinDevice(option: MidiDinPinOption): string {
   const uart: proto.IUARTDevice = {
     block: option.block,
     tx: -1,
@@ -177,23 +174,35 @@ export function addMidiDinInput(option: MidiDinPinOption, channel: number) {
   const direction = proto.MidiSerialDirection.MidiSerialIn;
   const store = useConfigStore.getState();
   const existing = findMidiDin(store);
-  let id = existing?.id;
-  if (id === undefined) {
-    id = store.addDevice('midiSerial', undefined, (device) => {
+  if (!existing) {
+    return store.addDevice('midiSerial', undefined, (device) => {
       device.midiSerial!.uart = uart;
       device.midiSerial!.direction = direction;
     });
-  } else {
-    const current = existing!.device.midiSerial!;
-    if (
-      current.uart.rx !== uart.rx ||
-      current.uart.tx !== uart.tx ||
-      current.uart.block !== uart.block ||
-      current.uart.baudrate !== uart.baudrate
-    ) {
-      store.updateDevice({ ...existing!.device, midiSerial: { ...current, uart, direction } }, id);
-    }
   }
+  const current = existing.device.midiSerial!;
+  if (
+    current.uart.rx !== uart.rx ||
+    current.uart.tx !== uart.tx ||
+    current.uart.block !== uart.block ||
+    current.uart.baudrate !== uart.baudrate
+  ) {
+    store.updateDevice(
+      { ...existing.device, midiSerial: { ...current, uart, direction } },
+      existing.id
+    );
+  }
+  return existing.id;
+}
+
+/**
+ * Makes sure the MIDI input is there, gives the profile a MIDI slot for it, loads the MIDI drum
+ * defaults and moves the slot and the pad mappings onto the chosen channel. The profile is switched
+ * to a Guitar Hero kit first unless it already emulates a drum kit.
+ */
+export function addMidiDinInput(option: MidiDinPinOption, channel: number) {
+  ensureDrumKitProfile();
+  const id = ensureMidiDinDevice(option);
   assignMidiDrumSlot(id);
   applyMidiChannel(channel);
 }

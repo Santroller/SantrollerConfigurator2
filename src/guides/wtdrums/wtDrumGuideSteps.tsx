@@ -1,24 +1,36 @@
-import React from 'react';
 import {
   IconAlertTriangle,
   IconCheck,
-  IconDeviceFloppy,
   IconInfoCircle,
   IconPlugConnected,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Badge, Button, Card, Image, Paper, Stack, Table, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Image, Stack, Table, Text, Title } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { BrainStatusBadge, PadMonitors } from '../bhdrums/bhDrumGuideSteps';
+import { BrainStatusBadge } from '../bhdrums/bhDrumGuideSteps';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
-import { addWtDrumDriver, findWtDrum, isWtDrumConfigured, WT_CONNECTOR } from './wtDrumSetup';
+import { gpPin } from '../wiringText';
+import {
+  addWtDrumDriver,
+  findWtDrum,
+  isWtDrumConfigured,
+  WT_CONNECTOR,
+  wtPins,
+} from './wtDrumSetup';
 
 const P = 'guides.wt-drums.steps';
 
+// The driver's pins, which can be changed on the wiring step once it's added
+function useWtPins() {
+  return wtPins(useConfigStore((state) => findWtDrum(state)?.device.worldTourDrum));
+}
+
 function ConnectorTable({ withType }: { withType?: boolean }) {
   const { t } = useTranslation();
+  const pins = useWtPins();
   return (
     <Table striped highlightOnHover withTableBorder withColumnBorders>
       <Table.Thead>
@@ -32,7 +44,7 @@ function ConnectorTable({ withType }: { withType?: boolean }) {
         {WT_CONNECTOR.map((pin) => (
           <Table.Tr key={pin.label}>
             <Table.Td>{pin.label}</Table.Td>
-            <Table.Td>{pin.pico()}</Table.Td>
+            <Table.Td>{pin.pico(pins)}</Table.Td>
             {withType && <Table.Td>{t(`${P}.wt-wiring.${pin.type}`)}</Table.Td>}
           </Table.Tr>
         ))}
@@ -117,6 +129,7 @@ function DriverSetup() {
   const drum = useConfigStore(findWtDrum);
   const configured = useConfigStore(isWtDrumConfigured);
   const device = drum?.device.worldTourDrum;
+  const pins = useWtPins();
   return (
     <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
       <Stack gap="xs">
@@ -124,7 +137,7 @@ function DriverSetup() {
           {t(`${P}.wt-wiring.setupTitle`)}
         </Text>
         <Text size="xs" c="dimmed">
-          {t(`${P}.wt-wiring.setupDesc`)}
+          {t(`${P}.wt-wiring.setupDesc`, { ...pins })}
         </Text>
         <ConnectorTable withType />
         {configured ? (
@@ -155,6 +168,9 @@ function DriverSetup() {
 // Step 2: Wiring
 export function WtDrumWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useWtPins();
+  const connected = useConfigStore((state) => state.connected);
+  const configured = useConfigStore(isWtDrumConfigured);
 
   const guideContent = (
     <Stack gap="md">
@@ -170,7 +186,16 @@ export function WtDrumWiringStep(props: GuideStepProps) {
       </Stack>
 
       <Title order={4}>{t(`${P}.wt-wiring.cableTitle`)}</Title>
-      <GuideList type="ordered" items={t(`${P}.wt-wiring.cableSteps`, { returnObjects: true })} />
+      <GuideList
+        type="ordered"
+        items={t(`${P}.wt-wiring.cableSteps`, {
+          returnObjects: true,
+          sckPin: gpPin(pins.sck),
+          mosiPin: gpPin(pins.mosi),
+          misoPin: gpPin(pins.miso),
+          csPin: gpPin(pins.cs),
+        })}
+      />
 
       <Alert
         color="orange"
@@ -189,84 +214,41 @@ export function WtDrumWiringStep(props: GuideStepProps) {
       badgeColor="orange"
       description={t(`${P}.wt-wiring.description`)}
       guideContent={guideContent}
-      workbenchContent={<DriverSetup />}
+      workbenchContent={
+        <Stack gap="sm">
+          <DriverSetup />
+          {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+          <GuideDeviceEditor kind="worldTourDrum" />
+        </Stack>
+      }
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the driver up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (connected && !configured) {
+          addWtDrumDriver();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
-// Step 3: Live Test & Save
-export function WtDrumReviewStep(props: GuideStepProps) {
+// Whether the Pico sees the drums, shown alongside the test step
+export function WtDrumCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
-  const connected = useConfigStore((state) => state.connected);
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${P}.wt-test.configuredText`)}</Text>
-
-      <Title order={4}>{t(`${P}.wt-test.tipsTitle`)}</Title>
-      <Text size="sm">{t(`${P}.wt-test.tipsText`)}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.wt-test.btnSaved`) : t(`${P}.wt-test.btnSave`)}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          {t(`${P}.wt-test.telemetryTitle`)}
-        </Text>
-        <BrainStatusBadge prefix={`${P}.wt-test`} findBrain={findWtDrum} />
-        <Text size="xs" c="dimmed">
-          {t(`${P}.wt-test.verifyPrompt`)}
-        </Text>
-        <PadMonitors prefix={`${P}.wt-test`} />
-      </Stack>
-    </Paper>
-  );
-
+  const C = 'guides.wt-drums.check';
   return (
-    <StepWorkbench
-      title={t(`${P}.wt-test.title`)}
-      badge={t(`${P}.wt-test.badge`)}
-      badgeColor="green"
-      description={t(`${P}.wt-test.description`)}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <BrainStatusBadge prefix={C} findBrain={findWtDrum} />
+      <Text size="sm" fw={600} mt="xs">
+        {t(`${C}.tipsTitle`)}
+      </Text>
+      <Text size="xs">{t(`${C}.tipsText`)}</Text>
+    </Stack>
   );
 }

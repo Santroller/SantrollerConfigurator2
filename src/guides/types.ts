@@ -5,6 +5,8 @@ export interface GuideStepProps {
   onPrevious?: () => void;
   isFirstStep?: boolean;
   isLastStep?: boolean;
+  // Running inside the setup guide, which saves in a step of its own
+  nested?: boolean;
 }
 
 // A step as a guide defines it. Its text comes from the translations, under
@@ -12,6 +14,8 @@ export interface GuideStepProps {
 export interface GuideStepSource {
   id: string;
   render: React.ComponentType<GuideStepProps>;
+  // Where its text is instead, for a step shared between guides
+  textKey?: string;
 }
 
 export interface GuideStep extends GuideStepSource {

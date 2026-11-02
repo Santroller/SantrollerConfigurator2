@@ -32,6 +32,51 @@ describe('Fortnite Festival presets', () => {
     const whammy = mappings.find((m) => m.mapping?.keycode === CODE_TO_HID.Slash);
     expect(whammy?.trigger).toBeDefined();
   });
+
+  // A Guitar Hero kit as the drum kit guide sets one up: a piezo per pad, and on the kick
+  const GHD = proto.GuitarHeroDrumsAxisType;
+  const ghPad = (axis: proto.GuitarHeroDrumsAxisType, pin: number): proto.IMapping => ({
+    mapping: { ghDrumAxis: axis },
+    input: { gpio: { pin, pinMode: proto.PinMode.Floating, analog: true } },
+    debounce: 5,
+  });
+  const ghKit = [
+    ghPad(GHD.GuitarHeroDrums_RedPad, 26),
+    ghPad(GHD.GuitarHeroDrums_YellowPad, 27),
+    ghPad(GHD.GuitarHeroDrums_BluePad, 28),
+    ghPad(GHD.GuitarHeroDrums_OrangePad, 1),
+    ghPad(GHD.GuitarHeroDrums_GreenPad, 2),
+    ghPad(GHD.GuitarHeroDrums_KickPedal, 3),
+  ];
+  const keysFrom = (id: string) =>
+    ghKit.map((pad) =>
+      preset(id)
+        .convert(pad)
+        .map((m) => [m.mapping?.keycode, m.debounce])
+    );
+
+  it('maps a Guitar Hero kit to the pro drum keys, with its cymbals as Rock Band cymbals', () => {
+    expect(keysFrom('festival_pro_drums')).toEqual([
+      [[CODE_TO_HID.KeyD, 5]],
+      [[CODE_TO_HID.KeyR, 5]],
+      [[CODE_TO_HID.KeyJ, 5]],
+      [[CODE_TO_HID.KeyI, 5]],
+      [[CODE_TO_HID.KeyK, 5]],
+      [[CODE_TO_HID.Space, 5]],
+    ]);
+  });
+
+  it('maps a Guitar Hero kit to the four drum lanes', () => {
+    expect(keysFrom('festival_drums')).toEqual([
+      [[CODE_TO_HID.KeyF, 5]],
+      [[CODE_TO_HID.KeyG, 5]],
+      [[CODE_TO_HID.KeyH, 5]],
+      // orange and green both play the green lane
+      [[CODE_TO_HID.KeyJ, 5]],
+      [[CODE_TO_HID.KeyJ, 5]],
+      [[CODE_TO_HID.KeyK, 5]],
+    ]);
+  });
 });
 
 describe('Preset key labels', () => {

@@ -36,8 +36,9 @@ import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { MIDI_PERCUSSION_CHANNEL } from '@/devices/midi';
 import { StepWorkbench } from '../components/StepWorkbench';
+import { holdButtons } from '../finish/festivalSetup';
 import { GuideStepProps } from '../types';
-import { LayoutMarker, LayoutMarkerList } from './setupGuideSteps';
+import { LayoutMarker, LayoutMarkerList, useStepText } from './setupGuideSteps';
 import { BUILDS, useSetupPath } from './setupPath';
 
 // The three parts of a rule, coloured like the profile sketch on the layout step
@@ -152,12 +153,97 @@ function ImportedRules() {
   );
 }
 
-// What assignments are, as one sentence, then the common setups to copy
+const ruleItems = (profiles: proto.IProfile[]) =>
+  profiles.flatMap((profile) =>
+    (profile.assignments ?? []).flatMap((list) => list.assignments ?? [])
+  );
+
+// Whether the controller already has a setup, so it isn't offered again
+const RECIPE_DONE: Record<string, (profiles: proto.IProfile[]) => boolean> = {
+  usb: (profiles) => ruleItems(profiles).some((item) => item.consoleType != null),
+  adapter: (profiles) =>
+    ruleItems(profiles).some((item) => item.wiiExt != null || item.ps2Cnt != null),
+  wiredWireless: (profiles) => ruleItems(profiles).some((item) => item.bluetooth != null),
+  // A keyboard profile picked with a button at startup is the Festival setup
+  festivalWired: (profiles) => hasFestival(profiles),
+  festivalAdapter: (profiles) => hasFestival(profiles),
+  twoPlayers: (profiles) => ruleItems(profiles).some((item) => item.usbType != null),
+};
+
+function hasFestival(profiles: proto.IProfile[]) {
+  return profiles.some(
+    (profile) =>
+      profile.opts?.deviceToEmulate === proto.SubType.KeyboardMouse &&
+      ruleItems([profile]).some((item) => item.input != null)
+  );
+}
+
+// The controller's own profiles and their rules, each showing live whether it matches
+function YourProfiles() {
+  const { t } = useTranslation();
+  const profiles = useConfigStore((state) => state.config.profiles);
+  const activation = useConfigStore((state) => state.activationListStatus);
+  // A rule's button is an input, so it's named after what that input does in the profiles, the way
+  // it was picked (eg Orange Fret)
+  const buttonNames = new Map(
+    (profiles ?? []).flatMap((profile) =>
+      holdButtons(profile).map((button) => [JSON.stringify(button.input), t(button.label)] as const)
+    )
+  );
+  const triggerName = (list: proto.IProfileAssignment) => {
+    const trigger = (list.assignments ?? []).find(
+      (item) => item.input != null || item.inputAnyTime != null
+    );
+    const input = trigger?.input?.input ?? trigger?.inputAnyTime?.input;
+    return input
+      ? (buttonNames.get(JSON.stringify(input)) ?? t('assignmentsGuide.yours.otherButton'))
+      : undefined;
+  };
+  return (
+    <section>
+      <Text size="sm" mb="sm">
+        {t('assignmentsGuide.yours.intro')}
+      </Text>
+      <Accordion variant="separated" radius="md" multiple>
+        {(profiles ?? []).map((profile, idx) =>
+          profile.opts?.standbyLighting ? null : (
+            <Accordion.Item key={profile.opts?.uid ?? idx} value={String(idx)}>
+              <Accordion.Control>
+                <Group gap="xs">
+                  <Text size="sm" fw={600}>
+                    {profile.opts?.name}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {t(
+                      `subType.${proto.SubType[profile.opts?.deviceToEmulate ?? proto.SubType.Gamepad]}`
+                    )}
+                  </Text>
+                </Group>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Box maw="100%" miw={0}>
+                  <RulePreview
+                    rules={(profile.assignments ?? []).map((list, listIdx) => ({
+                      assignments: list.assignments ?? [],
+                      triggerButton: triggerName(list),
+                      active: activation[idx]?.[listIdx]?.state ?? false,
+                    }))}
+                  />
+                </Box>
+              </Accordion.Panel>
+            </Accordion.Item>
+          )
+        )}
+      </Accordion>
+    </section>
+  );
+}
+
+// What assignments are, as one sentence. Shown before the build, as the guide makes the rules itself
+// and they only need understanding, not setting up.
 export function AssignmentsBasicsStep(props: GuideStepProps) {
   const { t } = useTranslation();
-  const path = useSetupPath((state) => state.path);
-  const build = useSetupPath((state) => state.build);
-  const fromSantroller1 = path === 'santroller1';
+  const fromSantroller1 = useSetupPath((state) => state.path) === 'santroller1';
   const [target, source] = getRuleSummaryParts([USB_AUTO, WII_GUITAR], t);
   const partLabels = [
     target,
@@ -167,98 +253,8 @@ export function AssignmentsBasicsStep(props: GuideStepProps) {
     }),
   ];
 
-  const recipes: { key: string; icon: React.ReactNode; profiles: PreviewRule[][] }[] = [
-    {
-      key: 'usb',
-      icon: <IconUsb size={16} />,
-      profiles: [[{ assignments: [USB_AUTO] }]],
-    },
-    {
-      key: 'adapter',
-      icon: <IconDeviceGamepad size={16} />,
-      profiles: [[{ assignments: [USB_AUTO, WII_GUITAR] }]],
-    },
-    {
-      key: 'wiredWireless',
-      icon: <IconBluetooth size={16} />,
-      profiles: [
-        [{ assignments: [USB_AUTO, LOCAL_INPUTS] }],
-        [{ assignments: [BLUETOOTH, LOCAL_INPUTS] }],
-      ],
-    },
-    {
-      key: 'festivalWired',
-      icon: <IconKeyboard size={16} />,
-      profiles: [
-        [
-          {
-            assignments: [USB_AUTO, HOLD_AT_BOOT, LOCAL_INPUTS],
-            triggerButton: t('assignmentsGuide.recipes.triggerButton'),
-          },
-        ],
-        [{ assignments: [USB_AUTO, LOCAL_INPUTS] }],
-      ],
-    },
-    {
-      key: 'festivalAdapter',
-      icon: <IconKeyboard size={16} />,
-      profiles: [
-        [
-          {
-            assignments: [USB_AUTO, WII_GUITAR, HOLD_AT_BOOT],
-            triggerButton: t('assignmentsGuide.recipes.triggerButton'),
-          },
-        ],
-        [{ assignments: [USB_AUTO, WII_GUITAR] }],
-      ],
-    },
-    {
-      key: 'twoPlayers',
-      icon: <IconDeviceGamepad size={16} />,
-      profiles: [[{ assignments: [USB_AUTO, USB_GUITAR] }]],
-    },
-  ];
-
-  // A build from the setup guide puts the setups that fit it first
-  const fitting =
-    path === 'fresh' && build
-      ? recipes.filter((recipe) => BUILDS[build]?.recipes.includes(recipe.key))
-      : [];
-
-  const recipeList = (list: typeof recipes) => (
-    <Accordion variant="separated" radius="md" multiple>
-      {list.map(({ key, icon, profiles }) => (
-        <Accordion.Item key={key} value={key}>
-          <Accordion.Control icon={icon}>
-            <Text size="sm" fw={600}>
-              {t(`assignmentsGuide.recipes.${key}.title`)}
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Text size="sm" mb="md">
-              <Trans i18nKey={`assignmentsGuide.recipes.${key}.body`} components={strong} />
-            </Text>
-            <Group align="flex-start" gap="xl">
-              {profiles.map((rules, i) => (
-                <Stack key={i} gap="xs" maw="100%">
-                  {profiles.length > 1 && (
-                    <Text size="sm" fw={700}>
-                      {t(`assignmentsGuide.recipes.${i === 0 ? 'profileA' : 'profileB'}`)}
-                    </Text>
-                  )}
-                  <RulePreview rules={rules} />
-                </Stack>
-              ))}
-            </Group>
-          </Accordion.Panel>
-        </Accordion.Item>
-      ))}
-    </Accordion>
-  );
-
   const guideContent = (
     <Stack gap="lg">
-      <OpenProfilesButton />
       <section>
         <Title order={2} size="h3" mb="sm">
           {t('assignmentsGuide.rule.title')}
@@ -326,7 +322,6 @@ export function AssignmentsBasicsStep(props: GuideStepProps) {
           </Stack>
         </Group>
       </section>
-      {fromSantroller1 && <ImportedRules />}
       <Alert
         variant="light"
         color="blue"
@@ -338,35 +333,150 @@ export function AssignmentsBasicsStep(props: GuideStepProps) {
           <List.Item>{t('assignmentsGuide.remember.pins')}</List.Item>
         </List>
       </Alert>
-      <section>
-        <Title order={2} size="h3" mb="sm">
-          {fitting.length
-            ? t('assignmentsGuide.recipes.fitTitle', {
-                name: t(`guides.setup.build.names.${build}`),
-              })
-            : t('assignmentsGuide.recipes.title')}
-        </Title>
-        {recipeList(fitting.length ? fitting : recipes)}
-        {fitting.length > 0 && (
-          <>
-            <Title order={3} size="h4" mt="lg" mb="sm">
-              {t('assignmentsGuide.recipes.otherTitle')}
-            </Title>
-            {recipeList(recipes.filter((recipe) => !fitting.includes(recipe)))}
-          </>
-        )}
-      </section>
     </Stack>
   );
 
-  return (
-    <StepWorkbench
-      {...props}
-      title={t('guides.setup.steps.assignments.title')}
-      description={t('assignmentsGuide.subtitle')}
-      guideContent={guideContent}
-    />
+  return <StepWorkbench {...props} {...useStepText('assignments')} guideContent={guideContent} />;
+}
+
+// Once everything is set up: the rules the guide and any import made, live, the setups that could
+// still be added, and what to do when one doesn't match
+export function YourProfilesStep(props: GuideStepProps) {
+  const { t } = useTranslation();
+  const path = useSetupPath((state) => state.path);
+  const build = useSetupPath((state) => state.build);
+  const connected = useConfigStore((state) => state.connected);
+  const allProfiles = useConfigStore((state) => state.config.profiles);
+  const userProfiles = (allProfiles ?? []).filter((profile) => !profile.opts?.standbyLighting);
+
+  const recipes: { key: string; icon: React.ReactNode; profiles: PreviewRule[][] }[] = [
+    {
+      key: 'usb',
+      icon: <IconUsb size={16} />,
+      profiles: [[{ assignments: [USB_AUTO] }]],
+    },
+    {
+      key: 'adapter',
+      icon: <IconDeviceGamepad size={16} />,
+      profiles: [[{ assignments: [USB_AUTO, WII_GUITAR] }]],
+    },
+    {
+      key: 'wiredWireless',
+      icon: <IconBluetooth size={16} />,
+      profiles: [
+        [{ assignments: [USB_AUTO, LOCAL_INPUTS] }],
+        [{ assignments: [BLUETOOTH, LOCAL_INPUTS] }],
+      ],
+    },
+    {
+      key: 'festivalWired',
+      icon: <IconKeyboard size={16} />,
+      profiles: [
+        [
+          {
+            assignments: [USB_AUTO, HOLD_AT_BOOT, LOCAL_INPUTS],
+            triggerButton: t('assignmentsGuide.recipes.triggerButton'),
+          },
+        ],
+        [{ assignments: [USB_AUTO, LOCAL_INPUTS] }],
+      ],
+    },
+    {
+      key: 'festivalAdapter',
+      icon: <IconKeyboard size={16} />,
+      profiles: [
+        [
+          {
+            assignments: [USB_AUTO, WII_GUITAR, HOLD_AT_BOOT],
+            triggerButton: t('assignmentsGuide.recipes.triggerButton'),
+          },
+        ],
+        [{ assignments: [USB_AUTO, WII_GUITAR] }],
+      ],
+    },
+    {
+      key: 'twoPlayers',
+      icon: <IconDeviceGamepad size={16} />,
+      profiles: [[{ assignments: [USB_AUTO, USB_GUITAR] }]],
+    },
+  ];
+
+  // With a controller connected, its own profiles are shown, so the setups only list what it doesn't
+  // have yet. The setup guide sets most of them up itself.
+  const live = connected && userProfiles.length > 0;
+  const offered = live
+    ? recipes.filter((recipe) => !RECIPE_DONE[recipe.key]?.(userProfiles))
+    : recipes;
+  // A build from the setup guide puts the setups that fit it first
+  const fitting =
+    path === 'fresh' && build
+      ? offered.filter((recipe) => BUILDS[build]?.recipes.includes(recipe.key))
+      : [];
+
+  const recipeList = (list: typeof recipes) => (
+    <Accordion variant="separated" radius="md" multiple>
+      {list.map(({ key, icon, profiles }) => (
+        <Accordion.Item key={key} value={key}>
+          <Accordion.Control icon={icon}>
+            <Text size="sm" fw={600}>
+              {t(`assignmentsGuide.recipes.${key}.title`)}
+            </Text>
+          </Accordion.Control>
+          <Accordion.Panel>
+            <Text size="sm" mb="md">
+              <Trans i18nKey={`assignmentsGuide.recipes.${key}.body`} components={strong} />
+            </Text>
+            <Group align="flex-start" gap="xl">
+              {profiles.map((rules, i) => (
+                <Stack key={i} gap="xs" maw="100%">
+                  {profiles.length > 1 && (
+                    <Text size="sm" fw={700}>
+                      {t(`assignmentsGuide.recipes.${i === 0 ? 'profileA' : 'profileB'}`)}
+                    </Text>
+                  )}
+                  <RulePreview rules={rules} />
+                </Stack>
+              ))}
+            </Group>
+          </Accordion.Panel>
+        </Accordion.Item>
+      ))}
+    </Accordion>
   );
+
+  const guideContent = (
+    <Stack gap="lg">
+      <OpenProfilesButton />
+      {live && <YourProfiles />}
+      {path === 'santroller1' && <ImportedRules />}
+      {offered.length > 0 && (
+        <section>
+          <Title order={2} size="h3" mb="sm">
+            {live
+              ? t('assignmentsGuide.recipes.addTitle')
+              : fitting.length
+                ? t('assignmentsGuide.recipes.fitTitle', {
+                    name: t(`guides.setup.build.names.${build}`),
+                  })
+                : t('assignmentsGuide.recipes.title')}
+          </Title>
+          {/* Fitting ones first, with a heading for the rest when they're split */}
+          {recipeList(fitting.length ? fitting : offered)}
+          {fitting.length > 0 && fitting.length < offered.length && (
+            <>
+              <Title order={3} size="h4" mt="lg" mb="sm">
+                {t('assignmentsGuide.recipes.otherTitle')}
+              </Title>
+              {recipeList(offered.filter((recipe) => !fitting.includes(recipe)))}
+            </>
+          )}
+        </section>
+      )}
+      <AssignmentIssues />
+    </Stack>
+  );
+
+  return <StepWorkbench {...props} {...useStepText('yourProfiles')} guideContent={guideContent} />;
 }
 
 // What to do about an assignment issue, set apart from the explanation above it
@@ -384,7 +494,7 @@ function IssueFix({ i18nKey }: { i18nKey: string }) {
 }
 
 // The usual assignment surprises, each opened only when it matches what the user is seeing
-export function AssignmentsAdvancedStep(props: GuideStepProps) {
+function AssignmentIssues() {
   const { t } = useTranslation();
   const I = 'assignmentsGuide.issues';
 
@@ -535,10 +645,14 @@ export function AssignmentsAdvancedStep(props: GuideStepProps) {
     },
   ];
 
-  const guideContent = (
-    <Stack gap="md">
-      <OpenProfilesButton />
-      <Text size="sm">{t(`${I}.intro`)}</Text>
+  return (
+    <section>
+      <Title order={2} size="h3" mb={4}>
+        {t(`${I}.heading`)}
+      </Title>
+      <Text size="sm" mb="sm">
+        {t(`${I}.intro`)}
+      </Text>
       <Accordion variant="separated" radius="md" multiple>
         {issues.map(({ key, icon, content }) => (
           <Accordion.Item key={key} value={key}>
@@ -551,15 +665,6 @@ export function AssignmentsAdvancedStep(props: GuideStepProps) {
           </Accordion.Item>
         ))}
       </Accordion>
-    </Stack>
-  );
-
-  return (
-    <StepWorkbench
-      {...props}
-      title={t('guides.setup.steps.assignmentsAdvanced.title')}
-      description={t('guides.setup.steps.assignmentsAdvanced.description')}
-      guideContent={guideContent}
-    />
+    </section>
   );
 }

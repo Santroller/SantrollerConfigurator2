@@ -1,18 +1,25 @@
-import React from 'react';
-import { IconCheck, IconDeviceFloppy, IconPlugConnected, IconUsb } from '@tabler/icons-react';
+import { IconCheck, IconPlugConnected, IconUsb } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Card, Image, Paper, Stack, Table, Text, Title } from '@mantine/core';
+import { Badge, Button, Card, Image, Stack, Table, Text, Title } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
 import { GuideStepProps } from '../types';
-import { gpWithPin, IMAGE_ALT, pinWithLabel } from '../wiringText';
-import { ensureUsbHost, profileHasUsbSlot, usbHostPins } from './usbHostUtils';
+import { gpPin, IMAGE_ALT, pinWithLabel } from '../wiringText';
+import { ensureUsbHostDevice, usbHostPins } from './usbHostUtils';
 
 // Step 1: Supplies & Intro
+// The USB port's pins: the driver's own once it's added, which can be changed on the wiring step, or
+// the ones it's added with
+function useUsbHostPins() {
+  return usbHostPins(useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost);
+}
+
 export function UsbHostIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useUsbHostPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -76,7 +83,7 @@ export function UsbHostIntroStep(props: GuideStepProps) {
                   </Badge>
                 </Table.Td>
                 <Table.Td>{t('guides.usb-host.steps.usb-intro.signalDPlus')}</Table.Td>
-                <Table.Td>{gpWithPin(2, 4)}</Table.Td>
+                <Table.Td>{gpPin(pins.dp)}</Table.Td>
               </Table.Tr>
               <Table.Tr>
                 <Table.Td>
@@ -85,7 +92,7 @@ export function UsbHostIntroStep(props: GuideStepProps) {
                   </Badge>
                 </Table.Td>
                 <Table.Td>{t('guides.usb-host.steps.usb-intro.signalDMinus')}</Table.Td>
-                <Table.Td>{gpWithPin(3, 5)}</Table.Td>
+                <Table.Td>{gpPin(pins.dm)}</Table.Td>
               </Table.Tr>
             </Table.Tbody>
           </Table>
@@ -115,7 +122,6 @@ export function UsbHostWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
   const connected = useConfigStore((state) => state.connected);
   const usbHost = useConfigStore((state) => findDeviceStatus(state, 'usbHost'))?.device.usbHost;
-  const hasUsbSlot = useConfigStore(profileHasUsbSlot);
   const pins = usbHostPins(usbHost);
 
   const guideContent = (
@@ -123,7 +129,11 @@ export function UsbHostWiringStep(props: GuideStepProps) {
       <Title order={4}>{t('guides.usb-host.steps.usb-wiring.wiringTitle')}</Title>
       <GuideList
         type="ordered"
-        items={t('guides.usb-host.steps.usb-wiring.wiringSteps', { returnObjects: true })}
+        items={t('guides.usb-host.steps.usb-wiring.wiringSteps', {
+          returnObjects: true,
+          dp: gpPin(pins.dp),
+          dm: gpPin(pins.dm),
+        })}
       />
     </Stack>
   );
@@ -136,10 +146,11 @@ export function UsbHostWiringStep(props: GuideStepProps) {
             {t('guides.usb-host.steps.usb-wiring.driverConfigTitle')}
           </Text>
           <Text size="xs" c="dimmed">
-            {t('guides.usb-host.steps.usb-wiring.driverConfigDesc')}
+            {/* A later step makes a profile for each kind of controller */}
+            {t('guides.usb-host.steps.usb-wiring.driverConfigDesc', pins)}
           </Text>
 
-          {usbHost && hasUsbSlot ? (
+          {usbHost ? (
             <Badge color="teal" size="md" variant="filled" leftSection={<IconCheck size={14} />}>
               {t('guides.usb-host.steps.usb-wiring.driverConfiguredBadge', pins)}
             </Badge>
@@ -148,7 +159,7 @@ export function UsbHostWiringStep(props: GuideStepProps) {
               size="sm"
               color="teal"
               leftSection={<IconUsb size={16} />}
-              onClick={() => ensureUsbHost()}
+              onClick={ensureUsbHostDevice}
               disabled={!connected}
             >
               {t('guides.usb-host.steps.usb-wiring.enableDriverBtn')}
@@ -156,6 +167,8 @@ export function UsbHostWiringStep(props: GuideStepProps) {
           )}
         </Stack>
       </Card>
+      {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind="usbHost" />
     </Stack>
   );
 
@@ -169,107 +182,62 @@ export function UsbHostWiringStep(props: GuideStepProps) {
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the driver up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (connected && !usbHost) {
+          ensureUsbHostDevice();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
-// Step 3: Review & Save
-export function UsbHostReviewStep(props: GuideStepProps) {
+// Whether the Pico sees anything plugged into its USB port, shown alongside the test step
+export function UsbHostCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
+  const C = 'guides.usb-host.check';
   const connected = useConfigStore((state) => state.connected);
   const usbHostStatus = useConfigStore((state) => findDeviceStatus(state, 'usbHost'));
   const detectedCount = Object.keys(usbHostStatus?.usbDevices ?? {}).length;
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t('guides.usb-host.steps.usb-test.activeText')}</Text>
-
-      <Title order={4}>{t('guides.usb-host.steps.usb-test.plugInTitle')}</Title>
-      <Text size="sm">{t('guides.usb-host.steps.usb-test.plugInText')}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved
-          ? t('guides.usb-host.steps.usb-test.btnSaved')
-          : t('guides.usb-host.steps.usb-test.btnSave')}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t('guides.usb-host.steps.usb-test.telemetryTitle')}
-          </Text>
-          {!usbHostStatus ? (
-            <Badge size="lg" color="gray" variant="light" leftSection={<IconUsb size={16} />}>
-              {t('guides.usb-host.steps.usb-test.notConfiguredBadge')}
-            </Badge>
-          ) : connected && detectedCount > 0 ? (
-            <Badge
-              size="lg"
-              color="teal"
-              variant="light"
-              leftSection={<IconPlugConnected size={16} />}
-            >
-              {t('guides.usb-host.steps.usb-test.detectedBadge', { count: detectedCount })}
-            </Badge>
-          ) : (
-            <Badge size="lg" color="yellow" variant="light" leftSection={<IconUsb size={16} />}>
-              {t('guides.usb-host.steps.usb-test.waitingBadge')}
-            </Badge>
-          )}
-          <Text size="xs" c="dimmed">
-            {!usbHostStatus
-              ? t('guides.usb-host.steps.usb-test.notConfiguredPrompt')
-              : connected
-                ? t('guides.usb-host.steps.usb-test.verifyPrompt')
-                : t('guides.usb-host.steps.usb-test.connectPrompt')}
-          </Text>
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
   return (
-    <StepWorkbench
-      title={t('guides.usb-host.steps.usb-test.title')}
-      badge={t('guides.usb-host.steps.usb-test.badge')}
-      badgeColor="green"
-      description={t('guides.usb-host.steps.usb-test.description')}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      {!usbHostStatus ? (
+        <Badge size="lg" color="gray" variant="light" leftSection={<IconUsb size={16} />} tt="none">
+          {t(`${C}.notConfiguredBadge`)}
+        </Badge>
+      ) : connected && detectedCount > 0 ? (
+        <Badge
+          size="lg"
+          color="teal"
+          variant="light"
+          leftSection={<IconPlugConnected size={16} />}
+          tt="none"
+        >
+          {t(`${C}.detectedBadge`, { count: detectedCount })}
+        </Badge>
+      ) : (
+        <Badge
+          size="lg"
+          color="yellow"
+          variant="light"
+          leftSection={<IconUsb size={16} />}
+          tt="none"
+        >
+          {t(`${C}.waitingBadge`)}
+        </Badge>
+      )}
+      <Text size="xs" c="dimmed">
+        {!usbHostStatus
+          ? t(`${C}.notConfiguredPrompt`)
+          : connected
+            ? t(`${C}.verifyPrompt`)
+            : t(`${C}.connectPrompt`)}
+      </Text>
+    </Stack>
   );
 }

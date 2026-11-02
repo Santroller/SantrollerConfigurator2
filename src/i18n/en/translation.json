@@ -988,7 +988,7 @@
       },
       "santroller1Check": {
         "title": "Check the result",
-        "body": "Your hardware is now on the <strong>Devices</strong> page rather than inside the config, and each file you imported is a profile. Open a profile to check its inputs. If you held a button while plugging in to pick a console mode, or had a Fortnite Festival mode, that's now a separate profile with an assignment that matches while the button is held. The next step explains how that works."
+        "body": "Your hardware is now on the <strong>Devices</strong> page rather than inside the config, and each file you imported is a profile. Open a profile to check its inputs. If you held a button while plugging in to pick a console mode, or had a Fortnite Festival mode, that's now a separate profile with an assignment that matches while the button is held. The Your profiles step near the end shows what yours became."
       }
     },
     "links": {
@@ -1103,6 +1103,36 @@
         "leds": "Works like any other profile's LEDs, but only input, pattern, static and status LEDs light up here, as there's no game or console to drive the rest."
       }
     },
+    "devicesPage": {
+      "intro": "The Devices page has a card for each piece of hardware attached to the board. Here's one with a Wii extension port that has a guitar plugged in, and a USB host port with nothing in it yet:",
+      "parts": {
+        "status": {
+          "title": "Status",
+          "body": "Whether the board can see it right now, and what's plugged in. <strong>Disconnected</strong> just means nothing is plugged in yet, or it isn't wired up right."
+        },
+        "pins": {
+          "title": "Pins",
+          "body": "Which of the board's pins it's wired to. Change them here if you wired it to different ones."
+        },
+        "add": {
+          "title": "Add device",
+          "body": "Adds a card for more hardware. The build you pick later adds the ones it needs for you, so you'll rarely need this."
+        }
+      },
+      "shared": {
+        "title": "Shared by every profile",
+        "body": "The board has one Wii extension port whichever profile is in use. Each profile says which extension it's for, so a guitar profile and a drum profile can share the same port. Buttons wired straight to the board's pins don't need a device at all."
+      }
+    },
+    "profilePage": {
+      "intro": "Clicking a profile opens one long page with four sections, from top to bottom. Here's one for a Wii guitar plugged into the board's Wii extension port:",
+      "sections": {
+        "settings": "The profile's name and the controller type it emulates, under <strong>Device to emulate</strong>.",
+        "assignments": "When this profile is used, and which connected controllers it reads from. This rule says: use this profile over USB while a Wii guitar is plugged in. Adding the Wii guitar here gives it a slot, <strong>Slot 1</strong>.",
+        "inputs": "What each button and axis does: where it comes from, and what it sends. These read from <strong>Slot 1</strong>, the Wii guitar from the rule above, which is why Assignments comes first. Buttons wired straight to the board's pins don't need a slot.",
+        "leds": "What the lights and displays show, if you added any."
+      }
+    },
     "layout": {
       "intro": "The configurator is split into two halves: settings for the board itself, and the profiles it can act as. Once you know which half something belongs to, it's easy to find.",
       "mock": {
@@ -1133,16 +1163,6 @@
           "body": "This guide, the build guides, supported hardware and console compatibility. These work without a controller connected."
         }
       },
-      "profilePage": {
-        "title": "Inside a profile",
-        "intro": "Clicking a profile opens one long page with four sections, from top to bottom. Here's one for a Wii guitar plugged into the board's Wii extension port:",
-        "sections": {
-          "settings": "The profile's name and the controller type it emulates, under <strong>Device to emulate</strong>.",
-          "assignments": "When this profile is used, and which connected controllers it reads from. This rule says: use this profile over USB while a Wii guitar is plugged in. Adding the Wii guitar here gives it a slot, <strong>Slot 1</strong>.",
-          "inputs": "What each button and axis does: where it comes from, and what it sends. These read from <strong>Slot 1</strong>, the Wii guitar from the rule above, which is why Assignments comes first. Buttons wired straight to the board's pins don't need a slot.",
-          "leds": "What the lights and displays show, if you added any."
-        }
-      },
       "keyIdea": {
         "title": "Board or profile?",
         "body": "If it's about the hardware wired to the board, it's under <strong>Devices</strong>. If it's about what the controller does, it's in a <strong>profile</strong>."
@@ -1150,7 +1170,6 @@
     }
   },
   "assignmentsGuide": {
-    "subtitle": "Assignments are the rules that decide when each profile is used.",
     "openProfiles": "Go to Profiles",
     "rule": {
       "title": "A rule is one sentence",
@@ -1178,6 +1197,10 @@
       "alsoOnCard": "Also on the card",
       "caption": "On the Profiles page each rule is a card with these three parts in the same order. A profile can have several rules, and any one of them matching is enough."
     },
+    "yours": {
+      "otherButton": "A button (open the profile to see which)",
+      "intro": "These are the rules the guide set up. Each card is laid out like the example at the start of the guide, and a rule that applies right now says Matching. You don't need to change them, but this is where to look if a profile isn't used when you expect."
+    },
     "remember": {
       "title": "Two things to remember",
       "noRule": "A profile with no rule is never used.",
@@ -1186,6 +1209,7 @@
     "recipes": {
       "title": "Pick the setup closest to yours",
       "fitTitle": "Setups that fit your {{name}}",
+      "addTitle": "Other setups you can add",
       "otherTitle": "Other setups",
       "usb": {
         "title": "A plain USB controller",
@@ -1233,6 +1257,7 @@
       }
     },
     "issues": {
+      "heading": "If something doesn't match",
       "intro": "Most of the time assignments just work. Open whichever of these matches what you're seeing.",
       "fixLabel": "Fix",
       "twoControllers": {
@@ -3037,7 +3062,7 @@
             "Battery level: The battery percentage is reported to the paired host through the standard Bluetooth battery service.",
             "Power saving: Bluetooth can turn off, and the Pico can sleep, when the controller is left unused."
           ],
-          "consoleNote": "Most consoles won't pair with a Bluetooth gamepad. To play on one, a second Pico W plugged into the console can act as the receiver (give its profile a Bluetooth controller slot on the Inputs page). For a Wii, the Inputs page also has a Wii Remote Bluetooth mode.",
+          "consoleNote": "Most consoles won't pair with a Bluetooth gamepad. To play on one, a second Pico W plugged into the console can act as the receiver, which the Bluetooth Receiver build guide sets up. For a Wii, the Inputs page also has a Wii Remote Bluetooth mode.",
           "requiresTitle": "Requirements",
           "requiresList": [
             "A genuine Pico W or Pico 2 W: Bluetooth needs the CYW43439 wireless chip. Plain Picos, and clone \"Pico W\" boards with an ESP8266 / ESP8285 chip, have no Bluetooth radio Santroller can use.",
@@ -3187,8 +3212,8 @@
     },
     "direct-pico-guitar": {
       "title": "Direct-Wired Guitar",
-      "subtitle": "Interactive Wiring & Configuration Walkthrough",
-      "description": "Step-by-step interactive build guide for rewiring any Guitar Hero or Rock Band guitar with mechanical or original switches to a Raspberry Pi Pico or Pico 2.",
+      "subtitle": "Replace a guitar's board with a Pico wired to its frets, strum and whammy",
+      "description": "Take the original board out of a Guitar Hero or Rock Band guitar and wire its frets, strum bar, whammy, tilt and buttons straight to a Raspberry Pi Pico or Pico 2. Works with the original switches or mechanical ones.",
       "badge": "Mechanical / Direct Wire",
       "estimatedTime": "1 - 2 hours",
       "steps": {
@@ -3282,12 +3307,12 @@
           "gh5PinoutTitle": "GH5 Neck Pinout (4 Wires)",
           "gh5PinVcc": "3.3V (VCC) → Pico Pin 36 (3V3 OUT)",
           "gh5PinGnd": "GND → Pico Pin 38 (or any GND pin)",
-          "gh5PinSda": "SDA (Data) → Pico GP18 (Pin 24)",
-          "gh5PinScl": "SCL (Clock) → Pico GP19 (Pin 25)",
+          "gh5PinSda": "SDA (Data) → Pico {{sdaPin}}",
+          "gh5PinScl": "SCL (Clock) → Pico {{sclPin}}",
           "gh5VoltageWarning": "Always use 3.3V (Pin 36). Never connect the neck to 5V (VBUS); doing so will permanently damage the neck controller IC.",
           "gh5DriverCardTitle": "Guitar Hero 5 Neck Driver",
-          "gh5DriverCardDesc": "Enable Santroller's built-in GH5 neck driver to automatically configure I2C on GP18/GP19 and map both the frets and the touch slider bar.",
-          "gh5DriverActive": "I2C Driver Active (GP18 SDA / GP19 SCL)",
+          "gh5DriverCardDesc": "Enable Santroller's built-in GH5 neck driver to automatically configure I2C on GP{{sda}}/GP{{scl}} and map both the frets and the touch slider bar.",
+          "gh5DriverActive": "I2C Driver Active (GP{{sda}} SDA / GP{{scl}} SCL)",
           "gh5DriverBtn": "Enable GH5 Neck Driver",
           "gh5VoltageTitle": "3.3V Power Only",
           "gh5FretsHeader": "GH5 I2C FRET BUTTONS",
@@ -3371,14 +3396,14 @@
           "mpr121I2cTitle": "3. MPR121 to Raspberry Pi Pico Connections",
           "mpr121FretsTitle": "4. Wire the Frets",
           "mpr121StepFrets": "The MPR121 only handles the slider. Wire the 5 fret buttons and their ground directly to the Pico (GP2-GP6), exactly as in Direct GPIO mode, and test them in the panel on the right.",
-          "mpr121StepI2c": "Connect the MPR121 to the Pico over I2C: 3.3V (Pin 36), GND (Pin 38), SDA (GP18 / Pin 24), and SCL (GP19 / Pin 25).",
+          "mpr121StepI2c": "Connect the MPR121 to the Pico over I2C: 3.3V (Pin 36), GND (Pin 38), SDA ({{sdaPin}}), and SCL ({{sclPin}}).",
           "mpr121Vcc": "VCC: 3V3 OUT (Pin 36)",
           "mpr121Gnd": "GND: Pin 38",
-          "mpr121Sda": "SDA: GP18 (Pin 24)",
-          "mpr121Scl": "SCL: GP19 (Pin 25)",
+          "mpr121Sda": "SDA: {{sdaPin}}",
+          "mpr121Scl": "SCL: {{sclPin}}",
           "mpr121DriverTitle": "MPR121 Slider Driver",
-          "mpr121DriverDesc": "Add an MPR121 on I2C (GP18 SDA / GP19 SCL) and map its channels 0-4 to the five slider zones.",
-          "mpr121DriverActive": "MPR121 Active (GP18 SDA / GP19 SCL)",
+          "mpr121DriverDesc": "Add an MPR121 on I2C (GP{{sda}} SDA / GP{{scl}} SCL) and map its channels 0-4 to the five slider zones.",
+          "mpr121DriverActive": "MPR121 Active (GP{{sda}} SDA / GP{{scl}} SCL)",
           "mpr121DriverBtn": "Enable MPR121 Slider"
         },
         "strum": {
@@ -3458,12 +3483,12 @@
           "i2cIntro": "Accelerometers measure gravitational acceleration along 3 axes for tilt detection.",
           "i2cVcc": "VCC: Connect to 3V3(OUT) (Pin 36).",
           "i2cGnd": "GND: Connect to GND (Pin 38).",
-          "i2cSda": "SDA: Connect to GP18 (Pin 24).",
-          "i2cScl": "SCL: Connect to GP19 (Pin 25).",
+          "i2cSda": "SDA: Connect to {{sdaPin}}.",
+          "i2cScl": "SCL: Connect to {{sclPin}}.",
           "i2cShared": "A GH5 neck or MPR121 slider can share these SDA / SCL pins with the accelerometer; connect them in parallel.",
           "accelDriverTitle": "Accelerometer Tilt",
-          "accelDriverDesc": "Add an accelerometer (ADXL345, LIS3DH or MPU-6050) on I2C (GP18 SDA / GP19 SCL) and drive tilt from its X axis.",
-          "accelDriverActive": "Accelerometer Active (GP18 SDA / GP19 SCL)",
+          "accelDriverDesc": "Add an accelerometer (ADXL345, LIS3DH or MPU-6050) on I2C (GP{{sda}} SDA / GP{{scl}} SCL) and drive tilt from its X axis.",
+          "accelDriverActive": "Accelerometer Active (GP{{sda}} SDA / GP{{scl}} SCL)",
           "accelDriverBtn": "Enable Accelerometer Tilt",
           "accelBenchHint": "Raw accelerometer reading (tilt the neck up and down):",
           "accelAxisTitle": "Wrong axis or direction?",
@@ -3491,48 +3516,22 @@
           "startLabel": "Start / Plus",
           "selectLabel": "Select / Minus",
           "homeLabel": "Home / Guide (Optional)"
-        },
-        "review": {
-          "shortTitle": "Test & Save",
-          "title": "7. Complete & Final Verification",
-          "badge": "Test Bench",
-          "description": "Verify all guitar inputs and save your configuration to the Pico.",
-          "finalVerificationDesc": "Use the diagnostic panel on the right to test every switch, strum, and the whammy bar. Press chord combinations and flick the strum bar up and down rapidly to ensure clean actuation.",
-          "saveTitle": "Save to Pico Flash",
-          "saveDesc": "When all inputs test correctly, click Save Configuration to Pico Flash to write your settings to flash memory.",
-          "saveErrorTitle": "Save Error",
-          "saveErrorFallback": "Failed to save configuration to controller",
-          "savedSuccessTitle": "Configuration Saved",
-          "savedSuccessDesc": "Configuration saved to Pico flash memory.",
-          "btnSave": "Save Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "liveBenchTitle": "Live Guitar Test Bench",
-          "fretsHeader": "FRETS (TEST CHORDS & FAST TAPS)",
-          "strumHeader": "STRUM BAR",
-          "strumUp": "↑ Strum Up",
-          "strumDown": "↓ Strum Down",
-          "navHeader": "NAVIGATION & TILT",
-          "navStart": "Start",
-          "navSelect": "Select",
-          "navTilt": "Tilt / Star Power",
-          "whammyHeader": "WHAMMY POTENTIOMETER",
-          "pickupHeader": "PICKUP SELECTOR (5-WAY SWITCH)"
         }
       }
     },
     "wii-adapter": {
-      "title": "Wii Controller & Guitar to USB Adapter",
-      "subtitle": "Plug-and-Play I2C Adapter for Wii Guitars",
-      "description": "Build an adapter using a Raspberry Pi Pico to use any Wii Guitar Hero or Rock Band guitar on PC or console with zero soldering to the guitar itself.",
+      "title": "Wii Controller Adapter",
+      "subtitle": "Plug Wii guitars, drums, turntables and other Wii controllers into a Pico",
+      "description": "Build an adapter with a Wii extension socket, so the controllers that plug into a Wii Remote work on PC or console: Guitar Hero and Rock Band guitars, drums, DJ Hero turntables, Taiko drums, Classic Controllers and Nunchuks. Nothing on the controller itself is modified.",
       "badge": "Beginner Friendly",
       "estimatedTime": "20 - 30 mins",
       "steps": {
         "wii-intro": {
           "shortTitle": "Supplies",
           "title": "1. Supplies & Overview",
-          "badge": "No Guitar Mods",
+          "badge": "No Controller Mods",
           "description": "Learn the 4-wire I2C pinout needed to adapt any Wii controller to USB.",
-          "intro": "The Wii Guitar Adapter lets you plug any original Nintendo Wii guitar (Les Paul, World Tour, GH5) or Classic Controller into a Raspberry Pi Pico and use it on PC or consoles with ultra-low latency.",
+          "intro": "The Wii adapter lets you plug any controller that goes into a Wii Remote, like a Guitar Hero or Rock Band guitar, drum kit, DJ Hero turntable or Classic Controller, into a Raspberry Pi Pico and use it on PC or consoles with ultra-low latency.",
           "adapterCaption": "A completed Wii controller adapter powered by a Pi Pico",
           "suppliesTitle": "Supplies Required",
           "supplies": [
@@ -3540,8 +3539,8 @@
             "Wii Extension Breakout Board or cut extension cable",
             "Soldering Iron & 4 wires"
           ],
-          "noDisassemblyTitle": "No Guitar Disassembly Required",
-          "noDisassemblyText": "Building an external adapter requires zero modifications to your guitar. The guitar's original Wii connector plugs directly into the adapter.",
+          "noDisassemblyTitle": "No Disassembly Required",
+          "noDisassemblyText": "Building an external adapter requires zero modifications to your controllers. Their original Wii connector plugs directly into the adapter.",
           "quickStartTitle": "Quick Start: 4-Wire Wiring",
           "quickStartDesc": "Wii controllers communicate over I2C. Connect 4 wires between the Wii connector and Pico:",
           "thWiiPin": "Wii Pin",
@@ -3555,55 +3554,34 @@
         "wii-wiring": {
           "shortTitle": "Wiring",
           "title": "2. Wii Connector Pinout & Wiring",
-          "badge": "I2C (GP18 / GP19)",
-          "description": "Wire 3.3V, Ground, SDA, and SCL, and add the Wii guitar to your profile.",
+          "badge": "I2C (GP{{sda}} / GP{{scl}})",
+          "description": "Wire 3.3V, Ground, SDA and SCL, and turn on the Wii extension driver.",
           "intro": "Connect the 4 wires from your Wii female connector or breakout board to the Raspberry Pi Pico.",
           "socketCaption": "Extension socket pin numbers (the end your controller plugs into)",
-          "plugCaption": "Controller plug pinout, looking into the plug. A4 / A5 are Arduino labels: on the Pico, SDA goes to GP18 and SCL to GP19.",
+          "plugCaption": "Controller plug pinout, looking into the plug. A4 / A5 are Arduino labels: on the Pico, SDA goes to GP{{sda}} and SCL to GP{{scl}}.",
           "voltageWarningTitle": "Voltage Warning: 3.3V Only",
           "voltageWarningText": "Wii controllers operate strictly at 3.3V. Connect VCC to the Pico's 3V3(OUT) (Pin 36), never to VBUS (5V).",
           "wireColorWarningTitle": "Wire Colour Warning",
           "wireColorWarningText": "Third-party extension cables often use arbitrary wire colours. Verify each pin with a multimeter using the pinout diagram above.",
           "deviceStatusTitle": "Wii Extension Device Status",
-          "deviceStatusDesc": "This adds the Wii extension driver on GP18 (SDA) and GP19 (SCL), and gives the current profile a Wii guitar slot with the default guitar mappings. A profile that isn't emulating a guitar is switched to a Guitar Hero guitar.",
-          "driverConfiguredBadge": "Wii Guitar Configured on GP{{sda}} & GP{{scl}}",
-          "enableDriverBtn": "Add Wii Driver & Guitar Mappings",
-          "notAssignedText": "The Wii driver is set up, but the current profile has no Wii guitar slot, so it ignores the controller.",
-          "assignBtn": "Use the Wii Guitar in This Profile"
-        },
-        "wii-test": {
-          "shortTitle": "Test & Save",
-          "title": "3. Live Test & Save",
-          "badge": "Test Bench",
-          "description": "Plug in your guitar, test inputs live, and save the adapter firmware configuration.",
-          "adapterReadyTitle": "Wiring Complete",
-          "adapterReadyText": "The adapter circuit is wired and ready for testing.",
-          "plugInTitle": "Plug In Your Guitar",
-          "plugInText": "Plug your Wii Guitar Hero or Rock Band guitar into the connector. The panel on the right shows which extension the Pico detects, and lights up the frets and strum as you press them.",
-          "btnSave": "Save Adapter Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "WII EXTENSION LIVE TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "driverMissing": "Wii driver not added yet (see the wiring step)",
-          "extNone": "No extension detected",
-          "extDetected": "Detected: {{type}}",
-          "verifyPrompt": "Press buttons on your Wii guitar to verify responsiveness.",
-          "notMapped": "Not mapped",
-          "green": "Green",
-          "red": "Red",
-          "yellow": "Yellow",
-          "blue": "Blue",
-          "orange": "Orange",
-          "strumUp": "Strum Up",
-          "strumDown": "Strum Down",
-          "whammy": "Whammy"
+          "deviceStatusDesc": "Adds the Wii extension driver on GP{{sda}} (SDA) and GP{{scl}} (SCL), which can be changed once it's added. The next step sets up a profile for each extension you'll plug in.",
+          "driverConfiguredBadge": "Wii Driver Added on GP{{sda}} & GP{{scl}}",
+          "enableDriverBtn": "Add Wii Driver"
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "driverMissing": "Wii driver not added yet (see the wiring step)",
+        "extNone": "No extension detected",
+        "extDetected": "Detected: {{type}}",
+        "title": "Wii extension",
+        "prompt": "Plug your Wii controller in. It should show up here as soon as the Pico can read it."
       }
     },
     "ps2-adapter": {
-      "title": "PS2 Controller & Guitar to USB Adapter",
-      "subtitle": "SPI Bus Adapter for DualShock 2 & PS2 Guitars",
-      "description": "Convert any original Sony PlayStation 1 or 2 gamepad, arcade stick, or Guitar Hero guitar to USB using a Raspberry Pi Pico.",
+      "title": "PS1/PS2 Controller Adapter",
+      "subtitle": "Plug PlayStation 1 and 2 controllers, guitars and other instruments into a Pico",
+      "description": "Build an adapter with a PlayStation controller socket, so PS1 and PS2 controllers work on PC or console: DualShock and DualShock 2 pads, Guitar Hero and Rock Band guitars, and Taiko, Pop'n Music, GuitarFreaks and DrumMania controllers. Nothing on the controller itself is modified.",
       "badge": "SPI Bus",
       "estimatedTime": "30 - 45 mins",
       "steps": {
@@ -3612,7 +3590,7 @@
           "title": "1. PS2 Socket Pinout & Supplies",
           "badge": "SPI Bus",
           "description": "Overview of the PS2 controller SPI protocol and required 1kΩ pull-up resistors.",
-          "intro": "Build a high-polling PS2 controller adapter for PlayStation 1 and PlayStation 2 controllers, including DualShock, DualShock 2, and PS2 Guitar Hero / Rock Band guitars.",
+          "intro": "Build a high-polling adapter for PlayStation 1 and PlayStation 2 controllers, including DualShock and DualShock 2 pads, Guitar Hero and Rock Band guitars, and Taiko, Pop'n Music, GuitarFreaks and DrumMania controllers.",
           "plugCaption": "PS2 controller plug pinout. Pin 1 is Data and pin 9 is Acknowledge; the line colours match the table.",
           "suppliesTitle": "Supplies Required",
           "supplies": [
@@ -3640,57 +3618,36 @@
           "shortTitle": "Wiring",
           "title": "2. Solder Wires & Enable Driver",
           "badge": "Resistors + SPI",
-          "description": "Connect the 7 signal and power wires and add the PS2 guitar to your profile.",
+          "description": "Connect the 7 signal and power wires, and turn on the PS2 controller driver.",
           "solderingTitle": "Soldering Steps",
           "solderingSteps": [
-            "Solder Clock (SCK): Connect PS2 Pin 7 to GP6 (Pin 9).",
-            "Solder Command (MOSI): Connect PS2 Pin 2 to GP3 (Pin 5).",
-            "Solder Data (MISO) & Resistor: Connect PS2 Pin 1 to GP4 (Pin 6). Place a 1kΩ resistor between GP4 and 3V3 (Pin 36).",
-            "Solder Acknowledge & Resistor: Connect PS2 Pin 9 to GP7 (Pin 10). Place a 1kΩ resistor between GP7 and 3V3 (Pin 36).",
-            "Solder Attention (ATT): Connect PS2 Pin 6 to GP10 (Pin 14).",
+            "Solder Clock (SCK): Connect PS2 Pin 7 to {{sck}}.",
+            "Solder Command (MOSI): Connect PS2 Pin 2 to {{mosi}}.",
+            "Solder Data (MISO) & Resistor: Connect PS2 Pin 1 to {{miso}}. Place a 1kΩ resistor between GP{{misoGp}} and 3V3 (Pin 36).",
+            "Solder Acknowledge & Resistor: Connect PS2 Pin 9 to {{ack}}. Place a 1kΩ resistor between GP{{ackGp}} and 3V3 (Pin 36).",
+            "Solder Attention (ATT): Connect PS2 Pin 6 to {{att}}.",
             "Power & Ground: Connect PS2 Pin 5 to 3V3(OUT) (Pin 36) and PS2 Pin 4 to GND (Pin 38). Leave PS2 Pin 3 (7.6V rumble motor supply) unconnected."
           ],
           "driverStatusTitle": "PS2 Controller Driver Status",
-          "driverStatusDesc": "This adds the PS2 controller driver on the pins above, and gives the current profile a PS2 guitar slot with the default guitar mappings. A profile that isn't emulating a guitar is switched to a Guitar Hero guitar. For a DualShock, change the PS2 slot's controller type on the Inputs page.",
-          "driverConfiguredBadge": "PS2 Guitar Configured",
+          "driverStatusDesc": "Adds the PS2 controller driver. The next step sets up a profile for each controller you'll plug in.",
+          "driverConfiguredBadge": "PS2 Driver Added",
           "driverPins": "Command GP{{mosi}}, Data GP{{miso}}, Clock GP{{sck}}, Acknowledge GP{{ack}}, Attention GP{{att}}",
-          "notAssignedText": "The PS2 driver is set up, but the current profile has no PS2 guitar slot, so it ignores the controller.",
-          "enableDriverBtn": "Add PS2 Driver & Guitar Mappings",
-          "assignBtn": "Use the PS2 Guitar in This Profile"
-        },
-        "ps2-test": {
-          "shortTitle": "Test & Save",
-          "title": "3. Live Test & Save",
-          "badge": "Test Bench",
-          "description": "Plug in your PS2 guitar, verify live inputs, and save to flash.",
-          "adapterReadyTitle": "Wiring Complete",
-          "adapterReadyText": "Your PS2 controller adapter is wired and ready for testing.",
-          "testTitle": "Test Your Controller",
-          "testText": "Plug your PS2 Guitar Hero guitar into the socket. The panel on the right shows which controller type the Pico detects, and lights up the frets and strum as you press them.",
-          "btnSave": "Save Adapter Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "PS2 HARDWARE TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "driverMissing": "PS2 driver not added yet (see the wiring step)",
-          "controllerNone": "No controller detected",
-          "controllerDetected": "Detected: {{type}}",
-          "verifyPrompt": "Press the frets and strum on your PS2 guitar to verify the connection.",
-          "notMapped": "Not mapped",
-          "green": "Green",
-          "red": "Red",
-          "yellow": "Yellow",
-          "blue": "Blue",
-          "orange": "Orange",
-          "strumUp": "Strum Up",
-          "strumDown": "Strum Down",
-          "whammy": "Whammy"
+          "enableDriverBtn": "Add PS2 Driver"
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "driverMissing": "PS2 driver not added yet (see the wiring step)",
+        "controllerNone": "No controller detected",
+        "controllerDetected": "Detected: {{type}}",
+        "title": "PS2 controller",
+        "prompt": "Plug your PS2 controller in. It should show up here as soon as the Pico can read it."
       }
     },
     "drum-kit": {
       "title": "Direct-Wired Drum Kit",
-      "subtitle": "Velocity-Sensitive Drum Kit with Multiplexers",
-      "description": "Build a custom velocity-sensitive electronic drum kit or rewire an existing Rock Band or Guitar Hero kit to a Raspberry Pi Pico.",
+      "subtitle": "Wire a drum kit's piezo pads and kick pedal to a Pico through multiplexers",
+      "description": "Build a velocity-sensitive drum kit from piezo pads, or replace the board in a Guitar Hero or Rock Band kit, with every pad wired to a Raspberry Pi Pico through a multiplexer.",
       "badge": "Velocity Sensing",
       "estimatedTime": "1 - 2 hours",
       "steps": {
@@ -3744,7 +3701,7 @@
           "slowTitle": "CD4051 / CD4067 Settling Time",
           "slowText": "CD40xx multiplexers switch channels more slowly than 74HC parts at 3.3V. Picking a CD part in the setup sets the multiplexer's Slow option, so the firmware waits for the reading to settle after switching channels (at the cost of slower polling). It can also be changed later on the Devices page.",
           "setupTitle": "Multiplexer & Pad Setup",
-          "setupDesc": "Pick your kit type and multiplexer chip. This adds the multiplexer (common on GP26, select pins on GP2 - GP4, plus GP5 for a 4067), switches the profile to the chosen drum kit, and maps each pad to its channel with a starting strike threshold. Pads that already have a mapping are moved to the multiplexer.",
+          "setupDesc": "Pick your kit type and multiplexer chip. This adds the multiplexer (common on GP{{com}}, select pins on GP{{s0}}, GP{{s1}} and GP{{s2}}, plus GP{{s3}} for a 4067), switches the profile to the chosen drum kit, and maps each pad to its channel with a starting strike threshold. Pads that already have a mapping are moved to the multiplexer.",
           "familyGh": "Guitar Hero Kit",
           "familyRb": "Rock Band Kit",
           "createBtn": "Add Multiplexer & Map Pads",
@@ -3765,28 +3722,21 @@
           "padNotMapped": "Not mapped",
           "padUnused": "Not used by this kit",
           "padOtherInput": "Mapped"
-        },
-        "drum-test": {
-          "shortTitle": "Test & Save",
-          "title": "3. Live Test & Save",
-          "badge": "Test Bench",
-          "description": "Perform strike tests across all pads, then save to Pico flash.",
-          "calibratedText": "The setup mapped each pad with a starting strike threshold. Strike every pad and check its bar on the right, then save the configuration to the Pico.",
-          "tipsTitle": "Threshold & Cross-Talk Tips",
-          "tipsText": "Each pad's deadzone on the Inputs page is its strike threshold (a Rock Band kick uses its trigger value instead). If a pad triggers on its own, or hitting one drum triggers an adjacent one (cross-talk), raise that pad's deadzone or debounce there.",
-          "btnSave": "Save Drum Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "DRUM KIT TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "muxMissing": "No multiplexer added yet (see the wiring step)",
-          "muxConfigured": "Mux on GP{{com}} (S0 - S2: GP{{s0}}, GP{{s1}}, GP{{s2}}), {{count}} pads mapped",
-          "verifyPrompt": "Strike pads and press the kick pedal to verify live hits."
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "muxMissing": "No multiplexer added yet (see the wiring step)",
+        "muxConfigured": "Mux on GP{{com}} (S0 - S2: GP{{s0}}, GP{{s1}}, GP{{s2}}), {{count}} pads mapped",
+        "verifyPrompt": "Each bar is a pad's raw reading, held briefly after a hit, so you can see how hard a hit has to be to get past its threshold.",
+        "tipsTitle": "Threshold & Cross-Talk Tips",
+        "tipsText": "Each pad's deadzone on the Inputs page is its strike threshold (a Rock Band kick uses its trigger value instead). If a pad triggers on its own, or hitting one drum triggers an adjacent one (cross-talk), raise that pad's deadzone or debounce there.",
+        "title": "Pads"
       }
     },
     "bh-drums": {
       "title": "Band Hero Drum Kit",
-      "subtitle": "Band Hero / Guitar Hero 5 Drum Brain Conversion",
+      "subtitle": "Replace the chip in a Band Hero or Guitar Hero 5 drum kit's brain with a Pico",
       "description": "Replace the main microcontroller in a Band Hero or Guitar Hero 5 era drum kit brain with a Raspberry Pi Pico, reading the pads from the brain's own drum chip over I2C.",
       "badge": "MIDI over I2C",
       "estimatedTime": "30 - 45 mins",
@@ -3815,7 +3765,7 @@
           "warningTitle": "This replaces the brain's main microcontroller",
           "warningText": "Once the main microcontroller board is removed, the kit no longer works on its own console. Keep the removed board safe if you may want to put the kit back to stock.",
           "pinoutTitle": "Pinout at a Glance",
-          "pinoutDesc": "The I2C connector must use these pins. The button pins are suggestions that keep clear of GP18 / GP19; the probe rows in the wiring step take whichever pin you actually use.",
+          "pinoutDesc": "The I2C connector must use these pins. The button pins are suggestions that keep clear of GP{{sda}} / GP{{scl}}; the probe rows in the wiring step take whichever pin you actually use.",
           "thBoardPad": "Board Pad",
           "thPicoPin": "Pico Pin"
         },
@@ -3830,8 +3780,8 @@
             "Remove the Main Board: Open the brain and remove the PCB with the main microcontroller from the main PCB.",
             "+V: Connect +V to the Pico's 3V3(OUT) (Pin 36).",
             "0V: Connect 0V to a Pico GND (Pin 38).",
-            "DATA: Connect DATA (SDA) to GP18 (Pin 24).",
-            "CLK: Connect CLK (SCL) to GP19 (Pin 25)."
+            "DATA: Connect DATA (SDA) to {{sdaPin}}.",
+            "CLK: Connect CLK (SCL) to {{sclPin}}."
           ],
           "buttonsTitle": "Wiring the Face Buttons",
           "buttonSteps": [
@@ -3844,7 +3794,7 @@
           "leaveTitle": "Leave these pads unconnected",
           "leaveText": "Do not connect VBAT, +1V6, the SPEAKER / SW header, MIC- / MIC+, or any NC pad to the Pico. Only the +V, CLK, DATA and 0V connector, the button pads and BUTTON COM are used.",
           "setupTitle": "Drum Brain Setup",
-          "setupDesc": "Adds the Band Hero drum driver on I2C1 (GP18 / GP19), gives the profile a MIDI channel 10 slot for it, and loads the default MIDI drum mappings. The profile is switched to a Guitar Hero drum kit unless it is already a drum kit.",
+          "setupDesc": "Adds the Band Hero drum driver on I2C1 (GP{{sda}} / GP{{scl}}), gives the profile a MIDI channel 10 slot for it, and loads the default MIDI drum mappings. The profile is switched to a Guitar Hero drum kit unless it is already a drum kit.",
           "thConnector": "Connector Pin",
           "thPicoPin": "Pico Pin",
           "thType": "Type",
@@ -3869,43 +3819,21 @@
             "x": "X",
             "y": "Y"
           }
-        },
-        "bh-test": {
-          "shortTitle": "Test & Save",
-          "title": "Live Test & Save",
-          "badge": "Save to Pico",
-          "description": "Check the brain is detected, hit every pad, then save to the Pico.",
-          "configuredText": "The setup mapped the drum chip's MIDI notes to the kit's pads. Check the brain shows as detected, hit every pad and press the kick pedal, then save the configuration to the Pico.",
-          "tipsTitle": "If Nothing Registers",
-          "tipsText": "If the brain isn't detected, check the +V and 0V wires, and that DATA goes to GP18 and CLK to GP19 (swapped lines are the most common mistake). If the brain is detected but a pad doesn't light up, its MIDI mappings can be adjusted on the Inputs page.",
-          "btnSave": "Save Drum Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "DRUM BRAIN TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "driverNotAdded": "Drum driver not added yet (see the wiring step)",
-          "brainNotDetected": "Drum brain not detected; check the I2C wiring",
-          "brainDetected": "Drum brain detected",
-          "verifyPrompt": "Hit each pad and the kick pedal. Each bar shows the strongest reading from that pad's mappings, held briefly after a hit.",
-          "padNotes": "MIDI notes mapped: {{count}}",
-          "notMapped": "Not mapped",
-          "buttonsTitle": "FACE BUTTONS",
-          "pad": {
-            "red": "Red",
-            "yellow": "Yellow",
-            "blue": "Blue",
-            "orange": "Orange",
-            "green": "Green",
-            "kick": "Kick Pedal",
-            "yellowCymbal": "Yellow Cymbal",
-            "blueCymbal": "Blue Cymbal",
-            "greenCymbal": "Green Cymbal"
-          }
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "driverNotAdded": "Drum driver not added yet (see the wiring step)",
+        "brainNotDetected": "Drum brain not detected; check the I2C wiring",
+        "brainDetected": "Drum brain detected",
+        "tipsTitle": "If Nothing Registers",
+        "tipsText": "If the brain isn't detected, check the +V and 0V wires, and that DATA goes to GP{{sda}} and CLK to GP{{scl}} (swapped lines are the most common mistake). If the brain is detected but a pad doesn't light up, its MIDI mappings can be adjusted on the Inputs page.",
+        "title": "Drum brain"
       }
     },
     "wt-drums": {
       "title": "World Tour Drum Kit",
-      "subtitle": "Guitar Hero World Tour Drum Brain Replacement",
+      "subtitle": "Replace a Guitar Hero World Tour drum kit's brain with a Pico",
       "description": "Replace the brain of a Guitar Hero World Tour drum kit with a Raspberry Pi Pico, reading the pads over the kit's own SPI cable.",
       "badge": "MIDI over SPI",
       "estimatedTime": "20 - 30 mins",
@@ -3951,16 +3879,16 @@
             "Connect to the Cable: A connector or header that mates with the cable leaves it untouched, or you can solder straight to the cable's wires.",
             "+3V3: Connect +3V3 to the Pico's 3V3(OUT) (Pin 36).",
             "0V: Connect 0V to a Pico GND (Pin 38).",
-            "CLK: Connect CLK to GP2 (Pin 4), the Pico's SPI clock (SCK).",
-            "MOSI: Connect MOSI to GP3 (Pin 5), the Pico's SPI TX.",
-            "MISO: Connect MISO to GP4 (Pin 6), the Pico's SPI RX.",
-            "CS: Connect CS to GP5 (Pin 7).",
+            "CLK: Connect CLK to {{sckPin}}, the Pico's SPI clock (SCK).",
+            "MOSI: Connect MOSI to {{mosiPin}}, the Pico's SPI TX.",
+            "MISO: Connect MISO to {{misoPin}}, the Pico's SPI RX.",
+            "CS: Connect CS to {{csPin}}.",
             "Add the Driver: With the Pico connected to the configurator, press Add World Tour Drum Driver."
           ],
           "leaveTitle": "Only connect the drum cable",
           "leaveText": "Don't connect anything else to the Pico for this conversion. The face buttons and the rest of the original brain aren't covered by this guide yet.",
           "setupTitle": "Drum Cable Setup",
-          "setupDesc": "Adds the World Tour drum driver on SPI0 (CLK GP2, MOSI GP3, MISO GP4, CS GP5, 500 kHz), gives the profile a MIDI channel 10 slot for it, and loads the default MIDI drum mappings. The profile is switched to a Guitar Hero drum kit unless it is already a drum kit.",
+          "setupDesc": "Adds the World Tour drum driver on SPI0 (CLK GP{{sck}}, MOSI GP{{mosi}}, MISO GP{{miso}}, CS GP{{cs}}, 500 kHz), gives the profile a MIDI channel 10 slot for it, and loads the default MIDI drum mappings. The profile is switched to a Guitar Hero drum kit unless it is already a drum kit.",
           "thConnector": "Brain Label",
           "thPicoPin": "Pico Pin",
           "thType": "Type",
@@ -3972,42 +3900,21 @@
           "typeClock": "SPI Clock (SCK)",
           "addDriverBtn": "Add World Tour Drum Driver",
           "driverAdded": "World Tour drum driver on CLK GP{{sck}}, MOSI GP{{mosi}}, MISO GP{{miso}}, CS GP{{cs}}, pads mapped"
-        },
-        "wt-test": {
-          "shortTitle": "Test & Save",
-          "title": "Live Test & Save",
-          "badge": "Save to Pico",
-          "description": "Check the drums are detected, hit every pad, then save to the Pico.",
-          "configuredText": "The setup mapped the kit's MIDI notes to its pads. Check the drums show as detected, hit every pad and press the kick pedal, then save the configuration to the Pico.",
-          "tipsTitle": "If Nothing Registers",
-          "tipsText": "If the drums aren't detected, check the +3V3 and 0V wires, then check CLK, MOSI, MISO and CS against the labels on the original brain's connector (MOSI and MISO swapped is an easy mistake). If the drums are detected but a pad doesn't light up, its MIDI mappings can be adjusted on the Inputs page.",
-          "btnSave": "Save Drum Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "DRUM TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "driverNotAdded": "World Tour drum driver not added yet (see the wiring step)",
-          "brainNotDetected": "Drums not detected; check the SPI wiring",
-          "brainDetected": "Drums detected",
-          "verifyPrompt": "Hit each pad and the kick pedal. Each bar shows the strongest reading from that pad's mappings, held briefly after a hit.",
-          "padNotes": "MIDI notes mapped: {{count}}",
-          "notMapped": "Not mapped",
-          "pad": {
-            "red": "Red",
-            "yellow": "Yellow",
-            "blue": "Blue",
-            "orange": "Orange",
-            "green": "Green",
-            "kick": "Kick Pedal",
-            "yellowCymbal": "Yellow Cymbal",
-            "blueCymbal": "Blue Cymbal",
-            "greenCymbal": "Green Cymbal"
-          }
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "driverNotAdded": "World Tour drum driver not added yet (see the wiring step)",
+        "brainNotDetected": "Drums not detected; check the SPI wiring",
+        "brainDetected": "Drums detected",
+        "tipsTitle": "If Nothing Registers",
+        "tipsText": "If the drums aren't detected, check the +3V3 and 0V wires, then check CLK, MOSI, MISO and CS against the labels on the original brain's connector (MOSI and MISO swapped is an easy mistake). If the drums are detected but a pad doesn't light up, its MIDI mappings can be adjusted on the Inputs page.",
+        "title": "Drums"
       }
     },
     "midi-din": {
       "title": "MIDI In (5-pin DIN)",
-      "subtitle": "Play with an E-Drum Kit or Other MIDI Gear",
+      "subtitle": "Add a MIDI IN socket for an e-drum kit, keyboard or other MIDI gear",
       "description": "Build a small opto-isolated MIDI input so an e-drum kit, keyboard or other device with a 5-pin MIDI OUT port can drive the Pico, which then acts as a Guitar Hero or Rock Band drum kit.",
       "badge": "MIDI over UART",
       "estimatedTime": "30 - 45 mins",
@@ -4052,7 +3959,11 @@
           "shortTitle": "Wiring",
           "title": "Circuit & Wiring",
           "badge": "H11L1",
-          "description": "Build the optocoupler receiver, then connect it to the MIDI socket and the Pico.",
+          "description": "Build the optocoupler receiver, connect it to the MIDI socket and the Pico, and pick its RX pin.",
+          "pinCardTitle": "MIDI Input Pin",
+          "pinCardDesc": "Pick the Pico pin H11L1 pin 4 goes to. The wiring here follows it, and the MIDI input is set up on it as you pick.",
+          "pinApplied": "MIDI input on GP{{rx}} (UART{{block}})",
+          "pinApplyBtn": "Set Up MIDI Input on This Pin",
           "schematicCaption": "The 3.3V MIDI receiver: MIDI socket on the left, H11L1 optocoupler (IC1) in the middle, Pico connections (+3.3V, RX, GND) on the right",
           "schematicText": "On the input side, socket pin 4 runs through R1 (220Ω) to H11L1 pin 1, and socket pin 5 goes straight to H11L1 pin 2. A diode sits across H11L1 pins 1 and 2, with its banded end on pin 1. Socket pins 1, 2 and 3 and H11L1 pin 3 are not connected. On the output side, H11L1 pin 6 goes to +3.3V, pin 5 to GND and pin 4 to the Pico's RX pin, with R2 (470Ω) pulling pin 4 up to +3.3V.",
           "socketTitle": "Check the socket's pin numbers",
@@ -4066,7 +3977,7 @@
             "Leave the Rest of the Socket: Socket pins 1, 2 and 3 are not connected. Pin 2 carries the cable's shield, which the sending device grounds; leaving it unconnected keeps the two devices' grounds apart.",
             "Power: Connect H11L1 pin 6 (VCC) to the Pico's 3V3(OUT) (Pin 36), and H11L1 pin 5 (GND) to a Pico GND (Pin 38). Leave H11L1 pin 3 unconnected.",
             "Pull-Up: Connect the 470Ω resistor (R2) between H11L1 pin 4 and 3V3(OUT).",
-            "Output: Connect H11L1 pin 4 to GP{{rx}} (Pin {{rxPhysical}}), the Pico's UART RX. You can pick a different RX pin in the next step.",
+            "Output: Connect H11L1 pin 4 to GP{{rx}} (Pin {{rxPhysical}}), the Pico's UART RX. You can pick a different RX pin below.",
             "Connect the Kit: Run a MIDI cable from the kit's MIDI OUT port to the socket. The socket is the receiver's MIDI IN."
           ],
           "capTitle": "About the 100nF capacitor",
@@ -4102,8 +4013,8 @@
           "shortTitle": "Setup",
           "title": "MIDI Input Setup",
           "badge": "UART",
-          "description": "Pick the MIDI channel and RX pin, then add the MIDI input to the Pico.",
-          "intro": "With the receiver wired, pick the channel your kit sends on and the RX pin you wired H11L1 pin 4 to, then add the MIDI input.",
+          "description": "Pick the MIDI channel your kit sends on, then set up the MIDI input.",
+          "intro": "With the receiver wired, pick the channel your kit sends on, then set up the MIDI input. Its pads get mapped to the drum kit.",
           "channelTitle": "MIDI Channel",
           "channelText": "Most e-drum kits send their drums on channel 10, the General MIDI drum channel, so that is the default. If your kit's manual or MIDI settings say it uses a different channel, pick that one. The Pico only listens on the chosen channel: the profile's MIDI slot only picks up the input once a message arrives on that channel, and the pad mappings only read notes on it.",
           "notesTitle": "How Pads Are Matched",
@@ -4118,7 +4029,7 @@
             "Channel: moves the profile's MIDI slot and its MIDI mappings onto the chosen channel."
           ],
           "cardTitle": "Add the MIDI Input",
-          "cardDesc": "Pick the channel and RX pin, then add the MIDI input. Changing either later and pressing Update moves the input and its mappings.",
+          "cardDesc": "Pick the channel, then set up the MIDI input. Changing the channel later and pressing Update moves the input and its mappings.",
           "channelLabel": "MIDI channel",
           "pinLabel": "RX pin (H11L1 pin 4)",
           "pinOption": "GP{{rx}} (Pin {{physical}}), UART{{block}}",
@@ -4126,81 +4037,60 @@
           "uartInUse": "UART{{block}} is already used by another device. Pick an RX pin on the other UART.",
           "addBtn": "Add MIDI Input",
           "updateBtn": "Update MIDI Input",
-          "added": "MIDI input on GP{{rx}} (UART{{block}}), channel {{channel}}, pads mapped"
-        },
-        "din-test": {
-          "shortTitle": "Test & Save",
-          "title": "Live Test & Save",
-          "badge": "Save to Pico",
-          "description": "Watch the notes arrive, hit every pad, then save to the Pico.",
-          "configuredText": "Hit each pad on the kit and watch the notes arrive. Each hit shows its note number, channel and velocity, and whether a pad mapping reads it. When every pad registers, save the configuration to the Pico.",
-          "btnSave": "Save Drum Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "tipsTitle": "If Nothing Registers",
-          "tips": [
-            "Swapped Pins 4 and 5: If no notes arrive at all, socket pins 4 and 5 are the most common mistake, as the DIN numbering isn't in order. Swap the two wires and try again.",
-            "Optocoupler Orientation: Check H11L1 pin 1 is where the dot or notch is, and that the diode's banded end is on pin 1. A reversed diode shorts out the MIDI signal, so nothing gets through.",
-            "Power and RX: Check H11L1 pin 6 is on 3V3(OUT), pin 5 on GND, R2 between pin 4 and 3V3(OUT), and pin 4 on the RX pin chosen in setup.",
-            "MIDI OUT, not IN: Make sure the cable runs from the kit's MIDI OUT (not MIDI IN or THRU) to the socket, and that the kit's MIDI output is turned on in its settings.",
-            "Wrong Channel: If notes arrive but the pads don't move, check the channel the notes arrive on matches the channel chosen in setup. Go back to setup and pick the kit's channel.",
-            "Unmapped Notes: If notes arrive on the right channel but a pad doesn't move, the kit sends a note the defaults don't use. Remap that pad to the note shown here on the Inputs page."
-          ],
-          "telemetryTitle": "MIDI ACTIVITY",
-          "activityDesc": "The latest notes the Pico has received, newest first.",
-          "picoNotConnected": "Pico not connected",
-          "notAdded": "MIDI input not added yet (see the setup step)",
-          "waiting": "No notes received yet. Hit a pad.",
-          "lastNote": "Last note {{note}} ({{name}}), channel {{channel}}, velocity {{velocity}}",
-          "wrongChannel": "Notes are arriving on channel {{got}}, but the MIDI input listens on channel {{channel}}. Go back to setup and pick channel {{got}}.",
-          "thNote": "Note",
-          "thChannel": "Channel",
-          "thVelocity": "Velocity",
-          "thMapped": "Mapped",
-          "mappedYes": "Yes",
-          "mappedNo": "No",
-          "clearBtn": "Clear",
-          "unknownNote": "not a default drum note",
-          "gm": {
-            "35": "Acoustic Bass Drum",
-            "36": "Bass Drum",
-            "38": "Snare",
-            "40": "Electric Snare",
-            "41": "Low Floor Tom",
-            "42": "Closed Hi-Hat",
-            "43": "High Floor Tom",
-            "44": "Pedal Hi-Hat",
-            "45": "Low Tom",
-            "46": "Open Hi-Hat",
-            "47": "Low-Mid Tom",
-            "48": "Hi-Mid Tom",
-            "49": "Crash Cymbal",
-            "50": "High Tom",
-            "51": "Ride Cymbal",
-            "57": "Crash Cymbal 2",
-            "59": "Ride Cymbal 2"
-          },
-          "padsTitle": "PADS",
-          "verifyPrompt": "Hit each pad and the kick pedal. Each bar shows the strongest reading from that pad's mappings, held briefly after a hit.",
-          "padNotes": "MIDI notes mapped: {{count}}",
-          "notMapped": "Not mapped",
-          "pad": {
-            "red": "Red",
-            "yellow": "Yellow",
-            "blue": "Blue",
-            "orange": "Orange",
-            "green": "Green",
-            "kick": "Kick Pedal",
-            "yellowCymbal": "Yellow Cymbal",
-            "blueCymbal": "Blue Cymbal",
-            "greenCymbal": "Green Cymbal"
-          }
+          "added": "MIDI input on GP{{rx}} (UART{{block}}), channel {{channel}}, pads mapped",
+          "pinFromWiring": "Reading MIDI on GP{{rx}} (UART{{block}}), the pin picked on the wiring step."
         }
+      },
+      "check": {
+        "tipsTitle": "If Nothing Registers",
+        "tips": [
+          "Swapped Pins 4 and 5: If no notes arrive at all, socket pins 4 and 5 are the most common mistake, as the DIN numbering isn't in order. Swap the two wires and try again.",
+          "Optocoupler Orientation: Check H11L1 pin 1 is where the dot or notch is, and that the diode's banded end is on pin 1. A reversed diode shorts out the MIDI signal, so nothing gets through.",
+          "Power and RX: Check H11L1 pin 6 is on 3V3(OUT), pin 5 on GND, R2 between pin 4 and 3V3(OUT), and pin 4 on the RX pin chosen on the wiring step.",
+          "MIDI OUT, not IN: Make sure the cable runs from the kit's MIDI OUT (not MIDI IN or THRU) to the socket, and that the kit's MIDI output is turned on in its settings.",
+          "Wrong Channel: If notes arrive but the pads don't move, check the channel the notes arrive on matches the channel chosen in setup. Go back to setup and pick the kit's channel.",
+          "Unmapped Notes: If notes arrive on the right channel but a pad doesn't move, the kit sends a note the defaults don't use. Remap that pad to the note shown here on the Inputs page."
+        ],
+        "activityDesc": "The latest notes the Pico has received, newest first.",
+        "picoNotConnected": "Pico not connected",
+        "notAdded": "MIDI input not added yet (see the setup step)",
+        "waiting": "No notes received yet. Hit a pad.",
+        "lastNote": "Last note {{note}} ({{name}}), channel {{channel}}, velocity {{velocity}}",
+        "wrongChannel": "Notes are arriving on channel {{got}}, but the MIDI input listens on channel {{channel}}. Go back to setup and pick channel {{got}}.",
+        "thNote": "Note",
+        "thChannel": "Channel",
+        "thVelocity": "Velocity",
+        "thMapped": "Mapped",
+        "mappedYes": "Yes",
+        "mappedNo": "No",
+        "clearBtn": "Clear",
+        "unknownNote": "not a default drum note",
+        "gm": {
+          "35": "Acoustic Bass Drum",
+          "36": "Bass Drum",
+          "38": "Snare",
+          "40": "Electric Snare",
+          "41": "Low Floor Tom",
+          "42": "Closed Hi-Hat",
+          "43": "High Floor Tom",
+          "44": "Pedal Hi-Hat",
+          "45": "Low Tom",
+          "46": "Open Hi-Hat",
+          "47": "Low-Mid Tom",
+          "48": "Hi-Mid Tom",
+          "49": "Crash Cymbal",
+          "50": "High Tom",
+          "51": "Ride Cymbal",
+          "57": "Crash Cymbal 2",
+          "59": "Ride Cymbal 2"
+        },
+        "title": "MIDI activity"
       }
     },
     "dj-turntable": {
       "title": "DJ Hero Turntable Controller",
-      "subtitle": "Optical Encoder Platter & Crossfader Conversion",
-      "description": "Rewire any DJ Hero turntable to a Raspberry Pi Pico for low-latency scratch vinyl and crossfader controls in DJ Hero.",
+      "subtitle": "Replace a DJ Hero turntable's main board with a Pico",
+      "description": "Replace the main board in a DJ Hero turntable (Xbox 360, PS3 or Wii) with a Raspberry Pi Pico, reading its platters, crossfader, effects dial and buttons.",
       "badge": "Optical Scratching",
       "estimatedTime": "45 - 60 mins",
       "steps": {
@@ -4257,7 +4147,7 @@
           "description": "Wire the platters over I2C, then the crossfader, effects dial, and base buttons.",
           "wiringTitle": "Wiring Instructions",
           "wiringSteps": [
-            "Platters (I2C): Each platter connects to the base with 4 wires: power, ground, SDA, and SCL. Connect power to 3V3(OUT) (Pin 36), ground to GND, SDA to GP18, and SCL to GP19. With two platters, wire both to the same four points.",
+            "Platters (I2C): Each platter connects to the base with 4 wires: power, ground, SDA, and SCL. Connect power to 3V3(OUT) (Pin 36), ground to GND, SDA to GP{{sda}}, and SCL to GP{{scl}}. With two platters, wire both to the same four points.",
             "Platter Buttons: Nothing to wire. The platter reads its Green, Red, and Blue buttons itself and sends them over I2C.",
             "Crossfader: Connect the outer pins to 3V3 and GND, and the centre wiper pin to GP26 (ADC0).",
             "Effects Dial: If it is a three-pin potentiometer, connect the outer pins to 3V3 and GND, and the wiper to GP27 (ADC1).",
@@ -4266,7 +4156,7 @@
           "orientationTitle": "Left & Right Platters",
           "orientationText": "The two platters answer on different I2C addresses (left 0x0E, right 0x0D), so add a platter for each side you have installed. The side is the device's Left / Right setting: it picks which address the Pico reads, and its default mappings drive the matching left or right turntable controls. If a platter only responds as the other side, switch its Left / Right setting on the Devices page and move its mappings to that side on the Inputs page.",
           "setupTitle": "Turntable Setup",
-          "setupDesc": "Add each installed platter on GP18 (SDA) / GP19 (SCL) with its default mappings, then map the base controls to the suggested pins. The profile is switched to a DJ Hero turntable if it isn't one already.",
+          "setupDesc": "Add each installed platter on GP{{sda}} (SDA) / GP{{scl}} (SCL) with its default mappings, then map the base controls to the suggested pins. The profile is switched to a DJ Hero turntable if it isn't one already.",
           "leftPlatter": "Left",
           "rightPlatter": "Right",
           "addPlatterBtn": "Add Platter",
@@ -4280,32 +4170,22 @@
           "btnBlue": "Blue",
           "crossfaderHeader": "Crossfader",
           "notMapped": "Not mapped"
-        },
-        "tt-test": {
-          "shortTitle": "Test & Save",
-          "title": "3. Live Test & Save",
-          "badge": "Test Bench",
-          "description": "Verify the platters and crossfader, then save the turntable configuration.",
-          "configuredText": "Check each platter is detected on the right, then save the configuration to the Pico. Crossfader and effects dial ranges can be fine-tuned on the Inputs page.",
-          "scratchTestTitle": "Scratch Testing",
-          "scratchTestText": "Spin each platter forward and backward: its velocity bar should move away from the middle in both directions and return to the middle when it stops. Slide the crossfader left and right to verify full travel.",
-          "btnSave": "Save Turntable Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "TURNTABLE HARDWARE TELEMETRY",
-          "picoNotConnected": "Pico not connected",
-          "platterNotAdded": "not added",
-          "platterConnected": "connected",
-          "platterNotDetected": "not detected",
-          "leftVelocity": "Left platter velocity",
-          "rightVelocity": "Right platter velocity",
-          "verifyPrompt": "Spin the turntable to test live scratching. The bars rest in the middle."
         }
+      },
+      "check": {
+        "picoNotConnected": "Pico not connected",
+        "platterNotAdded": "not added",
+        "platterConnected": "connected",
+        "platterNotDetected": "not detected",
+        "scratchTestTitle": "Scratch Testing",
+        "scratchTestText": "Spin each platter forward and backward: its velocity bar should move away from the middle in both directions and return to the middle when it stops. Slide the crossfader left and right to verify full travel.",
+        "title": "Platters"
       }
     },
     "usb-host": {
-      "title": "USB Host Controller & Console Auth",
-      "subtitle": "Connect Wired Controllers & Xbox 360 Wireless Receivers",
-      "description": "Add a USB Host port to your Raspberry Pi Pico to connect wired controllers, wireless receivers, or security authentication donor controllers.",
+      "title": "USB Host Port",
+      "subtitle": "Plug USB controllers, instruments and Xbox 360 wireless receivers into a Pico",
+      "description": "Add a USB port to a Raspberry Pi Pico, so wired USB controllers and instruments, MIDI devices and Xbox 360 wireless receivers can be plugged into it.",
       "badge": "Console Auth",
       "estimatedTime": "15 - 20 mins",
       "steps": {
@@ -4343,66 +4223,158 @@
           "wiringSteps": [
             "Power (Red): Solder the Red wire to VBUS (Pin 40). This provides 5V to the connected USB controller.",
             "Ground (Black): Solder the Black wire to any GND (Pin 38).",
-            "D+ (Green): Connect the Green wire straight to GP2 (Pin 4).",
-            "D- (White): Connect the White wire straight to GP3 (Pin 5). D+ and D- just need to be on two consecutive GPIOs, in either order: if D- is on the lower pin, turn on \"D- First\" for the USB Host device on the Devices page."
+            "D+ (Green): Connect the Green wire straight to {{dp}}.",
+            "D- (White): Connect the White wire straight to {{dm}}. D+ and D- just need to be on two consecutive GPIOs, in either order: if D- is on the lower pin, turn on \"D- First\" for the USB Host device on the Devices page."
           ],
           "driverConfigTitle": "USB Host Driver Configuration",
-          "driverConfigDesc": "Adds a USB host port on GP2 (D+) / GP3 (D-) and a USB controller slot to the active profile so the plugged-in controller drives it:",
+          "driverConfigDesc": "Adds a USB host port on GP{{dp}} (D+) / GP{{dm}} (D-), which can be changed once it's added. The next step sets up a profile for each controller you'll plug in.",
           "driverConfiguredBadge": "USB Host Configured on GP{{dp}} (D+) / GP{{dm}} (D-)",
           "enableDriverBtn": "Enable USB Host Driver"
-        },
-        "usb-test": {
-          "shortTitle": "Test & Save",
-          "title": "3. Live Test & Save",
-          "badge": "Test Bench",
-          "description": "Plug in a USB controller or wireless dongle, verify detection, and save to flash.",
-          "activeText": "With the USB host port enabled, the Pico can read a controller plugged into the socket. The status panel shows whether a device has been detected.",
-          "plugInTitle": "Plug In a USB Device",
-          "plugInText": "Plug in a wired Xbox 360 controller, an Xbox 360 wireless gaming receiver, or any supported USB gamepad. The Santroller status will report the detected USB device name and negotiate USB descriptors.",
-          "btnSave": "Save USB Host Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
-          "telemetryTitle": "USB HOST HARDWARE STATUS",
-          "notConfiguredBadge": "USB Host Not Configured",
-          "waitingBadge": "USB Host Enabled, No Device Detected",
-          "detectedBadge": "USB Device Detected ({{count}})",
-          "notConfiguredPrompt": "Go back to the Wiring step and enable the USB host driver first.",
-          "connectPrompt": "Connect your Pico to see live USB device detection.",
-          "verifyPrompt": "Plug in a USB controller to test live detection."
         }
+      },
+      "check": {
+        "notConfiguredBadge": "USB Host Not Configured",
+        "waitingBadge": "USB Host Enabled, No Device Detected",
+        "detectedBadge": "USB Device Detected ({{count}})",
+        "notConfiguredPrompt": "Go back to the Wiring step and enable the USB host driver first.",
+        "connectPrompt": "Connect your Pico to see live USB device detection.",
+        "verifyPrompt": "Plug in a USB controller to test live detection.",
+        "title": "USB port"
+      }
+    },
+    "bt-receiver": {
+      "title": "Bluetooth Receiver",
+      "subtitle": "Connect PlayStation, Switch, Xbox and Wii controllers and instruments to a Pico over Bluetooth",
+      "description": "Turn a Pico W, or a Pico with a USB Bluetooth adapter, into a receiver for Bluetooth controllers: PS3, PS4 and PS5 pads, Switch and Xbox controllers, Wii Remotes with guitars, drums or turntables plugged in, iOS Guitar Hero Live guitars and other Santrollers. The Pico then acts as whatever each profile emulates, over USB.",
+      "estimatedTime": "15 - 30 mins",
+      "steps": {
+        "bt-intro": {
+          "title": "Overview & Supplies",
+          "shortTitle": "Overview",
+          "description": "What the receiver connects to, and what you need.",
+          "intro": "The Pico pairs with Bluetooth controllers the way a console or PC does, then shows up over USB as whatever its profiles emulate. That lets a wireless controller play on a console it was never made for, or a Wii guitar play on a PS4.",
+          "controllersTitle": "What It Connects To",
+          "controllers": [
+            "PlayStation: DualShock 3, DualShock 4 and DualSense pads, plus PS4 and PS5 Rock Band instruments.",
+            "Nintendo: Switch Pro Controllers and Joy-Con, Wii U Pro Controllers, and Wii Remotes with a guitar, drum kit, turntable or Classic Controller plugged in.",
+            "Xbox: Xbox One and Series controllers with Bluetooth.",
+            "Guitar Hero Live: the iOS guitar, which connects over Bluetooth.",
+            "Santroller: another Santroller controller set up for Bluetooth, like a wireless guitar.",
+            "Other Bluetooth gamepads, such as 8BitDo pads in Switch or Android mode."
+          ],
+          "suppliesTitle": "Supplies",
+          "supplies": [
+            "A Raspberry Pi Pico W or Pico 2 W, which has its own Bluetooth radio. Nothing needs wiring.",
+            "Or a plain Pico or Pico 2 with a USB host port and a USB Bluetooth adapter plugged into it.",
+            "Optional: a push button between a GPIO and GND, to start pairing without the configurator."
+          ]
+        },
+        "bt-hardware": {
+          "title": "Bluetooth Radio",
+          "shortTitle": "Radio",
+          "description": "Pick the Pico's own radio or a USB adapter, and add the Bluetooth driver.",
+          "intro": "Santroller can use a Pico W's own radio, or a USB Bluetooth adapter on a plain Pico.",
+          "plainNote": "Without the wireless chip, the Pico uses a USB Bluetooth adapter plugged into a USB host port instead. Wire one up as shown below.",
+          "wirelessText": "The Pico W's radio is built in, so there's nothing to wire. Add the Bluetooth driver on the right.",
+          "dongleTitle": "Wire a USB Host Port",
+          "dongleSupport": "Not every adapter works yet. <strong>Realtek and Intel</strong> adapters, which covers most cheap current ones, need firmware the Pico can't load yet. Adapters that work without it, like <strong>Broadcom BCM20702</strong> or <strong>CSR8510</strong> based ones, are the ones to get.",
+          "driverTitle": "Bluetooth Driver",
+          "driverDesc": "Adds the Bluetooth driver, which uses the Pico W's own radio.",
+          "driverDescDongle": "Adds the USB host port, then the Bluetooth driver, which uses the adapter plugged into it. The port's pins can be changed once it's added.",
+          "addDriverBtn": "Add Bluetooth Driver",
+          "addDriversBtn": "Add USB Host Port & Bluetooth Driver",
+          "driverAdded": "Bluetooth Driver Added"
+        },
+        "bt-pair": {
+          "title": "Pair Your Controllers",
+          "shortTitle": "Pair",
+          "description": "Put each controller into pairing mode, then scan for it.",
+          "intro": "Put a controller into pairing mode, then press <strong>Pair New Device</strong> on the right, or the pairing button if you wired one. The Pico looks for it for about 10 seconds. Pair each controller once, and it shows up under Paired Devices.",
+          "controllerHeader": "Controller",
+          "howHeader": "Pairing mode",
+          "families": {
+            "playstation": {
+              "name": "DualShock 4 / DualSense",
+              "how": "Hold <strong>Share</strong> (or <strong>Create</strong>) and <strong>PS</strong> until the light bar flashes quickly."
+            },
+            "ps3": {
+              "name": "DualShock 3",
+              "how": "Plug it into the receiver's <strong>USB host port</strong> once, which tells it the Pico's address, then unplug it and press <strong>PS</strong>. A Pico W needs a USB host port wired for this."
+            },
+            "switch": {
+              "name": "Switch Pro / Joy-Con",
+              "how": "Hold the small <strong>sync</strong> button (on top of the Pro Controller, on the rail of a Joy-Con) until the lights run back and forth."
+            },
+            "xbox": {
+              "name": "Xbox One / Series",
+              "how": "Hold the <strong>pair</strong> button on top until the Xbox button flashes quickly. Only Bluetooth models work: on those, the plastic around the Xbox button is part of the front, not the top."
+            },
+            "wii": {
+              "name": "Wii Remote / Wii U Pro",
+              "how": "Plug the guitar, drums or turntable into the Wii Remote first, then press the red <strong>sync</strong> button (under the battery cover, or on the back of a Wii U Pro)."
+            },
+            "ghl": {
+              "name": "Guitar Hero Live (iOS)",
+              "how": "Turn the guitar on and hold its <strong>sync</strong> button until the lights flash."
+            },
+            "santroller": {
+              "name": "Another Santroller",
+              "how": "Turn on its Bluetooth, the same way as pairing it with a PC. The Wireless build guide sets that up."
+            },
+            "other": {
+              "name": "Other gamepads",
+              "how": "Use the controller's own Bluetooth pairing mode. 8BitDo and similar pads work best in Switch or Android mode."
+            }
+          },
+          "reconnect": "Once paired, a controller reconnects by itself when it's turned on. If one stops reconnecting, remove it from Paired Devices and pair it again.",
+          "noDriver": "Add the Bluetooth driver on the radio step first, and its pairing controls show up here."
+        }
+      },
+      "check": {
+        "title": "Bluetooth controllers",
+        "picoNotConnected": "Pico not connected",
+        "driverMissing": "Bluetooth driver not added yet (see the radio step)",
+        "noAdapter": "No Bluetooth radio found; check the board or adapter",
+        "noControllers": "No controllers connected",
+        "connectedCount_one": "{{count}} controller connected",
+        "connectedCount_other": "{{count}} controllers connected",
+        "prompt": "Turn on a paired controller. It shows up here with the kind of controller it reports, which is what its profile has to read."
       }
     },
     "xbox-auth": {
-      "title": "Xbox One / Series Authentication",
-      "subtitle": "Pass Auth to a Real Controller or a Harvested Auth Chip",
-      "description": "Xbox One and Xbox Series consoles only accept genuine controllers. Let Santroller pass the console's auth requests to an official controller on the USB Host port, or to an auth chip taken from an Xbox One controller and wired over I2C.",
+      "title": "Console Authentication (PS4, PS5, Xbox One / Series)",
+      "subtitle": "Pass auth to a real controller, an auth dongle or a harvested Xbox auth chip",
+      "description": "PS4, PS5, Xbox One and Xbox Series consoles only accept genuine controllers. Let Santroller pass the console's auth requests to an official controller or auth dongle on the USB Host port, or, for Xbox, to an auth chip taken from an Xbox One controller and wired over I2C.",
       "badge": "Console Auth",
       "estimatedTime": "15 - 45 mins",
       "steps": {
         "auth-intro": {
           "shortTitle": "Overview",
-          "title": "1. Why Xbox Needs Authentication",
+          "title": "1. Why Consoles Need Authentication",
           "badge": "Overview",
           "description": "Which consoles check for genuine controllers, and the ways to pass the check.",
-          "intro": "Some consoles check that a controller is genuine. Santroller controllers are unofficial, so on an Xbox One or Xbox Series console Santroller passes the console's authentication requests on to something genuine: an official controller plugged into a USB Host port, or an auth chip taken from an Xbox One controller.",
+          "intro": "Some consoles check that a controller is genuine. Santroller controllers are unofficial, so on a PS4, PS5, Xbox One or Xbox Series console Santroller passes the console's authentication requests on to something genuine: an official controller or auth dongle plugged into a USB Host port, or, for Xbox, an auth chip taken from an Xbox One controller.",
           "consolesTitle": "Which Consoles Need This",
           "consoles": [
             "Xbox 360: Santroller has the authentication keys built in, so nothing extra is needed.",
-            "Xbox One / Series S|X: Needs an auth source from this guide, unless you're playing Fortnite Festival.",
-            "Fortnite Festival: Doesn't need authentication. Use a keyboard profile instead (see the Fortnite Festival tab on the Compatibility page).",
-            "PS4 / PS5: Not covered here. See the Authentication tab on the Compatibility page."
+            "Xbox One / Series S|X: An Xbox One or Series controller on the USB Host port, or an auth chip. Auth is only checked when the controller is plugged in, so the donor can be unplugged afterwards.",
+            "PS4: A DualShock 4, or a Mayflash MAGPS4 / MagicBoots PS4 dongle, on the USB Host port. Leave it plugged in while you play, as the PS4 keeps checking.",
+            "PS5 games: A Besavior P5General on the USB Host port, left plugged in. MagicBoots dongles don't work with PS5 games.",
+            "Rock Band 4 on PS4 / PS5: Doesn't need authentication in PS3 instrument mode.",
+            "Fortnite Festival: Doesn't need authentication. Use a keyboard profile instead (see the Fortnite Festival tab on the Compatibility page)."
           ],
           "suppliesTitle": "What You'll Need",
           "supplies": [
             "A Raspberry Pi Pico running Santroller",
-            "USB method: an official Xbox One / Series controller (wired with a USB cable, or on an Xbox Wireless Adapter) and a USB Host port on the Pico",
-            "Auth chip method: an auth chip removed from an Xbox One controller, fine wire and a soldering iron"
+            "USB method: a USB Host port on the Pico, and an auth source for your console: an Xbox One / Series controller, a DualShock 4 or PS4 auth dongle, or a P5General for PS5",
+            "Xbox auth chip method: an auth chip removed from an Xbox One controller, fine wire and a soldering iron"
           ],
           "compatibilityLink": "Compatibility & authentication overview",
-          "usbTitle": "Method 1: Donor controller on USB Host",
-          "usbBody": "Plug an official Xbox One / Series controller into a USB Host port on the Pico. When the console asks for authentication, Santroller passes the request to that controller and sends its answer back.",
-          "usbNote": "Official Microsoft controllers are the safe choice. The Santroller docs say third-party controllers don't work for this, even though Santroller will try any Xbox One controller plugged in.",
-          "chipTitle": "Method 2: Harvested auth chip (I2C)",
-          "chipBody": "Take the auth chip off an Xbox One controller board and wire it to the Pico's I2C pins. Santroller talks to the chip directly, so nothing needs to be plugged into a USB Host port.",
+          "usbTitle": "Method 1: Donor controller or dongle on USB Host",
+          "usbBody": "Plug an official controller or auth dongle for your console into a USB Host port on the Pico. When the console asks for authentication, Santroller passes the request to it and sends its answer back.",
+          "usbNote": "Official controllers are the safe choice. Most third-party wired Xbox One controllers work too, but not every one does.",
+          "chipTitle": "Method 2: Harvested Xbox auth chip (I2C)",
+          "chipBody": "Xbox One / Series only. Take the auth chip off an Xbox One controller board and wire it to the Pico's I2C pins. Santroller talks to the chip directly, so nothing needs to be plugged into a USB Host port.",
           "priorityNote": "You only need one of these. If both are set up, whichever is ready first answers the console."
         },
         "auth-wiring": {
@@ -4418,20 +4390,20 @@
           "usbSteps": [
             "Power (Red): Solder the socket's VBUS wire to VBUS (Pin 40).",
             "Ground (Black): Solder the socket's GND wire to any GND (Pin 38).",
-            "D+ (Green): Connect straight to GP2 (Pin 4).",
-            "D- (White): Connect straight to GP3 (Pin 5). D+ and D- just need to be on two consecutive GPIOs, in either order: if D- is on the lower pin, turn on \"D- First\" for the USB Host device on the Devices page.",
-            "Plug in the donor: Connect an official Xbox One / Series controller with a USB cable, or an Xbox Wireless Adapter with an official controller connected to it."
+            "D+ (Green): Connect straight to {{dpPin}}.",
+            "D- (White): Connect straight to {{dmPin}}. D+ and D- just need to be on two consecutive GPIOs, in either order: if D- is on the lower pin, turn on \"D- First\" for the USB Host device on the Devices page.",
+            "Plug in the donor: Connect the auth source for your console: an Xbox One / Series controller (or an Xbox Wireless Adapter with one connected), a DualShock 4 or PS4 auth dongle, or a P5General."
           ],
           "usbGuideLink": "Open the full USB Host guide",
           "usbSetupTitle": "USB Host Port",
-          "usbSetupDesc": "Adds a USB Host port on GP2 (D+) / GP3 (D-) and a USB controller slot to the active profile, the same as the USB Host guide:",
+          "usbSetupDesc": "Adds a USB Host port on GP{{dp}} (D+) / GP{{dm}} (D-), the same as the USB Host guide. The donor answers the console as soon as it's plugged in, so no profile needs to be changed for it.",
           "usbConfiguredBadge": "USB Host Configured on GP{{dp}} (D+) / GP{{dm}} (D-)",
           "usbEnableBtn": "Enable USB Host Port",
           "chipIntro": "The auth chip talks to the Pico over I2C, on the same I2C1 header pins the other guides use. It answers on its own address, so it can share these pins with a Wii extension, a Guitar Hero 5 neck or other I2C devices.",
           "chipSteps": [
             "Remove the chip: Take the auth chip off an Xbox One controller board. Pin 1 is marked by the dot (GND in the pinout above).",
-            "SDA: Wire the chip's SDA pin to GP18 (Pin 24).",
-            "CLK: Wire the chip's CLK pin (the I2C clock, SCL) to GP19 (Pin 25).",
+            "SDA: Wire the chip's SDA pin to {{sdaPin}}.",
+            "CLK: Wire the chip's CLK pin (the I2C clock, SCL) to {{sclPin}}.",
             "Power: Wire the chip's VCC pin to 3V3(OUT) (Pin 36), and its GND pin to any GND (Pin 38).",
             "Reset (optional): Wire the chip's RST pin to any free GPIO, then set that pin as Reset on the Xbox One Auth Chip card on the Devices page.",
             "Leave every NC pin unconnected."
@@ -4453,16 +4425,16 @@
           "shortTitle": "Test & Save",
           "title": "3. Check, Save & Play",
           "badge": "Test Bench",
-          "description": "Check the auth source is detected, save to the Pico, and plug into your Xbox.",
+          "description": "Check the auth source is detected, save to the Pico, and plug into your console.",
           "saveText": "Save the configuration to the Pico, then check the status panel shows your auth source.",
           "btnSave": "Save Configuration to Pico Flash",
           "btnSaved": "Saved to Controller",
           "consoleTitle": "On the Console",
           "consoleStepsUsb": [
-            "Plug the donor controller (or the Xbox Wireless Adapter with its controller) into the Pico's USB Host port.",
-            "Plug the Pico into the Xbox. Santroller switches to Xbox One mode on its own when it detects the console.",
-            "When the console starts up the controller, Santroller passes its authentication requests to the donor controller.",
-            "If the controller works in the console menus, authentication passed."
+            "Plug the donor controller or auth dongle into the Pico's USB Host port.",
+            "Plug the Pico into the console. Santroller picks the console's mode on its own when it detects it.",
+            "When the console starts up the controller, Santroller passes its authentication requests to the donor.",
+            "If the controller works in the console menus, authentication passed. On a PS4 or PS5, leave the donor plugged in while you play."
           ],
           "consoleStepsChip": [
             "Plug the Pico into the Xbox. Santroller switches to Xbox One mode on its own when it detects the console.",
@@ -4472,12 +4444,12 @@
           "troubleTitle": "Troubleshooting",
           "troubleUsb": [
             "Nothing detected: Check the USB Host wiring, that D+ and D- are on consecutive pins, and that \"D- First\" is enabled on the Devices page if D- is on the lower pin.",
-            "Detected but auth fails: Use an official Microsoft controller. The Santroller docs say third-party controllers don't work for this.",
-            "Plugged in late: If the donor is plugged in after the Xbox has started the controller, Santroller reconnects to the console so it can authenticate again."
+            "Detected but auth fails: Use an official controller or a supported dongle for that console. Most third-party Xbox One controllers work, but not every one.",
+            "Plugged in late: On an Xbox, if the donor is plugged in after the console has started the controller, Santroller reconnects to the console so it can authenticate again."
           ],
           "troubleChip": [
             "Chip not detected: Check SDA, SCL, power and ground. The Pico only looks for the chip when it starts, so unplug and replug the Pico after changing the wiring.",
-            "Sharing I2C pins: Other I2C devices on GP18 / GP19 are fine, but every device on those pins runs at the slowest device's speed."
+            "Sharing I2C pins: Other I2C devices on GP{{sda}} / GP{{scl}} are fine, but every device on those pins runs at the slowest device's speed."
           ],
           "usbStatusTitle": "USB HOST STATUS",
           "chipStatusTitle": "AUTH CHIP STATUS",
@@ -4486,7 +4458,7 @@
           "usbDetected": "USB Device Detected ({{count}})",
           "unnamedDevice": "Unnamed USB device",
           "usbNotConfiguredPrompt": "Go back to the Wiring step and enable the USB Host port first.",
-          "usbVerifyPrompt": "Plug the donor controller into the USB Host port and check it shows up here.",
+          "usbVerifyPrompt": "Plug the donor controller or auth dongle into the USB Host port and check it shows up here.",
           "connectPrompt": "Connect your Pico to see the live status.",
           "chipNotConfigured": "Auth Chip Not Configured",
           "chipReady": "Auth Chip Responding",
@@ -4690,8 +4662,8 @@
       }
     },
     "xbox360-rf": {
-      "title": "Xbox 360 RF Wireless Module & Sync",
-      "subtitle": "Use Original Fat & Slim RF Modules with Wireless Controllers",
+      "title": "Xbox 360 Wireless Receiver (RF Module)",
+      "subtitle": "Connect Xbox 360 wireless controllers and instruments to a Pico through an original RF module",
       "description": "Repurpose an authentic Xbox 360 RF module (Original/Fat or Slim) as an ultra-low latency wireless receiver for Xbox 360 controllers with sync and Ring of Light support.",
       "badge": "Wireless RF",
       "estimatedTime": "25 - 40 mins",
@@ -4721,7 +4693,7 @@
           "twoInterfacesTitle": "Two Interfaces on One Board",
           "twoInterfacesText": "To use the module completely, you wire two distinct interfaces:",
           "twoInterfacesList": [
-            "USB Interface (D+, D-, GND): The module's built-in wireless receiver carries the controller data over USB, so it connects to a Santroller USB host port on GP2 (D+) / GP3 (D-).",
+            "USB Interface (D+, D-, GND): The module's built-in wireless receiver carries the controller data over USB, so it connects to a Santroller USB host port on GP{{dp}} (D+) / GP{{dm}} (D-).",
             "Serial Control Bus (Data, Clock, Sync): Connects to Pico GPIOs so Santroller can send sync commands, cycle LED ring animations, and trigger pairing."
           ],
           "architectureOverviewTitle": "Signal Reference & Target Pins",
@@ -4742,7 +4714,10 @@
           "badge": "Wiring",
           "description": "Step-by-step soldering instructions for your chosen module.",
           "usbNoteTitle": "USB D+ / D- Go to the Pico USB Host Port",
-          "usbNoteText": "The module's controller data arrives over USB, so its D+ and D- lines are wired like the socket in the USB Host Controller & Console Auth guide: D+ to GP2 and D- to GP3. The two pins must be consecutive, in either order (turn on \"D- First\" on the Devices page if D- is on the lower pin). No resistors or capacitors are needed. The final step adds the USB host port for you."
+          "usbNoteText": "The module's controller data arrives over USB, so its D+ and D- lines are wired like the socket in the USB Host Port guide: D+ to GP{{dp}} and D- to GP{{dm}}. The two pins must be consecutive, in either order (turn on \"D- First\" on the Devices page if D- is on the lower pin). No resistors or capacitors are needed. Adding the module on the right adds the USB host port too, and its pins can be changed there.",
+          "driverTitle": "RF Module & USB Host Port",
+          "driverDesc": "Adds the RF module on GP{{data}} (data), GP{{clock}} (clock) and GP{{sync}} (sync), and the USB host port its receiver uses on GP{{dp}} (D+) / GP{{dm}} (D-). The pins can be changed once they're added, and the wiring follows them.",
+          "driverAdded": "RF Module & USB Host Port Added"
         },
         "rf-fat": {
           "shortTitle": "Fat Module",
@@ -4758,10 +4733,10 @@
           "wiringSteps": [
             "3.3V Power: Solder Top Pin 1 (or TP18) to Pico Pin 36 (3V3 OUT).",
             "Ground: Solder Top Pin 4 or Bottom Pin 4 (or TP9 / TP10) to Pico Pin 38 (GND).",
-            "USB D+: Solder Top Pin 3 (or TP14) to Pico GP2 (Pin 4), the USB host D+ pin.",
-            "USB D-: Solder Top Pin 2 (or TP13) to Pico GP3 (Pin 5), the USB host D- pin. D+ and D- just need to be on consecutive GPIOs, in either order (see the USB Host guide).",
-            "Serial Data: Solder Bottom Pin 2 (or TP16) to an unused Pico GPIO (e.g. GP4).",
-            "Serial Clock: Solder Bottom Pin 3 (or TP15) to an unused Pico GPIO (e.g. GP5).",
+            "USB D+: Solder Top Pin 3 (or TP14) to Pico {{dpPin}}, the USB host D+ pin.",
+            "USB D-: Solder Top Pin 2 (or TP13) to Pico {{dmPin}}, the USB host D- pin. D+ and D- just need to be on consecutive GPIOs, in either order (see the USB Host guide).",
+            "Serial Data: Solder Bottom Pin 2 (or TP16) to an unused Pico GPIO (e.g. GP{{data}}).",
+            "Serial Clock: Solder Bottom Pin 3 (or TP15) to an unused Pico GPIO (e.g. GP{{clock}}).",
             "Sync Button (Optional): Solder Bottom Pin 1 to a GPIO if you want a physical sync button, or leave it unconnected and use Santroller's built-in software sync button."
           ],
           "pinoutTableTitle": "Fat RF Module Pinout & Test Points",
@@ -4782,11 +4757,11 @@
           "wiringSteps": [
             "3.3V Power: Solder bottom-row Pin 12 (Orange wire) to Pico Pin 36 (3V3 OUT).",
             "Ground: Solder the large mounting pad beside the connector (Black wire) to Pico Pin 38 (GND) and your USB shield/GND.",
-            "USB D+ (Green): Solder top-row Pin 6 (Green wire) to Pico GP2 (Pin 4), the USB host D+ pin.",
-            "USB D- (Grey/White): Solder top-row Pin 5 (Grey/White wire) to Pico GP3 (Pin 5), the USB host D- pin. D+ and D- just need to be on consecutive GPIOs, in either order (see the USB Host guide).",
-            "Serial Data: Solder top-row Pin 2 (Pink wire) to Pico GP4.",
-            "Serial Clock: Solder top-row Pin 3 (Cyan/Blue wire) to Pico GP5.",
-            "Sync Button: Solder bottom-row Pin 13 (Yellow wire) to Pico GP6 (or an optional physical push-button to ground)."
+            "USB D+ (Green): Solder top-row Pin 6 (Green wire) to Pico {{dpPin}}, the USB host D+ pin.",
+            "USB D- (Grey/White): Solder top-row Pin 5 (Grey/White wire) to Pico {{dmPin}}, the USB host D- pin. D+ and D- just need to be on consecutive GPIOs, in either order (see the USB Host guide).",
+            "Serial Data: Solder top-row Pin 2 (Pink wire) to Pico GP{{data}}.",
+            "Serial Clock: Solder top-row Pin 3 (Cyan/Blue wire) to Pico GP{{clock}}.",
+            "Sync Button: Solder bottom-row Pin 13 (Yellow wire) to Pico GP{{sync}} (or an optional physical push-button to ground)."
           ],
           "syncPinNoteTitle": "Slim RF Sync Protocol",
           "syncPinNoteText": "The Slim RF module requires a dedicated initialisation sequence to illuminate the LEDs and initiate the pairing sweep. Santroller natively handles this when 'Slim' is selected under the Xbox 360 RF device settings.",
@@ -4797,23 +4772,20 @@
           "thFunction": "Function",
           "thConnectTo": "Connect To"
         },
-        "rf-test": {
-          "shortTitle": "Test & Sync",
-          "title": "3. Configure Device, Pair & Save",
-          "badge": "Configuration",
-          "description": "Add the Xbox 360 RF device in Santroller, set your pins, sync controllers, and save.",
-          "intro": "Now that your RF module is soldered, connect your Raspberry Pi Pico to your PC. Configure the device in Santroller, test controller synchronisation, and save the settings to flash.",
+        "rf-sync": {
+          "shortTitle": "Sync",
+          "title": "3. Sync Your Controllers",
+          "badge": "Sync",
+          "description": "Sync your Xbox 360 wireless controllers to the module.",
+          "intro": "Now connect your Pico and sync each wireless controller to the module. The next step makes a profile for each kind of controller you'll use.",
           "syncInstructionsTitle": "How to Pair Your Xbox 360 Controller",
           "syncSteps": [
             "Open the Santroller Configurator and connect to your Pico via WebHID.",
-            "Select Original/Fat or Slim above, then click 'Add Original / Fat RF Module' or 'Add Slim RF Module'. This adds the RF module (Data GP4, Clock GP5, Sync GP6) and a USB host port on GP2/GP3 for the receiver.",
+            "Check the module and its USB host port are added (the wiring step adds them, or use the button on the right). The module uses Data GP{{data}}, Clock GP{{clock}} and Sync GP{{sync}}, and the receiver GP{{dp}}/GP{{dm}}.",
             "Click the 'Sync Controller' button in Santroller (or press your wired sync button). The LEDs on the module will begin the rotation animation.",
             "Turn on your Xbox 360 wireless controller and hold its top sync button until its ring also spins.",
-            "Within seconds, the controller will be assigned to Player 1 and the quadrant LED will remain solidly lit.",
-            "Click 'Save RF Configuration to Pico Flash' to store your configuration in the Pico's flash memory."
+            "Within seconds, the controller will be assigned to Player 1 and the quadrant LED will remain solidly lit."
           ],
-          "btnSave": "Save RF Configuration to Pico Flash",
-          "btnSaved": "Saved to Controller",
           "deviceControlTitle": "XBOX 360 RF DEVICE BENCH",
           "moduleConfiguredFat": "Fat RF Module Active",
           "moduleConfiguredSlim": "Slim RF Module Active",
@@ -4823,7 +4795,7 @@
           "picoConnected": "Pico Connected",
           "picoDisconnected": "Pico Disconnected (Connect to Configure)",
           "usbHostReady": "USB Host on GP{{dp}} (D+) / GP{{dm}} (D-)",
-          "usbHostMissing": "The receiver's controller data needs a USB host port (D+ GP2 / D- GP3) and a USB slot in the profile:",
+          "usbHostMissing": "The receiver's controller data needs a USB host port (D+ GP{{dp}} / D- GP{{dm}}):",
           "addUsbHostBtn": "Add USB Host Port for Receiver"
         }
       },
@@ -4836,6 +4808,15 @@
         "modelFatShort": "Fat / RF01",
         "modelSlimShort": "Slim / Trinity",
         "dataClockPins": "Data: GP{{data}} | Clock: GP{{clock}}"
+      },
+      "check": {
+        "title": "Wireless controllers",
+        "picoNotConnected": "Pico not connected",
+        "notAdded": "RF module not added yet (see the sync step)",
+        "waiting": "No controllers connected",
+        "detected_one": "{{count}} controller connected",
+        "detected_other": "{{count}} controllers connected",
+        "prompt": "Turn on a synced controller. Its quadrant on the module lights up once it's connected."
       }
     },
     "rgb-leds": {
@@ -4870,7 +4851,7 @@
           "levelShiftTitle": "3.3V Data vs 5V LEDs",
           "levelShiftText": "WS2812B and APA102 LEDs powered from 5V VBUS expect a logic high of about 0.7 × VDD (around 3.5V), but the Pico's GPIOs only output 3.3V. It often works anyway, but can flicker or glitch. For reliable data, run the data (and APA102 clock) line through a 5V level shifter such as a 74AHCT125 powered from VBUS, or power just the first LED from 5V through a diode (e.g. 1N4001): its supply drops to about 4.3V, so 3.3V counts as high, and it re-drives the data to the rest of the chain at full 5V levels.",
           "pinoutTitle": "Standard LED Power & Data Pinout",
-          "pinoutDescWs2812": "Pico connections for WS2812B LEDs (driven by PIO, so GP16 is just a free pin; any GPIO works):",
+          "pinoutDescWs2812": "Pico connections for WS2812B LEDs (driven by PIO, so GP{{data}} is just a free pin; any GPIO works):",
           "pinoutDescApa102": "Pico connections for APA102 / SK9822 LEDs (these need the hardware SPI pins below):",
           "apa102PinNote": "APA102 needs a hardware SPI clock and data (TX) pair on the same SPI block. No pair on the Pico is free of every other guide: GP18 (SPI0 SCK) / GP19 (SPI0 TX) is used because it only shares pins with the optional GH5 neck / Wii extension I2C bus. If you use either of those, change the LED or I2C pins on the Devices page.",
           "thLedPin": "LED Pin",
@@ -4892,20 +4873,20 @@
             "5V Power: Connect the 5V line of your LED strip or fret LEDs to VBUS (Pin 40) on the Pico.",
             "Ground: Connect the ground line to any GND (Pin 38).",
             "Capacitor: Solder a 1000µF capacitor across 5V and GND close to the first LED (mind the polarity).",
-            "Data Line: Solder a 330Ω to 470Ω resistor inline between GP16 (Pin 21) and the Data In (DIN) pin of the first LED, placing it close to the LED. It damps ringing on the wire and protects the LED's data input.",
+            "Data Line: Solder a 330Ω to 470Ω resistor inline between {{dataPin}} and the Data In (DIN) pin of the first LED, placing it close to the LED. It damps ringing on the wire and protects the LED's data input.",
             "Chaining LEDs: Connect the Data Out (DOUT) of the first LED to the Data In (DIN) of the next, until all LEDs are connected in series."
           ],
           "wiringStepsApa102": [
             "5V Power: Connect the 5V line of your LED strip or fret LEDs to VBUS (Pin 40) on the Pico.",
             "Ground: Connect the ground line to any GND (Pin 38).",
             "Capacitor: Solder a 1000µF capacitor across 5V and GND close to the first LED (mind the polarity).",
-            "Data Line: Solder a 330Ω to 470Ω resistor inline between GP19 (Pin 25, SPI0 TX) and the Data In (DI) pin of the first LED, placing it close to the LED to damp ringing and protect the LED's input.",
-            "Clock Line: Solder a second 330Ω to 470Ω resistor inline between GP18 (Pin 24, SPI0 SCK) and the Clock In (CI) pin of the first LED.",
+            "Data Line: Solder a 330Ω to 470Ω resistor inline between {{mosiPin}}, SPI TX and the Data In (DI) pin of the first LED, placing it close to the LED to damp ringing and protect the LED's input.",
+            "Clock Line: Solder a second 330Ω to 470Ω resistor inline between {{sckPin}}, SPI SCK and the Clock In (CI) pin of the first LED.",
             "Chaining LEDs: Connect Data Out (DO) and Clock Out (CO) of each LED to Data In (DI) and Clock In (CI) of the next, until all LEDs are connected in series."
           ],
           "driverConfigTitle": "LED Driver Configuration",
-          "driverConfigDescWs2812": "Adds a WS2812B LED device on GP16:",
-          "driverConfigDescApa102": "Adds an APA102 / SK9822 LED device on SPI0 (clock GP18, data GP19):",
+          "driverConfigDescWs2812": "Adds a WS2812B LED device on GP{{data}}, which can be changed once it's added:",
+          "driverConfigDescApa102": "Adds an APA102 / SK9822 LED device on SPI (clock GP{{sck}}, data GP{{mosi}}), which can be changed once it's added:",
           "ledCountLabel": "Number of LEDs in the chain",
           "driverConfiguredBadge": "LED Device Configured ({{count}} LEDs)",
           "addWs2812Btn": "Add WS2812B LEDs",
@@ -5029,11 +5010,6 @@
           "shortTitle": "Import",
           "description": "Import your Santroller 1 settings, then check what came across."
         },
-        "yourProfile": {
-          "title": "Your profile",
-          "shortTitle": "Your profile",
-          "description": "What the build guide set up."
-        },
         "build": {
           "title": "What are you building?",
           "shortTitle": "Build",
@@ -5056,23 +5032,33 @@
         },
         "devices": {
           "title": "Add your devices",
-          "shortTitle": "Devices",
+          "shortTitle": "Add devices",
           "description": "Tell the firmware what hardware is attached to the board."
         },
         "profile": {
           "title": "Set up a profile",
-          "shortTitle": "Profile",
+          "shortTitle": "Set up profile",
           "description": "Pick a controller type, then map your inputs and LEDs."
         },
-        "assignments": {
-          "title": "Assignments",
-          "shortTitle": "Assignments",
-          "description": "Decide when each profile is used."
+        "devicesIntro": {
+          "title": "What's attached to the board",
+          "shortTitle": "Devices",
+          "description": "The Devices page lists the hardware wired to the board, which every profile shares."
         },
-        "assignmentsAdvanced": {
-          "title": "When it doesn't do what you expected",
-          "shortTitle": "Fixing assignments",
-          "description": "The usual surprises with assignments, and the less common setups."
+        "profilesIntro": {
+          "title": "Inside a profile",
+          "shortTitle": "Profiles",
+          "description": "A profile is what the controller acts as. Each one is a single page with four sections."
+        },
+        "assignments": {
+          "title": "How profiles are picked",
+          "shortTitle": "Assignments",
+          "description": "Each profile has rules that say when it's used. The guide sets them up for you, so this is just what they mean."
+        },
+        "yourProfiles": {
+          "title": "Your profiles",
+          "shortTitle": "Your profiles",
+          "description": "The rules the guide set up, whether each one matches right now, and other setups you can add."
         },
         "standby": {
           "title": "Standby profile",
@@ -5115,24 +5101,42 @@
         "useNew": "Use a new profile instead",
         "names": {
           "direct-pico-guitar": "Guitar",
-          "wii-adapter": "Wii Guitar",
-          "ps2-adapter": "PS2 Guitar",
-          "usb-host": "USB Controller",
+          "wii-adapter": "Wii Adapter",
+          "ps2-adapter": "PS2 Adapter",
+          "usb-host": "USB Host",
           "drum-kit": "Drums",
           "wt-drums": "World Tour Drums",
           "bh-drums": "Band Hero Drums",
           "midi-din": "MIDI Drums",
-          "dj-turntable": "Turntable"
+          "dj-turntable": "Turntable",
+          "bt-receiver": "Bluetooth Receiver",
+          "xbox360-rf": "360 Receiver"
+        },
+        "extrasTitle": "Anything else?",
+        "extrasIntro": "Optional. Tick anything you're adding on top, and its guide runs as part of this one, before your controller is tested.",
+        "extras": {
+          "wireless": {
+            "name": "Bluetooth",
+            "title": "Bluetooth & battery",
+            "body": "Play wirelessly over Bluetooth from a Pico W, with a LiPo battery if you want one."
+          },
+          "xbox-auth": {
+            "name": "Auth",
+            "title": "Console authentication",
+            "body": "Adds a USB host port for a real controller or auth dongle, which PS4, PS5, Xbox One and Series consoles need to accept the controller.",
+            "bodyUsbHost": "Uses your USB host port for a real controller or auth dongle, which PS4, PS5, Xbox One and Series consoles need to accept the controller."
+          },
+          "rgb-leds": {
+            "name": "LEDs",
+            "title": "RGB LEDs",
+            "body": "Light up the frets, pads or anything else with addressable WS2812B or APA102 LEDs."
+          },
+          "console-output": {
+            "name": "Console Output",
+            "title": "Play on a Wii or PS2",
+            "body": "Plug the controller into a Wii Remote or a PS2 controller port, as well as over USB."
+          }
         }
-      },
-      "yourProfile": {
-        "intro": "This is the profile the build guide set up.",
-        "rulesTitle": "When it's used",
-        "wired": "Everything comes from the board's own pins, so it has <strong>Claim directly wired inputs</strong> on. If you add a second profile like it, for Bluetooth or a keyboard layout, the two take turns instead of both showing up.",
-        "wiredNoClaim": "Everything comes from the board's own pins. Turning on <strong>Claim directly wired inputs</strong> in its rule lets a second profile like it, for Bluetooth or a keyboard layout, take turns with it instead of both showing up.",
-        "source": "Its rule includes the controller the build guide added, so the profile only runs while that's plugged in, and its inputs read from that controller's slot.",
-        "open": "Open this profile",
-        "next": "The next step explains these rules, and the setups that fit your build."
       },
       "path": {
         "title": "How are you starting?",
@@ -5153,6 +5157,98 @@
         "connected": "It was set up by a seller, so everything is already configured and mapped. There's nothing you need to do in this guide; the steps are here if you want to change something.",
         "connectedNamed": "It was set up by {{name}}, so everything is already configured and mapped. There's nothing you need to do in this guide; the steps are here if you want to change something.",
         "goToMain": "Go to the main page"
+      }
+    },
+    "finish": {
+      "steps": {
+        "hostDevices": {
+          "title": "What will you connect?",
+          "shortTitle": "Controllers",
+          "description": "Pick the controllers you'll use, and each gets a profile."
+        },
+        "games": {
+          "title": "What will you play?",
+          "shortTitle": "Games",
+          "description": "Fortnite Festival needs a little extra setup, so it's done here."
+        },
+        "test": {
+          "title": "Test your controller",
+          "shortTitle": "Test",
+          "description": "Press everything, and check it all does what it should."
+        }
+      },
+      "hostDevices": {
+        "intro": "Tick every kind of controller you'll use. A profile only reads its own kind of controller, so each one ticked gets a profile, with its buttons already mapped.",
+        "haveProfile": "Already has a profile",
+        "copies": "Plug in two of the same kind, like two guitars through a hub, and each gets its own copy of the profile, so they show up as two players.",
+        "apply": "Set up profiles",
+        "groups": {
+          "usb": "USB controllers",
+          "midiOverUsb": "USB MIDI gear",
+          "midi": "MIDI gear",
+          "wii": "Wii extensions",
+          "ps2": "PS1 and PS2 controllers",
+          "bluetooth": "Bluetooth controllers",
+          "xbox360rf": "Xbox 360 wireless controllers"
+        },
+        "names": {
+          "wii": "Wii {{name}}",
+          "ps2": "PS2 {{name}}",
+          "bluetooth": "Bluetooth {{name}}"
+        },
+        "midi": {
+          "drums": "MIDI drum kit",
+          "keys": "MIDI keyboard (Pro Keys)",
+          "proGuitar": "MIDI Pro guitar (Squier / Mustang)"
+        },
+        "gamepad": {
+          "label": "Use a USB gamepad for menus with the drum kit",
+          "description": "Drum kits often have no Start or Select. With this, a gamepad plugged into the USB port does the menus while the kit plays, and the kit still works on its own without it. Two USB devices need a hub.",
+          "needsUsbHost": "Drum kits often have no Start or Select, so a USB gamepad can do the menus. That needs a USB host port, which the USB Host build guide sets up."
+        }
+      },
+      "games": {
+        "intro": "Your guitar already works with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it and it's set up for you.",
+        "introDrums": "Your drums already work with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it and it's set up for you.",
+        "profileName": "{{name}} (Festival)",
+        "introAll": "Your guitars and drums already work with Clone Hero, YARG, Rock Band and Guitar Hero. Fortnite Festival needs a bit more, so tick where you'll play it for each one and it's set up for you.",
+        "noInstruments": "None of your profiles are a guitar or drum kit, so there's nothing to set up for Fortnite Festival.",
+        "noFrets": "The guitar profile has no frets mapped yet. Go back through the build guide's fret step first.",
+        "noButtons": "Drum pads can't be held while plugging in, so this needs a button like Start, Select or a kick pedal that's a switch. Map one in your drum profile first.",
+        "clash": "Pick a different button for each, so the controller can tell which one you want.",
+        "convertFailed": "None of the buttons in <strong>{{name}}</strong> have a Fortnite Festival key, so no Festival profile was added. Check its frets or pads are mapped, then try again.",
+        "apply": "Set up Fortnite Festival",
+        "console": {
+          "title": "Fortnite Festival on PlayStation or Xbox",
+          "body": "Adds a keyboard profile, as consoles only let keyboards skip authentication. Hold a button while plugging in to use it.",
+          "holdDesc": "Hold this while plugging in to play Festival. Plug in normally for everything else.",
+          "holdLabel": "Button to hold for PlayStation or Xbox"
+        },
+        "pc": {
+          "title": "Fortnite Festival on PC",
+          "holdDesc": "Hold this while plugging in to play Festival on PC. Plug in normally for everything else.",
+          "holdLabel": "Button to hold for PC"
+        },
+        "guitar": {
+          "pcBody": "Adds an Xbox One rule to your guitar profile, as that's how Festival on PC recognises a guitar. Hold a button while plugging in to use it.",
+          "consoleDone": "Added a <strong>{{name}} (Festival)</strong> keyboard profile, above the guitar's. Hold <strong>{{button}}</strong> while plugging in to use it.",
+          "pcDone": "Added a rule to your guitar profile: hold <strong>{{button}}</strong> while plugging in and it shows up as an Xbox One guitar.",
+          "copyNote": "Its keys are copied from your guitar's buttons. If you remap the guitar later, load the Fortnite Festival preset on the Festival profile again."
+        },
+        "drums": {
+          "pcBody": "Adds an Xbox One rule to your drum profile, as that's how Festival on PC recognises a drum kit. Hold a button while plugging in to use it.",
+          "consoleDone": "Added a <strong>{{name}} (Festival)</strong> keyboard profile, above the drums'. Hold <strong>{{button}}</strong> while plugging in to use it.",
+          "pcDone": "Added a rule to your drum profile: hold <strong>{{button}}</strong> while plugging in and it shows up as an Xbox One drum kit.",
+          "copyNote": "Its keys are copied from your drums' pads. If you remap them later, load the Fortnite Festival preset on the Festival profile again."
+        }
+      },
+      "test": {
+        "intro": "Pick a profile and press everything on the controller. Buttons light up while they're held, pads flash when they're hit, and sticks, whammy and tilt show how far they've moved. Anything that doesn't is worth checking before you go on.",
+        "profile": "Profile",
+        "notMatching": "This profile isn't <strong>Matching</strong> right now, as what it needs isn't plugged in or held. Its inputs still show here, so you can test them anyway.",
+        "noProfiles": "There are no profiles to test yet. Go back and set one up first.",
+        "noInputs": "This profile has no inputs mapped yet.",
+        "saved": "Everything's saved to the controller."
       }
     }
   },

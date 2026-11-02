@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  IconAlertTriangle,
-  IconCheck,
-  IconDeviceFloppy,
-  IconInfoCircle,
-  IconMusic,
-} from '@tabler/icons-react';
+import { IconAlertTriangle, IconCheck, IconInfoCircle, IconMusic } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -23,10 +17,11 @@ import {
   Title,
 } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
-import { IMAGE_ALT } from '../wiringText';
+import { IMAGE_ALT, PICO_PHYSICAL_PINS } from '../wiringText';
 import {
   configureDrumMux,
   countMappedPads,
@@ -36,9 +31,7 @@ import {
   DrumPad,
   findMux,
   MUX_CHIPS,
-  MUX_COM_PHYSICAL_PIN,
   MUX_COM_PIN,
-  MUX_SELECT_PHYSICAL_PINS,
   MUX_SELECT_PINS,
   MuxChip,
   padOutput,
@@ -211,8 +204,32 @@ export function DrumIntroStep(props: GuideStepProps) {
   );
 }
 
-function MuxSetupCard() {
-  const { t } = useTranslation();
+// The multiplexer's pins: its own once it's added, which can be changed on the wiring step, or the
+// ones it's added with
+function useMuxPins() {
+  const mux = useConfigStore((state) => findMux(state)?.device.multiplexer);
+  const com = mux?.inputPin ?? MUX_COM_PIN;
+  const [s0, s1, s2] = [mux?.s0Pin, mux?.s1Pin, mux?.s2Pin].map(
+    (pin, i) => pin ?? MUX_SELECT_PINS[i]
+  );
+  const s3 = mux?.s3Pin != null && mux.s3Pin >= 0 ? mux.s3Pin : MUX_SELECT_PINS[3];
+  const physical = (pin: number) => PICO_PHYSICAL_PINS[pin];
+  return {
+    com,
+    comPhysical: physical(com),
+    s0,
+    s1,
+    s2,
+    s3,
+    s0Physical: physical(s0),
+    s1Physical: physical(s1),
+    s2Physical: physical(s2),
+    s3Physical: physical(s3),
+  };
+}
+
+// The multiplexer card's choices, kept by the step so moving on can set it up with them
+function useMuxSetup() {
   const connected = useConfigStore((state) => state.connected);
   const profileFamily = useConfigStore(drumFamily);
   const mux = useConfigStore(findMux);
@@ -226,6 +243,26 @@ function MuxSetupCard() {
   });
   const mapped = useConfigStore((state) => countMappedPads(state, family));
   const total = DRUM_PADS.filter((pad) => padOutput(pad, family)).length;
+  const done = !!mux && mapped === total && profileFamily === family;
+  return {
+    connected,
+    profileFamily,
+    mux,
+    family,
+    setFamily,
+    chip,
+    setChip,
+    mapped,
+    total,
+    done,
+    apply: () => configureDrumMux(family, chip),
+  };
+}
+
+function MuxSetupCard({ setup }: { setup: ReturnType<typeof useMuxSetup> }) {
+  const { t } = useTranslation();
+  const pins = useMuxPins();
+  const { connected, profileFamily, mux, family, setFamily, chip, setChip, mapped, total } = setup;
 
   return (
     <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
@@ -234,7 +271,7 @@ function MuxSetupCard() {
           {t(`${P}.drum-wiring.setupTitle`)}
         </Text>
         <Text size="xs" c="dimmed">
-          {t(`${P}.drum-wiring.setupDesc`)}
+          {t(`${P}.drum-wiring.setupDesc`, pins)}
         </Text>
         <SegmentedControl
           size="xs"
@@ -277,18 +314,8 @@ function MuxSetupCard() {
 // Step 2: Piezo & Multiplexer Wiring
 export function DrumPadWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
-  const pins = {
-    com: MUX_COM_PIN,
-    comPhysical: MUX_COM_PHYSICAL_PIN,
-    s0: MUX_SELECT_PINS[0],
-    s1: MUX_SELECT_PINS[1],
-    s2: MUX_SELECT_PINS[2],
-    s3: MUX_SELECT_PINS[3],
-    s0Physical: MUX_SELECT_PHYSICAL_PINS[0],
-    s1Physical: MUX_SELECT_PHYSICAL_PINS[1],
-    s2Physical: MUX_SELECT_PHYSICAL_PINS[2],
-    s3Physical: MUX_SELECT_PHYSICAL_PINS[3],
-  };
+  const setup = useMuxSetup();
+  const pins = useMuxPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -326,7 +353,9 @@ export function DrumPadWiringStep(props: GuideStepProps) {
 
   const workbenchContent = (
     <Stack gap="sm">
-      <MuxSetupCard />
+      <MuxSetupCard setup={setup} />
+      {/* Its pins, which can be changed here once it's added, and the wiring follows them */}
+      <GuideDeviceEditor kind="multiplexer" />
       <Text fw={700} size="sm">
         {t(`${P}.drum-wiring.hitMonitorTitle`)}
       </Text>
@@ -347,43 +376,33 @@ export function DrumPadWiringStep(props: GuideStepProps) {
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the multiplexer up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (setup.connected && !setup.done) {
+          setup.apply();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
-// Step 3: Review & Save
-export function DrumReviewStep(props: GuideStepProps) {
+// Whether the multiplexer is set up, and each pad's raw reading against its threshold, shown
+// alongside the test step
+export function DrumCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
+  const C = `guides.drum-kit.check`;
   const connected = useConfigStore((state) => state.connected);
   const mux = useConfigStore(findMux);
   const family = useConfigStore(drumFamily);
   const mapped = useConfigStore((state) => countMappedPads(state, family));
   const muxDevice = mux?.device.multiplexer;
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const status = !connected
-    ? t(`${P}.drum-test.picoNotConnected`)
+    ? t(`${C}.picoNotConnected`)
     : !muxDevice
-      ? t(`${P}.drum-test.muxMissing`)
-      : t(`${P}.drum-test.muxConfigured`, {
+      ? t(`${C}.muxMissing`)
+      : t(`${C}.muxConfigured`, {
           com: muxDevice.inputPin,
           s0: muxDevice.s0Pin,
           s1: muxDevice.s1Pin,
@@ -391,62 +410,28 @@ export function DrumReviewStep(props: GuideStepProps) {
           count: mapped,
         });
 
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${P}.drum-test.calibratedText`)}</Text>
-
-      <Title order={4}>{t(`${P}.drum-test.tipsTitle`)}</Title>
-      <Text size="sm">{t(`${P}.drum-test.tipsText`)}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.drum-test.btnSaved`) : t(`${P}.drum-test.btnSave`)}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.drum-test.telemetryTitle`)}
-          </Text>
-          <Badge
-            size="lg"
-            color={connected && muxDevice ? 'teal' : 'gray'}
-            variant="light"
-            leftSection={<IconMusic size={16} />}
-          >
-            {status}
-          </Badge>
-          <Text size="xs" c="dimmed">
-            {t(`${P}.drum-test.verifyPrompt`)}
-          </Text>
-          <DrumHitMonitor />
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
   return (
-    <StepWorkbench
-      title={t(`${P}.drum-test.title`)}
-      badge={t(`${P}.drum-test.badge`)}
-      badgeColor="green"
-      description={t(`${P}.drum-test.description`)}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <Badge
+        size="lg"
+        color={connected && muxDevice ? 'teal' : 'gray'}
+        variant="light"
+        leftSection={<IconMusic size={16} />}
+        tt="none"
+      >
+        {status}
+      </Badge>
+      <Text size="xs" c="dimmed">
+        {t(`${C}.verifyPrompt`)}
+      </Text>
+      <DrumHitMonitor />
+      <Text size="sm" fw={600} mt="xs">
+        {t(`${C}.tipsTitle`)}
+      </Text>
+      <Text size="xs">{t(`${C}.tipsText`)}</Text>
+    </Stack>
   );
 }

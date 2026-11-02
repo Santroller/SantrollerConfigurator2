@@ -1,9 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import {
-  TurntableIntroStep,
-  TurntableReviewStep,
-  TurntableWiringStep,
-} from './turntableGuideSteps';
+import { TurntableCheck, TurntableIntroStep, TurntableWiringStep } from './turntableGuideSteps';
 
 export const DJ_TURNTABLE_GUIDE: GuideSource = {
   id: 'dj-turntable',
@@ -11,6 +8,6 @@ export const DJ_TURNTABLE_GUIDE: GuideSource = {
   steps: [
     { id: 'tt-intro', render: TurntableIntroStep },
     { id: 'tt-wiring', render: TurntableWiringStep },
-    { id: 'tt-test', render: TurntableReviewStep },
+    ...finishSteps('dj-turntable', TurntableCheck),
   ],
 };

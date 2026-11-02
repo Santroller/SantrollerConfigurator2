@@ -1,5 +1,6 @@
+import { finishSteps } from '../finish/finishSteps';
 import { GuideSource } from '../types';
-import { UsbHostIntroStep, UsbHostReviewStep, UsbHostWiringStep } from './usbHostGuideSteps';
+import { UsbHostCheck, UsbHostIntroStep, UsbHostWiringStep } from './usbHostGuideSteps';
 
 export const USB_HOST_GUIDE: GuideSource = {
   id: 'usb-host',
@@ -7,6 +8,6 @@ export const USB_HOST_GUIDE: GuideSource = {
   steps: [
     { id: 'usb-intro', render: UsbHostIntroStep },
     { id: 'usb-wiring', render: UsbHostWiringStep },
-    { id: 'usb-test', render: UsbHostReviewStep },
+    ...finishSteps('usb-host', UsbHostCheck),
   ],
 };

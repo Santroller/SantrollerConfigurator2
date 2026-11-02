@@ -1,59 +1,42 @@
-import React from 'react';
 import {
   IconAlertTriangle,
   IconCheck,
-  IconDeviceFloppy,
   IconInfoCircle,
   IconPlugConnected,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Image,
-  Paper,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Badge, Button, Card, Group, Image, Stack, Table, Text, Title } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
-import { isDeviceAssigned, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
-import { assignDeviceToProfile, findDeviceStatus } from '../guideConfig';
+import { findDeviceStatus } from '../guideConfig';
 import { GuideStepProps } from '../types';
-import { gpWithPin, IMAGE_ALT, pinWithLabel, signalWithName } from '../wiringText';
-import { ensureDeviceToEmulate, LiveAxis, LiveButtons, LiveInput } from './adapterLiveStatus';
+import { gpPin, IMAGE_ALT, pinWithLabel, signalWithName } from '../wiringText';
 
-const GUITAR_TYPES = [proto.SubType.GuitarHeroGuitar, proto.SubType.RockBandGuitar];
+// The Wii extension's I2C pins: the driver's own once it's added, which can be changed on the wiring
+// step, or the ones it's added with
+function useWiiPins() {
+  const i2c = useConfigStore((state) => findDeviceStatus(state, 'wii')?.device.wii?.i2c);
+  return { sda: i2c?.sda ?? 18, scl: i2c?.scl ?? 19 };
+}
 
-/**
- * Adds the Wii extension driver on I2C1 (GP18 / GP19) when there isn't one, then gives the
- * active profile a Wii guitar slot (loading the default guitar mappings), as a Wii device does
- * nothing until a profile has a slot for it.
- */
-function configureWiiGuitar() {
+// Adds the Wii extension driver on GP18 / GP19 unless it's already there
+function ensureWiiDevice() {
   const existing = findDeviceStatus(useConfigStore.getState(), 'wii');
-  const id =
+  return (
     existing?.id ??
     useConfigStore.getState().addDevice('wii', undefined, (device) => {
       device.wii!.i2c = { ...device.wii!.i2c, sda: 18, scl: 19, block: 1 };
-    });
-  ensureDeviceToEmulate(GUITAR_TYPES, proto.SubType.GuitarHeroGuitar);
-  assignDeviceToProfile(id, { wiiExt: proto.WiiExtType.WiiGuitarHeroGuitar });
-}
-
-function wiiButton(button: proto.WiiButtonType) {
-  return (m: proto.IMapping) => m.input?.wiiButton?.button === button;
+    })
+  );
 }
 
 // Step 1: Overview
 export function WiiIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const pins = useWiiPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -123,7 +106,7 @@ export function WiiIntroStep(props: GuideStepProps) {
                     {signalWithName('SDA', 'data')}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{gpWithPin(18, 24)}</Table.Td>
+                <Table.Td>{gpPin(pins.sda)}</Table.Td>
                 <Table.Td>{t('guides.wii-adapter.steps.wii-intro.fnData')}</Table.Td>
               </Table.Tr>
               <Table.Tr>
@@ -132,7 +115,7 @@ export function WiiIntroStep(props: GuideStepProps) {
                     {signalWithName('SCL', 'clock')}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{gpWithPin(19, 25)}</Table.Td>
+                <Table.Td>{gpPin(pins.scl)}</Table.Td>
                 <Table.Td>{t('guides.wii-adapter.steps.wii-intro.fnClock')}</Table.Td>
               </Table.Tr>
             </Table.Tbody>
@@ -164,10 +147,8 @@ export function WiiWiringStep(props: GuideStepProps) {
   const connected = useConfigStore((state) => state.connected);
   // config.devices is only rebuilt on connect, so read live devices from deviceStatus
   const wiiDevice = useConfigStore((state) => findDeviceStatus(state, 'wii'));
-  const assigned = useConfigStore((state) =>
-    isDeviceAssigned('wii', state.config.profiles?.[state.currentProfile])
-  );
   const i2c = wiiDevice?.device.wii?.i2c;
+  const pins = useWiiPins();
 
   const guideContent = (
     <Stack gap="md">
@@ -191,7 +172,7 @@ export function WiiWiringStep(props: GuideStepProps) {
             alt={t(`${IMAGE_ALT}.wiiExtPlugPinout`)}
           />
           <Text size="xs" c="dimmed" ta="center">
-            {t('guides.wii-adapter.steps.wii-wiring.plugCaption')}
+            {t('guides.wii-adapter.steps.wii-wiring.plugCaption', pins)}
           </Text>
         </Stack>
       </Group>
@@ -222,10 +203,11 @@ export function WiiWiringStep(props: GuideStepProps) {
             {t('guides.wii-adapter.steps.wii-wiring.deviceStatusTitle')}
           </Text>
           <Text size="xs" c="dimmed">
-            {t('guides.wii-adapter.steps.wii-wiring.deviceStatusDesc')}
+            {t('guides.wii-adapter.steps.wii-wiring.deviceStatusDesc', pins)}
           </Text>
 
-          {wiiDevice && assigned ? (
+          {/* Profiles for each extension are made in a step of their own */}
+          {wiiDevice ? (
             <Badge color="teal" size="md" variant="filled" leftSection={<IconCheck size={14} />}>
               {t('guides.wii-adapter.steps.wii-wiring.driverConfiguredBadge', {
                 sda: i2c?.sda,
@@ -233,200 +215,81 @@ export function WiiWiringStep(props: GuideStepProps) {
               })}
             </Badge>
           ) : (
-            <>
-              {wiiDevice && (
-                <Text size="xs" c="orange">
-                  {t('guides.wii-adapter.steps.wii-wiring.notAssignedText')}
-                </Text>
-              )}
-              <Button
-                size="sm"
-                color="teal"
-                leftSection={<IconPlugConnected size={16} />}
-                onClick={configureWiiGuitar}
-                disabled={!connected}
-              >
-                {wiiDevice
-                  ? t('guides.wii-adapter.steps.wii-wiring.assignBtn')
-                  : t('guides.wii-adapter.steps.wii-wiring.enableDriverBtn')}
-              </Button>
-            </>
+            <Button
+              size="sm"
+              color="teal"
+              leftSection={<IconPlugConnected size={16} />}
+              onClick={ensureWiiDevice}
+              disabled={!connected}
+            >
+              {t('guides.wii-adapter.steps.wii-wiring.enableDriverBtn')}
+            </Button>
           )}
         </Stack>
       </Card>
+      {/* Its pins, which can be changed here once it's added, and the wiring above follows them */}
+      <GuideDeviceEditor kind="wii" />
     </Stack>
   );
 
   return (
     <StepWorkbench
       title={t('guides.wii-adapter.steps.wii-wiring.title')}
-      badge={t('guides.wii-adapter.steps.wii-wiring.badge')}
+      badge={t('guides.wii-adapter.steps.wii-wiring.badge', pins)}
       badgeColor="blue"
       description={t('guides.wii-adapter.steps.wii-wiring.description')}
       guideContent={guideContent}
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the driver up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (connected && !wiiDevice) {
+          ensureWiiDevice();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
 }
 
-// Step 3: Live Verification
-export function WiiReviewStep(props: GuideStepProps) {
+// Whether the Pico sees the Wii extension, shown alongside the test step
+export function WiiCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
+  const C = 'guides.wii-adapter.check';
   const connected = useConfigStore((state) => state.connected);
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
   const wiiDevice = useConfigStore((state) => findDeviceStatus(state, 'wii'));
-  const assigned = useConfigStore((state) =>
-    isDeviceAssigned('wii', state.config.profiles?.[state.currentProfile])
-  );
   const extType = wiiDevice?.wiiExtType ?? proto.WiiExtType.WiiNoExtension;
-  const extDetected = connected && !!wiiDevice && extType !== proto.WiiExtType.WiiNoExtension;
-  const extensionLabel = !connected
-    ? t('guides.wii-adapter.steps.wii-test.picoNotConnected')
+  const extDetected =
+    connected &&
+    !!wiiDevice &&
+    extType !== proto.WiiExtType.WiiNoExtension &&
+    extType !== proto.WiiExtType.WiiNotInitialised;
+  const label = !connected
+    ? t(`${C}.picoNotConnected`)
     : !wiiDevice
-      ? t('guides.wii-adapter.steps.wii-test.driverMissing')
+      ? t(`${C}.driverMissing`)
       : extDetected
-        ? t('guides.wii-adapter.steps.wii-test.extDetected', {
-            type: t(`wiiExt.${proto.WiiExtType[extType]}`),
-          })
-        : t('guides.wii-adapter.steps.wii-test.extNone');
-
-  const B = proto.WiiButtonType;
-  const liveButtons: LiveInput[] = [
-    {
-      label: t('guides.wii-adapter.steps.wii-test.green'),
-      color: 'green',
-      match: wiiButton(B.WiiButtonGuitarGreen),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.red'),
-      color: 'red',
-      match: wiiButton(B.WiiButtonGuitarRed),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.yellow'),
-      color: 'yellow',
-      match: wiiButton(B.WiiButtonGuitarYellow),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.blue'),
-      color: 'blue',
-      match: wiiButton(B.WiiButtonGuitarBlue),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.orange'),
-      color: 'orange',
-      match: wiiButton(B.WiiButtonGuitarOrange),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.strumUp'),
-      color: 'cyan',
-      match: wiiButton(B.WiiButtonGuitarStrumUp),
-    },
-    {
-      label: t('guides.wii-adapter.steps.wii-test.strumDown'),
-      color: 'cyan',
-      match: wiiButton(B.WiiButtonGuitarStrumDown),
-    },
-  ];
-  const liveWhammy: LiveInput = {
-    label: t('guides.wii-adapter.steps.wii-test.whammy'),
-    color: 'grape',
-    match: (m) => m.input?.wiiAxis?.axis === proto.WiiAxisType.WiiAxisGuitarWhammy,
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Alert
-        color="teal"
-        icon={<IconCheck size={18} />}
-        title={t('guides.wii-adapter.steps.wii-test.adapterReadyTitle')}
-      >
-        {t('guides.wii-adapter.steps.wii-test.adapterReadyText')}
-      </Alert>
-
-      <Title order={4}>{t('guides.wii-adapter.steps.wii-test.plugInTitle')}</Title>
-      <Text size="sm">{t('guides.wii-adapter.steps.wii-test.plugInText')}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved
-          ? t('guides.wii-adapter.steps.wii-test.btnSaved')
-          : t('guides.wii-adapter.steps.wii-test.btnSave')}
-      </Button>
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t('guides.wii-adapter.steps.wii-test.telemetryTitle')}
-          </Text>
-          <Badge
-            size="lg"
-            color={extDetected ? 'teal' : 'gray'}
-            variant="light"
-            leftSection={<IconPlugConnected size={16} />}
-          >
-            {extensionLabel}
-          </Badge>
-          {wiiDevice && !assigned && (
-            <Text size="xs" c="orange">
-              {t('guides.wii-adapter.steps.wii-wiring.notAssignedText')}
-            </Text>
-          )}
-          <Text size="xs" c="dimmed">
-            {t('guides.wii-adapter.steps.wii-test.verifyPrompt')}
-          </Text>
-          <LiveButtons inputs={liveButtons} />
-          <LiveAxis
-            input={liveWhammy}
-            notMappedLabel={t('guides.wii-adapter.steps.wii-test.notMapped')}
-          />
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
+        ? t(`${C}.extDetected`, { type: t(`wiiExt.${proto.WiiExtType[extType]}`) })
+        : t(`${C}.extNone`);
   return (
-    <StepWorkbench
-      title={t('guides.wii-adapter.steps.wii-test.title')}
-      badge={t('guides.wii-adapter.steps.wii-test.badge')}
-      badgeColor="green"
-      description={t('guides.wii-adapter.steps.wii-test.description')}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <Badge
+        size="lg"
+        color={extDetected ? 'teal' : 'gray'}
+        variant="light"
+        leftSection={<IconPlugConnected size={16} />}
+        tt="none"
+      >
+        {label}
+      </Badge>
+      <Text size="xs" c="dimmed">
+        {t(`${C}.prompt`)}
+      </Text>
+    </Stack>
   );
 }

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   IconAlertTriangle,
   IconCheck,
-  IconDeviceFloppy,
   IconInfoCircle,
   IconMusic,
   IconPlugConnected,
@@ -16,7 +15,6 @@ import {
   Card,
   Group,
   Image,
-  Paper,
   Select,
   Stack,
   Table,
@@ -25,13 +23,13 @@ import {
 } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { PadMonitors } from '../bhdrums/bhDrumGuideSteps';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
 import {
   addMidiDinInput,
   DEFAULT_MIDI_CHANNEL,
+  ensureMidiDinDevice,
   findMidiDin,
   isMidiDinConfigured,
   MIDI_DIN_PINS,
@@ -98,9 +96,8 @@ function useSocketRows(): ConnectionRow[] {
   ];
 }
 
-function usePicoRows(): ConnectionRow[] {
+function usePicoRows(pins: MidiDinPinOption): ConnectionRow[] {
   const { t } = useTranslation();
-  const pins = useCurrentPins();
   const R = `${P}.din-wiring.rows`;
   return [
     { from: t(`${R}.opto6`), to: t(`${R}.opto6To`) },
@@ -115,7 +112,7 @@ function usePicoRows(): ConnectionRow[] {
 export function MidiDinIntroStep(props: GuideStepProps) {
   const { t } = useTranslation();
   const socketRows = useSocketRows();
-  const picoRows = usePicoRows();
+  const picoRows = usePicoRows(useCurrentPins());
 
   const guideContent = (
     <Stack gap="md">
@@ -172,11 +169,106 @@ export function MidiDinIntroStep(props: GuideStepProps) {
 }
 
 // Step 2: Circuit & Wiring
+// The RX pin picked on the wiring step. Picking one moves the MIDI input there straight away, and
+// the wiring shown follows it.
+function useMidiPin() {
+  const connected = useConfigStore((state) => state.connected);
+  const current = useCurrentPins();
+  const deviceRx = useConfigStore((state) => findMidiDin(state)?.device.midiSerial?.uart.rx);
+  const [rx, setRx] = React.useState(current.rx);
+  const option = midiDinPinOption(rx) ?? current;
+  // Derived here, as a selector returning a new array each time would re-render forever
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const clashes = (pin: MidiDinPinOption) => ({
+    conflicts: midiDinPinConflicts(deviceStatus, pin),
+    uartInUse: midiDinUartInUse(deviceStatus, pin),
+  });
+  const { conflicts, uartInUse } = clashes(option);
+  const blocked = conflicts.length > 0 || uartInUse;
+  const pick = (value: number) => {
+    setRx(value);
+    const pin = midiDinPinOption(value);
+    const clash = pin && clashes(pin);
+    if (connected && pin && clash && !clash.conflicts.length && !clash.uartInUse) {
+      ensureMidiDinDevice(pin);
+    }
+  };
+  return {
+    connected,
+    option,
+    conflicts,
+    uartInUse,
+    blocked,
+    applied: deviceRx === option.rx,
+    pick,
+    apply: () => ensureMidiDinDevice(option),
+  };
+}
+
+function MidiPinCard({ pin }: { pin: ReturnType<typeof useMidiPin> }) {
+  const { t } = useTranslation();
+  const S = `${P}.din-setup`;
+  const W = `${P}.din-wiring`;
+  return (
+    <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
+      <Stack gap="xs">
+        <Text fw={700} size="sm">
+          {t(`${W}.pinCardTitle`)}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(`${W}.pinCardDesc`)}
+        </Text>
+        <Select
+          label={t(`${S}.pinLabel`)}
+          data={MIDI_DIN_PINS.map((option) => ({
+            value: String(option.rx),
+            label: t(`${S}.pinOption`, {
+              rx: option.rx,
+              physical: option.rxPhysical,
+              block: option.block,
+            }),
+          }))}
+          value={String(pin.option.rx)}
+          onChange={(value) => value && pin.pick(parseInt(value, 10))}
+          allowDeselect={false}
+        />
+        {pin.conflicts.length > 0 && (
+          <Alert color="red" icon={<IconAlertTriangle size={16} />}>
+            {t(`${S}.pinConflict`, { pins: pin.conflicts.map((p) => `GP${p}`).join(', ') })}
+          </Alert>
+        )}
+        {pin.uartInUse && (
+          <Alert color="red" icon={<IconAlertTriangle size={16} />}>
+            {t(`${S}.uartInUse`, { block: pin.option.block })}
+          </Alert>
+        )}
+        {pin.applied && (
+          <Badge color="teal" variant="filled" leftSection={<IconCheck size={14} />}>
+            {t(`${W}.pinApplied`, { rx: pin.option.rx, block: pin.option.block })}
+          </Badge>
+        )}
+        {!pin.applied && !pin.blocked && (
+          <Button
+            size="xs"
+            color="orange"
+            leftSection={<IconPlugConnected size={14} />}
+            disabled={!pin.connected}
+            onClick={pin.apply}
+          >
+            {t(`${W}.pinApplyBtn`)}
+          </Button>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
 export function MidiDinWiringStep(props: GuideStepProps) {
   const { t } = useTranslation();
-  const pins = useCurrentPins();
+  const pin = useMidiPin();
+  const pins = pin.option;
   const socketRows = useSocketRows();
-  const picoRows = usePicoRows();
+  const picoRows = usePicoRows(pins);
 
   const guideContent = (
     <Stack gap="md">
@@ -210,11 +302,15 @@ export function MidiDinWiringStep(props: GuideStepProps) {
       <Alert color="blue" icon={<IconInfoCircle size={16} />} title={t(`${P}.din-wiring.capTitle`)}>
         {t(`${P}.din-wiring.capText`)}
       </Alert>
+
+      <Title order={4}>{t(`${P}.din-setup.pinTitle`)}</Title>
+      <Text size="sm">{t(`${P}.din-setup.pinText`)}</Text>
     </Stack>
   );
 
   const workbenchContent = (
     <Stack gap="sm">
+      <MidiPinCard pin={pin} />
       <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
         <Stack gap="xs">
           <Text fw={700} size="sm">
@@ -250,7 +346,17 @@ export function MidiDinWiringStep(props: GuideStepProps) {
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on adds the MIDI input on the picked pin too, so it isn't missed. A pin that clashes
+      // with another device stops it, and the card says what's in the way.
+      onNext={() => {
+        if (pin.connected && !pin.applied) {
+          if (pin.blocked) {
+            return;
+          }
+          pin.apply();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
@@ -258,27 +364,32 @@ export function MidiDinWiringStep(props: GuideStepProps) {
 
 const CHANNELS = Array.from({ length: 16 }, (_, i) => String(i + 1));
 
-function MidiInputSetup() {
-  const { t } = useTranslation();
-  const S = `${P}.din-setup`;
+// The MIDI input card's choices, kept by the step so moving on can set it up with them
+function useMidiInputSetup() {
   const connected = useConfigStore((state) => state.connected);
   const configured = useConfigStore(isMidiDinConfigured);
+  // The pin is picked on the wiring step, or picked here if that was skipped
   const current = useCurrentPins();
   const slotChannel = useConfigStore(midiSlotChannel);
-  const [rx, setRx] = React.useState(current.rx);
   const [channel, setChannel] = React.useState(slotChannel ?? DEFAULT_MIDI_CHANNEL);
-  const option = midiDinPinOption(rx) ?? current;
-  // Derived here, as a selector returning a new array each time would re-render forever
-  const deviceStatus = useConfigStore((state) => state.deviceStatus);
-  const conflicts = React.useMemo(
-    () => midiDinPinConflicts(deviceStatus, option),
-    [deviceStatus, option]
-  );
-  const uartInUse = React.useMemo(
-    () => midiDinUartInUse(deviceStatus, option),
-    [deviceStatus, option]
-  );
-  const changed = !configured || current.rx !== option.rx || slotChannel !== channel;
+  const changed = !configured || slotChannel !== channel;
+  return {
+    connected,
+    configured,
+    current,
+    slotChannel,
+    channel,
+    setChannel,
+    changed,
+    apply: () => addMidiDinInput(current, channel),
+  };
+}
+
+function MidiInputSetup({ setup }: { setup: ReturnType<typeof useMidiInputSetup> }) {
+  const { t } = useTranslation();
+  const S = `${P}.din-setup`;
+  const { connected, configured, current, slotChannel, channel, setChannel, changed, apply } =
+    setup;
 
   return (
     <Card withBorder radius="md" p="md" bg="var(--mantine-color-body)">
@@ -296,30 +407,7 @@ function MidiInputSetup() {
           onChange={(value) => value && setChannel(parseInt(value, 10))}
           allowDeselect={false}
         />
-        <Select
-          label={t(`${S}.pinLabel`)}
-          data={MIDI_DIN_PINS.map((pin) => ({
-            value: String(pin.rx),
-            label: t(`${S}.pinOption`, {
-              rx: pin.rx,
-              physical: pin.rxPhysical,
-              block: pin.block,
-            }),
-          }))}
-          value={String(option.rx)}
-          onChange={(value) => value && setRx(parseInt(value, 10))}
-          allowDeselect={false}
-        />
-        {conflicts.length > 0 && (
-          <Alert color="red" icon={<IconAlertTriangle size={16} />}>
-            {t(`${S}.pinConflict`, { pins: conflicts.map((pin) => `GP${pin}`).join(', ') })}
-          </Alert>
-        )}
-        {uartInUse && (
-          <Alert color="red" icon={<IconAlertTriangle size={16} />}>
-            {t(`${S}.uartInUse`, { block: option.block })}
-          </Alert>
-        )}
+        <Text size="xs">{t(`${S}.pinFromWiring`, { rx: current.rx, block: current.block })}</Text>
         {configured && (
           <Badge color="teal" variant="filled" leftSection={<IconCheck size={14} />}>
             {t(`${S}.added`, { rx: current.rx, block: current.block, channel: slotChannel })}
@@ -330,8 +418,8 @@ function MidiInputSetup() {
             size="xs"
             color="orange"
             leftSection={<IconPlugConnected size={14} />}
-            disabled={!connected || conflicts.length > 0 || uartInUse}
-            onClick={() => addMidiDinInput(option, channel)}
+            disabled={!connected}
+            onClick={apply}
           >
             {configured ? t(`${S}.updateBtn`) : t(`${S}.addBtn`)}
           </Button>
@@ -344,6 +432,7 @@ function MidiInputSetup() {
 // Step 3: MIDI Input Setup
 export function MidiDinSetupStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const setup = useMidiInputSetup();
 
   const guideContent = (
     <Stack gap="md">
@@ -354,9 +443,6 @@ export function MidiDinSetupStep(props: GuideStepProps) {
 
       <Title order={4}>{t(`${P}.din-setup.notesTitle`)}</Title>
       <Text size="sm">{t(`${P}.din-setup.notesText`)}</Text>
-
-      <Title order={4}>{t(`${P}.din-setup.pinTitle`)}</Title>
-      <Text size="sm">{t(`${P}.din-setup.pinText`)}</Text>
 
       <Title order={4}>{t(`${P}.din-setup.whatTitle`)}</Title>
       <GuideList items={t(`${P}.din-setup.whatList`, { returnObjects: true })} />
@@ -370,10 +456,16 @@ export function MidiDinSetupStep(props: GuideStepProps) {
       badgeColor="orange"
       description={t(`${P}.din-setup.description`)}
       guideContent={guideContent}
-      workbenchContent={<MidiInputSetup />}
+      workbenchContent={<MidiInputSetup setup={setup} />}
       isFirstStep={props.isFirstStep}
       isLastStep={props.isLastStep}
-      onNext={props.onNext}
+      // Moving on sets the MIDI input up too, so it isn't missed by not pressing the button
+      onNext={() => {
+        if (setup.connected && setup.changed) {
+          setup.apply();
+        }
+        props.onNext?.();
+      }}
       onPrevious={props.onPrevious}
     />
   );
@@ -416,7 +508,7 @@ function mappedNotes(mappings: proto.IMapping[], channel: number | undefined): S
 
 function MidiActivity() {
   const { t } = useTranslation();
-  const S = `${P}.din-test`;
+  const S = 'guides.midi-din.check';
   const connected = useConfigStore((state) => state.connected);
   const device = useConfigStore(findMidiDin);
   const channel = useConfigStore(midiSlotChannel);
@@ -504,87 +596,23 @@ function MidiActivity() {
   );
 }
 
-// Step 4: Live Test & Save
-export function MidiDinTestStep(props: GuideStepProps) {
+// The notes arriving from the kit, and what to check if they don't, shown alongside the test step
+export function MidiDinCheck() {
   const { t } = useTranslation();
-  const commitConfig = useConfigStore((state) => state.commitConfig);
-  const connected = useConfigStore((state) => state.connected);
-
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await commitConfig();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
-    } catch {
-      //
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const guideContent = (
-    <Stack gap="md">
-      <Text size="sm">{t(`${P}.din-test.configuredText`)}</Text>
-
-      <Button
-        size="md"
-        color="teal"
-        disabled={!connected}
-        loading={saving}
-        leftSection={<IconDeviceFloppy size={18} />}
-        onClick={handleSave}
-      >
-        {saved ? t(`${P}.din-test.btnSaved`) : t(`${P}.din-test.btnSave`)}
-      </Button>
-
-      <Title order={4}>{t(`${P}.din-test.tipsTitle`)}</Title>
-      <GuideList type="ordered" items={t(`${P}.din-test.tips`, { returnObjects: true })} />
-    </Stack>
-  );
-
-  const workbenchContent = (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.din-test.telemetryTitle`)}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {t(`${P}.din-test.activityDesc`)}
-          </Text>
-          <MidiActivity />
-        </Stack>
-      </Paper>
-      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            {t(`${P}.din-test.padsTitle`)}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {t(`${P}.din-test.verifyPrompt`)}
-          </Text>
-          <PadMonitors prefix={`${P}.din-test`} />
-        </Stack>
-      </Paper>
-    </Stack>
-  );
-
+  const C = 'guides.midi-din.check';
   return (
-    <StepWorkbench
-      title={t(`${P}.din-test.title`)}
-      badge={t(`${P}.din-test.badge`)}
-      badgeColor="green"
-      description={t(`${P}.din-test.description`)}
-      guideContent={guideContent}
-      workbenchContent={workbenchContent}
-      isFirstStep={props.isFirstStep}
-      isLastStep={props.isLastStep}
-      onNext={props.onNext}
-      onPrevious={props.onPrevious}
-    />
+    <Stack gap="xs">
+      <Text size="xs" fw={600} c="dimmed">
+        {t(`${C}.title`)}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {t(`${C}.activityDesc`)}
+      </Text>
+      <MidiActivity />
+      <Text size="sm" fw={600} mt="xs">
+        {t(`${C}.tipsTitle`)}
+      </Text>
+      <GuideList type="ordered" items={t(`${C}.tips`, { returnObjects: true })} />
+    </Stack>
   );
 }
