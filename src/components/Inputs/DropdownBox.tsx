@@ -48,6 +48,17 @@ export function DropdownBox<T extends number>({
           pointer
           rightSection={<Combobox.Chevron />}
           rightSectionPointerEvents="none"
+          styles={{
+            input: {
+              height: 'auto',
+              minHeight: 'var(--input-height)',
+              paddingTop: 8,
+              paddingBottom: 8,
+              whiteSpace: 'normal',
+              textAlign: 'left',
+              lineHeight: 1.3,
+            },
+          }}
           onClick={() => inputCombobox.toggleDropdown()}
         >
           {t(`${label}.${e[val as keyof typeof e]}`)}
