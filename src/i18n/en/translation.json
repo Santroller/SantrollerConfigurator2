@@ -365,7 +365,7 @@
     "shiftInput": "Shift / Modifier Input"
   },
   "cycle": {
-    "description": "Cycling inputs let you jump between a set list of values. This can be useful for something like the pickup selector, where you could map a button to the pickup selector, and each time you press the button, it jumps between each notch.",
+    "description": "Cycling inputs let you jump between a set list of values. This can be useful for something like the pickup selector, where you could map a button to the pickup selector, and each time you press the button, it jumps between each notch. The selected value is remembered across restarts.",
     "title": "Cycling input {{id}}",
     "type": "Type",
     "label": {
@@ -2146,6 +2146,7 @@
     }
   },
   "toggle": {
+    "description": "A toggle input turns a momentary button into an on/off switch. The state is remembered across restarts.",
     "state": "Current State",
     "title": "Toggle Device"
   },
@@ -3032,7 +3033,7 @@
           "title": "Cycling inputs",
           "shortTitle": "Cycling",
           "description": "Advance or reverse through an ordered list, wrapping around at either end.",
-          "intro": "Each new forward press selects the next value. Each new reverse press selects the previous value. Releasing the source leaves the selected value in place; holding it does not keep stepping.",
+          "intro": "Each new forward press selects the next value. Each new reverse press selects the previous value. Releasing the source leaves the selected value in place; holding it does not keep stepping. The selected value is remembered, so it is still selected after the controller is unplugged or restarted.",
           "instructions": [
             "Add the device: On Devices, add a Cycling input.",
             {
@@ -3061,7 +3062,7 @@
           "title": "Toggle inputs",
           "shortTitle": "Toggle",
           "description": "Turn a momentary button into a latched off/on state.",
-          "intro": "A new source press flips the state. Release leaves it unchanged. The next press flips it back. Holding the source does not repeatedly toggle it.",
+          "intro": "A new source press flips the state. Release leaves it unchanged. The next press flips it back. Holding the source does not repeatedly toggle it. The state is remembered, so it is still on or off after the controller is unplugged or restarted.",
           "instructions": [
             "Add the device: On Devices, add a Toggle Input.",
             "Select it in the mapping: On Profiles, choose the Toggle Input in the mapping's Device dropdown.",
@@ -3075,7 +3076,7 @@
             "Hold the source to check it only flips once.",
             "Use the Current State switch on Devices to test off and on independently of the source."
           ],
-          "note": "Physical toggle presses are debounced for 100 ms. For analog mappings, off is 0 and on is 65535. Avoid toggling destructive actions: a latched source can leave an action active."
+          "note": "Physical toggle presses are debounced for 100 ms. For analog mappings, off is 0 and on is 65535. Avoid toggling destructive actions: a latched source can leave an action active, and it will still be active after a restart."
         },
         "held": {
           "title": "Held inputs",

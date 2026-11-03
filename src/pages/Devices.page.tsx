@@ -2007,11 +2007,13 @@ export function CycleDevice({ id }: { id: string }) {
       image="covers/devices/cycle.svg"
       deleteDevice={() => deleteDevice(id)}
     >
+      <Text size="xs" c="dimmed">
+        {t('cycle.description')}
+      </Text>
       <LabeledDropdown
         data={cycleData}
         label="cycle.type"
         value={`cycle.label.${proto.CycleType[cycle.type]}`}
-        description="cycle.description"
         dispatch={(val) =>
           updateDevice(
             {
@@ -2143,6 +2145,9 @@ export function ToggleDevice({ id }: { id: string }) {
       image="covers/devices/toggle.svg"
       deleteDevice={() => deleteDevice(id)}
     >
+      <Text size="xs" c="dimmed">
+        {t('toggle.description')}
+      </Text>
       <Switch
         label={t('toggle.state')}
         checked={status.toggleState}
