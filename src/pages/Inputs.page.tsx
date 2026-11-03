@@ -828,7 +828,9 @@ function InputValue({
   const { t } = useTranslation();
   return (
     <>
-      <Input.Label mb={3}>{t('calibration.value')}</Input.Label>
+      <Input.Label mb={3}>
+        {t(cycleDeviceId !== undefined ? 'cycle.current_state' : 'calibration.value')}
+      </Input.Label>
       <Progress.Root size={40} transitionDuration={0}>
         <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
           {cycleDeviceId !== undefined ? (
