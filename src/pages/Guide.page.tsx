@@ -5,7 +5,7 @@ import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core
 import { Layout } from '@/components/Layout/Layout';
 import { GuideStepNav } from '@/guides/components/GuideStepNav';
 import { DIRECT_PICO_GUITAR_GUIDE } from '@/guides/guitar/guitarGuide';
-import { getLocalizedGuide, useGuideById } from '@/guides/registry';
+import { CONTEXTUAL_GUIDE_REGISTRY, getLocalizedGuide, useGuideById } from '@/guides/registry';
 import { useGuideSteps } from '@/guides/useGuideSteps';
 
 export function GuidePage() {
@@ -13,11 +13,13 @@ export function GuidePage() {
   const navigate = useNavigate();
   const { guideId } = useParams<{ guideId?: string }>();
   const guide = useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t);
+  const contextual = guide.id in CONTEXTUAL_GUIDE_REGISTRY;
+  const returnPath = contextual ? '/profiles' : '/guides';
 
-  // Finishing starts the guide over next time and heads back to the catalog
+  // Finishing starts the guide over next time and returns to its entry point
   const { activeStep, currentStep, setStep, stepProps } = useGuideSteps(guide, () => {
     setStep(0);
-    navigate('/guides');
+    navigate(returnPath);
   });
   const StepComponent = currentStep.render;
 
@@ -29,14 +31,14 @@ export function GuidePage() {
           <Group justify="space-between" align="center">
             <Button
               component={Link}
-              to="/guides"
+              to={returnPath}
               variant="subtle"
               size="xs"
               color="gray"
               leftSection={<IconArrowLeft size={14} />}
               px={0}
             >
-              {t('guides.backToCatalog')}
+              {t(contextual ? 'guides.backToProfiles' : 'guides.backToCatalog')}
             </Button>
 
             <Text size="xs" c="dimmed">

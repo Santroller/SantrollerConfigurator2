@@ -3,14 +3,20 @@ import { describe, expect, it, vi } from 'vitest';
 
 import '@/i18n/config';
 
-import { getLocalizedGuide, GUIDE_REGISTRY } from './registry';
+import {
+  CONTEXTUAL_GUIDE_REGISTRY,
+  getAllGuides,
+  getGuideById,
+  getLocalizedGuide,
+  GUIDE_REGISTRY,
+} from './registry';
 import { getSetupGuide, withBuildGuide } from './setup/setupGuide';
 import { OTHER_BUILD } from './setup/setupPath';
 import { GuideSource } from './types';
 
 vi.hoisted(() => {
   vi.stubGlobal('localStorage', { getItem: () => null });
-}); 
+});
 
 // Guides only hold their structure, so every bit of text they show has to be in the translations
 function missingKeys(guide: GuideSource) {
@@ -28,12 +34,19 @@ function missingKeys(guide: GuideSource) {
 }
 
 describe('guide text', () => {
-  it.each(Object.values(GUIDE_REGISTRY).map((guide) => [guide.id, guide]))(
-    '%s has all its text',
-    (_, guide) => {
-      expect(missingKeys(guide)).toEqual([]);
-    }
-  );
+  it.each(
+    [...Object.values(GUIDE_REGISTRY), ...Object.values(CONTEXTUAL_GUIDE_REGISTRY)].map((guide) => [
+      guide.id,
+      guide,
+    ])
+  )('%s has all its text', (_, guide) => {
+    expect(missingKeys(guide)).toEqual([]);
+  });
+
+  it('opens input behavior help without listing it in the hardware catalog', () => {
+    expect(getGuideById('input-behavior')?.title).toBe('Cycling, Toggle & Held Inputs');
+    expect(getAllGuides().map((guide) => guide.id)).not.toContain('input-behavior');
+  });
 
   it('every setup guide path has all its text', () => {
     const paths = [

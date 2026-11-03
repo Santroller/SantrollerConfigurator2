@@ -3002,6 +3002,16 @@ function SantrollerInput({
           )}
         </Text>
       )}
+      <Anchor
+        component={Link}
+        to="/guides/input-behavior"
+        target="_blank"
+        rel="noopener noreferrer"
+        size="xs"
+        mt={4}
+      >
+        {t('inputs.input_behavior_help')}
+      </Anchor>
       <Space h="md" />
       {input.shortcut && (
         <ActionIcon

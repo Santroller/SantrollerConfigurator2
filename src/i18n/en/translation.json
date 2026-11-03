@@ -437,6 +437,7 @@
   },
   "inputs": {
     "title": "Inputs",
+    "input_behavior_help": "Cycling, toggle & hold input help",
     "led_icon": "LED icon",
     "mapping_title": "Input #{{num}}",
     "expand": "Edit Input",
@@ -2947,6 +2948,7 @@
     "disconnect": "Disconnect",
     "startGuide": "Open Guide",
     "backToCatalog": "Guides",
+    "backToProfiles": "Profiles",
     "stepCount": "{{count}} Steps",
     "stepOf": "Step {{current}} of {{total}}",
     "markAsDone": "Mark as Done",
@@ -2979,6 +2981,110 @@
       "drums": "E-drum MIDI setup and piezo triggers",
       "turntable": "DJ Hero turntable conversions",
       "mods": "WS2812B addressable LEDs and custom peripherals"
+    },
+    "input-behavior": {
+      "title": "Cycling, Toggle & Held Inputs",
+      "subtitle": "Step through values, latch a button, or require a long press",
+      "description": "Choose the right input behavior, configure its source and output, and test cycling, toggle, and timed hold mappings.",
+      "estimatedTime": "10 - 15 mins",
+      "setupTitle": "Configuration",
+      "exampleTitle": "Example",
+      "verifyTitle": "Check the behavior",
+      "openDevices": "Open Devices in a new tab",
+      "openProfiles": "Open Profiles in a new tab",
+      "save": "Edits apply live while connected. Once you have tested the mappings, click Save changes to keep the configuration after a restart.",
+      "preview": {
+        "title": "Configured example",
+        "badge": "Read-only demo",
+        "description": "These are example settings, styled like the Devices and Profiles editors. They do not read from or change your controller. The example profile is a gamepad.",
+        "deviceTitle": "Devices",
+        "mappingTitle": "Profiles - Input #1",
+        "toggleName": "Toggle Input {{id}}",
+        "forward": "Forward button - nested input",
+        "reverse": "Reverse button - nested input",
+        "source": "Source button - nested input",
+        "heldNote": "No virtual device is needed: the Held Input and its source are both configured inside this mapping.",
+        "pinsNote": "GP2 and GP3 are example button pins, not required wiring. Use the pins or controller inputs from your own build."
+      },
+      "steps": {
+        "intro": {
+          "title": "Choose an input behavior",
+          "shortTitle": "Overview",
+          "description": "These types change how an input behaves; they do not replace its physical button or its output mapping.",
+          "intro": "Cycling moves through a list of values. Toggle switches between off and on and stays there after release. Held Input only becomes active after its source has been pressed continuously for a set time, and stops when released.",
+          "instructions": [
+            "Start with a working source: Configure and test the physical button, GPIO pin, or controller input you want to use.",
+            "Choose the profile and output: Open Profiles, select the intended profile, and edit or add the mapping for the button, axis, or action you want to send.",
+            "Choose the behavior: Cycling and Toggle need a virtual device added on Devices first. Held Input is selected directly in the mapping's Device dropdown, with no extra device."
+          ],
+          "example": "Use Cycling for a five-position pickup selector, Toggle for a button that stays on without being held, and Held Input for an action that should ignore short accidental presses.",
+          "checks": [
+            "Confirm the original source responds correctly before wrapping it in one of these types.",
+            "Check the mapped output too: a source's state and what the game receives are not always the same."
+          ],
+          "note": "Cycling and Toggle state belongs to their virtual device. Mappings using the same device share its state; add separate devices when you want independent states."
+        },
+        "cycling": {
+          "title": "Cycling inputs",
+          "shortTitle": "Cycling",
+          "description": "Advance or reverse through an ordered list, wrapping around at either end.",
+          "intro": "Each new forward press selects the next value. Each new reverse press selects the previous value. Releasing the source leaves the selected value in place; holding it does not keep stepping.",
+          "instructions": [
+            "Add the device: On Devices, add a Cycling input.",
+            "Choose its values: Select Pickup selector for the built-in five notches, or Custom range and enter an ordered list of values. Keep at least one value; for analog mappings use values from 0 to 65535.",
+            "Select it in the mapping: On Profiles, choose this Cycling input in the mapping's Device dropdown and map it to the intended output, such as the pickup selector axis.",
+            "Configure the sources: Enable Allow cycling forwards and select its button or digital input. Optionally enable Allow cycling backwards and configure a different source."
+          ],
+          "example": "With Custom range values 0, 32768, and 65535, forward presses move through those three values and wrap back to 0. A reverse press from 0 wraps to 65535.",
+          "checks": [
+            "Press and release forward repeatedly: the selected state should advance once per press and wrap after the last value.",
+            "Hold forward: the state should not repeatedly advance.",
+            "If reverse is enabled, test stepping backwards and wrapping from the first value to the last.",
+            "On Devices, select a state directly to test the mapped output separately from the physical buttons."
+          ],
+          "note": "Physical cycling presses are debounced for 100 ms, shared by both directions. Leave more than 100 ms between test presses. When used as a digital input, a selected value of 0 is off and any nonzero value is on."
+        },
+        "toggle": {
+          "title": "Toggle inputs",
+          "shortTitle": "Toggle",
+          "description": "Turn a momentary button into a latched off/on state.",
+          "intro": "A new source press flips the state. Release leaves it unchanged. The next press flips it back. Holding the source does not repeatedly toggle it.",
+          "instructions": [
+            "Add the device: On Devices, add a Toggle Input.",
+            "Select it in the mapping: On Profiles, choose the Toggle Input in the mapping's Device dropdown.",
+            "Configure its source: In the nested input editor, select the physical button or digital input that should flip the state.",
+            "Choose its output: Map the toggle to the button or other output you want to stay active."
+          ],
+          "example": "Starting off, press and release once to leave the mapped button on. Press and release again to turn it off. This sends a held button state, not a stream of repeated taps.",
+          "checks": [
+            "Watch Current State on Devices or in the mapping while pressing and releasing the source.",
+            "Confirm one press flips the state, release preserves it, and a second press flips it back.",
+            "Hold the source to check it only flips once.",
+            "Use the Current State switch on Devices to test off and on independently of the source."
+          ],
+          "note": "Physical toggle presses are debounced for 100 ms. For analog mappings, off is 0 and on is 65535. Avoid toggling destructive actions: a latched source can leave an action active."
+        },
+        "held": {
+          "title": "Held inputs",
+          "shortTitle": "Hold",
+          "description": "Require a continuous long press before activating an output.",
+          "intro": "Held Input is a timed gate, not a toggle. It remains off until the source has been pressed for longer than Time (ms). It then stays active only while that source remains pressed. Releasing early resets the timer.",
+          "instructions": [
+            "Select the wrapper: On Profiles, choose Held Input in the mapping's Device dropdown. You do not add a Held device on Devices.",
+            "Set the duration: Enter Time (ms), for example 1000 for a one-second hold.",
+            "Configure its source: In the nested input editor, choose the button or digital input that must stay pressed.",
+            "Choose its output: Map it to the intended button or action. Action mappings already default to a Held Input to protect against accidental presses; inspect the existing duration before changing it."
+          ],
+          "example": "With Time (ms) set to 1000, a short tap does nothing. Holding for longer than one second activates the output, and releasing turns it off. Two separate half-second presses do not add up to one long press.",
+          "checks": [
+            "Release before the duration: the output should never become active.",
+            "Hold longer than the duration: the output should activate and remain active until release.",
+            "Release, then try again: the next hold should start a fresh timer.",
+            "Test with a harmless button output before assigning an action that restarts the controller or enters the bootloader."
+          ],
+          "note": "Held Input produces a digital state; for analog mappings it sends 0 or 65535, not the source's analog value. Use a momentary source if you want release to stop the output; wrapping a latched toggle measures how long its state is on instead."
+        }
+      }
     },
     "wireless": {
       "title": "Wireless: Bluetooth & Battery (Pico W)",

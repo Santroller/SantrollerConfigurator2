@@ -8,6 +8,7 @@ import { BT_RECEIVER_GUIDE } from './btreceiver/btReceiverGuide';
 import { CONSOLE_OUTPUT_GUIDE } from './consoleout/consoleOutputGuide';
 import { DRUM_KIT_GUIDE } from './drums/drumGuide';
 import { DIRECT_PICO_GUITAR_GUIDE } from './guitar/guitarGuide';
+import { INPUT_BEHAVIOR_GUIDE } from './inputs/inputBehaviorGuide';
 import { RGB_LED_GUIDE } from './leds/ledGuide';
 import { MIDI_DIN_GUIDE } from './mididin/midiDinGuide';
 import { DJ_TURNTABLE_GUIDE } from './turntable/turntableGuide';
@@ -34,6 +35,10 @@ export const GUIDE_REGISTRY: Record<string, GuideSource> = {
   [WIRELESS_GUIDE.id]: WIRELESS_GUIDE,
   [XBOX360_RF_GUIDE.id]: XBOX360_RF_GUIDE,
   [XBOX_AUTH_GUIDE.id]: XBOX_AUTH_GUIDE,
+};
+
+export const CONTEXTUAL_GUIDE_REGISTRY: Record<string, GuideSource> = {
+  [INPUT_BEHAVIOR_GUIDE.id]: INPUT_BEHAVIOR_GUIDE,
 };
 
 export interface CategoryInfo {
@@ -104,10 +109,11 @@ export function useAllGuides(): GuideDefinition[] {
 }
 
 export function getGuideById(id: string | undefined, t?: TFunction): GuideDefinition | undefined {
-  if (!id || !GUIDE_REGISTRY[id]) {
+  if (!id) {
     return undefined;
   }
-  return getLocalizedGuide(GUIDE_REGISTRY[id], t);
+  const guide = GUIDE_REGISTRY[id] ?? CONTEXTUAL_GUIDE_REGISTRY[id];
+  return guide ? getLocalizedGuide(guide, t) : undefined;
 }
 
 export function useGuideById(id: string | undefined): GuideDefinition | undefined {
