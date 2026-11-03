@@ -3252,7 +3252,7 @@ function SantrollerInput({
               <Accordion.Panel>
                 <Switch
                   label={t('cycle.forward_input')}
-                  checked={input.cycle.input !== null}
+                  checked={!!input.cycle.input}
                   onChange={(event) => {
                     dispatch({
                       cycle: {
@@ -3291,7 +3291,7 @@ function SantrollerInput({
               <Accordion.Panel>
                 <Switch
                   label={t('cycle.reverse_input')}
-                  checked={input.cycle.inputReverse !== null}
+                  checked={!!input.cycle.inputReverse}
                   onChange={(event) => {
                     dispatch({
                       cycle: {
