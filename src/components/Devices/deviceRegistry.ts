@@ -337,7 +337,7 @@ const deviceRegistry: DeviceDefinitions = {
   },
   cycle: {
     category: 'other',
-    create: () => ({ type: proto.CycleType.custom, values: [0] }),
+    create: () => ({ type: proto.CycleType.slots, values: [0, 1] }),
     formatStatus: (status) => status.id,
   },
   toggle: {

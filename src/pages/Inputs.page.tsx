@@ -2667,6 +2667,7 @@ function SantrollerInput({
   ledIdx,
   innerIdx,
   proKeyCount,
+  digital = false,
   dispatch,
 }: {
   input: proto.IInput;
@@ -2680,9 +2681,12 @@ function SantrollerInput({
   ledIdx?: number;
   innerIdx?: number;
   proKeyCount?: number;
+  // Used as a pressed / released input, such as inside a shortcut, so it needs its own trigger
+  digital?: boolean;
   dispatch: (input: proto.IInput) => void;
 }) {
   const deviceId = getInputDeviceId(input) ?? -1;
+  const cycleValues = useCycleValues(input);
   const expandAll = useContext(ExpandAllAccordionsContext);
   const { t } = useTranslation();
   const detectPins = useConfigStore.getState().detectPins;
@@ -3145,6 +3149,7 @@ function SantrollerInput({
                 legendMode={legendMode}
                 input={innerInput}
                 type={type}
+                digital
                 dispatch={(changed) =>
                   dispatch({
                     shortcut: {
@@ -3175,6 +3180,7 @@ function SantrollerInput({
             legendMode={legendMode}
             type={type}
             input={input.held.input}
+            digital
             dispatch={(changed) =>
               dispatch({
                 held: {
@@ -3325,6 +3331,15 @@ function SantrollerInput({
               </Accordion.Panel>
             </Accordion.Item>
           </Accordion>
+          {digital && !!cycleValues?.length && (
+            <CycleValuePicker
+              cycleValues={cycleValues}
+              deviceid={input.cycle.deviceid}
+              trigger={input.cycle.trigger}
+              triggerValue={input.cycle.triggerValue}
+              onChange={(patch) => dispatch({ cycle: { ...input.cycle!, ...patch } })}
+            />
+          )}
         </>
       )}
       {input.toggle && (
