@@ -1,6 +1,20 @@
 # Santroller Configurator 2
 
 https://dev.santroller.com
+
+## Reloading profiles with a button
+
+Choose **Reload Profiles** from an input's **Output** actions to recheck **Hold Button at Startup**
+conditions without power cycling. For example, map PS to this action, hold the button that selects
+the desired profile, then hold PS for more than one second. The previous startup selection is
+forgotten and the buttons currently held select the profile again. With no matching button held,
+the usual fallback profile can take over.
+
+Add the reload action to each profile you want to switch from. Release PS before using it again;
+keeping it held through a reload does not repeatedly reload. USB or Bluetooth may reconnect if the
+new profile changes the emulated device. **Restart USB / Bluetooth** remains a separate action and
+does not reselect profiles.
+
 ## Desktop app
 
 The same configurator is also packaged as a desktop app with [Tauri](https://tauri.app), for

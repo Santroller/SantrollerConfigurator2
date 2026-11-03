@@ -89,6 +89,7 @@ export function actionOutputLabel(
 export function actionHoldMs(output: proto.IOutput): number {
   switch (output.action) {
     case proto.ActionType.ActionRestartDeviceStack:
+    case proto.ActionType.ActionReloadProfiles:
       return 1000;
     case proto.ActionType.ActionBootloader:
       return 3000;

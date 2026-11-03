@@ -41,6 +41,7 @@ describe('action outputs', () => {
     expect(options.map((x) => x.output)).toEqual([
       { action: proto.ActionType.ActionRestartDeviceStack },
       { action: proto.ActionType.ActionBootloader },
+      { action: proto.ActionType.ActionReloadProfiles },
       { turnOffController: { usb: 1 } },
       { turnOffController: { bluetooth: 1 } },
     ]);
@@ -53,6 +54,10 @@ describe('action outputs', () => {
     expect(isActionOutput({ action: proto.ActionType.ActionBootloader })).toBe(true);
     expect(isActionOutput({ gamepadButton: proto.GamepadButtonType.Gamepad_A })).toBe(false);
     expect(actionHoldMs({ action: proto.ActionType.ActionBootloader })).toBe(3000);
+    expect(actionHoldMs({ action: proto.ActionType.ActionReloadProfiles })).toBe(1000);
+    expect(actionOutputLabel({ action: proto.ActionType.ActionReloadProfiles }, slots, t)).toBe(
+      'outputs.ActionReloadProfiles'
+    );
     expect(actionHoldMs({ turnOffController: { usb: 1 } })).toBe(2000);
   });
 

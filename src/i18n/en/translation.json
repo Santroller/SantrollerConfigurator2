@@ -2676,6 +2676,7 @@
     "ProKeyboardTouchPad": "Touch Strip",
     "ProKeyboardOverdrive": "Overdrive",
     "ActionRestartDeviceStack": "Restart USB / Bluetooth",
+    "ActionReloadProfiles": "Reload Profiles",
     "ActionBootloader": "Enter Bootloader",
     "TurnOffController": "Turn off {{slot}}",
     "GuitarHeroLiveGuitar_StrumUp": "Strum Up",
