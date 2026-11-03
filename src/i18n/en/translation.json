@@ -5,7 +5,7 @@
     "encoder": "Incremental Encoder / DJH Turntable Platter",
     "matrix": "Matrix Input",
     "switchNetwork": "Switch Network",
-    "toggle": "Toggle Input",
+    "toggle": "Virtual Toggle Switch",
     "dmx": "DMX",
     "xbox360Rf": "Xbox 360 RF Module",
     "adcBattery": "Battery Voltage (ADC pin)",
@@ -53,7 +53,7 @@
     "accelerometer": "Accelerometer",
     "ws2812": "WS2812 LEDs",
     "apa102": "APA102 LEDs",
-    "cycle": "Cycling input",
+    "cycle": "Virtual Selector Switch",
     "bluetooth_paired_devices": "Paired Devices",
     "bluetooth_no_devices": "No paired Bluetooth devices",
     "bluetooth_device_name": "Name",
@@ -365,25 +365,25 @@
     "shiftInput": "Shift / Modifier Input"
   },
   "cycle": {
-    "description": "A Cycling input stores a selected value from a list and remembers it across restarts. Set its values here, then configure the button or other input that changes it under Profiles in the Forward input or Backward input section. Use the Cycling input as the mapping source for the output you want to control, such as a pickup selector.",
-    "title": "Cycling input {{id}}",
+    "description": "A Virtual Selector Switch stores a selected value from a list and remembers it across restarts. Set its values here, then configure the button or other input that changes it under Profiles in the Forward input or Backward input section. Use it as the mapping source for the output you want to control, such as a pickup selector.",
+    "title": "Virtual Selector Switch {{id}}",
     "type": "Type",
     "label": {
       "custom": "Custom range",
       "pickup": "Pickup selector",
       "slots": "Number of slots"
     },
-    "forward_input": "Allow cycling forwards",
-    "reverse_input": "Allow cycling backwards",
+    "forward_input": "Allow stepping forward",
+    "reverse_input": "Allow stepping backward",
     "forward_section": "Forward input",
     "reverse_section": "Backward input",
     "mapping_value": "Active on",
     "slot_name": "Label for value {{slot}}",
     "slot_value": "Slot value",
     "current_state": "Current value",
-    "device": "Cycling input",
+    "device": "Virtual Selector Switch",
     "slot_count": "Number of slots",
-    "slot_count_description": "How many positions the input cycles through.",
+    "slot_count_description": "How many positions the Virtual Selector Switch steps through.",
     "enter_value": "Enter a value",
     "enter_value_placeholder": "Enter value"
   },
@@ -447,7 +447,7 @@
   },
   "inputs": {
     "title": "Inputs",
-    "input_behavior_help": "Cycling, toggle & hold input help",
+    "input_behavior_help": "Virtual switches & held input help",
     "led_icon": "LED icon",
     "mapping_title": "Input #{{num}}",
     "expand": "Edit Input",
@@ -2307,9 +2307,11 @@
     }
   },
   "toggle": {
-    "description": "A toggle input turns a momentary button into an on/off switch. The state is remembered across restarts.",
+    "description": "A Virtual Toggle Switch turns a momentary button into an on/off state that stays selected after you release the button. The state is remembered across restarts.",
     "state": "Current State",
-    "title": "Toggle Device"
+    "off": "Off",
+    "on": "On",
+    "title": "Virtual Toggle Switch {{id}}"
   },
   "wiiExt": {
     "WiiNunchuk": "Nunchuk",
@@ -3024,7 +3026,7 @@
     "addMultiplexer": "Add Multiplexer Label",
     "addSwitchNetwork": "Add Switch Network Label",
     "addKeyboardKey": "Add Keyboard Key Label",
-    "addCycleSlot": "Add Cycling Input Slot Label",
+    "addCycleSlot": "Add Virtual Selector Switch Slot Label",
     "profiles": "Profiles",
     "allProfiles": "All profiles",
     "bulk": {
@@ -3157,9 +3159,9 @@
       "mods": "WS2812B addressable LEDs and custom peripherals"
     },
     "input-behavior": {
-      "title": "Cycling, Toggle & Held Inputs",
+      "title": "Virtual Switches & Held Inputs",
       "subtitle": "Step through values, latch a button, or require a long press",
-      "description": "Choose the right input behavior, configure its source and output, and test cycling, toggle, and timed hold mappings.",
+      "description": "Choose the right input behavior, configure its source and output, and test selector switches, toggle switches, and timed hold mappings.",
       "estimatedTime": "10 - 15 mins",
       "setupTitle": "Configuration",
       "exampleTitle": "Example",
@@ -3177,26 +3179,26 @@
           "title": "Choose an input behavior",
           "shortTitle": "Overview",
           "description": "These types change how an input behaves; they do not replace its physical button or its output mapping.",
-          "intro": "Cycling moves through a list of values. Toggle switches between off and on and stays there after release. Held Input only becomes active after its source has been pressed continuously for a set time, and stops when released.",
+          "intro": "A Virtual Selector Switch steps through a list of values. A Virtual Toggle Switch changes between off and on and stays there after release. Held Input only becomes active after its source has been pressed continuously for a set time, and stops when released.",
           "instructions": [
             "Start with a working source: Configure and test the physical button, GPIO pin, or controller input you want to use.",
             "Choose the profile and output: Open Profiles, select the intended profile, and edit or add the mapping for the button, axis, or action you want to send.",
-            "Choose the behavior: Cycling and Toggle need a virtual device added on Devices first. Held Input is selected directly in the mapping's Device dropdown, with no extra device."
+            "Choose the behavior: Add a Virtual Selector Switch or Virtual Toggle Switch on Devices first. Held Input is selected directly in the mapping's Device dropdown, with no extra device."
           ],
-          "example": "Use Cycling for a five-position pickup selector, Toggle for a button that stays on without being held, and Held Input for an action that should ignore short accidental presses.",
+          "example": "Use a Virtual Selector Switch for a five-position pickup selector, a Virtual Toggle Switch for a button that stays on without being held, and Held Input for an action that should ignore short accidental presses.",
           "checks": [
             "Confirm the original source responds correctly before wrapping it in one of these types.",
             "Check the mapped output too: a source's state and what the game receives are not always the same."
           ],
-          "note": "Cycling and Toggle state belongs to their virtual device. Mappings using the same device share its state; add separate devices when you want independent states."
+          "note": "Each virtual switch's state belongs to its device. Mappings using the same device share its state; add separate devices when you want independent states."
         },
         "cycling": {
-          "title": "Cycling inputs",
-          "shortTitle": "Cycling",
-          "description": "Advance or reverse through an ordered list, wrapping around at either end.",
+          "title": "Virtual Selector Switch",
+          "shortTitle": "Selector switch",
+          "description": "Step forward or backward through an ordered list, wrapping around at either end.",
           "intro": "Each new forward press selects the next value. Each new reverse press selects the previous value. Releasing the source leaves the selected value in place; holding it does not keep stepping. The selected value is remembered, so it is still selected after the controller is unplugged or restarted.",
           "instructions": [
-            "Add the device: On Devices, add a Cycling input.",
+            "Add the device: On Devices, add a Virtual Selector Switch.",
             {
               "text": "Choose its values: Pick a Type on the device. For analog mappings use values from 0 to 65535.",
               "items": [
@@ -3205,28 +3207,28 @@
                 "Custom range: Enter your own ordered list of values."
               ]
             },
-            "Select it in the mapping: On Profiles, choose this Cycling input in the mapping's Device dropdown and map it to the intended output, such as the pickup selector axis.",
-            "Configure the sources: Open the Forward input section, enable Allow cycling forwards and select its button or digital input. Optionally do the same in the Backward input section with a different source.",
-            "Name the slots (optional): With Number of slots, type a label for each slot on the Devices card, or add a Cycling Input Slot Label on Labels. Names show on the device, in the Value bar and in the pickers below."
+            "Select it in the mapping: On Profiles, choose this Virtual Selector Switch in the mapping's Device dropdown and map it to the intended output, such as the pickup selector axis.",
+            "Configure the sources: Open the Forward input section, enable Allow stepping forward and select its button or digital input. Optionally do the same in the Backward input section with a different source.",
+            "Name the slots (optional): With Number of slots, type a label for each slot on the Devices card, or add a Virtual Selector Switch Slot Label on Labels. Names show on the device, in the Current value bar and in the pickers below."
           ],
-          "example": "With Number of slots set to 3 and the slots named Guitar Hero Guitar, Rock Band Guitar and Fortnite Festival, forward presses move through them and wrap back to the first. A reverse press from the first wraps to Fortnite Festival. In the demo, a Press Button Anytime rule uses this Cycling input as its source, so you can switch which game mode the controller acts as with one button. Under Activation, the rule is only active on Rock Band Guitar. Button mappings work the same way under Active on.",
+          "example": "With Number of slots set to 3 and the slots named Guitar Hero Guitar, Rock Band Guitar and Fortnite Festival, forward presses move through them and wrap back to the first. A backward press from the first wraps to Fortnite Festival. In the demo, a Press Button Anytime rule uses this Virtual Selector Switch as its source, so you can switch which game mode the controller acts as with one button. Under Activation, the rule is only active on Rock Band Guitar. Button mappings work the same way under Active on.",
           "checks": [
-            "Press and release forward repeatedly: the selected state should advance once per press and wrap after the last value. The Value bar at the top of the input shows the current value, or its label if you named it.",
+            "Press and release forward repeatedly: the selected state should advance once per press and wrap after the last value. The Current value bar at the top of the input shows the selected value, or its label if you named it.",
             "Hold forward: the state should not repeatedly advance.",
             "If reverse is enabled, test stepping backwards and wrapping from the first value to the last.",
             "On Devices, select a state directly to test the mapped output separately from the physical buttons.",
             "For a button mapping driven by a slot, switch to the slot under Active on and confirm the button is only pressed there."
           ],
-          "note": "Physical cycling presses are debounced for 100 ms, shared by both directions. Leave more than 100 ms between test presses. When driving a button mapping or assignment, use the Active on picker to choose which slot presses it; the first slot is selected by default."
+          "note": "Physical selector switch presses are debounced for 100 ms, shared by both directions. Leave more than 100 ms between test presses. When driving a button mapping or assignment, use the Active on picker to choose which slot presses it; the first slot is selected by default."
         },
         "toggle": {
-          "title": "Toggle inputs",
-          "shortTitle": "Toggle",
+          "title": "Virtual Toggle Switch",
+          "shortTitle": "Toggle switch",
           "description": "Turn a momentary button into a latched off/on state.",
           "intro": "A new source press flips the state. Release leaves it unchanged. The next press flips it back. Holding the source does not repeatedly toggle it. The state is remembered, so it is still on or off after the controller is unplugged or restarted.",
           "instructions": [
-            "Add the device: On Devices, add a Toggle Input.",
-            "Select it in the mapping: On Profiles, choose the Toggle Input in the mapping's Device dropdown.",
+            "Add the device: On Devices, add a Virtual Toggle Switch.",
+            "Select it in the mapping: On Profiles, choose the Virtual Toggle Switch in the mapping's Device dropdown.",
             "Configure its source: In the nested input editor, select the physical button or digital input that should flip the state.",
             "Choose its output: Map the toggle to the button or other output you want to stay active."
           ],
@@ -3235,7 +3237,7 @@
             "Watch Current State on Devices or in the mapping while pressing and releasing the source.",
             "Confirm one press flips the state, release preserves it, and a second press flips it back.",
             "Hold the source to check it only flips once.",
-            "Use the Current State switch on Devices to test off and on independently of the source."
+            "Use the Current State control on Devices to set off or on independently of the source."
           ],
           "note": "Physical toggle presses are debounced for 100 ms. For analog mappings, off is 0 and on is 65535. Avoid toggling destructive actions: a latched source can leave an action active, and it will still be active after a restart."
         },

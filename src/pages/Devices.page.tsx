@@ -2149,11 +2149,17 @@ export function ToggleDevice({ id }: { id: string }) {
       <Text size="xs" c="dimmed">
         {t('toggle.description')}
       </Text>
-      <Switch
-        label={t('toggle.state')}
-        checked={status.toggleState}
-        onChange={(e) => updateToggle(parseInt(id, 10), e.currentTarget.checked)}
-      />
+      <Input.Wrapper label={t('toggle.state')}>
+        <SegmentedControl
+          fullWidth
+          data={[
+            { value: 'off', label: t('toggle.off') },
+            { value: 'on', label: t('toggle.on') },
+          ]}
+          value={status.toggleState ? 'on' : 'off'}
+          onChange={(value) => updateToggle(parseInt(id, 10), value === 'on')}
+        />
+      </Input.Wrapper>
       <InputBehaviorHelpLink stepId="toggle" />
     </DeviceCard>
   );

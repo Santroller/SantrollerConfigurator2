@@ -44,7 +44,7 @@ describe('guide text', () => {
   });
 
   it('opens input behavior help without listing it in the hardware catalog', () => {
-    expect(getGuideById('input-behavior')?.title).toBe('Cycling, Toggle & Held Inputs');
+    expect(getGuideById('input-behavior')?.title).toBe('Virtual Switches & Held Inputs');
     expect(getAllGuides().map((guide) => guide.id)).not.toContain('input-behavior');
   });
 
