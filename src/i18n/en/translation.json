@@ -828,6 +828,167 @@
   "calibration": {
     "min": "Min",
     "max": "Max",
+    "released": "Released",
+    "pressed": "Fully pressed",
+    "guided": {
+      "start": "Guided calibration",
+      "triggers": {
+        "whammy": {
+          "released": "Let the whammy bar return to its resting position. Click Measure released and keep it released for one second while its resting noise is measured.",
+          "pressed": "Push the whammy bar all the way down. Hold it there, then capture the value."
+        },
+        "trigger": {
+          "released": "Let the trigger return to its resting position. Click Measure released and keep it released for one second while its resting noise is measured.",
+          "pressed": "Fully press the trigger. Hold it there, then capture the value."
+        },
+        "pedal": {
+          "released": "Let the pedal return to its resting position. Click Measure released and keep it released for one second while its resting noise is measured.",
+          "pressed": "Fully press the pedal. Hold it there, then capture the value."
+        }
+      },
+      "axes": {
+        "stickX": {
+          "low": {
+            "label": "Left",
+            "title": "Move the stick fully left",
+            "description": "Hold the stick at its leftmost position, then capture the value for this horizontal axis.",
+            "capture": "Capture left"
+          },
+          "high": {
+            "label": "Right",
+            "title": "Move the stick fully right",
+            "description": "Hold the stick at its rightmost position, then capture the value.",
+            "capture": "Capture right"
+          },
+          "neutral": {
+            "title": "Release the stick",
+            "description": "Let the stick return to its centre. Click Measure centre and leave it untouched for one second.",
+            "capture": "Measure centre"
+          }
+        },
+        "stickY": {
+          "low": {
+            "label": "Down",
+            "title": "Move the stick fully down",
+            "description": "Hold the stick at its bottom position, then capture the value for this vertical axis.",
+            "capture": "Capture down"
+          },
+          "high": {
+            "label": "Up",
+            "title": "Move the stick fully up",
+            "description": "Hold the stick at its top position, then capture the value.",
+            "capture": "Capture up"
+          },
+          "neutral": {
+            "title": "Release the stick",
+            "description": "Let the stick return to its centre. Click Measure centre and leave it untouched for one second.",
+            "capture": "Measure centre"
+          }
+        },
+        "tilt": {
+          "low": {
+            "label": "Neck down",
+            "title": "Tilt the guitar neck down",
+            "description": "Lower the neck to the lowest angle you want to use, then hold the guitar still and capture.",
+            "capture": "Capture neck down"
+          },
+          "high": {
+            "label": "Neck up",
+            "title": "Tilt the guitar neck up",
+            "description": "Raise the neck to the highest angle you want to use for tilt activation, then hold the guitar still and capture.",
+            "capture": "Capture neck up"
+          },
+          "neutral": {
+            "title": "Hold the guitar at your normal playing angle",
+            "description": "Return to your normal playing position. Click Measure playing angle and hold the guitar still for one second.",
+            "capture": "Measure playing angle"
+          }
+        },
+        "steering": {
+          "low": {
+            "label": "Left",
+            "title": "Turn the wheel fully left",
+            "description": "Hold the wheel at its left steering limit, then capture.",
+            "capture": "Capture left"
+          },
+          "high": {
+            "label": "Right",
+            "title": "Turn the wheel fully right",
+            "description": "Hold the wheel at its right steering limit, then capture.",
+            "capture": "Capture right"
+          },
+          "neutral": {
+            "title": "Centre the wheel",
+            "description": "Return the wheel to its straight-ahead position. Click Measure centre and keep it still for one second.",
+            "capture": "Measure centre"
+          }
+        },
+        "crossfader": {
+          "low": {
+            "label": "Left",
+            "title": "Move the crossfader fully left",
+            "description": "Hold the crossfader at its leftmost position, then capture.",
+            "capture": "Capture left"
+          },
+          "high": {
+            "label": "Right",
+            "title": "Move the crossfader fully right",
+            "description": "Hold the crossfader at its rightmost position, then capture.",
+            "capture": "Capture right"
+          },
+          "neutral": {
+            "title": "Centre the crossfader",
+            "description": "Return the crossfader to the middle. Click Measure centre and keep it still for one second.",
+            "capture": "Measure centre"
+          }
+        }
+      },
+      "low": {
+        "label": "Low output",
+        "title": "Move to the low-output position",
+        "description": "Move this stick axis all the way in the direction you want to produce minimum output, or tilt the guitar to its low-output limit. Hold it there and capture. This is an output direction, not necessarily the lowest raw reading.",
+        "capture": "Capture low output"
+      },
+      "high": {
+        "label": "High output",
+        "title": "Move to the high-output position",
+        "description": "Move this stick axis to the opposite end, or tilt the guitar to its high-output limit. Hold it there and capture. The order of these captures determines the axis direction.",
+        "capture": "Capture high output"
+      },
+      "neutral": {
+        "title": "Return to neutral",
+        "description": "Release the stick or hold the guitar at its normal playing angle. Click Measure neutral and keep it still for one second while the centre and resting noise are measured.",
+        "capture": "Measure neutral",
+        "compensation": "Set a centre deadzone covering the measured resting noise. Turning this off keeps the measured centre but sets the deadzone to zero.",
+        "invalid": "The neutral noise range must fit strictly between the two captured endpoints. Start again and capture both extremes, then hold the input at neutral."
+      },
+      "released": {
+        "title": "Release the input",
+        "description": "Return the input to its resting position. Click Measure released and keep it still for one second while its resting noise is measured.",
+        "capture": "Measure released"
+      },
+      "pressed": {
+        "title": "Fully press the input",
+        "description": "Move the input all the way to its fully pressed position. Hold it there, then capture the value.",
+        "capture": "Capture fully pressed"
+      },
+      "review": {
+        "label": "Review",
+        "title": "Review calibration",
+        "description": "Move the input to test the proposed calibration in the live Value bar, then apply it to this mapping."
+      },
+      "apply": "Apply calibration",
+      "restart": "Start again",
+      "noise": {
+        "measuring": "Measuring resting noise...",
+        "range": "Resting range (noise width)",
+        "compensate": "Compensate for resting noise",
+        "description": "Use the measured resting edge toward fully pressed as the released endpoint. This keeps the measured resting noise at zero, at the cost of a little initial travel. Turning this off uses the reading from the start of measurement.",
+        "interrupted": "The resting-noise measurement was interrupted by an unavailable reading. Reconnect if needed, then measure again.",
+        "noTravel": "The fully pressed value is inside the resting-noise range. Start again, keep the input released during measurement, then move it all the way to fully pressed."
+      },
+      "unavailable": "Connect your controller and wait for a valid input reading before capturing or applying calibration."
+    },
     "buttonMapping": "Button Mapping",
     "inverted": "Inverted",
     "center": "Centre",
@@ -6134,7 +6295,7 @@
           "features": [
             "Works with Guitar Hero games on PS3, 360 and Wii",
             "Supports the touch slider on guitars that have one",
-            "Whammy calibration and deadzone settings"
+            "Whammy calibration settings"
           ]
         },
         "rbGuitar": {

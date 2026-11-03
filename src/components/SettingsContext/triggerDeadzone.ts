@@ -1,9 +1,9 @@
 import { proto } from './config.js';
 
 /**
- * Whether the firmware calibrates this axis like a trigger, so it rests at min and its deadzone is
- * measured from min instead of around the center. Matches the trigger flag each AxisMapping is
- * built with, and sections always calibrate like a trigger.
+ * Whether the firmware calibrates this axis like a trigger, so it rests at min and ignores its
+ * deadzone. Matches the trigger flag each AxisMapping is built with, and sections always
+ * calibrate like a trigger.
  */
 export function calibratesAsTrigger(mapping: proto.IMapping): boolean {
   if (

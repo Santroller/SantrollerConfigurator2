@@ -123,6 +123,7 @@ import {
   newDisplayElement,
 } from '@/components/Inputs/DisplayElementEditor';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
+import { GuidedAxisCalibration } from '@/components/Inputs/GuidedAxisCalibration';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
 import {
@@ -382,13 +383,8 @@ function StateSection({
   if (raw) {
     const minPerc = (minCalc / 65535) * 100;
     const maxPerc = (maxCalc / 65535) * 100;
-    // a trigger's deadzone runs from min towards max, a stick's sits either side of its center
-    let deadZoneStart = center - deadzone;
-    let deadZoneEnd = center + deadzone;
-    if (trigger) {
-      deadZoneStart = min > max ? min - deadzone : min;
-      deadZoneEnd = min > max ? min : min + deadzone;
-    }
+    const deadZoneStart = trigger ? minCalc : center - deadzone;
+    const deadZoneEnd = trigger ? minCalc : center + deadzone;
     const clamp = (v: number) => Math.min(Math.max(v, minCalc), maxCalc);
     const deadZoneStartPerc = (clamp(deadZoneStart) / 65535) * 100;
     const deadZoneEndPerc = (clamp(deadZoneEnd) / 65535) * 100;
@@ -715,8 +711,7 @@ function AnalogFilters({
 }
 
 // Rapid trigger works on calibrated travel, so it brings its own min / max, and uses
-// triggerValue as the actuation point within that travel. A deadzone there just moves where
-// travel starts, so older configs that have one get it folded into min instead.
+// triggerValue as the actuation point within that travel.
 function RapidTriggerSettings({
   mapping,
   mappingIdx,
@@ -736,10 +731,7 @@ function RapidTriggerSettings({
   const uncalibrated = (mapping.min ?? 0) === (mapping.max ?? 65535);
   const min = uncalibrated ? 0 : (mapping.min ?? 0);
   const max = uncalibrated ? 65535 : (mapping.max ?? 65535);
-  const deadzone = mapping.deadzone ?? 0;
-  const released = min > max ? min - deadzone : min + deadzone;
-  const update = (changes: Partial<proto.IMapping>) =>
-    dispatch({ ...mapping, ...(deadzone ? { min: released, max, deadzone: 0 } : {}), ...changes });
+  const update = (changes: Partial<proto.IMapping>) => dispatch({ ...mapping, ...changes });
   const setRapid = (changes: Partial<proto.IRapidTrigger>) =>
     update({ rapidTrigger: { ...rapid, ...changes } });
   return (
@@ -748,14 +740,15 @@ function RapidTriggerSettings({
         mappingIdx={mappingIdx}
         profileIdx={profileIdx}
         center={0}
-        min={released}
+        min={min}
         max={max}
         deadzone={0}
+        trigger
         raw
       />
       <ValueRow
         label={t('rapidTrigger.min')}
-        value={released}
+        value={min}
         onChange={(min) => update({ min })}
         current={current}
       />
@@ -4312,8 +4305,6 @@ export function SantrollerMapping({
     mapping.mapping.midiPitchBend != null ||
     mapping.mapping.wheelAxis === proto.WheelAxisType.Wheel_Steering;
   const triggerAxis = !!axis && calibratesAsTrigger(mapping);
-  // a trigger's deadzone is a distance from min, so it can't be more than the travel
-  const deadzoneMax = triggerAxis ? Math.abs((mapping.max ?? 0) - (mapping.min ?? 0)) : 65535;
   // MIDI labels are translated, so check GM drum names by their (English) key instead
   const midiDrumKey =
     mapping.mapping.midiNote?.channel === MIDI_PERCUSSION_CHANNEL
@@ -4814,7 +4805,7 @@ export function SantrollerMapping({
                           trigger={mapping.trigger}
                           triggerValue={mapping.triggerValue}
                           maxTriggerValue={mapping.maxTriggerValue}
-                          deadzone={mapping.deadzone ?? 0}
+                          deadzone={0}
                           cycleValues={mapping.input.cycle ? cycleValues : undefined}
                           cycleDeviceId={mapping.input.cycle?.deviceid}
                           hideTypeSelect={simpleMode}
@@ -5032,6 +5023,17 @@ export function SantrollerMapping({
                             raw
                             zeroBased={drum}
                           />
+                          {mapping.mapping.proKeySingle == null && mapping.pressed == null && (
+                            <>
+                              <GuidedAxisCalibration
+                                mapping={mapping}
+                                mappingIdx={mappingIdx}
+                                profileIdx={profileIdx}
+                                dispatch={dispatch}
+                              />
+                              <Space h="md" />
+                            </>
+                          )}
                           {stick && !mapping.section && (
                             <>
                               <Text size="sm" fw={700}>
@@ -5076,7 +5078,7 @@ export function SantrollerMapping({
                             </>
                           )}
                           <Text size="sm" fw={700}>
-                            {t('calibration.min')}
+                            {t(triggerAxis ? 'calibration.released' : 'calibration.min')}
                           </Text>
                           <Group>
                             <Slider
@@ -5113,7 +5115,7 @@ export function SantrollerMapping({
                           </Group>
                           <Space h="md" />
                           <Text size="sm" fw={700}>
-                            {t('calibration.max')}
+                            {t(triggerAxis ? 'calibration.pressed' : 'calibration.max')}
                           </Text>
                           <Group>
                             <Slider
@@ -5148,29 +5150,33 @@ export function SantrollerMapping({
                             </Button>
                           </Group>
                           <Space h="md" />
-                          <Text size="sm" fw={700}>
-                            {t('calibration.deadzone')}
-                          </Text>
-                          <Group>
-                            <Slider
-                              flex={1}
-                              value={mapping.deadzone!}
-                              min={0}
-                              max={deadzoneMax}
-                              onChange={(val) => dispatch({ ...mapping, deadzone: val })}
-                            />
+                          {!triggerAxis && (
+                            <>
+                              <Text size="sm" fw={700}>
+                                {t('calibration.deadzone')}
+                              </Text>
+                              <Group>
+                                <Slider
+                                  flex={1}
+                                  value={mapping.deadzone!}
+                                  min={0}
+                                  max={65535}
+                                  onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+                                />
 
-                            <NumberInput
-                              value={mapping.deadzone!}
-                              min={0}
-                              max={deadzoneMax}
-                              onChange={(e) =>
-                                dispatch({ ...mapping, deadzone: parseInt(e.toString(), 10) })
-                              }
-                              w={100}
-                            />
-                          </Group>
-                          <Space h="md" />
+                                <NumberInput
+                                  value={mapping.deadzone!}
+                                  min={0}
+                                  max={65535}
+                                  onChange={(e) =>
+                                    dispatch({ ...mapping, deadzone: parseInt(e.toString(), 10) })
+                                  }
+                                  w={100}
+                                />
+                              </Group>
+                              <Space h="md" />
+                            </>
+                          )}
                           {mapping.mapping.rbAxis ===
                             proto.RockBandGuitarAxisType.RockBandGuitar_Pickup && (
                             <PickupNotches
@@ -5191,6 +5197,7 @@ export function SantrollerMapping({
                             min={crkdMin}
                             max={crkdMax}
                             deadzone={mapping.deadzone!}
+                            trigger={triggerAxis}
                             crkd={crkdAxis}
                             crkdId={mapping.input.crkdDrum!.deviceid}
                             raw
