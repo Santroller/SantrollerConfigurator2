@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { hasSlowBootStageBuild, parseVersionReport } from './firmwareVersion';
+import {
+  hasSlowBootStageBuild,
+  needsFirmwareVerificationUf2,
+  parseVersionReport,
+} from './firmwareVersion';
 
 const ascii = (s: string) => Array.from(s, (c) => c.charCodeAt(0));
 const report = (bytes: number[]) => new DataView(Uint8Array.from([0x29, ...bytes]).buffer);
@@ -34,6 +38,28 @@ describe('hasSlowBootStageBuild', () => {
   it('flags compat builds from before the fix', () => {
     expect(hasSlowBootStageBuild('pico_w_compat', 2850)).toBe(true);
     expect(hasSlowBootStageBuild('pico_w_compat', 3438)).toBe(true);
+  });
+
+  describe('needsFirmwareVerificationUf2', () => {
+    it('requires UF2 for installed builds before verification was enabled', () => {
+      expect(needsFirmwareVerificationUf2(3489)).toBe(true);
+      expect(needsFirmwareVerificationUf2(3492)).toBe(true);
+    });
+
+    it('allows the first verified build even before it reports the capability', () => {
+      expect(needsFirmwareVerificationUf2(3493)).toBe(false);
+      expect(needsFirmwareVerificationUf2(3494)).toBe(false);
+    });
+
+    it('uses the capability for unnumbered firmware', () => {
+      expect(needsFirmwareVerificationUf2(undefined)).toBe(true);
+      expect(needsFirmwareVerificationUf2(undefined, false)).toBe(true);
+      expect(needsFirmwareVerificationUf2(undefined, true)).toBe(false);
+    });
+
+    it('does not allow an explicit disabled capability to bypass the gate', () => {
+      expect(needsFirmwareVerificationUf2(3493, false)).toBe(true);
+    });
   });
 
   it('leaves the firmware to report it from the fix on', () => {

@@ -1,6 +1,24 @@
-import { IconCheck, IconDisc, IconInfoCircle, IconPlugConnected } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconCheck,
+  IconDisc,
+  IconInfoCircle,
+  IconPlugConnected,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Badge, Button, Card, Group, Paper, Stack, Table, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Image,
+  Paper,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { LiveAxis, LiveButtons, LiveInput } from '../adapters/adapterLiveStatus';
@@ -244,6 +262,25 @@ export function TurntableWiringStep(props: GuideStepProps) {
 
   const guideContent = (
     <Stack gap="md">
+      <Alert
+        color="orange"
+        icon={<IconAlertTriangle size={16} />}
+        title={t(`${P}.tt-wiring.removeBoardTitle`)}
+      >
+        {t(`${P}.tt-wiring.removeBoardText`)}
+      </Alert>
+
+      <Stack gap={4}>
+        <Image
+          src="/guides/dj-turntable-mainboard.jpg"
+          radius="md"
+          alt={t(`${P}.tt-wiring.mainBoardPhotoCaption`)}
+        />
+        <Text size="xs" c="dimmed" ta="center">
+          {t(`${P}.tt-wiring.mainBoardPhotoCaption`)}
+        </Text>
+      </Stack>
+
       <Title order={4}>{t(`${P}.tt-wiring.wiringTitle`)}</Title>
       <GuideList
         type="ordered"

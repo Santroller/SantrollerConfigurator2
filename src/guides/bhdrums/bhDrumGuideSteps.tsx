@@ -233,18 +233,31 @@ export function BhDrumWiringStep(props: GuideStepProps) {
 
   const guideContent = (
     <Stack gap="md">
+      <Title order={4}>{t(`${P}.bh-wiring.removalTitle`)}</Title>
       <Stack gap={4}>
         <Image
-          src="/guides/drums/bh_mainboard.jpg"
+          src="/guides/drums/bh_microcontroller_board_removal.jpg"
           radius="md"
-          alt={t(`${P}.bh-wiring.photoCaption`)}
+          alt={t(`${P}.bh-wiring.removalPhotoCaption`)}
         />
         <Text size="xs" c="dimmed" ta="center">
-          {t(`${P}.bh-wiring.photoCaption`)}
+          {t(`${P}.bh-wiring.removalPhotoCaption`)}
+        </Text>
+      </Stack>
+      <GuideList type="ordered" items={t(`${P}.bh-wiring.removalSteps`, { returnObjects: true })} />
+
+      <Title order={4}>{t(`${P}.bh-wiring.brainTitle`)}</Title>
+      <Stack gap={4}>
+        <Image
+          src="/guides/drums/bh_mainboard_annotated.jpg"
+          radius="md"
+          alt={t(`${P}.bh-wiring.mainBoardPhotoCaption`)}
+        />
+        <Text size="xs" c="dimmed" ta="center">
+          {t(`${P}.bh-wiring.mainBoardPhotoCaption`)}
         </Text>
       </Stack>
 
-      <Title order={4}>{t(`${P}.bh-wiring.brainTitle`)}</Title>
       <GuideList
         type="ordered"
         items={t(`${P}.bh-wiring.brainSteps`, {
@@ -256,6 +269,9 @@ export function BhDrumWiringStep(props: GuideStepProps) {
 
       <Title order={4}>{t(`${P}.bh-wiring.buttonsTitle`)}</Title>
       <GuideList type="ordered" items={t(`${P}.bh-wiring.buttonSteps`, { returnObjects: true })} />
+
+      <Title order={4}>{t(`${P}.bh-wiring.ledsTitle`)}</Title>
+      <Text size="sm">{t(`${P}.bh-wiring.ledsText`)}</Text>
 
       <Alert
         color="orange"

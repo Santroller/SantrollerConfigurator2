@@ -2788,6 +2788,8 @@
     "bootloaderOutdated": "This update changes how the device's flash is laid out, which the bootloader has to know about. That can't be updated over OTA, so you'll need to reflash via UF2 this once. Updates after that can go over OTA again.",
     "slowBootStageTitle": "Reflash via UF2 for Better Performance",
     "slowBootStage": "Your device's bootloader reads its flash much more slowly than it should, which can lower its polling rate. OTA updates can't replace the bootloader, so reflash via UF2 once to fix it. Updates after that can go over OTA as usual.",
+    "firmwareVerificationTitle": "Firmware Update Needs a UF2",
+    "firmwareVerification": "Your current firmware does not verify OTA images before installing them. To enable image verification safely, reflash via UF2 this once. Subsequent updates can go over OTA with SHA-256 verification.",
     "advancedMode": {
       "button": "Switch to Advanced Mode",
       "title": "Enable Advanced Mode?",
@@ -3694,11 +3696,15 @@
           "shortTitle": "Wiring",
           "title": "Brain & Button Wiring",
           "badge": "I2C",
-          "description": "Wire the drum chip connector to the Pico over I2C, add the driver, then wire and probe the face buttons.",
-          "photoCaption": "Band Hero drum brain main board (rear)",
+          "description": "Wire the drum chip connector to the Pico over I2C, add the driver, then wire the face buttons and optional LEDs.",
+          "removalTitle": "Identify the PCB to Remove",
+          "removalPhotoCaption": "Remove the small microcontroller PCB shown on the right from the orange-outlined footprint on the main board. Leave the main board in place.",
+          "removalSteps": [
+            "Remove the small microcontroller PCB from the outlined location. Leave the larger main board in place."
+          ],
+          "mainBoardPhotoCaption": "Orange marks the face-button headers; teal marks the four-pad drum-chip connector (+V, DATA, CLK, 0V).",
           "brainTitle": "Wiring the Drum Chip Connector",
           "brainSteps": [
-            "Remove the Main Board: Open the brain and remove the PCB with the main microcontroller from the main PCB.",
             "+V: Connect +V to the Pico's 3V3(OUT) (Pin 36).",
             "0V: Connect 0V to a Pico GND (Pin 38).",
             "DATA: Connect DATA (SDA) to {{sdaPin}}.",
@@ -3712,8 +3718,10 @@
             "Top Header: Next to the BIND label, the pads read BUTTON COM, NC, BUTTON COM, Y/TRIANGLE, X/SQUARE, B/CIRCLE, A/CROSS. Wire Y, X, B and A to free Pico GPIOs, and leave the first pad beside the BIND label and the NC pad unconnected.",
             "Probe: Add the driver, then press Probe on each row and press that button on the brain to assign its pin. Rows for buttons you don't wire can be skipped."
           ],
+          "ledsTitle": "Optional LED Wiring",
+          "ledsText": "LED wiring is optional. On this kit, use the +3V3 and P1-P4 pads on the removed microcontroller PCB: connect +3V3 to the Pico's 3V3(OUT), and connect P1-P4 to GPIO pins.",
           "leaveTitle": "Leave these pads unconnected",
-          "leaveText": "Do not connect VBAT, +1V6, the SPEAKER / SW header, MIC- / MIC+, or any NC pad to the Pico. Only the +V, CLK, DATA and 0V connector, the button pads and BUTTON COM are used.",
+          "leaveText": "Do not connect VBAT, +1V6, the SPEAKER / SW header, MIC- / MIC+, or any NC pad to the Pico. Use the +V, CLK, DATA and 0V connector, button pads and BUTTON COM, and the optional LED pins for your board revision.",
           "setupTitle": "Drum Brain Setup",
           "setupDesc": "Adds the Band Hero drum driver on I2C1 (GP{{sda}} / GP{{scl}}), gives the profile a MIDI channel 10 slot for it, and loads the default MIDI drum mappings. The profile is switched to a Guitar Hero drum kit unless it is already a drum kit.",
           "thConnector": "Connector Pin",
@@ -4033,6 +4041,9 @@
           "title": "2. Platter & Base Wiring",
           "badge": "I2C & ADC",
           "description": "Wire the platters over I2C, then the crossfader, effects dial, and base buttons.",
+          "removeBoardTitle": "Remove the Green Main PCB",
+          "removeBoardText": "Remove the green PCB shown in the photo from the turntable base; this is the original main board that the Pico replaces. Leave the small PCBs in the platters installed. Keep the removed board safe if you may want to restore the controller to stock.",
+          "mainBoardPhotoCaption": "Wired DJ Hero turntable: the green PCB shown here is the main board to remove.",
           "wiringTitle": "Wiring Instructions",
           "wiringSteps": [
             "Platters (I2C): Each platter connects to the base with 4 wires: power, ground, SDA, and SCL. Connect power to 3V3(OUT) (Pin 36), ground to GND, SDA to GP{{sda}}, and SCL to GP{{scl}}. With two platters, wire both to the same four points.",

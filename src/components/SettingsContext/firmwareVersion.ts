@@ -31,3 +31,16 @@ export function hasSlowBootStageBuild(type: string, build: number | undefined) {
     build < SLOW_BOOT_STAGE_FIXED_BUILD
   );
 }
+
+// Build 3493 first enabled SHA256 verification. Check the installed build before uploading,
+// as earlier firmware cannot report the capability. Unnumbered builds use the capability instead.
+const FIRMWARE_VERIFICATION_FIRST_BUILD = 3493;
+
+export function needsFirmwareVerificationUf2(
+  build: number | undefined,
+  verification?: boolean | null
+) {
+  return build === undefined
+    ? verification !== true
+    : build < FIRMWARE_VERIFICATION_FIRST_BUILD || verification === false;
+}

@@ -77,9 +77,8 @@ export function ConnectPage() {
   const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
   const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
   const slowBootStage = useConfigStore((state) => state.slowBootStage);
-  // OTA can't fix either, and an OTA update past a slow boot stage leaves it in place, so these only get
-  // pointed at the UF2
-  const uf2Only = bootloaderOutdated || slowBootStage;
+  const firmwareVerificationMissing = useConfigStore((state) => state.firmwareVerificationMissing);
+  const uf2Only = bootloaderOutdated || slowBootStage || firmwareVerificationMissing;
   const [advancedModalOpened, { open: openAdvancedModal, close: closeAdvancedModal }] =
     useDisclosure(false);
   const [udevModalOpened, { open: openUdevModal, close: closeUdevModal }] = useDisclosure(false);

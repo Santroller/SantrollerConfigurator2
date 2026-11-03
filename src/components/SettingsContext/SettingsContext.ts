@@ -49,7 +49,11 @@ import { CRC32 } from '@/CRC32.js';
 import { splitExtraTargets } from './assignmentTargets';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
 import { proto } from './config.js';
-import { hasSlowBootStageBuild, parseVersionReport } from './firmwareVersion';
+import {
+  hasSlowBootStageBuild,
+  needsFirmwareVerificationUf2,
+  parseVersionReport,
+} from './firmwareVersion';
 import { KeepaliveTimer, startKeepaliveTimer, stopKeepaliveTimer } from './keepaliveTimer';
 import { truncateProfileName } from './profileName';
 import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './savedConfigFields';
@@ -622,6 +626,7 @@ export interface ConfigState {
   bootloaderOutdated: boolean;
   // The bootloader reads flash slowly. OTA updates still work, but only a UF2 replaces the bootloader
   slowBootStage: boolean;
+  firmwareVerificationMissing: boolean;
   needsUf2Update: boolean;
   // The controller takes firmware uploads streamed as output reports (see firmwareUpdate)
   streamedFirmwareUpload: boolean;
@@ -906,6 +911,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     missingStaticFirmware: false,
     bootloaderOutdated: false,
     slowBootStage: false,
+    firmwareVerificationMissing: false,
     needsUf2Update: false,
     streamedFirmwareUpload: false,
     legacyImportWarnings: [],
@@ -1893,10 +1899,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           if (deviceEvent.console) {
             state.console = (state.console + deviceEvent.console.data).slice(-MAX_CONSOLE_CHARS);
           }
-          if (deviceEvent.reload) {
+          if (deviceEvent.reload && !state.updating) {
             state.waitingForReload = true;
           }
-          if (deviceEvent.loaded) {
+          if (deviceEvent.loaded && !state.updating) {
             // The reload kept the connection, so there's no reconnect to wait for
             state.waitingForReload = false;
             reloaded = true;
@@ -2058,8 +2064,9 @@ export const useConfigStore = create<ConfigState & Actions>()(
       }
     },
     refreshActiveProfiles: async () => {
-      const device = get().hidDevice;
-      if (!device) {
+      const state = get();
+      const device = state.hidDevice;
+      if (!device || state.updating) {
         return;
       }
       const { activeProfiles, deferredMode } = await readActiveProfiles(device);
@@ -2462,6 +2469,13 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     saveConfig: async (immediate = false, committing = false) => {
       const state = get();
+      if (state.updating) {
+        console.warn('Config write deferred during firmware update');
+        set((state) => {
+          state.pendingSave = true;
+        });
+        return false;
+      }
       if (state.configLoadError) {
         return false;
       }
@@ -2833,7 +2847,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
     refreshBluetoothPairings: async () => {
       const state = get();
-      if (!state.hidDevice || !state.connected || state.refreshingBluetooth) {
+      if (!state.hidDevice || !state.connected || state.refreshingBluetooth || state.updating) {
         return;
       }
       try {
@@ -2862,8 +2876,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
         return;
       }
       // The device refuses it anyway, the update has to come from a UF2 with the matching bootloader
-      if (state.bootloaderOutdated) {
-        console.error('Cannot update firmware over OTA with an outdated bootloader');
+      if (state.bootloaderOutdated || state.slowBootStage || state.firmwareVerificationMissing) {
+        console.error('Firmware update requires a UF2 instead of OTA');
         return;
       }
       const hidDevice = state.hidDevice;
@@ -2877,7 +2891,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           state.keepaliveTimeout = undefined;
         }
       });
-      while (get().sendingKeepAlive) {
+      while (get().sendingKeepAlive || get().writing) {
         await delay(KEEPALIVE_INTERVAL_MS);
       }
       let firmwareSize = 0;
@@ -3122,7 +3136,7 @@ export const useConfigStore = create<ConfigState & Actions>()(
           state.keepaliveTimeout = undefined;
         }
       });
-      while (get().sendingKeepAlive) {
+      while (get().sendingKeepAlive || get().writing) {
         await delay(KEEPALIVE_INTERVAL_MS);
       }
       try {
@@ -3280,6 +3294,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
     connectDevice: async (device: HIDDevice) => {
       stopReloadReconnectTimer();
       stopInUseRetryTimer();
+      set((state) => {
+        state.firmwareVerificationMissing = true;
+        state.needsUf2Update = true;
+      });
       if (!device.opened) {
         await device.open();
       }
@@ -3291,6 +3309,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           latest,
           newer: firmwareNewer,
         } = await checkFirmwareVersion(device);
+        set((state) => {
+          state.firmwareVerificationMissing = needsFirmwareVerificationUf2(firmwareBuild);
+          state.needsUf2Update = state.firmwareVerificationMissing;
+        });
         const { activeProfiles, deferredMode } = await readActiveProfiles(device);
         let deviceType = 'pico_w';
         try {
@@ -3328,6 +3350,10 @@ export const useConfigStore = create<ConfigState & Actions>()(
           // UF2 rather than an OTA update first
           const slowBootStage =
             !!info.slowBootStage || hasSlowBootStageBuild(deviceType, firmwareBuild);
+          const firmwareVerificationMissing = needsFirmwareVerificationUf2(
+            firmwareBuild,
+            info.firmwareVerification
+          );
           set(
             (old) => ({
               ...old,
@@ -3348,7 +3374,8 @@ export const useConfigStore = create<ConfigState & Actions>()(
               missingStaticFirmware: !!info.missingStaticFirmware,
               bootloaderOutdated: !!info.bootloaderOutdated,
               slowBootStage,
-              needsUf2Update: !!info.needsUf2Update || slowBootStage,
+              firmwareVerificationMissing,
+              needsUf2Update: !!info.needsUf2Update || slowBootStage || firmwareVerificationMissing,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
               keepaliveTimeout: timeout,
               activeProfiles,
