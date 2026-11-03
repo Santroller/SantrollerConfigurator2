@@ -1,6 +1,5 @@
 import i18next from 'i18next';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 
@@ -21,9 +20,7 @@ function renderStep(id: string, nested = false) {
   const element = document.createElement('div');
   element.innerHTML = renderToStaticMarkup(
     <MantineProvider>
-      <MemoryRouter>
-        <Step nested={nested} />
-      </MemoryRouter>
+      <Step nested={nested} />
     </MantineProvider>
   );
   return element;
@@ -53,11 +50,7 @@ describe('input behavior guide', () => {
       expect(element.textContent).not.toContain('guides.input-behavior.');
       expect(element.querySelectorAll('ol li').length).toBeGreaterThan(0);
       expect(element.querySelectorAll('ul li').length).toBeGreaterThan(0);
-      const links = Array.from(element.querySelectorAll('a'));
-      expect(links.map((link) => link.getAttribute('href'))).toEqual(
-        id === 'held' ? ['/profiles'] : ['/devices', '/profiles']
-      );
-      expect(links.every((link) => link.target === '_blank')).toBe(true);
+      expect(element.querySelector('a[target="_blank"]')).toBeNull();
     }
   );
 

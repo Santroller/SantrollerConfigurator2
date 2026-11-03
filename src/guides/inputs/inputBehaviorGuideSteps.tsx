@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { Alert, Button, Group, Stack, Text, Title } from '@mantine/core';
+import { Alert, Stack, Text, Title } from '@mantine/core';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
@@ -34,22 +33,6 @@ function InputBehaviorStep({
           <Text size="sm" c="dimmed">
             {t(`${key}.note`)}
           </Text>
-          <Group>
-            {(kind === 'intro' || kind === 'cycling' || kind === 'toggle') && (
-              <Button component={Link} to="/devices" target="_blank" rel="noopener noreferrer">
-                {t('guides.input-behavior.openDevices')}
-              </Button>
-            )}
-            <Button
-              component={Link}
-              to="/profiles"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="light"
-            >
-              {t('guides.input-behavior.openProfiles')}
-            </Button>
-          </Group>
           {!props.nested && <Text size="sm">{t('guides.input-behavior.save')}</Text>}
         </Stack>
       }

@@ -2990,8 +2990,6 @@
       "setupTitle": "Configuration",
       "exampleTitle": "Example",
       "verifyTitle": "Check the behavior",
-      "openDevices": "Open Devices in a new tab",
-      "openProfiles": "Open Profiles in a new tab",
       "save": "Edits apply live while connected. Once you have tested the mappings, click Save changes to keep the configuration after a restart.",
       "preview": {
         "title": "Configured example",
