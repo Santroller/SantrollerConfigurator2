@@ -57,6 +57,7 @@ import {
   DeviceKind,
   deviceKinds,
   getGroupedDevices,
+  hasPinConfiguration,
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
 import { matrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
@@ -222,7 +223,7 @@ function DeviceGateSection({ id }: { id: string }) {
   const parentId = useConfigStore((state) => state.deviceStatus[id]?.parentId);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   // A secondary pico loads its own devices, and doesn't watch for gates changing
-  if (!device || parentId !== undefined) {
+  if (!device || parentId !== undefined || !hasPinConfiguration(device)) {
     return null;
   }
   const gate = device.gate;

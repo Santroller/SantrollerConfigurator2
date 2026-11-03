@@ -12,6 +12,7 @@ import {
   getDevicePins,
   getDeviceStatusLabel,
   getGroupedDevices,
+  hasPinConfiguration,
   isInputDeviceKind,
   isSingletonDeviceKind,
 } from './deviceRegistry';
@@ -109,6 +110,14 @@ describe('singleton devices', () => {
 });
 
 describe('device pins', () => {
+  it('identifies device kinds with pin configuration', () => {
+    expect(hasPinConfiguration(createDeviceConfig('snes', 0))).toBe(true);
+    expect(hasPinConfiguration(createDeviceConfig('dmx', 0))).toBe(true);
+    expect(hasPinConfiguration(createDeviceConfig('cycle', 0))).toBe(false);
+    expect(hasPinConfiguration(createDeviceConfig('toggle', 0))).toBe(false);
+    expect(hasPinConfiguration(createDeviceConfig('bt', 0))).toBe(false);
+  });
+
   // A freshly added device has its pins unset (-1). Those aren't pins, so they mustn't show up as
   // conflicts between unconfigured devices, and a pin derived from one (eg USB host's D-) mustn't
   // turn into GP0
@@ -126,6 +135,10 @@ describe('device pins', () => {
     const usbHost = createDeviceConfig('usbHost', 0);
     usbHost.usbHost!.firstPin = 10;
     expect(getDevicePins(usbHost)).toEqual([10, 11]);
+
+    const dmx = createDeviceConfig('dmx', 0);
+    dmx.dmx!.pin = 12;
+    expect(getDevicePins(dmx)).toEqual([12]);
   });
 });
 

@@ -347,6 +347,7 @@ const deviceRegistry: DeviceDefinitions = {
   dmx: {
     category: 'lighting',
     create: () => ({ pin: -1, channelCount: 1 }),
+    pins: ({ pin }) => [pin],
   },
   xbox360Rf: {
     category: 'controllers',
@@ -483,6 +484,11 @@ export function createDeviceConfig(kind: DeviceKind, deviceid: number): proto.ID
     deviceid,
     [kind]: deviceRegistry[kind].create(),
   } as proto.IDevice;
+}
+
+export function hasPinConfiguration(device: proto.IDevice): boolean {
+  const kind = deviceKinds.find((candidate) => device[candidate] != null);
+  return kind !== undefined && kind !== 'bt' && deviceRegistry[kind].pins !== undefined;
 }
 
 function resolveDevicePins<Kind extends DeviceKind>(kind: Kind, device: proto.IDevice): number[] {
