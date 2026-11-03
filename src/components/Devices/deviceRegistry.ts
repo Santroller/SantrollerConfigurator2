@@ -343,6 +343,7 @@ const deviceRegistry: DeviceDefinitions = {
   toggle: {
     category: 'other',
     create: () => ({}),
+    formatStatus: (status) => status.id,
   },
   dmx: {
     category: 'lighting',

@@ -160,6 +160,15 @@ describe('device status labels', () => {
     expect(getDeviceStatusLabel(status({ bt: {} }))).toBe('Connected');
   });
 
+  it('shows virtual switch IDs instead of connection status', () => {
+    expect(
+      getDeviceStatusLabel(
+        status({ cycle: { type: proto.CycleType.slots, values: [0, 1] } }, false)
+      )
+    ).toBe('1');
+    expect(getDeviceStatusLabel(status({ toggle: {} }, false))).toBe('1');
+  });
+
   it('lists the pins after whether it is connected', () => {
     expect(
       getDeviceStatusLabel(
