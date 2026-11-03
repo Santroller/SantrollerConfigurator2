@@ -92,6 +92,23 @@ export function getKeyboardKeyLabel(
   return labels.length > 0 && bracketed ? `(${labels.join(', ')})` : labels.join(', ');
 }
 
+export function getCycleSlotLabel(
+  guiDevices: proto.IGuiConfig[],
+  deviceid: number,
+  slot: number,
+  customer: boolean
+) {
+  return Object.values(guiDevices)
+    .filter(
+      (x) =>
+        x.cycleSlotLabel?.deviceid === deviceid &&
+        x.cycleSlotLabel?.slot === slot &&
+        (!customer || x.cycleSlotLabel?.showToCustomer)
+    )
+    .map((x) => x.cycleSlotLabel?.label)
+    .join(', ');
+}
+
 export function isLed(deviceStatus: DeviceStatus) {
   return isLedDeviceKind(deviceStatus.type);
 }

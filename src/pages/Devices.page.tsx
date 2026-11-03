@@ -30,11 +30,14 @@ import {
   Table,
   TagsInput,
   Text,
+  TextInput,
   Title,
   Tooltip,
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
+import { getCycleSlotLabel } from '@/components/Devices/pinUtils';
+import { InputBehaviorHelpLink } from '@/components/InputBehaviorHelpLink';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import {
@@ -349,6 +352,8 @@ function DeviceCard({
   const onSelect = (on: boolean) => deviceId && selection?.select(deviceId, on);
   // Not every device has artwork yet, so those get a placeholder instead of a broken image
   const [failedImage, setFailedImage] = useState<string>();
+  // Absolute, so the cover also resolves when the card is shown on a nested route like the guides
+  const imageSrc = /^(\/|https?:|data:)/.test(image) ? image : `/${image}`;
   const badge = useMemo(
     () =>
       connected ? (
@@ -419,13 +424,13 @@ function DeviceCard({
                 aria-label={t(title)}
                 style={{
                   backgroundColor: 'var(--mantine-color-text)',
-                  mask: `url(${image}) center / contain no-repeat`,
-                  WebkitMask: `url(${image}) center / contain no-repeat`,
+                  mask: `url(${imageSrc}) center / contain no-repeat`,
+                  WebkitMask: `url(${imageSrc}) center / contain no-repeat`,
                 }}
               />
             ) : (
               <Image
-                src={image}
+                src={imageSrc}
                 height={160}
                 fit="scale-down"
                 alt={title}
@@ -1976,11 +1981,19 @@ const cycleData = Object.keys(proto.CycleType).map((t) => ({
   label: `cycle.label.${t.toLowerCase()}`,
   value: t,
 }));
-function CycleDevice({ id }: { id: string }) {
+const defaultCycleValues = (type: proto.CycleType) => {
+  if (type === proto.CycleType.pickup) {
+    return [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500];
+  }
+  return type === proto.CycleType.slots ? [0, 1] : [0];
+};
+export function CycleDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const updateCycle = useConfigStore((state) => state.updateCycle);
+  const setCycleSlotLabel = useConfigStore((state) => state.setCycleSlotLabel);
+  const guiDevices = useConfigStore((state) => state.guiDevices);
   const { t } = useTranslation();
   const device = status.device;
   if (!device.cycle) {
@@ -2006,10 +2019,7 @@ function CycleDevice({ id }: { id: string }) {
               cycle: {
                 ...cycle,
                 type: parseInt(val, 10) + 1,
-                values:
-                  parseInt(val, 10) + 1 === proto.CycleType.pickup
-                    ? [0x1900, 0x4c00, 0x9600, 0xb200, 0xe500]
-                    : [0],
+                values: defaultCycleValues(parseInt(val, 10) + 1),
               },
             },
             id
@@ -2018,11 +2028,14 @@ function CycleDevice({ id }: { id: string }) {
       />
       {cycle.type === proto.CycleType.custom && (
         <>
-          <SegmentedControl
-            data={cycle.values!.map((x, i) => ({ label: x.toString(), value: i.toString() }))!}
-            value={status.cycleState.toString()}
-            onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
-          />
+          <Input.Wrapper label={t('cycle.current_state')}>
+            <SegmentedControl
+              fullWidth
+              data={cycle.values!.map((x, i) => ({ label: x.toString(), value: i.toString() }))!}
+              value={status.cycleState.toString()}
+              onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
+            />
+          </Input.Wrapper>
           <TagsInput
             label={t('cycle.enter_value', 'Enter a value')}
             placeholder={t('cycle.enter_value_placeholder', 'Enter value')}
@@ -2045,22 +2058,76 @@ function CycleDevice({ id }: { id: string }) {
           />
         </>
       )}
-      {cycle.type === proto.CycleType.pickup && (
+      {cycle.type === proto.CycleType.slots && (
         <>
-          <SegmentedControl
-            data={cycle.values!.map((_, i) => ({
-              label: t(`pickup.notch.${i}`),
-              value: i.toString(),
-            }))!}
-            value={status.cycleState.toString()}
-            onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
+          <NumberInput
+            label={t('cycle.slot_count')}
+            description={t('cycle.slot_count_description')}
+            min={2}
+            max={64}
+            allowDecimal={false}
+            clampBehavior="strict"
+            value={cycle.values?.length ?? 2}
+            onChange={(val) => {
+              const count = Math.max(2, Math.min(64, Number(val) || 2));
+              updateDevice(
+                {
+                  deviceid: parseInt(id, 10),
+                  cycle: {
+                    ...cycle,
+                    values: Array.from({ length: count }, (_, i) => i),
+                  },
+                },
+                id
+              );
+            }}
           />
+          <Input.Wrapper label={t('cycle.current_state')}>
+            <SegmentedControl
+              fullWidth
+              data={cycle.values!.map((x, i) => ({
+                label:
+                  getCycleSlotLabel(Object.values(guiDevices), parseInt(id, 10), x, false) ||
+                  x.toString(),
+                value: i.toString(),
+              }))}
+              value={status.cycleState.toString()}
+              onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
+            />
+          </Input.Wrapper>
+          {cycle.values!.map((x) => (
+            <TextInput
+              key={x}
+              label={t('cycle.slot_name', { slot: x })}
+              placeholder={x.toString()}
+              value={getCycleSlotLabel(Object.values(guiDevices), parseInt(id, 10), x, false)}
+              onChange={(event) =>
+                setCycleSlotLabel(parseInt(id, 10), x, event.currentTarget.value)
+              }
+            />
+          ))}
         </>
       )}
+      {cycle.type === proto.CycleType.pickup && (
+        <>
+          <Input.Wrapper label={t('cycle.current_state')}>
+            <SegmentedControl
+              fullWidth
+              data={cycle.values!.map((_, i) => ({
+                label: t(`pickup.notch.${i}`),
+                value: i.toString(),
+              }))!}
+              value={status.cycleState.toString()}
+              onChange={(val) => updateCycle(parseInt(id, 10), parseInt(val, 10))}
+            />
+          </Input.Wrapper>
+        </>
+      )}
+      <InputBehaviorHelpLink stepId="cycling" />
     </DeviceCard>
   );
 }
-function ToggleDevice({ id }: { id: string }) {
+export function ToggleDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const updateToggle = useConfigStore((state) => state.updateToggle);
@@ -2081,6 +2148,7 @@ function ToggleDevice({ id }: { id: string }) {
         checked={status.toggleState}
         onChange={(e) => updateToggle(parseInt(id, 10), e.currentTarget.checked)}
       />
+      <InputBehaviorHelpLink stepId="toggle" />
     </DeviceCard>
   );
 }

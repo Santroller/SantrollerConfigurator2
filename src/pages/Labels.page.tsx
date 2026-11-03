@@ -14,6 +14,8 @@ import {
   Menu,
   Modal,
   MultiSelect,
+  NumberInput,
+  Select,
   SimpleGrid,
   Space,
   Switch,
@@ -719,6 +721,109 @@ function KeyboardKeyLabel({ id, label, deleteLabel, selected, onSelect }: LabelE
   );
 }
 
+function CycleSlotLabel({ id, label, deleteLabel, selected, onSelect }: LabelEditorProps) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const { t } = useTranslation();
+  const updateLabel = useConfigStore((state) => state.updateLabel);
+  const seller = useConfigStore((state) => state.seller);
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const cycleLabel = label.cycleSlotLabel!;
+  const cycleDevices = Object.values(deviceStatus).filter((x) => x.type === 'cycle');
+  return (
+    <>
+      <Modal opened={opened} onClose={close} title={t('labels.remove.title')} centered>
+        {t('labels.remove.desc')}
+        <Space h="md" />
+        <Flex justify="flex-end">
+          <Group align="flex-end">
+            <Button
+              onClick={() => {
+                deleteLabel();
+                close();
+              }}
+              color="red"
+            >
+              {t('labels.remove.confirm')}
+            </Button>
+            <Button onClick={close}>{t('common.cancel')}</Button>
+          </Group>
+        </Flex>
+      </Modal>
+      <Card
+        key={id}
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        style={cardStyle(selected)}
+        onClick={(e) => toggleOnBackgroundClick(e, selected, onSelect)}
+      >
+        <Flex justify="flex-end" align="center">
+          <SelectToggle selected={selected} onSelect={onSelect} />
+          <ActionIcon color="red">
+            <IconTrash style={{ width: '70%', height: '70%' }} onClick={open} />
+          </ActionIcon>
+        </Flex>
+        <TextInput
+          value={cycleLabel.label}
+          onChange={(e) =>
+            updateLabel(
+              { ...label, cycleSlotLabel: { ...cycleLabel, label: e.currentTarget.value } },
+              parseInt(id, 10)
+            )
+          }
+          label={t('cycle.slot_name', { slot: cycleLabel.slot })}
+        />
+        <Select
+          mt="xs"
+          label={t('cycle.device')}
+          value={cycleLabel.deviceid >= 0 ? cycleLabel.deviceid.toString() : null}
+          placeholder={t('pick_value')}
+          data={cycleDevices.map((x) => ({ value: x.id, label: DeviceStatus.label(x) }))}
+          onChange={(val) =>
+            val != null &&
+            updateLabel(
+              { ...label, cycleSlotLabel: { ...cycleLabel, deviceid: parseInt(val, 10) } },
+              parseInt(id, 10)
+            )
+          }
+        />
+        <NumberInput
+          mt="xs"
+          label={t('cycle.slot_value')}
+          allowDecimal={false}
+          value={cycleLabel.slot}
+          onChange={(val) =>
+            updateLabel(
+              { ...label, cycleSlotLabel: { ...cycleLabel, slot: Number(val) || 0 } },
+              parseInt(id, 10)
+            )
+          }
+        />
+        <LabelProfiles id={id} label={label} />
+        {seller && (
+          <>
+            <Space h="md" />
+            <Switch
+              checked={cycleLabel.showToCustomer ?? false}
+              onChange={(e) =>
+                updateLabel(
+                  {
+                    ...label,
+                    cycleSlotLabel: { ...cycleLabel, showToCustomer: e.currentTarget.checked },
+                  },
+                  parseInt(id, 10)
+                )
+              }
+              label={t('labels.showToCustomer')}
+            />
+          </>
+        )}
+      </Card>
+    </>
+  );
+}
+
 function MultiplexerLabel({ id, label, deleteLabel, selected, onSelect }: LabelEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const { t } = useTranslation();
@@ -960,6 +1065,7 @@ const labelEditors: Record<LabelKind, React.FunctionComponent<LabelEditorProps>>
   multiplexerLabel: MultiplexerLabel,
   switchNetworkLabel: SwitchNetworkLabel,
   keyboardKeyLabel: KeyboardKeyLabel,
+  cycleSlotLabel: CycleSlotLabel,
 };
 
 function RegisteredLabelEditor(props: LabelEditorProps) {
@@ -1087,6 +1193,7 @@ export function LabelsPage() {
   const addMatrixLabel = useConfigStore((state) => state.addMatrixLabel);
   const addSwitchNetworkLabel = useConfigStore((state) => state.addSwitchNetworkLabel);
   const addKeyboardKeyLabel = useConfigStore((state) => state.addKeyboardKeyLabel);
+  const addCycleSlotLabel = useConfigStore((state) => state.addCycleSlotLabel);
   const deleteLabel = useConfigStore((state) => state.deleteLabel);
   const { t } = useTranslation();
   const labels = useConfigStore((state) => state.guiDevices);
@@ -1146,6 +1253,9 @@ export function LabelsPage() {
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addKeyboardKeyLabel}>
                   {t('labels.addKeyboardKey')}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconPlus size={14} />} onClick={addCycleSlotLabel}>
+                  {t('labels.addCycleSlot')}
                 </Menu.Item>
                 <Menu.Item leftSection={<IconPlus size={14} />} onClick={addMultiplexerLabel}>
                   {t('labels.addMultiplexer')}

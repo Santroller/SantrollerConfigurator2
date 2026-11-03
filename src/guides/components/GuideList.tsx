@@ -2,6 +2,7 @@ import React from 'react';
 import { IconTools } from '@tabler/icons-react';
 import { List, ThemeIcon } from '@mantine/core';
 
+// An item can carry sub-steps, as { text, items: [...] }
 export interface GuideListProps {
   items: unknown;
   type?: 'unordered' | 'ordered';
@@ -42,6 +43,42 @@ export function GuideList({
       icon={type === 'unordered' ? defaultIcon : undefined}
     >
       {items.map((rawItem, idx) => {
+        if (rawItem && typeof rawItem === 'object' && 'text' in rawItem) {
+          const { text, items: subItems } = rawItem as { text: string; items?: unknown };
+          const colon = String(text).indexOf(':');
+          return (
+            <List.Item key={idx}>
+              {colon === -1 ? (
+                text
+              ) : (
+                <>
+                  <strong>{text.slice(0, colon)}:</strong>
+                  {text.slice(colon + 1)}
+                </>
+              )}
+              {Array.isArray(subItems) && (
+                <List type="unordered" withPadding size="sm" spacing={4} mt={4}>
+                  {subItems.map((sub, subIdx) => {
+                    const subStr = String(sub);
+                    const subColon = subStr.indexOf(':');
+                    return (
+                      <List.Item key={subIdx}>
+                        {subColon === -1 ? (
+                          subStr
+                        ) : (
+                          <>
+                            <strong>{subStr.slice(0, subColon)}:</strong>
+                            {subStr.slice(subColon + 1)}
+                          </>
+                        )}
+                      </List.Item>
+                    );
+                  })}
+                </List>
+              )}
+            </List.Item>
+          );
+        }
         const itemStr = String(rawItem);
         const colonIdx = itemStr.indexOf(':');
 

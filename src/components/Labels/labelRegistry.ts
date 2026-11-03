@@ -7,7 +7,8 @@ export type LabelKind =
   | 'matrixLabel'
   | 'multiplexerLabel'
   | 'switchNetworkLabel'
-  | 'keyboardKeyLabel';
+  | 'keyboardKeyLabel'
+  | 'cycleSlotLabel';
 
 type LabelDefinition = {
   create: () => Record<string, unknown>;
@@ -39,6 +40,9 @@ const labelRegistry: Record<LabelKind, LabelDefinition> = {
   },
   keyboardKeyLabel: {
     create: () => ({ label: i18next.t('labels.title', 'Label'), key: 0 }),
+  },
+  cycleSlotLabel: {
+    create: () => ({ label: i18next.t('labels.title', 'Label'), deviceid: -1, slot: 0 }),
   },
 };
 

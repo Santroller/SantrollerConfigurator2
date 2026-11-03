@@ -1,4 +1,13 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   closestCenter,
   CollisionDetection,
@@ -90,6 +99,7 @@ import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/devi
 import { matrixHasPin } from '@/components/Devices/matrixPins';
 import { PinBox } from '@/components/Devices/Pins';
 import {
+  getCycleSlotLabel,
   getKeyboardKeyLabel,
   getLabel,
   getMatrixLabel,
@@ -98,6 +108,7 @@ import {
   hasDefaults,
   isLed,
 } from '@/components/Devices/pinUtils';
+import { InputBehaviorHelpLink } from '@/components/InputBehaviorHelpLink';
 import {
   actionHoldMs,
   actionOutputLabel,
@@ -257,14 +268,14 @@ function StateLabelLabel({
       : ledBased
         ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
         : activationBased
-          ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
+          ? state.activationStatus[profileIdx]?.[listIdx!]?.[mappingIdx]?.stateRaw
           : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const liveState = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
-        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
+        ? state.activationStatus[profileIdx]?.[listIdx!]?.[mappingIdx]?.state
         : state.mappingStatus[profileIdx][mappingIdx]?.state
   );
   const decay = zeroBased && !ledBased && !activationBased;
@@ -347,14 +358,14 @@ function StateSection({
       : ledBased
         ? state.ledStatus[profileIdx][mappingIdx]?.stateRaw
         : activationBased
-          ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.stateRaw
+          ? state.activationStatus[profileIdx]?.[listIdx!]?.[mappingIdx]?.stateRaw
           : state.mappingStatus[profileIdx][mappingIdx]?.stateRaw
   );
   const liveState = useConfigStore((state) =>
     ledBased
       ? state.ledStatus[profileIdx][mappingIdx]?.state
       : activationBased
-        ? state.activationStatus[profileIdx][listIdx!][mappingIdx]?.state
+        ? state.activationStatus[profileIdx]?.[listIdx!]?.[mappingIdx]?.state
           ? 65535
           : 0
         : state.mappingStatus[profileIdx][mappingIdx]?.state
@@ -782,9 +793,77 @@ function RapidTriggerSettings({
   );
 }
 
+// Shows a cycling input's value as its slot label when it has one
+function CycleSlotValueLabel({
+  profileIdx,
+  mappingIdx,
+  listIdx,
+  cycleDeviceId,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  listIdx?: number;
+  cycleDeviceId: number;
+}) {
+  const raw = useConfigStore((state) =>
+    listIdx !== undefined
+      ? state.activationStatus[profileIdx]?.[listIdx]?.[mappingIdx]?.stateRaw
+      : state.mappingStatus[profileIdx]?.[mappingIdx]?.stateRaw
+  );
+  const slotLabel = useConfigStore((state) =>
+    getCycleSlotLabel(Object.values(state.guiDevices), cycleDeviceId, Number(raw) || 0, false)
+  );
+  return (
+    <Center h="100%">
+      <Text fw={700}>{slotLabel || Number(raw) || 0}</Text>
+    </Center>
+  );
+}
+
+// Live value of an input, shown for any kind of source
+function InputValue({
+  profileIdx,
+  mappingIdx,
+  listIdx,
+  cycleDeviceId,
+}: {
+  profileIdx: number;
+  mappingIdx: number;
+  listIdx?: number;
+  cycleDeviceId?: number;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Input.Label mb={3}>{t('calibration.value')}</Input.Label>
+      <Progress.Root size={40} transitionDuration={0}>
+        <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
+          {cycleDeviceId !== undefined ? (
+            <CycleSlotValueLabel
+              profileIdx={profileIdx}
+              mappingIdx={mappingIdx}
+              listIdx={listIdx}
+              cycleDeviceId={cycleDeviceId}
+            />
+          ) : (
+            <StateLabel
+              profileIdx={profileIdx}
+              mappingIdx={mappingIdx}
+              listIdx={listIdx}
+              activationBased={listIdx !== undefined}
+              raw
+            />
+          )}
+        </Progress.Label>
+      </Progress.Root>
+      <Space h="md" />
+    </>
+  );
+}
 function StateSlider({
   profileIdx,
   mappingIdx,
+  listIdx,
   center,
   min,
   max,
@@ -799,6 +878,7 @@ function StateSlider({
 }: {
   profileIdx: number;
   mappingIdx: number;
+  listIdx?: number;
   center: number;
   min: number;
   max: number;
@@ -820,6 +900,7 @@ function StateSlider({
           <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
             <StateLabel
               mappingIdx={mappingIdx}
+              listIdx={listIdx}
               profileIdx={profileIdx}
               activationBased={activationBased}
               ledBased={ledBased}
@@ -831,6 +912,7 @@ function StateSlider({
           </Progress.Label>
           <StateSection
             mappingIdx={mappingIdx}
+            listIdx={listIdx}
             profileIdx={profileIdx}
             center={center}
             min={min}
@@ -856,6 +938,7 @@ function StateSlider({
         <Progress.Label w="100%" h="100%" style={{ position: 'absolute' }}>
           <StateLabel
             mappingIdx={mappingIdx}
+            listIdx={listIdx}
             profileIdx={profileIdx}
             activationBased={activationBased}
             zeroBased={zeroBased}
@@ -863,6 +946,7 @@ function StateSlider({
         </Progress.Label>
         <StateSection
           mappingIdx={mappingIdx}
+          listIdx={listIdx}
           profileIdx={profileIdx}
           center={center}
           min={min}
@@ -2568,6 +2652,9 @@ function InputDetectButton({
   );
 }
 
+// Guide demos open the cycle's input sections, since they can't be clicked open
+export const ExpandAllAccordionsContext = createContext(false);
+
 function SantrollerInput({
   input,
   axis,
@@ -2596,6 +2683,7 @@ function SantrollerInput({
   dispatch: (input: proto.IInput) => void;
 }) {
   const deviceId = getInputDeviceId(input) ?? -1;
+  const expandAll = useContext(ExpandAllAccordionsContext);
   const { t } = useTranslation();
   const detectPins = useConfigStore.getState().detectPins;
   const detected = useConfigStore.getState().detected;
@@ -2669,9 +2757,6 @@ function SantrollerInput({
   });
   const peripheralDevice = useConfigStore((state) =>
     input.peripheral ? state.deviceStatus[input.peripheral.deviceid?.toString() ?? ''] : undefined
-  );
-  const cycleState = useConfigStore((state) =>
-    input.cycle ? state.deviceStatus[input.cycle.deviceid]?.cycleState : undefined
   );
   const toggleState = useConfigStore((state) =>
     input.toggle ? state.deviceStatus[input.toggle.deviceid]?.toggleState : undefined
@@ -3002,16 +3087,9 @@ function SantrollerInput({
           )}
         </Text>
       )}
-      <Anchor
-        component={Link}
-        to="/guides/input-behavior"
-        target="_blank"
-        rel="noopener noreferrer"
-        size="xs"
-        mt={4}
-      >
-        {t('inputs.input_behavior_help')}
-      </Anchor>
+      <InputBehaviorHelpLink
+        stepId={input.cycle ? 'cycling' : input.toggle ? 'toggle' : input.held ? 'held' : undefined}
+      />
       <Space h="md" />
       {input.shortcut && (
         <ActionIcon
@@ -3167,78 +3245,86 @@ function SantrollerInput({
       )}
       {input.cycle && (
         <>
-          <SegmentedControl
-            data={device?.device.cycle?.values?.map((x) => x.toString()) ?? []}
-            value={device?.device.cycle?.values?.[cycleState ?? -1]?.toString() ?? ''}
-          />
-          <Switch
-            label={t('cycle.forward_input')}
-            checked={input.cycle.input !== null}
-            onChange={(event) => {
-              dispatch({
-                cycle: {
-                  ...input.cycle!,
-                  input: event.currentTarget.checked
-                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
-                    : null,
-                },
-              });
-            }}
-          />
-          {input.cycle.input && (
-            <SantrollerInput
-              axis={!!axis}
-              button={!!button}
-              mode={mode}
-              legendMode={legendMode}
-              type={type}
-              input={input.cycle.input}
-              dispatch={(changed) =>
-                dispatch({
-                  cycle: {
-                    ...input.cycle!,
-                    input: changed,
-                  },
-                })
-              }
-              innerIdx={0}
-              mappingIdx={mappingIdx}
-            />
-          )}
-          <Switch
-            label={t('cycle.reverse_input')}
-            checked={input.cycle.inputReverse !== null}
-            onChange={(event) => {
-              dispatch({
-                cycle: {
-                  ...input.cycle!,
-                  inputReverse: event.currentTarget.checked
-                    ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
-                    : null,
-                },
-              });
-            }}
-          />
-          {input.cycle.inputReverse && (
-            <SantrollerInput
-              axis={!!axis}
-              button={!!button}
-              mode={mode}
-              legendMode={legendMode}
-              type={type}
-              input={input.cycle.inputReverse}
-              dispatch={(changed) =>
-                dispatch({
-                  cycle: {
-                    ...input.cycle!,
-                    inputReverse: changed,
-                  },
-                })
-              }
-              mappingIdx={mappingIdx}
-              innerIdx={1}
-            />
-          )}
+          <Accordion multiple defaultValue={expandAll ? ['forward', 'reverse'] : undefined}>
+            <Accordion.Item value="forward">
+              <Accordion.Control>{t('cycle.forward_section')}</Accordion.Control>
+              <Accordion.Panel>
+                <Switch
+                  label={t('cycle.forward_input')}
+                  checked={input.cycle.input !== null}
+                  onChange={(event) => {
+                    dispatch({
+                      cycle: {
+                        ...input.cycle!,
+                        input: event.currentTarget.checked
+                          ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
+                          : null,
+                      },
+                    });
+                  }}
+                />
+                {input.cycle.input && (
+                  <SantrollerInput
+                    axis={!!axis}
+                    button={!!button}
+                    mode={mode}
+                    legendMode={legendMode}
+                    type={type}
+                    input={input.cycle.input}
+                    dispatch={(changed) =>
+                      dispatch({
+                        cycle: {
+                          ...input.cycle!,
+                          input: changed,
+                        },
+                      })
+                    }
+                    innerIdx={0}
+                    mappingIdx={mappingIdx}
+                  />
+                )}
+              </Accordion.Panel>
+            </Accordion.Item>
+            <Accordion.Item value="reverse">
+              <Accordion.Control>{t('cycle.reverse_section')}</Accordion.Control>
+              <Accordion.Panel>
+                <Switch
+                  label={t('cycle.reverse_input')}
+                  checked={input.cycle.inputReverse !== null}
+                  onChange={(event) => {
+                    dispatch({
+                      cycle: {
+                        ...input.cycle!,
+                        inputReverse: event.currentTarget.checked
+                          ? { gpio: { pin: -1, analog: false, pinMode: proto.PinMode.PullUp } }
+                          : null,
+                      },
+                    });
+                  }}
+                />
+                {input.cycle.inputReverse && (
+                  <SantrollerInput
+                    axis={!!axis}
+                    button={!!button}
+                    mode={mode}
+                    legendMode={legendMode}
+                    type={type}
+                    input={input.cycle.inputReverse}
+                    dispatch={(changed) =>
+                      dispatch({
+                        cycle: {
+                          ...input.cycle!,
+                          inputReverse: changed,
+                        },
+                      })
+                    }
+                    mappingIdx={mappingIdx}
+                    innerIdx={1}
+                  />
+                )}
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
         </>
       )}
       {input.toggle && (
@@ -3674,7 +3760,7 @@ function SantrollerInput({
       )}
       {input.gpio && (
         <>
-          <Group grow>
+          <Group grow align="flex-start">
             <PinBox
               label="pin_label"
               valid={input.gpio.analog ? AnalogPinsNamed : AllPinsNamed}
@@ -3691,6 +3777,7 @@ function SantrollerInput({
           </Group>
           <Button
             w="100%"
+            mt="xs"
             onClick={() => {
               detectPins(
                 activationIdx,
@@ -3726,7 +3813,7 @@ function SantrollerInput({
       )}
       {input.peripheral && (
         <>
-          <Group grow>
+          <Group grow align="flex-start">
             <PinBox
               label="pin_label"
               valid={input.peripheral.analog ? AnalogPinsNamed : AllPinsNamed}
@@ -3744,6 +3831,7 @@ function SantrollerInput({
           </Group>
           <Button
             w="100%"
+            mt="xs"
             onClick={() => {
               detectPins(
                 activationIdx,
@@ -4085,7 +4173,7 @@ const DEBOUNCE_MODES = [
   [proto.DebounceMode.DebounceImpulse, 'impulse'],
 ] as const;
 
-function SantrollerMapping({
+export function SantrollerMapping({
   mapping,
   type,
   profileIdx,
@@ -4222,6 +4310,7 @@ function SantrollerMapping({
     mapping.mapping.ghDrumAxis === proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal ||
     isDrumInput(mapping.input);
   const analogInput = isAnalog(mapping.input);
+  const cycleValues = useCycleValues(mapping.input);
   const crkdDrum = mapping.input.crkdDrum;
   const status = useConfigStore((state) => state.deviceStatus[crkdDrum?.deviceid ?? '']);
   const updateCrkdDrumCalibration = useConfigStore((state) => state.updateCrkdDrumCalibration);
@@ -4676,7 +4765,7 @@ function SantrollerMapping({
                   <Accordion.Item value="main">
                     <Accordion.Control>{t('calibration.buttonMapping')}</Accordion.Control>
                     <Accordion.Panel>
-                      {!simpleMode && (
+                      {!simpleMode && !(mapping.input.cycle && cycleValues?.length) && (
                         <>
                           <Switch
                             label={t('rapidTrigger.label')}
@@ -4698,7 +4787,7 @@ function SantrollerMapping({
                           <Space h="md" />
                         </>
                       )}
-                      {mapping.rapidTrigger ? (
+                      {mapping.rapidTrigger && !(mapping.input.cycle && cycleValues?.length) ? (
                         <RapidTriggerSettings
                           mapping={mapping}
                           mappingIdx={mappingIdx}
@@ -4706,136 +4795,28 @@ function SantrollerMapping({
                           dispatch={dispatch}
                         />
                       ) : (
-                        <>
-                          {!simpleMode && (
-                            <DropdownBox
-                              title="trigger_type.label"
-                              e={proto.AnalogToDigitalTriggerType}
-                              val={mapping.trigger ?? proto.AnalogToDigitalTriggerType.JoyHigh}
-                              label="trigger_type"
-                              dispatch={(trigger) => dispatch({ ...mapping, trigger })}
-                            />
-                          )}
-
-                          {(mapping.trigger ?? proto.AnalogToDigitalTriggerType.JoyHigh) ===
-                            proto.AnalogToDigitalTriggerType.JoyHigh && (
-                            <StateSlider
-                              mappingIdx={mappingIdx}
-                              profileIdx={profileIdx}
-                              center={32767}
-                              min={mapping.triggerValue ?? 32767}
-                              max={65535}
-                              deadzone={mapping.deadzone!}
-                              raw
-                              zeroBased={drum}
-                            />
-                          )}
-                          {mapping.trigger === proto.AnalogToDigitalTriggerType.JoyLow && (
-                            <StateSlider
-                              mappingIdx={mappingIdx}
-                              profileIdx={profileIdx}
-                              center={32767}
-                              min={0}
-                              max={mapping.triggerValue ?? 32767}
-                              deadzone={mapping.deadzone!}
-                              raw
-                              zeroBased={drum}
-                            />
-                          )}
-                          {mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
-                            <StateSlider
-                              mappingIdx={mappingIdx}
-                              profileIdx={profileIdx}
-                              center={32767}
-                              min={mapping.triggerValue ?? 32767}
-                              max={mapping.maxTriggerValue ?? 65535}
-                              deadzone={mapping.deadzone!}
-                              raw
-                              zeroBased={drum}
-                            />
-                          )}
-                          {(mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
-                            <Input.Label mb={3}>{t('trigger.min')}</Input.Label>
-                          )) || <Input.Label mb={3}>{t('trigger.trigger')}</Input.Label>}
-                          <Group>
-                            <Slider
-                              flex={1}
-                              value={mapping.triggerValue ?? 32767}
-                              min={0}
-                              max={65535}
-                              onChange={(val) => dispatch({ ...mapping, triggerValue: val })}
-                            />
-                            <NumberInput
-                              value={mapping.triggerValue ?? 32767}
-                              min={0}
-                              max={65535}
-                              onChange={(e) =>
-                                dispatch({
-                                  ...mapping,
-                                  triggerValue: parseInt(e.toString(), 10) || 0,
-                                })
-                              }
-                              w={100}
-                            />
-                          </Group>
-                          <Group>
-                            <Button
-                              onClick={() => {
-                                dispatch({
-                                  ...mapping,
-                                  triggerValue:
-                                    useConfigStore.getState().mappingStatus[profileIdx]?.[
-                                      mappingIdx
-                                    ]?.stateRaw ?? 0,
-                                });
-                              }}
-                            >
-                              {t('pin_use_current')}
-                            </Button>
-                          </Group>
-                          {mapping.trigger === proto.AnalogToDigitalTriggerType.Range && (
-                            <>
-                              <Input.Label mb={3}>{t('trigger.max')}</Input.Label>
-                              <Group>
-                                <Slider
-                                  flex={1}
-                                  value={mapping.maxTriggerValue ?? 65535}
-                                  min={0}
-                                  max={65535}
-                                  onChange={(val) => dispatch({ ...mapping, maxTriggerValue: val })}
-                                />
-
-                                <NumberInput
-                                  value={mapping.maxTriggerValue ?? 65535}
-                                  min={0}
-                                  max={65535}
-                                  onChange={(e) =>
-                                    dispatch({
-                                      ...mapping,
-                                      maxTriggerValue: parseInt(e.toString(), 10) || 0,
-                                    })
-                                  }
-                                  w={100}
-                                />
-                              </Group>
-                              <Group>
-                                <Button
-                                  onClick={() => {
-                                    dispatch({
-                                      ...mapping,
-                                      maxTriggerValue:
-                                        useConfigStore.getState().mappingStatus[profileIdx]?.[
-                                          mappingIdx
-                                        ]?.stateRaw ?? 0,
-                                    });
-                                  }}
-                                >
-                                  {t('pin_use_current')}
-                                </Button>
-                              </Group>
-                            </>
-                          )}
-                        </>
+                        <TriggerSettings
+                          trigger={mapping.trigger}
+                          triggerValue={mapping.triggerValue}
+                          maxTriggerValue={mapping.maxTriggerValue}
+                          deadzone={mapping.deadzone ?? 0}
+                          cycleValues={mapping.input.cycle ? cycleValues : undefined}
+                          cycleDeviceId={mapping.input.cycle?.deviceid}
+                          hideTypeSelect={simpleMode}
+                          profileIdx={profileIdx}
+                          mappingIdx={mappingIdx}
+                          zeroBased={drum}
+                          onChange={(patch) =>
+                            dispatch({
+                              ...mapping,
+                              ...patch,
+                              // exact cycle values have no rapid trigger travel
+                              ...(mapping.input.cycle && cycleValues?.length
+                                ? { rapidTrigger: null }
+                                : {}),
+                            })
+                          }
+                        />
                       )}
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -5492,6 +5473,11 @@ function SantrollerLed({
   const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
     id: ledIdx,
   });
+  const setInputMapping = (patch: Partial<proto.IInputLedMapping>) =>
+    dispatch({
+      ...led,
+      mapping: { inputMapping: { ...led.mapping.inputMapping!, ...patch } },
+    });
 
   const deviceCombobox = useCombobox({
     onDropdownClose: () => deviceCombobox.resetSelectedOption(),
@@ -6882,67 +6868,60 @@ function SantrollerLed({
                   raw
                   ledBased
                 />
-                <Input.Label mb={3}>{t('calibration.min')}</Input.Label>
-                <Slider
-                  value={led.mapping.inputMapping!.min!}
-                  min={0}
-                  max={65535}
-                  onChange={(val) =>
-                    dispatch({
-                      ...led,
-                      mapping: {
-                        inputMapping: {
-                          ...led.mapping.inputMapping!,
-                          min: val,
-                        },
-                      },
+                <Text size="sm" fw={700}>
+                  {t('calibration.min')}
+                </Text>
+                <Group>
+                  <Slider
+                    flex={1}
+                    value={led.mapping.inputMapping!.min!}
+                    min={0}
+                    max={65535}
+                    onChange={(val) => setInputMapping({ min: val })}
+                  />
+                  <NumberInput
+                    value={led.mapping.inputMapping!.min!}
+                    min={0}
+                    max={65535}
+                    onChange={(val) => setInputMapping({ min: parseInt(val.toString(), 10) || 0 })}
+                    w={100}
+                  />
+                </Group>
+                <Button
+                  onClick={() =>
+                    setInputMapping({
+                      min: useConfigStore.getState().ledStatus[profileIdx][ledIdx].stateRaw,
                     })
                   }
-                />
-                <Button
-                  onClick={() => {
-                    dispatch({
-                      ...led,
-                      mapping: {
-                        inputMapping: {
-                          ...led.mapping.inputMapping!,
-                          min: useConfigStore.getState().ledStatus[profileIdx][ledIdx].stateRaw,
-                        },
-                      },
-                    });
-                  }}
                 >
                   {t('pin_use_current')}
                 </Button>
-                <Input.Label mb={3}>{t('calibration.max')}</Input.Label>
-                <Slider
-                  value={led.mapping.inputMapping!.max!}
-                  min={0}
-                  max={65535}
-                  onChange={(val) =>
-                    dispatch({
-                      ...led,
-                      mapping: {
-                        inputMapping: {
-                          ...led.mapping.inputMapping!,
-                          max: val,
-                        },
-                      },
+                <Space h="md" />
+                <Text size="sm" fw={700}>
+                  {t('calibration.max')}
+                </Text>
+                <Group>
+                  <Slider
+                    flex={1}
+                    value={led.mapping.inputMapping!.max!}
+                    min={0}
+                    max={65535}
+                    onChange={(val) => setInputMapping({ max: val })}
+                  />
+                  <NumberInput
+                    value={led.mapping.inputMapping!.max!}
+                    min={0}
+                    max={65535}
+                    onChange={(val) => setInputMapping({ max: parseInt(val.toString(), 10) || 0 })}
+                    w={100}
+                  />
+                </Group>
+                <Button
+                  onClick={() =>
+                    setInputMapping({
+                      max: useConfigStore.getState().ledStatus[profileIdx][ledIdx].stateRaw,
                     })
                   }
-                />
-                <Button
-                  onClick={() => {
-                    dispatch({
-                      ...led,
-                      mapping: {
-                        inputMapping: {
-                          ...led.mapping.inputMapping!,
-                          max: useConfigStore.getState().ledStatus[profileIdx][ledIdx].stateRaw,
-                        },
-                      },
-                    });
-                  }}
                 >
                   {t('pin_use_current')}
                 </Button>
@@ -7014,6 +6993,206 @@ const AllProfileAssignmentTypes: ProfileAssignmentTypes[] = OtherAssignmentTypes
 )
   .concat(HostProfileAssignmentTypes)
   .concat(DeviceProfileAssignmentTypes);
+type TriggerPatch = {
+  trigger?: proto.AnalogToDigitalTriggerType;
+  triggerValue?: number;
+  maxTriggerValue?: number;
+};
+
+// Picks which value of a cycling input activates a digital mapping, as an exact trigger
+function CycleValuePicker({
+  cycleValues,
+  deviceid,
+  trigger,
+  triggerValue,
+  onChange,
+}: {
+  cycleValues: number[];
+  deviceid: number;
+  trigger: proto.AnalogToDigitalTriggerType | null | undefined;
+  triggerValue: number | null | undefined;
+  onChange: (patch: TriggerPatch) => void;
+}) {
+  const { t } = useTranslation();
+  const guiDevices = useConfigStore((state) => state.guiDevices);
+  const selected =
+    trigger === proto.AnalogToDigitalTriggerType.Exact
+      ? cycleValues.findIndex((value) => value === triggerValue)
+      : -1;
+  // Default to the first value so the mapping is always active for something
+  useEffect(() => {
+    if (selected < 0 && cycleValues.length) {
+      onChange({ trigger: proto.AnalogToDigitalTriggerType.Exact, triggerValue: cycleValues[0] });
+    }
+  }, [selected, cycleValues.length]);
+  return (
+    <Input.Wrapper label={t('cycle.mapping_value')}>
+      <SegmentedControl
+        fullWidth
+        data={cycleValues.map((value, index) => ({
+          value: index.toString(),
+          label:
+            getCycleSlotLabel(Object.values(guiDevices), deviceid, value, false) ||
+            value.toString(),
+        }))}
+        value={selected >= 0 ? selected.toString() : ''}
+        onChange={(index) => {
+          const value = cycleValues[Number(index)];
+          if (value !== undefined) {
+            onChange({ trigger: proto.AnalogToDigitalTriggerType.Exact, triggerValue: value });
+          }
+        }}
+      />
+    </Input.Wrapper>
+  );
+}
+function useCycleValues(input: proto.IInput | null | undefined) {
+  const deviceId = input?.cycle?.deviceid;
+  return useConfigStore((state) =>
+    deviceId == null ? undefined : state.deviceStatus[deviceId]?.device.cycle?.values
+  );
+}
+
+// How an analog value turns into a pressed / released state, shared by mappings (listIdx unset)
+// and assignment triggers (listIdx set, where mappingIdx is the activation's index)
+function TriggerSettings({
+  trigger,
+  triggerValue,
+  maxTriggerValue,
+  deadzone,
+  cycleValues,
+  cycleDeviceId,
+  hideTypeSelect,
+  profileIdx,
+  mappingIdx,
+  listIdx,
+  zeroBased,
+  onChange,
+}: {
+  trigger: proto.AnalogToDigitalTriggerType | null | undefined;
+  triggerValue: number | null | undefined;
+  maxTriggerValue: number | null | undefined;
+  deadzone: number;
+  cycleValues?: number[];
+  cycleDeviceId?: number;
+  hideTypeSelect?: boolean;
+  profileIdx: number;
+  mappingIdx: number;
+  listIdx?: number;
+  zeroBased?: boolean;
+  onChange: (patch: TriggerPatch) => void;
+}) {
+  const { t } = useTranslation();
+  if (cycleValues?.length) {
+    return (
+      <>
+        <InputValue
+          profileIdx={profileIdx}
+          mappingIdx={mappingIdx}
+          listIdx={listIdx}
+          cycleDeviceId={cycleDeviceId}
+        />
+        <CycleValuePicker
+          cycleValues={cycleValues}
+          deviceid={cycleDeviceId ?? -1}
+          trigger={trigger}
+          triggerValue={triggerValue}
+          onChange={onChange}
+        />
+      </>
+    );
+  }
+  const activationBased = listIdx !== undefined;
+  const type = trigger ?? proto.AnalogToDigitalTriggerType.JoyHigh;
+  const isRange = type === proto.AnalogToDigitalTriggerType.Range;
+  const value = triggerValue ?? 32767;
+  const maxValue = maxTriggerValue ?? 65535;
+  const sliderProps = {
+    mappingIdx,
+    profileIdx,
+    listIdx,
+    center: 32767,
+    deadzone,
+    raw: true,
+    activationBased,
+    zeroBased,
+  };
+  const currentRaw = () =>
+    (activationBased
+      ? useConfigStore.getState().activationStatus[profileIdx]?.[listIdx]?.[mappingIdx]?.stateRaw
+      : useConfigStore.getState().mappingStatus[profileIdx]?.[mappingIdx]?.stateRaw) ?? 0;
+  return (
+    <>
+      {!hideTypeSelect && (
+        <DropdownBox
+          title="trigger_type.label"
+          e={proto.AnalogToDigitalTriggerType}
+          val={type}
+          label="trigger_type"
+          dispatch={(next) => onChange({ trigger: next })}
+        />
+      )}
+      {type === proto.AnalogToDigitalTriggerType.Exact && (
+        <InputValue profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} />
+      )}
+      {type === proto.AnalogToDigitalTriggerType.JoyHigh && (
+        <StateSlider {...sliderProps} min={value} max={65535} />
+      )}
+      {type === proto.AnalogToDigitalTriggerType.JoyLow && (
+        <StateSlider {...sliderProps} min={0} max={value} />
+      )}
+      {isRange && <StateSlider {...sliderProps} min={value} max={maxValue} />}
+      <Input.Label mb={3}>{isRange ? t('trigger.min') : t('trigger.trigger')}</Input.Label>
+      <Group>
+        <Slider
+          flex={1}
+          value={value}
+          min={0}
+          max={65535}
+          onChange={(val) => onChange({ triggerValue: val })}
+        />
+        <NumberInput
+          value={value}
+          min={0}
+          max={65535}
+          onChange={(e) => onChange({ triggerValue: parseInt(e.toString(), 10) || 0 })}
+          w={100}
+        />
+      </Group>
+      <Group>
+        <Button onClick={() => onChange({ triggerValue: currentRaw() })}>
+          {t('pin_use_current')}
+        </Button>
+      </Group>
+      {isRange && (
+        <>
+          <Input.Label mb={3}>{t('trigger.max')}</Input.Label>
+          <Group>
+            <Slider
+              flex={1}
+              value={maxValue}
+              min={0}
+              max={65535}
+              onChange={(val) => onChange({ maxTriggerValue: val })}
+            />
+            <NumberInput
+              value={maxValue}
+              min={0}
+              max={65535}
+              onChange={(e) => onChange({ maxTriggerValue: parseInt(e.toString(), 10) || 0 })}
+              w={100}
+            />
+          </Group>
+          <Group>
+            <Button onClick={() => onChange({ maxTriggerValue: currentRaw() })}>
+              {t('pin_use_current')}
+            </Button>
+          </Group>
+        </>
+      )}
+    </>
+  );
+}
 function ActivationTrigger({
   input,
   profileIdx,
@@ -7028,118 +7207,24 @@ function ActivationTrigger({
   dispatch: (input: proto.IInputActivationTrigger) => void;
 }) {
   const { t } = useTranslation();
+  const cycleValues = useCycleValues(input.input);
   return (
-    <Accordion>
+    <Accordion defaultValue={cycleValues?.length ? 'main' : undefined}>
       <Accordion.Item value="main">
-        <Accordion.Control>{t('calibration.buttonMapping')}</Accordion.Control>
+        <Accordion.Control>{t('trigger.activation')}</Accordion.Control>
         <Accordion.Panel>
-          <>
-            <DropdownBox
-              title="trigger_type.label"
-              e={proto.AnalogToDigitalTriggerType}
-              val={input.trigger!}
-              label="trigger_type"
-              dispatch={(trigger) => dispatch({ ...input, trigger })}
-            />
-            {input.trigger === proto.AnalogToDigitalTriggerType.JoyHigh && (
-              <StateSlider
-                mappingIdx={activationIdx}
-                profileIdx={profileIdx}
-                center={32767}
-                min={input.triggerValue!}
-                max={65535}
-                deadzone={0}
-                raw
-                activationBased
-              />
-            )}
-            {input.trigger === proto.AnalogToDigitalTriggerType.JoyLow && (
-              <StateSlider
-                mappingIdx={activationIdx}
-                profileIdx={profileIdx}
-                center={32767}
-                min={0}
-                max={input.triggerValue!}
-                deadzone={0}
-                raw
-                activationBased
-              />
-            )}
-            {input.trigger === proto.AnalogToDigitalTriggerType.Range && (
-              <StateSlider
-                mappingIdx={activationIdx}
-                profileIdx={profileIdx}
-                center={32767}
-                min={input.triggerValue!}
-                max={input.maxTriggerValue!}
-                deadzone={0}
-                raw
-                activationBased
-              />
-            )}
-            {(input.trigger === proto.AnalogToDigitalTriggerType.Range && (
-              <Input.Label mb={3}>{t('trigger.min')}</Input.Label>
-            )) || <Input.Label mb={3}>{t('trigger.trigger')}</Input.Label>}
-
-            <Slider
-              value={input.triggerValue!}
-              min={0}
-              max={65535}
-              onChange={(val) => dispatch({ ...input, triggerValue: val })}
-            />
-
-            <NumberInput
-              value={input.triggerValue!}
-              min={0}
-              max={65535}
-              onChange={(e) => dispatch({ ...input, triggerValue: parseInt(e.toString(), 10) })}
-            />
-            <Button
-              onClick={() => {
-                dispatch({
-                  ...input,
-                  triggerValue:
-                    useConfigStore.getState().activationStatus[profileIdx][listIdx][activationIdx]
-                      .stateRaw,
-                });
-              }}
-            >
-              {t('pin_use_current')}
-            </Button>
-            {input.trigger === proto.AnalogToDigitalTriggerType.Range && (
-              <>
-                <Input.Label mb={3}>{t('trigger.max')}</Input.Label>
-                <Slider
-                  value={input.maxTriggerValue!}
-                  min={0}
-                  max={65535}
-                  onChange={(val) => dispatch({ ...input, maxTriggerValue: val })}
-                />
-                <NumberInput
-                  value={input.maxTriggerValue!}
-                  min={0}
-                  max={65535}
-                  onChange={(e) =>
-                    dispatch({ ...input, maxTriggerValue: parseInt(e.toString(), 10) })
-                  }
-                />
-
-                <Button
-                  onClick={() => {
-                    dispatch({
-                      ...input,
-                      maxTriggerValue:
-                        useConfigStore.getState().activationStatus[profileIdx][listIdx][
-                          activationIdx
-                        ].stateRaw,
-                    });
-                  }}
-                >
-                  {t('pin_use_current')}
-                </Button>
-              </>
-            )}
-          </>
+          <TriggerSettings
+            trigger={input.trigger}
+            triggerValue={input.triggerValue}
+            maxTriggerValue={input.maxTriggerValue}
+            deadzone={0}
+            cycleValues={cycleValues}
+            cycleDeviceId={input.input?.cycle?.deviceid}
+            profileIdx={profileIdx}
+            mappingIdx={activationIdx}
+            listIdx={listIdx}
+            onChange={(patch) => dispatch({ ...input, ...patch })}
+          />
         </Accordion.Panel>
       </Accordion.Item>
     </Accordion>
@@ -7664,16 +7749,22 @@ export function SantrollerAssignment({
                 dispatch={(inputAnyTime) => dispatch({ ...mapping, inputAnyTime })}
               />
             )) || (
-              <Switch
-                label={t('calibration.inverted')}
-                checked={!!mapping.inputAnyTime.inverted}
-                onChange={(evt) =>
-                  dispatch({
-                    ...mapping,
-                    inputAnyTime: { ...mapping.inputAnyTime!, inverted: evt.currentTarget.checked },
-                  })
-                }
-              />
+              <>
+                <InputValue profileIdx={profileIdx} mappingIdx={activationIdx} listIdx={listIdx} />
+                <Switch
+                  label={t('calibration.inverted')}
+                  checked={!!mapping.inputAnyTime.inverted}
+                  onChange={(evt) =>
+                    dispatch({
+                      ...mapping,
+                      inputAnyTime: {
+                        ...mapping.inputAnyTime!,
+                        inverted: evt.currentTarget.checked,
+                      },
+                    })
+                  }
+                />
+              </>
             )}
           </>
         )}
@@ -7698,16 +7789,19 @@ export function SantrollerAssignment({
                 dispatch={(input) => dispatch({ ...mapping, input })}
               />
             )) || (
-              <Switch
-                label={t('calibration.inverted')}
-                checked={!!mapping.input.inverted}
-                onChange={(evt) =>
-                  dispatch({
-                    ...mapping,
-                    input: { ...mapping.input!, inverted: evt.currentTarget.checked },
-                  })
-                }
-              />
+              <>
+                <InputValue profileIdx={profileIdx} mappingIdx={activationIdx} listIdx={listIdx} />
+                <Switch
+                  label={t('calibration.inverted')}
+                  checked={!!mapping.input.inverted}
+                  onChange={(evt) =>
+                    dispatch({
+                      ...mapping,
+                      input: { ...mapping.input!, inverted: evt.currentTarget.checked },
+                    })
+                  }
+                />
+              </>
             )}
           </>
         )}
@@ -9293,18 +9387,25 @@ function SantrollerAssignmentList({
               dispatch={updateXboxOneAuthTrigger}
             />
           ) : (
-            <Switch
-              size="xs"
-              label={t('calibration.inverted')}
-              checked={!!xboxOneAuthTrigger?.inverted}
-              onChange={(evt) =>
-                updateXboxOneAuthTrigger({
-                  ...(xboxOneAuthTrigger ?? {}),
-                  input: xboxOneAuthTrigger?.input ?? {},
-                  inverted: evt.currentTarget.checked,
-                })
-              }
-            />
+            <>
+              <InputValue
+                profileIdx={profileIdx}
+                mappingIdx={xboxOneAuthIdx !== -1 ? xboxOneAuthIdx : 0}
+                listIdx={listIdx}
+              />
+              <Switch
+                size="xs"
+                label={t('calibration.inverted')}
+                checked={!!xboxOneAuthTrigger?.inverted}
+                onChange={(evt) =>
+                  updateXboxOneAuthTrigger({
+                    ...(xboxOneAuthTrigger ?? {}),
+                    input: xboxOneAuthTrigger?.input ?? {},
+                    inverted: evt.currentTarget.checked,
+                  })
+                }
+              />
+            </>
           )}
         </Stack>
       </Modal>
@@ -9337,20 +9438,27 @@ function SantrollerAssignmentList({
                 dispatch={(input) => updateTrigger({ input })}
               />
             ) : (
-              <Switch
-                size="xs"
-                label={t('calibration.inverted')}
-                checked={!!triggerItem?.input?.inverted}
-                onChange={(evt) =>
-                  updateTrigger({
-                    input: {
-                      ...(triggerItem?.input ?? {}),
-                      input: triggerItem?.input?.input ?? {},
-                      inverted: evt.currentTarget.checked,
-                    },
-                  })
-                }
-              />
+              <>
+                <InputValue
+                  profileIdx={profileIdx}
+                  mappingIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                  listIdx={listIdx}
+                />
+                <Switch
+                  size="xs"
+                  label={t('calibration.inverted')}
+                  checked={!!triggerItem?.input?.inverted}
+                  onChange={(evt) =>
+                    updateTrigger({
+                      input: {
+                        ...(triggerItem?.input ?? {}),
+                        input: triggerItem?.input?.input ?? {},
+                        inverted: evt.currentTarget.checked,
+                      },
+                    })
+                  }
+                />
+              </>
             )}
           </Stack>
         )}
@@ -9379,20 +9487,27 @@ function SantrollerAssignmentList({
                 dispatch={(inputAnyTime) => updateTrigger({ inputAnyTime })}
               />
             ) : (
-              <Switch
-                size="xs"
-                label={t('calibration.inverted')}
-                checked={!!triggerItem?.inputAnyTime?.inverted}
-                onChange={(evt) =>
-                  updateTrigger({
-                    inputAnyTime: {
-                      ...(triggerItem?.inputAnyTime ?? {}),
-                      input: triggerItem?.inputAnyTime?.input ?? {},
-                      inverted: evt.currentTarget.checked,
-                    },
-                  })
-                }
-              />
+              <>
+                <InputValue
+                  profileIdx={profileIdx}
+                  mappingIdx={triggerIdx !== -1 ? triggerIdx : 0}
+                  listIdx={listIdx}
+                />
+                <Switch
+                  size="xs"
+                  label={t('calibration.inverted')}
+                  checked={!!triggerItem?.inputAnyTime?.inverted}
+                  onChange={(evt) =>
+                    updateTrigger({
+                      inputAnyTime: {
+                        ...(triggerItem?.inputAnyTime ?? {}),
+                        input: triggerItem?.inputAnyTime?.input ?? {},
+                        inverted: evt.currentTarget.checked,
+                      },
+                    })
+                  }
+                />
+              </>
             )}
           </Stack>
         )}
@@ -9440,7 +9555,7 @@ function FaceButtonMappingMode({
     </Input.Wrapper>
   );
 }
-enum LegendMode {
+export enum LegendMode {
   Xbox360 = 1,
   XboxOne = 2,
   Nintendo = 3,

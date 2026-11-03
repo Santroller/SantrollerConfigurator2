@@ -1,5 +1,6 @@
 import i18next from 'i18next';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 
@@ -10,18 +11,25 @@ import { extrasFor } from '../setup/setupPath';
 import { INPUT_BEHAVIOR_GUIDE } from './inputBehaviorGuide';
 import { INPUT_BEHAVIOR_EXAMPLES } from './InputBehaviorPreview';
 
-vi.mock('@/components/SettingsContext/SettingsContext', () => ({
-  useConfigStore: (selector: (state: { connected: boolean; updating: boolean }) => unknown) =>
-    selector({ connected: false, updating: false }),
-}));
+// The real store reads localStorage when it loads
+vi.hoisted(() => {
+  const items = new Map<string, string>();
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => items.get(key) ?? null,
+    setItem: (key: string, value: string) => items.set(key, value),
+    removeItem: (key: string) => items.delete(key),
+  });
+});
 
 function renderStep(id: string, nested = false) {
   const Step = INPUT_BEHAVIOR_GUIDE.steps.find((step) => step.id === id)!.render;
   const element = document.createElement('div');
   element.innerHTML = renderToStaticMarkup(
-    <MantineProvider>
-      <Step nested={nested} />
-    </MantineProvider>
+    <MemoryRouter>
+      <MantineProvider>
+        <Step nested={nested} />
+      </MantineProvider>
+    </MemoryRouter>
   );
   return element;
 }
@@ -50,7 +58,9 @@ describe('input behavior guide', () => {
       expect(element.textContent).not.toContain('guides.input-behavior.');
       expect(element.querySelectorAll('ol li').length).toBeGreaterThan(0);
       expect(element.querySelectorAll('ul li').length).toBeGreaterThan(0);
-      expect(element.querySelector('a[target="_blank"]')).toBeNull();
+      // The real editors link to this guide inside the demo, which is fine
+      const links = Array.from(element.querySelectorAll('a[target="_blank"]'));
+      expect(links.filter((link) => !link.closest('[inert]'))).toHaveLength(0);
     }
   );
 
@@ -62,7 +72,12 @@ describe('input behavior guide', () => {
 
   it('uses valid protobuf configurations with matching virtual device references', () => {
     const { cycling, toggle, held } = INPUT_BEHAVIOR_EXAMPLES;
-    for (const example of [cycling, toggle, held]) {
+    expect(proto.ProfileAssignmentInfo.verify(cycling.assignment)).toBeNull();
+    const decodedRule = proto.ProfileAssignmentInfo.decode(
+      proto.ProfileAssignmentInfo.encode(cycling.assignment).finish()
+    );
+    expect(decodedRule.inputAnyTime?.input).toMatchObject(cycling.assignment.inputAnyTime.input);
+    for (const example of [toggle, held]) {
       expect(proto.Mapping.verify(example.mapping)).toBeNull();
       const decoded = proto.Mapping.decode(proto.Mapping.encode(example.mapping).finish());
       expect(decoded.input).toMatchObject(example.mapping.input);
@@ -71,69 +86,46 @@ describe('input behavior guide', () => {
     for (const example of [cycling, toggle]) {
       expect(proto.Device.verify(example.device)).toBeNull();
     }
-    expect(cycling.mapping.input.cycle.deviceid).toBe(cycling.device.deviceid);
+    expect(cycling.assignment.inputAnyTime.input.cycle.deviceid).toBe(cycling.device.deviceid);
     expect(toggle.mapping.input.toggle.deviceid).toBe(toggle.device.deviceid);
-    expect(cycling.device.cycle.values).toEqual([0, 32768, 65535]);
-    expect(cycling.device.cycle.values[cycling.state]).toBe(32768);
+    expect(cycling.device.cycle.values).toEqual([0, 1, 2]);
+    expect(cycling.device.cycle.values[cycling.state]).toBe(1);
     expect(held.mapping.input.held.time).toBe(1000);
   });
 
-  it.each(['cycling', 'toggle', 'held'])('%s shows a read-only configured mapping', (kind) => {
+  it.each(['cycling', 'toggle', 'held'])('%s renders the real editors read-only', (kind) => {
     const element = renderStep(kind);
     expect(element.textContent).toContain('Configured example');
     expect(element.textContent).toContain('Read-only demo');
-    expect(element.textContent).toContain('Profiles - Input #1');
-    expect(element.textContent).toContain('They do not read from or change your controller.');
-    const inputs = Array.from(element.querySelectorAll('input')).filter(
-      (input) => input.type !== 'hidden'
-    );
-    expect(inputs.length).toBeGreaterThan(0);
-    for (const input of inputs) {
-      if (input.type === 'radio') {
-        expect(
-          element.querySelector(`label[for="${input.id}"]`)?.hasAttribute('data-read-only')
-        ).toBe(true);
-      } else {
-        expect(input.readOnly).toBe(true);
-      }
-    }
-    expect(inputs.map((input) => input.value)).toContain('GP2');
-    expect(inputs.map((input) => input.value)).toContain('Pull Up');
-    expect(inputs.map((input) => input.value)).toContain(
-      kind === 'cycling' ? 'Right Stick X Axis' : 'A Button'
-    );
+    expect(element.textContent).toContain('they do not read from or change your controller.');
+    expect(element.querySelector('[inert]')).not.toBeNull();
+    expect(element.textContent).toContain('GP2');
     expect(element.textContent).not.toContain('outputs.');
   });
 
-  it('shows both cycling sources, selected value, and custom values', () => {
+  it('shows both cycling sources, the named slots and the active slot', () => {
     const element = renderStep('cycling');
-    const inputs = Array.from(element.querySelectorAll('input'));
-    expect(inputs.map((input) => input.value)).toContain('GP3');
-    expect(inputs.map((input) => input.value)).toContain('Custom range');
-    expect(element.textContent).toContain('Forward button - nested input');
-    expect(element.textContent).toContain('Reverse button - nested input');
-    const states = inputs.filter((input) => input.type === 'radio');
-    expect(states.map((input) => input.value)).toEqual(['0', '1', '2']);
-    expect(states.find((input) => input.checked)?.value).toBe('1');
-    expect(element.querySelectorAll('input[role="switch"]:checked')).toHaveLength(2);
+    expect(element.textContent).toContain('GP3');
+    expect(element.textContent).toContain('Number of slots');
+    expect(element.textContent).toContain('Forward input');
+    expect(element.textContent).toContain('Backward input');
+    expect(element.textContent).toContain('Guitar Hero Guitar');
+    expect(element.textContent).toContain('Rock Band Guitar');
+    expect(element.textContent).toContain('Fortnite Festival');
+    expect(element.textContent).toContain('Activation');
+    expect(element.textContent).toContain('Active on');
   });
 
-  it('shows the same on state in the toggle device and mapping', () => {
+  it('shows the toggle device and its mapping', () => {
     const element = renderStep('toggle');
-    expect(element.querySelectorAll('input[role="switch"]:checked')).toHaveLength(2);
-    expect(element.textContent?.match(/Toggle Input 2/g)).toHaveLength(1);
-    expect(Array.from(element.querySelectorAll('input')).map((input) => input.value)).toContain(
-      'Toggle Input 2'
-    );
+    expect(element.querySelectorAll('input[role="switch"]:checked').length).toBeGreaterThan(0);
   });
 
-  it('shows a 1000 ms hold with a nested source but no virtual device', () => {
+  it('shows a 1000 ms hold with no virtual device', () => {
     const element = renderStep('held');
     expect(Array.from(element.querySelectorAll('input')).map((input) => input.value)).toContain(
       '1000'
     );
-    expect(element.textContent).toContain('Source button - nested input');
     expect(element.textContent).toContain('No virtual device is needed');
-    expect(element.querySelector('input[role="switch"]')).toBeNull();
   });
 });

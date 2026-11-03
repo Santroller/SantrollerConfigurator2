@@ -1,7 +1,8 @@
 /// <reference types="w3c-web-hid" />
+import { createContext, useContext } from 'react';
 import i18next from 'i18next';
 import { immerable } from 'immer';
-import { create } from 'zustand';
+import { create, useStore, type StoreApi } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 import type {} from '@redux-devtools/extension';
@@ -654,6 +655,8 @@ export interface Actions {
   addMatrixLabel: () => void;
   addSwitchNetworkLabel: () => void;
   addKeyboardKeyLabel: () => void;
+  addCycleSlotLabel: () => void;
+  setCycleSlotLabel: (deviceid: number, slot: number, label: string) => void;
   addPresetKeyLabels: (labels: { key: number; names: string[] }[], profileUid: number) => void;
   updateDevice: (device: proto.IDevice, id: string) => void;
   updateProfile: (profile: proto.IProfile, id: number) => void;
@@ -852,7 +855,8 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
           x.config === 'matrixLabel' ||
           x.config === 'multiplexerLabel' ||
           x.config === 'switchNetworkLabel' ||
-          x.config === 'keyboardKeyLabel'
+          x.config === 'keyboardKeyLabel' ||
+          x.config === 'cycleSlotLabel'
       )
       .map((x) => [x.deviceid, x])
   );
@@ -1055,7 +1059,7 @@ async function startDetect(
   await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
 }
 
-export const useConfigStore = create<ConfigState & Actions>()(
+const configStore = create<ConfigState & Actions>()(
   immer((set, get) => ({
     ...initialConfig,
     checkLogin: async () => {
@@ -1314,6 +1318,34 @@ export const useConfigStore = create<ConfigState & Actions>()(
       set((state) => {
         const id = getNextLabelId(state.guiDevices);
         state.guiDevices[id] = createLabelConfig('switchNetworkLabel', id);
+      });
+      get().saveConfig();
+    },
+    setCycleSlotLabel: (deviceid, slot, label) => {
+      set((state) => {
+        const existing = Object.values(state.guiDevices).find(
+          (x) => x.cycleSlotLabel?.deviceid === deviceid && x.cycleSlotLabel?.slot === slot
+        );
+        if (existing) {
+          if (label) {
+            existing.cycleSlotLabel!.label = label;
+          } else {
+            delete state.guiDevices[existing.deviceid];
+          }
+        } else if (label) {
+          const id = getNextLabelId(state.guiDevices);
+          state.guiDevices[id] = {
+            deviceid: id,
+            cycleSlotLabel: { label, deviceid, slot, showToCustomer: true },
+          };
+        }
+      });
+      get().saveConfig();
+    },
+    addCycleSlotLabel: () => {
+      set((state) => {
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = createLabelConfig('cycleSlotLabel', id);
       });
       get().saveConfig();
     },
@@ -3243,6 +3275,28 @@ export const useConfigStore = create<ConfigState & Actions>()(
     },
   }))
 );
+
+type ConfigStoreState = ConfigState & Actions;
+
+// Lets a subtree read from its own store instead of the real one, so demos can render the real
+// editors with example data without touching the controller's state
+export const ConfigStoreContext = createContext<StoreApi<ConfigStoreState> | null>(null);
+
+function useScopedConfigStore(): ConfigStoreState;
+function useScopedConfigStore<U>(selector: (state: ConfigStoreState) => U): U;
+function useScopedConfigStore<U>(selector?: (state: ConfigStoreState) => U) {
+  const scoped = useContext(ConfigStoreContext);
+  return useStore(scoped ?? configStore, selector as (state: ConfigStoreState) => U);
+}
+
+// Outside React (getState / setState) there is no context, so those always use the real store
+export const useConfigStore = Object.assign(useScopedConfigStore, {
+  getState: configStore.getState,
+  setState: configStore.setState,
+  subscribe: configStore.subscribe,
+  getInitialState: configStore.getInitialState,
+});
+
 async function fetchConfigData(device: HIDDevice, saved: boolean) {
   const infoData = await receiveFeatureReport(
     device,

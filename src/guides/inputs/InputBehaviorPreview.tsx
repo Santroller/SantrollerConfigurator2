@@ -1,21 +1,22 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Badge,
-  Card,
-  Group,
-  InputBase,
-  NumberInput,
-  SegmentedControl,
-  Select,
-  SimpleGrid,
-  Stack,
-  Switch,
-  TagsInput,
-  Text,
-  Title,
-} from '@mantine/core';
+import { createStore } from 'zustand/vanilla';
+import { Badge, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
+import {
+  ActivationStatus,
+  ConfigStoreContext,
+  DeviceStatus,
+  initialConfig,
+  MappingStatus,
+} from '@/components/SettingsContext/SettingsContext';
+import { CycleDevice, ToggleDevice } from '@/pages/Devices.page';
+import {
+  ExpandAllAccordionsContext,
+  LegendMode,
+  SantrollerAssignment,
+  SantrollerMapping,
+} from '@/pages/Inputs.page';
 
 export type InputBehaviorKind = 'cycling' | 'toggle' | 'held';
 
@@ -29,18 +30,23 @@ export const INPUT_BEHAVIOR_EXAMPLES = {
   cycling: {
     device: {
       deviceid: 1,
-      cycle: { type: proto.CycleType.custom, values: [0, 32768, 65535] },
+      cycle: { type: proto.CycleType.slots, values: [0, 1, 2] },
     } satisfies proto.IDevice,
-    mapping: {
-      input: {
-        cycle: {
-          deviceid: 1,
-          input: { gpio: gpio(2) },
-          inputReverse: { gpio: gpio(3) },
+    slotNames: ['Guitar Hero Guitar', 'Rock Band Guitar', 'Fortnite Festival'],
+    // An assignment rule: the cycling input is the source, and it is active while on slot 1
+    assignment: {
+      inputAnyTime: {
+        input: {
+          cycle: {
+            deviceid: 1,
+            input: { gpio: gpio(2) },
+            inputReverse: { gpio: gpio(3) },
+          },
         },
+        trigger: proto.AnalogToDigitalTriggerType.Exact,
+        triggerValue: 1,
       },
-      mapping: { gamepadAxis: proto.GamepadAxisType.Gamepad_RightStickX },
-    } satisfies proto.IMapping,
+    } satisfies proto.IProfileAssignmentInfo,
     state: 1,
   },
   toggle: {
@@ -61,75 +67,71 @@ export const INPUT_BEHAVIOR_EXAMPLES = {
 
 const K = 'guides.input-behavior.preview';
 
-function GpioPreview({ input, title }: { input: proto.IGPIOInput; title: string }) {
-  const { t } = useTranslation();
+const noop = () => {};
+
+type DemoStoreState = typeof initialConfig;
+
+// The demos render the real editors against this store, so they can't drift from the app and
+// never touch the connected controller
+function createDemoStore() {
+  const cycle = INPUT_BEHAVIOR_EXAMPLES.cycling;
+  const toggle = INPUT_BEHAVIOR_EXAMPLES.toggle;
+  const cycleStatus = new DeviceStatus('1', 'cycle', cycle.device);
+  cycleStatus.cycleState = cycle.state;
+  const toggleStatus = new DeviceStatus('2', 'toggle', toggle.device);
+  toggleStatus.toggleState = toggle.state;
+  const activation = new ActivationStatus(0, cycle.assignment);
+  activation.stateRaw = cycle.state;
+  const guiDevices: DemoStoreState['guiDevices'] = {};
+  cycle.slotNames.forEach((label, slot) => {
+    guiDevices[slot + 1] = {
+      deviceid: slot + 1,
+      cycleSlotLabel: { label, deviceid: 1, slot, showToCustomer: true },
+    };
+  });
+  const state: DemoStoreState = {
+    ...initialConfig,
+    deviceStatus: { 1: cycleStatus, 2: toggleStatus },
+    guiDevices,
+    mappingStatus: [{ 0: new MappingStatus(0, toggle.mapping) }],
+    activationStatus: [{ 0: [activation] }],
+  };
+  return createStore(() => state);
+}
+
+function DemoStore({ children }: { children: ReactNode }) {
+  const store = useMemo(createDemoStore, []);
   return (
-    <Card withBorder padding="sm" radius="md">
-      <Stack gap="xs">
-        <Text size="sm" fw={600}>
-          {title}
-        </Text>
-        <InputBase
-          readOnly
-          label={t('device')}
-          value={`${t('devices.gpio')} ${t('devices.gpio_digital')}`}
-        />
-        <Group grow>
-          <InputBase readOnly label={t('pin_label')} value={t('pin', { pin: input.pin })} />
-          <Select
-            readOnly
-            label={t('gpio.mode.label')}
-            value={String(input.pinMode)}
-            data={[
-              {
-                value: String(input.pinMode),
-                label: t(`gpio.mode.${proto.PinMode[input.pinMode]}`),
-              },
-            ]}
-          />
-        </Group>
-      </Stack>
-    </Card>
+    <ConfigStoreContext.Provider value={store as never}>
+      <ExpandAllAccordionsContext.Provider value>
+        {/* inert, so the real editors can't be used to change anything */}
+        <div {...{ inert: true }}>{children}</div>
+      </ExpandAllAccordionsContext.Provider>
+    </ConfigStoreContext.Provider>
   );
 }
 
-function MappingPreview({
-  device,
-  output,
-  children,
-}: {
-  device: string;
-  output: { gamepadAxis: proto.GamepadAxisType } | { gamepadButton: proto.GamepadButtonType };
-  children: ReactNode;
-}) {
-  const { t } = useTranslation();
-  const name =
-    'gamepadAxis' in output
-      ? proto.GamepadAxisType[output.gamepadAxis]
-      : proto.GamepadButtonType[output.gamepadButton];
-  return (
-    <Card withBorder shadow="sm" padding="lg" radius="md">
-      <Stack gap="sm">
-        <Title order={4}>{t(`${K}.mappingTitle`)}</Title>
-        <InputBase
-          readOnly
-          label={t('inputs.target_output')}
-          value={t([`outputs.${name}`, `outputs.Xbox360.${name}`, `outputs.Generic.${name}`])}
-        />
-        <InputBase readOnly label={t('device')} value={device} />
-        {children}
-      </Stack>
-    </Card>
-  );
-}
+const demoProps = {
+  profileIdx: 0,
+  mode: proto.FaceButtonMappingMode.LegendBased,
+  type: proto.SubType.Gamepad,
+  legendMode: LegendMode.Xbox360,
+};
 
 export function InputBehaviorPreview({ kind }: { kind: InputBehaviorKind }) {
   const { t } = useTranslation();
   const cycle = INPUT_BEHAVIOR_EXAMPLES.cycling;
   const toggle = INPUT_BEHAVIOR_EXAMPLES.toggle;
   const held = INPUT_BEHAVIOR_EXAMPLES.held;
-  const cycleName = t('cycle.title', { id: cycle.device.deviceid });
-  const toggleName = t(`${K}.toggleName`, { id: toggle.device.deviceid });
+  const mappingProps = {
+    ...demoProps,
+    mappingIdx: 0,
+    dispatch: noop,
+    deleteInput: noop,
+    copyInput: noop,
+    expanded: true,
+    onToggleExpanded: noop,
+  };
   return (
     <Stack gap="sm">
       <Group gap="xs">
@@ -139,77 +141,36 @@ export function InputBehaviorPreview({ kind }: { kind: InputBehaviorKind }) {
       <Text size="sm" c="dimmed">
         {t(`${K}.description`)}
       </Text>
-      <SimpleGrid cols={{ base: 1, md: kind === 'held' ? 1 : 2 }}>
-        {kind === 'cycling' && (
-          <>
-            <Card withBorder shadow="sm" padding="lg" radius="md">
-              <Stack gap="sm">
-                <Title order={4}>{t(`${K}.deviceTitle`)}</Title>
-                <Text fw={600}>{cycleName}</Text>
-                <Select
-                  readOnly
-                  label={t('cycle.type')}
-                  value={String(cycle.device.cycle.type)}
-                  data={[
-                    { value: String(proto.CycleType.custom), label: t('cycle.label.custom') },
-                    { value: String(proto.CycleType.pickup), label: t('cycle.label.pickup') },
-                  ]}
-                />
-                <TagsInput
-                  readOnly
-                  label={t('cycle.enter_value')}
-                  value={cycle.device.cycle.values.map(String)}
-                />
-                <SegmentedControl
-                  readOnly
-                  fullWidth
-                  value={String(cycle.state)}
-                  data={cycle.device.cycle.values.map((value, index) => ({
-                    value: String(index),
-                    label: String(value),
-                  }))}
-                />
-              </Stack>
-            </Card>
-            <MappingPreview device={cycleName} output={cycle.mapping.mapping}>
-              <Switch readOnly checked label={t('cycle.forward_input')} />
-              <GpioPreview input={cycle.mapping.input.cycle.input.gpio} title={t(`${K}.forward`)} />
-              <Switch readOnly checked label={t('cycle.reverse_input')} />
-              <GpioPreview
-                input={cycle.mapping.input.cycle.inputReverse.gpio}
-                title={t(`${K}.reverse`)}
+      <DemoStore>
+        <SimpleGrid cols={{ base: 1, md: kind === 'held' ? 1 : 2 }}>
+          {kind === 'cycling' && (
+            <>
+              <CycleDevice id="1" />
+              <SantrollerAssignment
+                {...demoProps}
+                mapping={cycle.assignment}
+                listIdx={0}
+                activationIdx={0}
+                dispatch={noop}
+                deleteAssignment={noop}
+                copyAssignment={noop}
               />
-            </MappingPreview>
-          </>
-        )}
-        {kind === 'toggle' && (
-          <>
-            <Card withBorder shadow="sm" padding="lg" radius="md">
-              <Stack gap="sm">
-                <Title order={4}>{t(`${K}.deviceTitle`)}</Title>
-                <Text fw={600}>{toggleName}</Text>
-                <Switch readOnly checked={toggle.state} label={t('toggle.state')} />
-              </Stack>
-            </Card>
-            <MappingPreview device={toggleName} output={toggle.mapping.mapping}>
-              <Switch readOnly checked={toggle.state} label={t('toggle.state')} />
-              <GpioPreview
-                input={toggle.mapping.input.toggle.input.gpio}
-                title={t(`${K}.source`)}
-              />
-            </MappingPreview>
-          </>
-        )}
-        {kind === 'held' && (
-          <MappingPreview device={t('devices.held')} output={held.mapping.mapping}>
-            <NumberInput readOnly label={t('held.time')} value={held.mapping.input.held.time} />
-            <GpioPreview input={held.mapping.input.held.input.gpio} title={t(`${K}.source`)} />
-            <Text size="sm" c="dimmed">
-              {t(`${K}.heldNote`)}
-            </Text>
-          </MappingPreview>
-        )}
-      </SimpleGrid>
+            </>
+          )}
+          {kind === 'toggle' && (
+            <>
+              <ToggleDevice id="2" />
+              <SantrollerMapping {...mappingProps} mapping={toggle.mapping} />
+            </>
+          )}
+          {kind === 'held' && <SantrollerMapping {...mappingProps} mapping={held.mapping} />}
+        </SimpleGrid>
+      </DemoStore>
+      {kind === 'held' && (
+        <Text size="sm" c="dimmed">
+          {t(`${K}.heldNote`)}
+        </Text>
+      )}
       <Text size="sm" c="dimmed">
         {t(`${K}.pinsNote`)}
       </Text>

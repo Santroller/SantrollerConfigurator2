@@ -370,10 +370,20 @@
     "type": "Type",
     "label": {
       "custom": "Custom range",
-      "pickup": "Pickup selector"
+      "pickup": "Pickup selector",
+      "slots": "Number of slots"
     },
     "forward_input": "Allow cycling forwards",
     "reverse_input": "Allow cycling backwards",
+    "forward_section": "Forward input",
+    "reverse_section": "Backward input",
+    "mapping_value": "Active on",
+    "slot_name": "Label for value {{slot}}",
+    "slot_value": "Slot value",
+    "current_state": "Current value",
+    "device": "Cycling input",
+    "slot_count": "Number of slots",
+    "slot_count_description": "How many positions the input cycles through.",
     "enter_value": "Enter a value",
     "enter_value_placeholder": "Enter value"
   },
@@ -812,7 +822,8 @@
   "trigger": {
     "min": "Trigger Min",
     "max": "Trigger Max",
-    "trigger": "Trigger"
+    "trigger": "Trigger",
+    "activation": "Activation"
   },
   "calibration": {
     "min": "Min",
@@ -2851,6 +2862,7 @@
     "addMultiplexer": "Add Multiplexer Label",
     "addSwitchNetwork": "Add Switch Network Label",
     "addKeyboardKey": "Add Keyboard Key Label",
+    "addCycleSlot": "Add Cycling Input Slot Label",
     "profiles": "Profiles",
     "allProfiles": "All profiles",
     "bulk": {
@@ -2994,13 +3006,7 @@
       "preview": {
         "title": "Configured example",
         "badge": "Read-only demo",
-        "description": "These are example settings, styled like the Devices and Profiles editors. They do not read from or change your controller. The example profile is a gamepad.",
-        "deviceTitle": "Devices",
-        "mappingTitle": "Profiles - Input #1",
-        "toggleName": "Toggle Input {{id}}",
-        "forward": "Forward button - nested input",
-        "reverse": "Reverse button - nested input",
-        "source": "Source button - nested input",
+        "description": "These are the real editors filled in with example settings. They are for show only: they do not read from or change your controller. The example profile is a gamepad.",
         "heldNote": "No virtual device is needed: the Held Input and its source are both configured inside this mapping.",
         "pinsNote": "GP2 and GP3 are example button pins, not required wiring. Use the pins or controller inputs from your own build."
       },
@@ -3029,18 +3035,27 @@
           "intro": "Each new forward press selects the next value. Each new reverse press selects the previous value. Releasing the source leaves the selected value in place; holding it does not keep stepping.",
           "instructions": [
             "Add the device: On Devices, add a Cycling input.",
-            "Choose its values: Select Pickup selector for the built-in five notches, or Custom range and enter an ordered list of values. Keep at least one value; for analog mappings use values from 0 to 65535.",
+            {
+              "text": "Choose its values: Pick a Type on the device. For analog mappings use values from 0 to 65535.",
+              "items": [
+                "Number of slots: Set how many positions you need.",
+                "Pickup selector: Uses the built-in five notches.",
+                "Custom range: Enter your own ordered list of values."
+              ]
+            },
             "Select it in the mapping: On Profiles, choose this Cycling input in the mapping's Device dropdown and map it to the intended output, such as the pickup selector axis.",
-            "Configure the sources: Enable Allow cycling forwards and select its button or digital input. Optionally enable Allow cycling backwards and configure a different source."
+            "Configure the sources: Open the Forward input section, enable Allow cycling forwards and select its button or digital input. Optionally do the same in the Backward input section with a different source.",
+            "Name the slots (optional): With Number of slots, type a label for each slot on the Devices card, or add a Cycling Input Slot Label on Labels. Names show on the device, in the Value bar and in the pickers below."
           ],
-          "example": "With Custom range values 0, 32768, and 65535, forward presses move through those three values and wrap back to 0. A reverse press from 0 wraps to 65535.",
+          "example": "With Number of slots set to 3 and the slots named Guitar Hero Guitar, Rock Band Guitar and Fortnite Festival, forward presses move through them and wrap back to the first. A reverse press from the first wraps to Fortnite Festival. In the demo, a Press Button Anytime rule uses this Cycling input as its source, so you can switch which game mode the controller acts as with one button. Under Activation, the rule is only active on Rock Band Guitar. Button mappings work the same way under Active on.",
           "checks": [
-            "Press and release forward repeatedly: the selected state should advance once per press and wrap after the last value.",
+            "Press and release forward repeatedly: the selected state should advance once per press and wrap after the last value. The Value bar at the top of the input shows the current value, or its label if you named it.",
             "Hold forward: the state should not repeatedly advance.",
             "If reverse is enabled, test stepping backwards and wrapping from the first value to the last.",
-            "On Devices, select a state directly to test the mapped output separately from the physical buttons."
+            "On Devices, select a state directly to test the mapped output separately from the physical buttons.",
+            "For a button mapping driven by a slot, switch to the slot under Active on and confirm the button is only pressed there."
           ],
-          "note": "Physical cycling presses are debounced for 100 ms, shared by both directions. Leave more than 100 ms between test presses. When used as a digital input, a selected value of 0 is off and any nonzero value is on."
+          "note": "Physical cycling presses are debounced for 100 ms, shared by both directions. Leave more than 100 ms between test presses. When driving a button mapping or assignment, use the Active on picker to choose which slot presses it; the first slot is selected by default."
         },
         "toggle": {
           "title": "Toggle inputs",
