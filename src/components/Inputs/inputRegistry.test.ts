@@ -10,7 +10,9 @@ import {
   getProfileSlotLabel,
   getProfileSlots,
   getPS2InputFilters,
+  getSelectedInput,
   getSNESInputFilters,
+  isAnalogInput,
   isDrumInput,
   isSelectablePS2Axis,
   isSelectableWiiAxis,
@@ -138,6 +140,23 @@ describe('isDrumInput', () => {
   it('treats MIDI channel 10 as percussion', () => {
     expect(isDrumInput({ midi: { midiNote: { note: 38, channel: 10 }, deviceid: 0 } })).toBe(true);
     expect(isDrumInput({ midi: { midiNote: { note: 38, channel: 1 }, deviceid: 0 } })).toBe(false);
+  });
+});
+
+describe('mapped input trigger metadata', () => {
+  it('does not treat trigger settings as the selected input', () => {
+    const input: proto.IInput = {
+      gpio: { pin: 26, pinMode: proto.PinMode.Floating, analog: true },
+      digitalTrigger: proto.AnalogToDigitalTriggerType.JoyHigh,
+      digitalTriggerValue: 40000,
+    };
+    expect(getSelectedInput(input)?.kind).toBe('gpio');
+    expect(isAnalogInput(input)).toBe(true);
+    expect(
+      getSelectedInput({
+        digitalTrigger: proto.AnalogToDigitalTriggerType.JoyHigh,
+      })
+    ).toBeUndefined();
   });
 });
 

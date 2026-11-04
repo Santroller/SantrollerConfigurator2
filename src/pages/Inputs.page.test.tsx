@@ -9,11 +9,14 @@ vi.mock('react-i18next', async (importOriginal) => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+const testState = vi.hoisted(() => ({ simpleMode: true }));
+
 vi.mock('@/components/SettingsContext/SettingsContext', () => ({
-  useConfigStore: (selector: (state: unknown) => unknown) =>
-    selector({
+  useConfigStore: (() => {
+    const state = {
       deviceStatus: {
         1: { type: 'matrix', device: { deviceid: 1, matrix: { inPins: 1, outPins: 2 } } },
+        5: { type: 'cycle', device: { deviceid: 5, cycle: { values: [6400, 19456, 38400] } } },
       },
       guiDevices: {},
       simpleMode: true,
@@ -21,7 +24,19 @@ vi.mock('@/components/SettingsContext/SettingsContext', () => ({
       selectedDevice: [],
       usbDevices: {},
       config: { profiles: [], xboxOneLegacyAdapter: false },
-    }),
+      detectPins: false,
+      detected: -1,
+      currentProfile: 0,
+    };
+    const getState = () => ({ ...state, simpleMode: testState.simpleMode });
+    return Object.assign((selector: (state: unknown) => unknown) => selector(getState()), {
+      getState,
+      setState: vi.fn(),
+    });
+  })(),
+  requiresAssignment: () => false,
+  isDeviceAssigned: () => true,
+  DeviceStatus: { pins: () => [], label: () => '' },
 }));
 
 const renderLabel = (input: proto.IInput) =>
@@ -52,13 +67,16 @@ const renderMapping = (
   output: proto.IOutput,
   section?: proto.AxisSection,
   deadzone = 1000,
-  settings: Partial<proto.IMapping> = {}
+  settings: Partial<proto.IMapping> = {},
+  input: proto.IInput = {
+    gpio: { pin: 26, pinMode: proto.PinMode.Floating, analog: true },
+  }
 ) =>
   renderToStaticMarkup(
     <MantineProvider>
       <SantrollerMapping
         mapping={{
-          input: { gpio: { pin: 26, pinMode: proto.PinMode.Floating, analog: true } },
+          input,
           mapping: output,
           min: 0,
           max: 65535,
@@ -89,7 +107,6 @@ describe('axis deadzone controls', () => {
     { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftTrigger },
     { gamepadAxis: proto.GamepadAxisType.Gamepad_RightTrigger },
     { wheelAxis: proto.WheelAxisType.Wheel_Brake },
-    { rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Pickup },
   ])('hides the deadzone for trigger output %j', (output) => {
     const html = renderMapping(output);
     expect(html).toContain('calibration.released');
@@ -99,6 +116,41 @@ describe('axis deadzone controls', () => {
     expect(html).not.toContain('calibration.max');
     expect(html).not.toContain('calibration.deadzone');
     expect(html).toBe(renderMapping(output, undefined, 0));
+  });
+
+  it('uses pickup notch calibration without standard axis range controls', () => {
+    testState.simpleMode = false;
+    try {
+      const html = renderMapping(
+        {
+          rbAxis: proto.RockBandGuitarAxisType.RockBandGuitar_Pickup,
+        },
+        undefined,
+        1000,
+        { pickupThresholds: [10000, 20000, 30000, 40000] }
+      );
+
+      expect(html).not.toContain('pickup.current');
+      expect(html).toContain('pickup.custom.label');
+      expect(html).toContain('pickup.threshold');
+      const element = document.createElement('div');
+      element.innerHTML = html;
+      const barText = (label: string) =>
+        Array.from(element.querySelectorAll('label')).find(
+          (element) => element.textContent === label
+        )?.nextElementSibling?.textContent;
+      // The live value of 10000 is in the first notch, which is shown instead of the number
+      expect(barText('calibration.value')).toBe('pickup.notch.0');
+      // The raw value stays visible, as a reference for setting the notch thresholds
+      expect(barText('calibration.rawValue')).toBe('10000');
+      expect(html).not.toContain('axis.section.label');
+      expect(html).not.toContain('calibration.min');
+      expect(html).not.toContain('calibration.max');
+      expect(html).not.toContain('calibration.guided.start');
+      expect(html).not.toContain('calibration.deadzone');
+    } finally {
+      testState.simpleMode = true;
+    }
   });
 
   it('keeps the deadzone for a full stick but hides it for a section', () => {
@@ -148,5 +200,52 @@ describe('axis deadzone controls', () => {
     expect(html).not.toContain('calibration.guided.start');
     expect(html).not.toContain('calibration.deadzone');
     expect(html).toBe(renderMapping(output, undefined, 0, settings));
+  });
+});
+
+describe('virtual selector analog stepping triggers', () => {
+  const renderCycleMapping = (analog: boolean, output: proto.IOutput) =>
+    renderMapping(
+      output,
+      undefined,
+      1000,
+      {},
+      {
+        cycle: {
+          deviceid: 5,
+          input: {
+            gpio: { pin: 26, pinMode: proto.PinMode.Floating, analog },
+          },
+        },
+      }
+    );
+
+  it('does not show an Active on picker for a virtual selector axis mapping', () => {
+    testState.simpleMode = false;
+    try {
+      const html = renderCycleMapping(true, {
+        gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX,
+      });
+      expect(html).not.toContain('cycle.mapping_value');
+    } finally {
+      testState.simpleMode = true;
+    }
+  });
+
+  it('keeps the Active on picker for a virtual selector button mapping', () => {
+    testState.simpleMode = false;
+    try {
+      expect(
+        renderCycleMapping(true, { gamepadButton: proto.GamepadButtonType.Gamepad_A })
+      ).toContain('cycle.mapping_value');
+    } finally {
+      testState.simpleMode = true;
+    }
+  });
+
+  it('does not show trigger settings for a digital forward input', () => {
+    expect(
+      renderCycleMapping(false, { gamepadAxis: proto.GamepadAxisType.Gamepad_LeftStickX })
+    ).not.toContain('trigger_type.label');
   });
 });

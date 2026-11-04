@@ -365,7 +365,7 @@
     "shiftInput": "Shift / Modifier Input"
   },
   "cycle": {
-    "description": "A Virtual Selector Switch stores a selected value from a list and remembers it across restarts. Set its values here, then configure the button or other input that changes it under Profiles in the Forward input or Backward input section. Use it as the mapping source for the output you want to control, such as a pickup selector.",
+    "description": "A Virtual Selector Switch stores a selected value from a list and remembers it across restarts. Set its values here, then configure the button or other input that changes it under Profiles in the Forward input or Backward input section. Analog inputs also let you set the trigger threshold used to step the selector. Use it as the mapping source for the output you want to control, such as a pickup selector.",
     "title": "Virtual Selector Switch {{id}}",
     "type": "Type",
     "label": {
@@ -388,7 +388,6 @@
     "enter_value_placeholder": "Enter value"
   },
   "pickup": {
-    "current": "Current position: {{notch}}",
     "custom": {
       "label": "Custom notch thresholds",
       "description": "Real 5-way pickup switches aren't evenly spaced. Move the switch to each notch and set the thresholds between them. When off, the range is split into 5 equal parts."

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { proto } from './config.js';
-import { calibratesAsTrigger, fixAbsoluteTriggerDeadzones } from './triggerDeadzone';
+import {
+  calibratesAsTrigger,
+  fixAbsoluteTriggerDeadzones,
+  migrateMappingTriggers,
+} from './triggerDeadzone';
 
 const GH_WHAMMY = { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Whammy };
 const GH_TILT = { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt };
@@ -55,6 +59,83 @@ describe('fixAbsoluteTriggerDeadzones', () => {
     );
     expect(fixAbsoluteTriggerDeadzones(config)).toBe(true);
     expect(deadzones(config)).toEqual([1249, 1232]);
+  });
+
+  describe('migrateMappingTriggers', () => {
+    it('moves mapping and nested cycle triggers to the input, preferring mapping settings', () => {
+      const config = {
+        profiles: [
+          {
+            mappings: [
+              {
+                input: {
+                  cycle: {
+                    trigger: proto.AnalogToDigitalTriggerType.JoyLow,
+                    triggerValue: 12000,
+                  },
+                },
+                trigger: proto.AnalogToDigitalTriggerType.JoyHigh,
+                triggerValue: 40000,
+                maxTriggerValue: 50000,
+              },
+            ],
+          },
+        ],
+      } as proto.IConfig;
+
+      expect(migrateMappingTriggers(config)).toBe(true);
+      const mapping = config.profiles![0].mappings![0];
+      expect(mapping.input?.digitalTrigger).toBe(proto.AnalogToDigitalTriggerType.JoyHigh);
+      expect(mapping.input?.digitalTriggerValue).toBe(40000);
+      expect(mapping.input?.digitalMaxTriggerValue).toBe(50000);
+      expect(mapping.input?.cycle?.trigger).toBeNull();
+      expect(mapping.trigger).toBeNull();
+      expect(mapping.triggerValue).toBeNull();
+    });
+
+    it('preserves generic input settings and migrates rapid trigger actuation separately', () => {
+      const config = {
+        profiles: [
+          {
+            mappings: [
+              {
+                input: {
+                  digitalTrigger: proto.AnalogToDigitalTriggerType.Range,
+                  digitalTriggerValue: 10000,
+                  cycle: { trigger: proto.AnalogToDigitalTriggerType.JoyLow, triggerValue: 5 },
+                },
+                trigger: proto.AnalogToDigitalTriggerType.JoyHigh,
+                triggerValue: 32000,
+                rapidTrigger: { downSensitivity: 3000, upSensitivity: 3000 },
+              },
+              {
+                input: { gpio: { pin: 1, analog: true } },
+                trigger: proto.AnalogToDigitalTriggerType.JoyHigh,
+                triggerValue: 12345,
+                rapidTrigger: { downSensitivity: 3000, upSensitivity: 3000 },
+              },
+            ],
+          },
+        ],
+      } as proto.IConfig;
+
+      expect(migrateMappingTriggers(config)).toBe(true);
+      const mapping = config.profiles![0].mappings![0];
+      expect(mapping.input?.digitalTrigger).toBe(proto.AnalogToDigitalTriggerType.Range);
+      expect(mapping.input?.digitalTriggerValue).toBe(10000);
+      expect(mapping.rapidTrigger?.actuationValue).toBe(32000);
+      expect(mapping.triggerValue).toBeNull();
+      expect(mapping.input?.cycle?.trigger).toBeNull();
+      expect(config.profiles![0].mappings![1].input?.digitalTrigger).toBeUndefined();
+      expect(config.profiles![0].mappings![1].rapidTrigger?.actuationValue).toBe(12345);
+    });
+
+    it('does not mark configs without legacy trigger fields as changed', () => {
+      const config = {
+        profiles: [{ mappings: [{ input: { gpio: { pin: 1 } } }] }],
+      } as proto.IConfig;
+      expect(migrateMappingTriggers(config)).toBe(false);
+    });
   });
 
   it('leaves working deadzones, sticks and switches alone', () => {

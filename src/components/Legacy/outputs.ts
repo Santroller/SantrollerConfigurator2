@@ -125,10 +125,10 @@ export function addButtonMapping(
   debounce100us?: number
 ) {
   const mapping: proto.IMapping = { mapping: output, input: converted.input, ...converted.mapping };
-  if (converted.analog && mapping.trigger == null) {
+  if (converted.analog && mapping.input.digitalTrigger == null) {
     // An analog input on a button, treat it as pressed past half way like the old firmware did
-    mapping.trigger = proto.AnalogToDigitalTriggerType.JoyHigh;
-    mapping.triggerValue = converted.isUint ? 32767 : INT16_OFFSET;
+    mapping.input.digitalTrigger = proto.AnalogToDigitalTriggerType.JoyHigh;
+    mapping.input.digitalTriggerValue = converted.isUint ? 32767 : INT16_OFFSET;
   }
   applyDebounce(mapping, debounce100us);
   ctx.mappings.push(mapping);
@@ -601,9 +601,9 @@ const CORE_OUTPUTS: Partial<Record<LegacyOutputKind, OutputConverter>> = {
         input: converted.input,
         ...converted.mapping,
       };
-      if (converted.analog && mapping.trigger == null) {
-        mapping.trigger = proto.AnalogToDigitalTriggerType.JoyHigh;
-        mapping.triggerValue =
+      if (converted.analog && mapping.input.digitalTrigger == null) {
+        mapping.input.digitalTrigger = proto.AnalogToDigitalTriggerType.JoyHigh;
+        mapping.input.digitalTriggerValue =
           (o!.min ?? 0) + (o!.deadzone ?? 0) + (converted.isUint ? 0 : INT16_OFFSET);
       }
       applyDebounce(mapping, debounce);

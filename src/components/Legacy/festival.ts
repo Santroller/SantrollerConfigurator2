@@ -88,7 +88,7 @@ function asKey(mapping: proto.IMapping, code: KeyCode): proto.IMapping {
 // its deadzone, for 0). A digital input that drove the axis is used as is.
 function axisAsKey(mapping: proto.IMapping, code: KeyCode, fraction: number): proto.IMapping {
   const key = asKey(mapping, code);
-  if (mapping.pressed != null || mapping.trigger != null) {
+  if (mapping.pressed != null || mapping.input?.digitalTrigger != null) {
     return key;
   }
   const min = mapping.min ?? 0;
@@ -97,10 +97,15 @@ function axisAsKey(mapping: proto.IMapping, code: KeyCode, fraction: number): pr
   const deadzone = fraction ? 0 : (mapping.deadzone ?? 0);
   return {
     ...key,
-    trigger: inverted
-      ? proto.AnalogToDigitalTriggerType.JoyLow
-      : proto.AnalogToDigitalTriggerType.JoyHigh,
-    triggerValue: Math.round(min + (max - min) * fraction + (inverted ? -deadzone : deadzone)),
+    input: {
+      ...key.input,
+      digitalTrigger: inverted
+        ? proto.AnalogToDigitalTriggerType.JoyLow
+        : proto.AnalogToDigitalTriggerType.JoyHigh,
+      digitalTriggerValue: Math.round(
+        min + (max - min) * fraction + (inverted ? -deadzone : deadzone)
+      ),
+    },
   };
 }
 

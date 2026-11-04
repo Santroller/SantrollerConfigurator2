@@ -113,7 +113,12 @@ export function holdButtons(profile: proto.IProfile | undefined) {
   const found = (profile?.mappings ?? []).flatMap((mapping) => {
     const out = mapping.mapping;
     // Analog inputs only count as pressed past a point, so they're left out
-    if (!out || !mapping.input || mapping.trigger != null || mapping.input.gpio?.analog) {
+    if (
+      !out ||
+      !mapping.input ||
+      mapping.input.digitalTrigger != null ||
+      mapping.input.gpio?.analog
+    ) {
       return [];
     }
     let name: string | undefined;

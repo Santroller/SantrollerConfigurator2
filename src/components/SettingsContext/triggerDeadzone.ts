@@ -64,3 +64,77 @@ export function fixAbsoluteTriggerDeadzones(config: proto.IConfig): boolean {
   });
   return changed;
 }
+
+function hasDigitalTrigger(input: proto.IInput): boolean {
+  return (
+    input.digitalTrigger != null ||
+    input.digitalTriggerValue != null ||
+    input.digitalMaxTriggerValue != null
+  );
+}
+
+function migrateInputTrigger(input: proto.IInput): boolean {
+  let changed = false;
+  const migrateChild = (child: proto.IInput | null | undefined) => {
+    if (child) {
+      changed = migrateInputTrigger(child) || changed;
+    }
+  };
+  input.shortcut?.inputs?.forEach(migrateChild);
+  migrateChild(input.held?.input);
+  migrateChild(input.toggle?.input);
+  migrateChild(input.shifted?.input);
+  migrateChild(input.shifted?.shift);
+  migrateChild(input.cycle?.input);
+  migrateChild(input.cycle?.inputReverse);
+
+  const cycle = input.cycle;
+  if (
+    cycle &&
+    (cycle.trigger != null || cycle.triggerValue != null || cycle.maxTriggerValue != null)
+  ) {
+    if (!hasDigitalTrigger(input)) {
+      input.digitalTrigger = cycle.trigger;
+      input.digitalTriggerValue = cycle.triggerValue;
+      input.digitalMaxTriggerValue = cycle.maxTriggerValue;
+    }
+    cycle.trigger = null;
+    cycle.triggerValue = null;
+    cycle.maxTriggerValue = null;
+    changed = true;
+  }
+  return changed;
+}
+
+export function migrateMappingTriggers(config: proto.IConfig): boolean {
+  let changed = false;
+  config.profiles?.forEach((profile) => {
+    profile.mappings?.forEach((mapping) => {
+      if (!mapping.input) {
+        return;
+      }
+      const hasLegacyTrigger =
+        mapping.trigger != null || mapping.triggerValue != null || mapping.maxTriggerValue != null;
+      if (hasLegacyTrigger && !mapping.rapidTrigger && !hasDigitalTrigger(mapping.input)) {
+        mapping.input.digitalTrigger = mapping.trigger;
+        mapping.input.digitalTriggerValue = mapping.triggerValue;
+        mapping.input.digitalMaxTriggerValue = mapping.maxTriggerValue;
+      }
+      if (
+        mapping.rapidTrigger &&
+        mapping.rapidTrigger.actuationValue == null &&
+        mapping.triggerValue != null
+      ) {
+        mapping.rapidTrigger.actuationValue = mapping.triggerValue;
+      }
+      if (hasLegacyTrigger) {
+        mapping.trigger = null;
+        mapping.triggerValue = null;
+        mapping.maxTriggerValue = null;
+        changed = true;
+      }
+      changed = migrateInputTrigger(mapping.input) || changed;
+    });
+  });
+  return changed;
+}

@@ -1,6 +1,7 @@
 import {
   createContext,
   Fragment,
+  ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -250,6 +251,7 @@ function StateLabelLabel({
   zeroBased,
   crkdId,
   crkd,
+  format,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -260,6 +262,7 @@ function StateLabelLabel({
   zeroBased?: boolean;
   crkdId?: number;
   crkd?: keyof proto.ICrkdCalibrationData;
+  format?: (value: number) => ReactNode;
 }) {
   const stateRaw = useConfigStore((state) =>
     crkd
@@ -281,7 +284,7 @@ function StateLabelLabel({
   );
   const decay = zeroBased && !ledBased && !activationBased;
   const value = useDecayedValue(Number(raw ? stateRaw : liveState) || 0, decay);
-  return <span>{value}</span>;
+  return <span>{format ? format(value) : value}</span>;
 }
 function StateLabel({
   profileIdx,
@@ -293,6 +296,7 @@ function StateLabel({
   zeroBased,
   crkdId,
   crkd,
+  format,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -303,6 +307,7 @@ function StateLabel({
   zeroBased?: boolean;
   crkdId?: number;
   crkd?: keyof proto.ICrkdCalibrationData;
+  format?: (value: number) => ReactNode;
 }) {
   return (
     <Center h="100%">
@@ -316,6 +321,7 @@ function StateLabel({
         zeroBased={zeroBased}
         crkdId={crkdId}
         crkd={crkd}
+        format={format}
       />
     </Center>
   );
@@ -411,6 +417,12 @@ function pickupNotch(value: number, thresholds?: number[] | null): number {
   return notch === -1 ? 4 : notch;
 }
 
+function pickupThresholdsOf(mapping: proto.IMapping): number[] | null {
+  return mapping.pickupThresholds && mapping.pickupThresholds.length === 4
+    ? mapping.pickupThresholds
+    : null;
+}
+
 function PickupNotches({
   mapping,
   mappingIdx,
@@ -426,10 +438,7 @@ function PickupNotches({
   const current = useConfigStore(
     (state) => state.mappingStatus[profileIdx]?.[mappingIdx]?.state ?? 0
   );
-  const thresholds =
-    mapping.pickupThresholds && mapping.pickupThresholds.length === 4
-      ? mapping.pickupThresholds
-      : null;
+  const thresholds = pickupThresholdsOf(mapping);
   const setThreshold = (idx: number, value: number) => {
     const next = [...(thresholds ?? EVEN_PICKUP_THRESHOLDS)];
     next[idx] = value;
@@ -437,10 +446,6 @@ function PickupNotches({
   };
   return (
     <>
-      <Text size="sm" fw={700}>
-        {t('pickup.current', { notch: t(`pickup.notch.${pickupNotch(current, thresholds)}`) })}
-      </Text>
-      <Space h="xs" />
       <Switch
         label={t('pickup.custom.label')}
         description={t('pickup.custom.description')}
@@ -710,8 +715,7 @@ function AnalogFilters({
   );
 }
 
-// Rapid trigger works on calibrated travel, so it brings its own min / max, and uses
-// triggerValue as the actuation point within that travel.
+// Rapid trigger works on calibrated travel, so it brings its own min / max and actuation point.
 function RapidTriggerSettings({
   mapping,
   mappingIdx,
@@ -761,8 +765,8 @@ function RapidTriggerSettings({
       <PercentRow
         label={t('rapidTrigger.actuation.label')}
         description={t('rapidTrigger.actuation.description')}
-        value={mapping.triggerValue ?? 32767}
-        onChange={(triggerValue) => update({ triggerValue })}
+        value={rapid.actuationValue ?? 32767}
+        onChange={(actuationValue) => setRapid({ actuationValue })}
       />
       <PercentRow
         label={t('rapidTrigger.down.label')}
@@ -870,6 +874,7 @@ function StateSlider({
   zeroBased,
   crkdId,
   crkd,
+  format,
 }: {
   profileIdx: number;
   mappingIdx: number;
@@ -885,6 +890,7 @@ function StateSlider({
   zeroBased?: boolean;
   crkdId?: number;
   crkd?: keyof proto.ICrkdCalibrationData;
+  format?: (value: number) => ReactNode;
 }) {
   const { t } = useTranslation();
   if (raw) {
@@ -937,6 +943,7 @@ function StateSlider({
             profileIdx={profileIdx}
             activationBased={activationBased}
             zeroBased={zeroBased}
+            format={format}
           />
         </Progress.Label>
         <StateSection
@@ -3208,6 +3215,7 @@ function SantrollerInput({
           <SantrollerInput
             axis={!!axis}
             button={!!button}
+            digital
             mode={mode}
             legendMode={legendMode}
             type={type}
@@ -3228,6 +3236,7 @@ function SantrollerInput({
           <SantrollerInput
             axis={!!axis}
             button={!!button}
+            digital
             mode={mode}
             legendMode={legendMode}
             type={type}
@@ -3265,24 +3274,27 @@ function SantrollerInput({
                   }}
                 />
                 {input.cycle.input && (
-                  <SantrollerInput
-                    axis={!!axis}
-                    button={!!button}
-                    mode={mode}
-                    legendMode={legendMode}
-                    type={type}
-                    input={input.cycle.input}
-                    dispatch={(changed) =>
-                      dispatch({
-                        cycle: {
-                          ...input.cycle!,
-                          input: changed,
-                        },
-                      })
-                    }
-                    innerIdx={0}
-                    mappingIdx={mappingIdx}
-                  />
+                  <>
+                    <SantrollerInput
+                      axis={!!axis}
+                      button={!!button}
+                      digital
+                      mode={mode}
+                      legendMode={legendMode}
+                      type={type}
+                      input={input.cycle.input}
+                      dispatch={(changed) =>
+                        dispatch({
+                          cycle: {
+                            ...input.cycle!,
+                            input: changed,
+                          },
+                        })
+                      }
+                      innerIdx={0}
+                      mappingIdx={mappingIdx}
+                    />
+                  </>
                 )}
               </Accordion.Panel>
             </Accordion.Item>
@@ -3304,61 +3316,58 @@ function SantrollerInput({
                   }}
                 />
                 {input.cycle.inputReverse && (
-                  <SantrollerInput
-                    axis={!!axis}
-                    button={!!button}
-                    mode={mode}
-                    legendMode={legendMode}
-                    type={type}
-                    input={input.cycle.inputReverse}
-                    dispatch={(changed) =>
-                      dispatch({
-                        cycle: {
-                          ...input.cycle!,
-                          inputReverse: changed,
-                        },
-                      })
-                    }
-                    mappingIdx={mappingIdx}
-                    innerIdx={1}
-                  />
+                  <>
+                    <SantrollerInput
+                      axis={!!axis}
+                      button={!!button}
+                      digital
+                      mode={mode}
+                      legendMode={legendMode}
+                      type={type}
+                      input={input.cycle.inputReverse}
+                      dispatch={(changed) =>
+                        dispatch({
+                          cycle: {
+                            ...input.cycle!,
+                            inputReverse: changed,
+                          },
+                        })
+                      }
+                      mappingIdx={mappingIdx}
+                      innerIdx={1}
+                    />
+                  </>
                 )}
               </Accordion.Panel>
             </Accordion.Item>
           </Accordion>
-          {digital && !!cycleValues?.length && (
-            <CycleValuePicker
-              cycleValues={cycleValues}
-              deviceid={input.cycle.deviceid}
-              trigger={input.cycle.trigger}
-              triggerValue={input.cycle.triggerValue}
-              onChange={(patch) => dispatch({ cycle: { ...input.cycle!, ...patch } })}
-            />
-          )}
         </>
       )}
       {input.toggle && (
         <>
           <Switch label={t('toggle.state')} checked={!!toggleState} />
           {input.toggle.input && (
-            <SantrollerInput
-              axis={!!axis}
-              button={!!button}
-              mode={mode}
-              legendMode={legendMode}
-              type={type}
-              input={input.toggle.input}
-              dispatch={(changed) =>
-                dispatch({
-                  toggle: {
-                    ...input.toggle!,
-                    input: changed,
-                  },
-                })
-              }
-              innerIdx={0}
-              mappingIdx={mappingIdx}
-            />
+            <>
+              <SantrollerInput
+                axis={!!axis}
+                button={!!button}
+                digital
+                mode={mode}
+                legendMode={legendMode}
+                type={type}
+                input={input.toggle.input}
+                dispatch={(changed) =>
+                  dispatch({
+                    toggle: {
+                      ...input.toggle!,
+                      input: changed,
+                    },
+                  })
+                }
+                innerIdx={0}
+                mappingIdx={mappingIdx}
+              />
+            </>
           )}
         </>
       )}
@@ -4090,6 +4099,14 @@ function SantrollerInput({
           }
         />
       )}
+      {digital && (isAnalogInput(input) || cycleValues?.length) && (
+        <MappedInputTriggerSettings
+          input={input}
+          profileIdx={currentProfile}
+          mappingIdx={mappingIdx ?? 0}
+          onChange={dispatch}
+        />
+      )}
     </>
   );
 }
@@ -4307,6 +4324,8 @@ export function SantrollerMapping({
     mapping.mapping.midiPitchBend != null ||
     mapping.mapping.wheelAxis === proto.WheelAxisType.Wheel_Steering;
   const triggerAxis = !!axis && calibratesAsTrigger(mapping);
+  const pickupSelector =
+    mapping.mapping.rbAxis === proto.RockBandGuitarAxisType.RockBandGuitar_Pickup;
   // MIDI labels are translated, so check GM drum names by their (English) key instead
   const midiDrumKey =
     mapping.mapping.midiNote?.channel === MIDI_PERCUSSION_CHANNEL
@@ -4543,6 +4562,11 @@ export function SantrollerMapping({
             max={mapping.max!}
             deadzone={mapping.deadzone!}
             zeroBased={drum}
+            format={
+              pickupSelector
+                ? (value) => t(`pickup.notch.${pickupNotch(value, pickupThresholdsOf(mapping))}`)
+                : undefined
+            }
           />
         )}
         {!expanded && (
@@ -4626,6 +4650,7 @@ export function SantrollerMapping({
                 <SantrollerInput
                   axis={!!axis}
                   button={!!button}
+                  digital={!!button}
                   mode={mode}
                   input={mapping.input}
                   legendMode={legendMode}
@@ -4802,30 +4827,7 @@ export function SantrollerMapping({
                           profileIdx={profileIdx}
                           dispatch={dispatch}
                         />
-                      ) : (
-                        <TriggerSettings
-                          trigger={mapping.trigger}
-                          triggerValue={mapping.triggerValue}
-                          maxTriggerValue={mapping.maxTriggerValue}
-                          deadzone={0}
-                          cycleValues={mapping.input.cycle ? cycleValues : undefined}
-                          cycleDeviceId={mapping.input.cycle?.deviceid}
-                          hideTypeSelect={simpleMode}
-                          profileIdx={profileIdx}
-                          mappingIdx={mappingIdx}
-                          zeroBased={drum}
-                          onChange={(patch) =>
-                            dispatch({
-                              ...mapping,
-                              ...patch,
-                              // exact cycle values have no rapid trigger travel
-                              ...(mapping.input.cycle && cycleValues?.length
-                                ? { rapidTrigger: null }
-                                : {}),
-                            })
-                          }
-                        />
-                      )}
+                      ) : null}
                     </Accordion.Panel>
                   </Accordion.Item>
                 </Accordion>
@@ -4907,169 +4909,213 @@ export function SantrollerMapping({
                     <Accordion.Panel>
                       {axis && !crkdDrum && (
                         <>
-                          {/* pro keys keys don't calibrate like an axis, so a range can't apply */}
-                          {mapping.mapping.proKeySingle == null && !simpleMode && (
+                          {!pickupSelector && (
                             <>
-                              <Input.Wrapper
-                                label={t('axis.section.label')}
-                                description={t('axis.section.description')}
-                              >
-                                <SegmentedControl
-                                  fullWidth
-                                  data={[
-                                    {
-                                      value: proto.AxisSection.AxisSectionFull.toString(),
-                                      label: t('axis.section.full'),
-                                    },
-                                    {
-                                      value: proto.AxisSection.AxisSectionPositive.toString(),
-                                      label: t('axis.section.positive'),
-                                    },
-                                    {
-                                      value: proto.AxisSection.AxisSectionNegative.toString(),
-                                      label: t('axis.section.negative'),
-                                    },
-                                    {
-                                      value: proto.AxisSection.AxisSectionCustom.toString(),
-                                      label: t('axis.section.custom'),
-                                    },
-                                  ]}
-                                  value={(
-                                    mapping.section ?? proto.AxisSection.AxisSectionFull
-                                  ).toString()}
-                                  onChange={(value) => {
-                                    const section = parseInt(value, 10) as proto.AxisSection;
-                                    const custom = section === proto.AxisSection.AxisSectionCustom;
-                                    dispatch({
-                                      ...mapping,
-                                      section:
-                                        section === proto.AxisSection.AxisSectionFull
-                                          ? undefined
-                                          : section,
-                                      sectionStart: custom
-                                        ? (mapping.sectionStart ?? 0)
-                                        : undefined,
-                                      sectionEnd: custom
-                                        ? (mapping.sectionEnd ?? 65535)
-                                        : undefined,
-                                    });
-                                  }}
-                                />
-                              </Input.Wrapper>
-                              {mapping.section === proto.AxisSection.AxisSectionCustom && (
+                              {/* pro keys keys don't calibrate like an axis, so a range can't apply */}
+                              {mapping.mapping.proKeySingle == null && !simpleMode && (
                                 <>
-                                  <Space h="sm" />
-                                  <Text size="sm" fw={700}>
-                                    {t('axis.section.min')}
-                                  </Text>
-                                  <Group>
-                                    <Slider
-                                      flex={1}
-                                      value={mapping.sectionStart ?? 0}
-                                      min={0}
-                                      max={65535}
-                                      onChange={(val) =>
-                                        dispatch({ ...mapping, sectionStart: val })
-                                      }
-                                    />
-                                    <NumberInput
-                                      value={mapping.sectionStart ?? 0}
-                                      min={0}
-                                      max={65535}
-                                      onChange={(e) =>
+                                  <Input.Wrapper
+                                    label={t('axis.section.label')}
+                                    description={t('axis.section.description')}
+                                  >
+                                    <SegmentedControl
+                                      fullWidth
+                                      data={[
+                                        {
+                                          value: proto.AxisSection.AxisSectionFull.toString(),
+                                          label: t('axis.section.full'),
+                                        },
+                                        {
+                                          value: proto.AxisSection.AxisSectionPositive.toString(),
+                                          label: t('axis.section.positive'),
+                                        },
+                                        {
+                                          value: proto.AxisSection.AxisSectionNegative.toString(),
+                                          label: t('axis.section.negative'),
+                                        },
+                                        {
+                                          value: proto.AxisSection.AxisSectionCustom.toString(),
+                                          label: t('axis.section.custom'),
+                                        },
+                                      ]}
+                                      value={(
+                                        mapping.section ?? proto.AxisSection.AxisSectionFull
+                                      ).toString()}
+                                      onChange={(value) => {
+                                        const section = parseInt(value, 10) as proto.AxisSection;
+                                        const custom =
+                                          section === proto.AxisSection.AxisSectionCustom;
                                         dispatch({
                                           ...mapping,
-                                          sectionStart: parseInt(e.toString(), 10),
-                                        })
-                                      }
-                                      w={100}
+                                          section:
+                                            section === proto.AxisSection.AxisSectionFull
+                                              ? undefined
+                                              : section,
+                                          sectionStart: custom
+                                            ? (mapping.sectionStart ?? 0)
+                                            : undefined,
+                                          sectionEnd: custom
+                                            ? (mapping.sectionEnd ?? 65535)
+                                            : undefined,
+                                        });
+                                      }}
                                     />
-                                  </Group>
-                                  <Text size="sm" fw={700}>
-                                    {t('axis.section.max')}
-                                  </Text>
-                                  <Group>
-                                    <Slider
-                                      flex={1}
-                                      value={mapping.sectionEnd ?? 65535}
-                                      min={0}
-                                      max={65535}
-                                      onChange={(val) => dispatch({ ...mapping, sectionEnd: val })}
-                                    />
-                                    <NumberInput
-                                      value={mapping.sectionEnd ?? 65535}
-                                      min={0}
-                                      max={65535}
-                                      onChange={(e) =>
-                                        dispatch({
-                                          ...mapping,
-                                          sectionEnd: parseInt(e.toString(), 10),
-                                        })
-                                      }
-                                      w={100}
-                                    />
-                                  </Group>
+                                  </Input.Wrapper>
+                                  {mapping.section === proto.AxisSection.AxisSectionCustom && (
+                                    <>
+                                      <Space h="sm" />
+                                      <Text size="sm" fw={700}>
+                                        {t('axis.section.min')}
+                                      </Text>
+                                      <Group>
+                                        <Slider
+                                          flex={1}
+                                          value={mapping.sectionStart ?? 0}
+                                          min={0}
+                                          max={65535}
+                                          onChange={(val) =>
+                                            dispatch({ ...mapping, sectionStart: val })
+                                          }
+                                        />
+                                        <NumberInput
+                                          value={mapping.sectionStart ?? 0}
+                                          min={0}
+                                          max={65535}
+                                          onChange={(e) =>
+                                            dispatch({
+                                              ...mapping,
+                                              sectionStart: parseInt(e.toString(), 10),
+                                            })
+                                          }
+                                          w={100}
+                                        />
+                                      </Group>
+                                      <Text size="sm" fw={700}>
+                                        {t('axis.section.max')}
+                                      </Text>
+                                      <Group>
+                                        <Slider
+                                          flex={1}
+                                          value={mapping.sectionEnd ?? 65535}
+                                          min={0}
+                                          max={65535}
+                                          onChange={(val) =>
+                                            dispatch({ ...mapping, sectionEnd: val })
+                                          }
+                                        />
+                                        <NumberInput
+                                          value={mapping.sectionEnd ?? 65535}
+                                          min={0}
+                                          max={65535}
+                                          onChange={(e) =>
+                                            dispatch({
+                                              ...mapping,
+                                              sectionEnd: parseInt(e.toString(), 10),
+                                            })
+                                          }
+                                          w={100}
+                                        />
+                                      </Group>
+                                    </>
+                                  )}
+                                  <Space h="md" />
                                 </>
                               )}
-                              <Space h="md" />
-                            </>
-                          )}
-                          <StateSlider
-                            mappingIdx={mappingIdx}
-                            profileIdx={profileIdx}
-                            center={mapping.center!}
-                            min={mapping.min!}
-                            max={mapping.max!}
-                            deadzone={mapping.deadzone!}
-                            trigger={triggerAxis}
-                            raw
-                            zeroBased={drum}
-                          />
-                          {mapping.mapping.proKeySingle == null && mapping.pressed == null && (
-                            <>
-                              <GuidedAxisCalibration
-                                mapping={mapping}
+                              <StateSlider
                                 mappingIdx={mappingIdx}
                                 profileIdx={profileIdx}
-                                dispatch={dispatch}
+                                center={mapping.center!}
+                                min={mapping.min!}
+                                max={mapping.max!}
+                                deadzone={mapping.deadzone!}
+                                trigger={triggerAxis}
+                                raw
+                                zeroBased={drum}
                               />
-                              <Space h="md" />
-                            </>
-                          )}
-                          {stick && !mapping.section && (
-                            <>
+                              {mapping.mapping.proKeySingle == null && mapping.pressed == null && (
+                                <>
+                                  <GuidedAxisCalibration
+                                    mapping={mapping}
+                                    mappingIdx={mappingIdx}
+                                    profileIdx={profileIdx}
+                                    dispatch={dispatch}
+                                  />
+                                  <Space h="md" />
+                                </>
+                              )}
+                              {stick && !mapping.section && (
+                                <>
+                                  <Text size="sm" fw={700}>
+                                    {t('calibration.center')}
+                                  </Text>
+                                  <Group>
+                                    <Slider
+                                      flex={1}
+                                      value={mapping.center!}
+                                      min={0}
+                                      max={65535}
+                                      onChange={(val) => dispatch({ ...mapping, center: val })}
+                                    />
+
+                                    <NumberInput
+                                      value={mapping.center!}
+                                      min={0}
+                                      max={65535}
+                                      onChange={(e) =>
+                                        dispatch({ ...mapping, center: parseInt(e.toString(), 10) })
+                                      }
+                                      w={100}
+                                    />
+                                  </Group>
+
+                                  <Group>
+                                    <Button
+                                      onClick={() => {
+                                        dispatch({
+                                          ...mapping,
+                                          center:
+                                            useConfigStore.getState().mappingStatus[profileIdx][
+                                              mappingIdx
+                                            ].stateRaw,
+                                        });
+                                      }}
+                                    >
+                                      {t('pin_use_current')}
+                                    </Button>
+                                  </Group>
+                                  <Space h="md" />
+                                </>
+                              )}
                               <Text size="sm" fw={700}>
-                                {t('calibration.center')}
+                                {t(triggerAxis ? 'calibration.released' : 'calibration.min')}
                               </Text>
                               <Group>
                                 <Slider
                                   flex={1}
-                                  value={mapping.center!}
+                                  value={mapping.min!}
                                   min={0}
                                   max={65535}
-                                  onChange={(val) => dispatch({ ...mapping, center: val })}
+                                  onChange={(val) => dispatch({ ...mapping, min: val })}
                                 />
 
                                 <NumberInput
-                                  value={mapping.center!}
+                                  value={mapping.min!}
                                   min={0}
                                   max={65535}
                                   onChange={(e) =>
-                                    dispatch({ ...mapping, center: parseInt(e.toString(), 10) })
+                                    dispatch({ ...mapping, min: parseInt(e.toString(), 10) })
                                   }
                                   w={100}
                                 />
                               </Group>
-
                               <Group>
                                 <Button
                                   onClick={() => {
                                     dispatch({
                                       ...mapping,
-                                      center:
-                                        useConfigStore.getState().mappingStatus[profileIdx][
-                                          mappingIdx
-                                        ].stateRaw,
+                                      min: useConfigStore.getState().mappingStatus[profileIdx][
+                                        mappingIdx
+                                      ].stateRaw,
                                     });
                                   }}
                                 >
@@ -5077,116 +5123,93 @@ export function SantrollerMapping({
                                 </Button>
                               </Group>
                               <Space h="md" />
-                            </>
-                          )}
-                          <Text size="sm" fw={700}>
-                            {t(triggerAxis ? 'calibration.released' : 'calibration.min')}
-                          </Text>
-                          <Group>
-                            <Slider
-                              flex={1}
-                              value={mapping.min!}
-                              min={0}
-                              max={65535}
-                              onChange={(val) => dispatch({ ...mapping, min: val })}
-                            />
-
-                            <NumberInput
-                              value={mapping.min!}
-                              min={0}
-                              max={65535}
-                              onChange={(e) =>
-                                dispatch({ ...mapping, min: parseInt(e.toString(), 10) })
-                              }
-                              w={100}
-                            />
-                          </Group>
-                          <Group>
-                            <Button
-                              onClick={() => {
-                                dispatch({
-                                  ...mapping,
-                                  min: useConfigStore.getState().mappingStatus[profileIdx][
-                                    mappingIdx
-                                  ].stateRaw,
-                                });
-                              }}
-                            >
-                              {t('pin_use_current')}
-                            </Button>
-                          </Group>
-                          <Space h="md" />
-                          <Text size="sm" fw={700}>
-                            {t(triggerAxis ? 'calibration.pressed' : 'calibration.max')}
-                          </Text>
-                          <Group>
-                            <Slider
-                              flex={1}
-                              value={mapping.max!}
-                              min={0}
-                              max={65535}
-                              onChange={(val) => dispatch({ ...mapping, max: val })}
-                            />
-                            <NumberInput
-                              value={mapping.max!}
-                              min={0}
-                              max={65535}
-                              onChange={(e) =>
-                                dispatch({ ...mapping, max: parseInt(e.toString(), 10) })
-                              }
-                              w={100}
-                            />
-                          </Group>
-                          <Group>
-                            <Button
-                              onClick={() => {
-                                dispatch({
-                                  ...mapping,
-                                  max: useConfigStore.getState().mappingStatus[profileIdx][
-                                    mappingIdx
-                                  ].stateRaw,
-                                });
-                              }}
-                            >
-                              {t('pin_use_current')}
-                            </Button>
-                          </Group>
-                          <Space h="md" />
-                          {!triggerAxis && (
-                            <>
                               <Text size="sm" fw={700}>
-                                {t('calibration.deadzone')}
+                                {t(triggerAxis ? 'calibration.pressed' : 'calibration.max')}
                               </Text>
                               <Group>
                                 <Slider
                                   flex={1}
-                                  value={mapping.deadzone!}
+                                  value={mapping.max!}
                                   min={0}
                                   max={65535}
-                                  onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+                                  onChange={(val) => dispatch({ ...mapping, max: val })}
                                 />
-
                                 <NumberInput
-                                  value={mapping.deadzone!}
+                                  value={mapping.max!}
                                   min={0}
                                   max={65535}
                                   onChange={(e) =>
-                                    dispatch({ ...mapping, deadzone: parseInt(e.toString(), 10) })
+                                    dispatch({ ...mapping, max: parseInt(e.toString(), 10) })
                                   }
                                   w={100}
                                 />
                               </Group>
+                              <Group>
+                                <Button
+                                  onClick={() => {
+                                    dispatch({
+                                      ...mapping,
+                                      max: useConfigStore.getState().mappingStatus[profileIdx][
+                                        mappingIdx
+                                      ].stateRaw,
+                                    });
+                                  }}
+                                >
+                                  {t('pin_use_current')}
+                                </Button>
+                              </Group>
                               <Space h="md" />
+                              {!triggerAxis && (
+                                <>
+                                  <Text size="sm" fw={700}>
+                                    {t('calibration.deadzone')}
+                                  </Text>
+                                  <Group>
+                                    <Slider
+                                      flex={1}
+                                      value={mapping.deadzone!}
+                                      min={0}
+                                      max={65535}
+                                      onChange={(val) => dispatch({ ...mapping, deadzone: val })}
+                                    />
+
+                                    <NumberInput
+                                      value={mapping.deadzone!}
+                                      min={0}
+                                      max={65535}
+                                      onChange={(e) =>
+                                        dispatch({
+                                          ...mapping,
+                                          deadzone: parseInt(e.toString(), 10),
+                                        })
+                                      }
+                                      w={100}
+                                    />
+                                  </Group>
+                                  <Space h="md" />
+                                </>
+                              )}
                             </>
                           )}
-                          {mapping.mapping.rbAxis ===
-                            proto.RockBandGuitarAxisType.RockBandGuitar_Pickup && (
-                            <PickupNotches
-                              mapping={mapping}
-                              mappingIdx={mappingIdx}
-                              profileIdx={profileIdx}
-                              dispatch={dispatch}
-                            />
+                          {pickupSelector && (
+                            <>
+                              <StateSlider
+                                mappingIdx={mappingIdx}
+                                profileIdx={profileIdx}
+                                center={0}
+                                min={0}
+                                max={65535}
+                                deadzone={0}
+                                trigger
+                                raw
+                              />
+                              <PickupNotches
+                                mapping={mapping}
+                                mappingIdx={mappingIdx}
+                                profileIdx={profileIdx}
+                                dispatch={dispatch}
+                              />
+                            </>
                           )}
                         </>
                       )}
@@ -7087,6 +7110,7 @@ function TriggerSettings({
   cycleValues,
   cycleDeviceId,
   hideTypeSelect,
+  hideState = false,
   profileIdx,
   mappingIdx,
   listIdx,
@@ -7100,6 +7124,7 @@ function TriggerSettings({
   cycleValues?: number[];
   cycleDeviceId?: number;
   hideTypeSelect?: boolean;
+  hideState?: boolean;
   profileIdx: number;
   mappingIdx: number;
   listIdx?: number;
@@ -7156,16 +7181,16 @@ function TriggerSettings({
           dispatch={(next) => onChange({ trigger: next })}
         />
       )}
-      {type === proto.AnalogToDigitalTriggerType.Exact && (
+      {!hideState && type === proto.AnalogToDigitalTriggerType.Exact && (
         <InputValue profileIdx={profileIdx} mappingIdx={mappingIdx} listIdx={listIdx} />
       )}
-      {type === proto.AnalogToDigitalTriggerType.JoyHigh && (
+      {!hideState && type === proto.AnalogToDigitalTriggerType.JoyHigh && (
         <StateSlider {...sliderProps} min={value} max={65535} />
       )}
-      {type === proto.AnalogToDigitalTriggerType.JoyLow && (
+      {!hideState && type === proto.AnalogToDigitalTriggerType.JoyLow && (
         <StateSlider {...sliderProps} min={0} max={value} />
       )}
-      {isRange && <StateSlider {...sliderProps} min={value} max={maxValue} />}
+      {!hideState && isRange && <StateSlider {...sliderProps} min={value} max={maxValue} />}
       <Input.Label mb={3}>{isRange ? t('trigger.min') : t('trigger.trigger')}</Input.Label>
       <Group>
         <Slider
@@ -7183,11 +7208,13 @@ function TriggerSettings({
           w={100}
         />
       </Group>
-      <Group>
-        <Button onClick={() => onChange({ triggerValue: currentRaw() })}>
-          {t('pin_use_current')}
-        </Button>
-      </Group>
+      {!hideState && (
+        <Group>
+          <Button onClick={() => onChange({ triggerValue: currentRaw() })}>
+            {t('pin_use_current')}
+          </Button>
+        </Group>
+      )}
       {isRange && (
         <>
           <Input.Label mb={3}>{t('trigger.max')}</Input.Label>
@@ -7207,16 +7234,61 @@ function TriggerSettings({
               w={100}
             />
           </Group>
-          <Group>
-            <Button onClick={() => onChange({ maxTriggerValue: currentRaw() })}>
-              {t('pin_use_current')}
-            </Button>
-          </Group>
+          {!hideState && (
+            <Group>
+              <Button onClick={() => onChange({ maxTriggerValue: currentRaw() })}>
+                {t('pin_use_current')}
+              </Button>
+            </Group>
+          )}
         </>
       )}
     </>
   );
 }
+
+function MappedInputTriggerSettings({
+  input,
+  profileIdx,
+  mappingIdx,
+  onChange,
+}: {
+  input: proto.IInput;
+  profileIdx: number;
+  mappingIdx: number;
+  onChange: (input: proto.IInput) => void;
+}) {
+  const cycleValues = useCycleValues(input);
+  if (!isAnalogInput(input) && !cycleValues?.length) {
+    return null;
+  }
+  return (
+    <TriggerSettings
+      trigger={input.digitalTrigger}
+      triggerValue={input.digitalTriggerValue}
+      maxTriggerValue={input.digitalMaxTriggerValue}
+      deadzone={0}
+      cycleValues={cycleValues}
+      cycleDeviceId={input.cycle?.deviceid}
+      hideState
+      profileIdx={profileIdx}
+      mappingIdx={mappingIdx}
+      onChange={(patch) =>
+        onChange({
+          ...input,
+          ...(patch.trigger !== undefined && { digitalTrigger: patch.trigger }),
+          ...(patch.triggerValue !== undefined && {
+            digitalTriggerValue: patch.triggerValue,
+          }),
+          ...(patch.maxTriggerValue !== undefined && {
+            digitalMaxTriggerValue: patch.maxTriggerValue,
+          }),
+        })
+      }
+    />
+  );
+}
+
 function ActivationTrigger({
   input,
   profileIdx,

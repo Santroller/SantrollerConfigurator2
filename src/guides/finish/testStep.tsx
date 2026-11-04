@@ -56,7 +56,7 @@ export function describeMapping(
     // Gamepad buttons are named per console, the d-pad only generically
     const label = t([`outputs.${name}`, `outputs.Xbox360.${name}`, `outputs.Generic.${name}`]);
     const drum = field === 'ghDrumAxis' || field === 'rbDrumAxis';
-    const axis = field.endsWith('Axis') && mapping.trigger == null;
+    const axis = field.endsWith('Axis') && mapping.input?.digitalTrigger == null;
     return { label, kind: drum ? 'hit' : axis ? 'axis' : 'button' };
   }
   if (out.keycode != null) {

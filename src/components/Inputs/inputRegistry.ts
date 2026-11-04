@@ -2,7 +2,10 @@ import type { TFunction } from 'i18next';
 import { proto } from '@/components/SettingsContext/config';
 import { MIDI_PERCUSSION_CHANNEL } from '@/devices/midi';
 
-export type InputKind = keyof proto.IInput;
+export type InputKind = Exclude<
+  keyof proto.IInput,
+  'digitalTrigger' | 'digitalTriggerValue' | 'digitalMaxTriggerValue'
+>;
 
 export function isSelectablePS2Axis(key: string, selected?: string): boolean {
   return !key.startsWith('PS2AxisDualshock2') || key === selected;
@@ -1216,7 +1219,7 @@ export function getSelectedInput(input?: proto.IInput | null): SelectedInput | u
   }
 
   for (const [kind, value] of Object.entries(input)) {
-    if (value != null) {
+    if (kind in inputRegistry && value != null) {
       return { kind: kind as InputKind, value } as SelectedInput;
     }
   }
