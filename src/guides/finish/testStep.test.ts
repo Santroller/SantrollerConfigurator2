@@ -9,7 +9,7 @@ import { describeMapping } from './testStep';
 
 vi.hoisted(() => {
   vi.stubGlobal('localStorage', { getItem: () => null });
-}); 
+});
 
 const t = i18next.t.bind(i18next);
 // Only what a mapping sends matters for naming it, not where it comes from
