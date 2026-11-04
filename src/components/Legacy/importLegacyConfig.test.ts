@@ -138,8 +138,10 @@ describe('importLegacyConfig', () => {
     const [slash] = festival.mappings.filter((m) => m.input?.gpio?.pin === 26);
     expect(slash).toMatchObject({
       mapping: { keycode: CODE_TO_HID.Slash },
-      trigger: proto.AnalogToDigitalTriggerType.JoyLow,
-      triggerValue: Math.round((65520 + 18512) / 2),
+      input: {
+        digitalTrigger: proto.AnalogToDigitalTriggerType.JoyLow,
+        digitalTriggerValue: Math.round((65520 + 18512) / 2),
+      },
     });
     expect(warnings.some((w) => w.key === 'legacyImport.fortniteModesUnsupported')).toBe(false);
   });

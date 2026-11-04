@@ -12,9 +12,10 @@ vi.hoisted(() => {
 });
 
 const t = i18next.t.bind(i18next);
-// Only what a mapping sends matters for naming it, not where it comes from
-const named = (mapping: Omit<proto.IMapping, 'input'>) =>
-  describeMapping(t, { input: {}, ...mapping }, 4);
+// Only what a mapping sends matters for naming it (and whether its input is used as a button), not
+// where it comes from
+const named = (mapping: Omit<proto.IMapping, 'input'>, input: proto.IInput = {}) =>
+  describeMapping(t, { input, ...mapping }, 4);
 
 describe('naming inputs in the tester', () => {
   it('names instrument outputs, and says how to show them', () => {
@@ -32,10 +33,10 @@ describe('naming inputs in the tester', () => {
 
   it('shows an analog input turned into a button as a button', () => {
     expect(
-      named({
-        mapping: { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt },
-        trigger: proto.AnalogToDigitalTriggerType.JoyHigh,
-      })
+      named(
+        { mapping: { ghAxis: proto.GuitarHeroGuitarAxisType.GuitarHeroGuitar_Tilt } },
+        { digitalTrigger: proto.AnalogToDigitalTriggerType.JoyHigh }
+      )
     ).toMatchObject({ kind: 'button' });
   });
 
