@@ -426,6 +426,8 @@ async fn check_udev_rules() -> Result<UdevStatus, String> {
             if let Ok(content) = std::fs::read_to_string(path) {
                 content.contains("2883")
                     && content.contains("2882")
+                    // older rules didn't cover the USB devices RPCS3's passthrough opens
+                    && content.contains("SUBSYSTEM==\"usb\"")
                     // older rules only had uaccess
                     && (has_logind || content.contains("GROUP=\"input\""))
             } else {

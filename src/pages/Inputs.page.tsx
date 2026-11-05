@@ -124,6 +124,7 @@ import {
   newDisplayElement,
 } from '@/components/Inputs/DisplayElementEditor';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
+import { forcedModeHidesTool, forcedModeLocksOutTool } from '@/components/Inputs/forcedModeLockout';
 import { GuidedAxisCalibration } from '@/components/Inputs/GuidedAxisCalibration';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -7326,6 +7327,58 @@ function ActivationTrigger({
     </Accordion>
   );
 }
+// Shown on a rule forcing a mode that the tool can't connect in, with no held input to skip it
+function ForcedModeLockoutAlert() {
+  const { t } = useTranslation();
+  return (
+    <Alert
+      variant="light"
+      color="orange"
+      title={t('assignments.forcedLockout.title')}
+      icon={<IconExclamationCircle size={16} />}
+      mt="xs"
+    >
+      <Text size="xs">{t('assignments.forcedLockout.desc')}</Text>
+    </Alert>
+  );
+}
+// Edits save straight away, so a change that would lock the device out of the tool is held here
+// until it is accepted. confirm(apply, cancel) runs apply on accept and cancel otherwise.
+function useForcedModeLockoutConfirm() {
+  const { t } = useTranslation();
+  const [pending, setPending] = useState<{ apply: () => void; cancel?: () => void } | null>(null);
+  const confirm = (apply: () => void, cancel?: () => void) => setPending({ apply, cancel });
+  const dismiss = () => {
+    pending?.cancel?.();
+    setPending(null);
+  };
+  const modal = (
+    <Modal
+      opened={pending !== null}
+      onClose={dismiss}
+      title={t('assignments.forcedLockout.title')}
+      centered
+    >
+      <Text size="sm">{t('assignments.forcedLockout.desc')}</Text>
+      <Space h="md" />
+      <Flex justify="flex-end">
+        <Group align="flex-end">
+          <Button
+            color="red"
+            onClick={() => {
+              pending?.apply();
+              setPending(null);
+            }}
+          >
+            {t('assignments.forcedLockout.confirm')}
+          </Button>
+          <Button onClick={dismiss}>{t('common.cancel')}</Button>
+        </Group>
+      </Flex>
+    </Modal>
+  );
+  return { confirm, modal };
+}
 function AssignmentOption({ value }: { value: string }) {
   const { t } = useTranslation();
   return (
@@ -8611,7 +8664,7 @@ function SantrollerAssignmentList({
   mode,
   type,
   legendMode,
-  dispatch,
+  dispatch: dispatchRule,
   deleteAssignment,
   copyAssignment,
   expanded,
@@ -8642,6 +8695,18 @@ function SantrollerAssignmentList({
   const [authTriggerOpened, { open: openAuthTrigger, close: closeAuthTrigger }] =
     useDisclosure(false);
   const { t } = useTranslation();
+  const lockoutConfirm = useForcedModeLockoutConfirm();
+  // Asks before any edit that newly leaves the device unreachable from the tool
+  const dispatch = (next: proto.IProfileAssignment) => {
+    if (
+      !forcedModeLocksOutTool(mapping.assignments ?? [], type) &&
+      forcedModeLocksOutTool(next.assignments ?? [], type)
+    ) {
+      lockoutConfirm.confirm(() => dispatchRule(next));
+      return;
+    }
+    dispatchRule(next);
+  };
   const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
     id: listIdx,
   });
@@ -8915,6 +8980,7 @@ function SantrollerAssignmentList({
 
   return (
     <>
+      {lockoutConfirm.modal}
       <Modal opened={opened} onClose={close} title={t('delete_assignment_dialog.title')} centered>
         {t('delete_assignment_dialog.desc')}
         <Space h="md" />
@@ -9230,6 +9296,7 @@ function SantrollerAssignmentList({
                         }
                       />
                     )}
+                    {forcedModeLocksOutTool(assignments, type) && <ForcedModeLockoutAlert />}
                     {currentUsbOption === 'specific' && (
                       <DropdownBox
                         title="activation.consoleType"
@@ -9677,6 +9744,7 @@ function BlankProfileWizard({
 }) {
   const { t } = useTranslation();
   const deviceTypes = useDeviceTypes();
+  const lockoutConfirm = useForcedModeLockoutConfirm();
 
   const hasBluetooth = deviceTypes.includes('bt');
   const hasWiiEmu = deviceTypes.includes('wiiEmulation');
@@ -9869,20 +9937,86 @@ function BlankProfileWizard({
       updatedTriggerInput
     );
 
-    const currentProfile = useConfigStore.getState().config.profiles![profileIdx] || profile;
-    updateProfile(
-      {
-        ...currentProfile,
-        opts: {
-          ...currentProfile.opts,
-          deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
-          name: truncateProfileName(updatedName),
-          deviceToEmulate: updatedDeviceToEmulate,
+    const apply = () => {
+      const currentProfile = useConfigStore.getState().config.profiles![profileIdx] || profile;
+      updateProfile(
+        {
+          ...currentProfile,
+          opts: {
+            ...currentProfile.opts,
+            deviceSlotIdVersion: SLOT_ID_VERSION_LATEST,
+            name: truncateProfileName(updatedName),
+            deviceToEmulate: updatedDeviceToEmulate,
+          },
+          assignments: [{ assignments: finalAssignments }],
         },
-        assignments: [{ assignments: finalAssignments }],
-      },
-      profileIdx
+        profileIdx
+      );
+    };
+    const previousAssignments = buildAssignments(
+      currentEmulMode,
+      usbMode,
+      forcedConsole,
+      specificConsole,
+      xinputOnWindows,
+      ps4OrPs5Mode,
+      bluetoothMode,
+      hostAssignments,
+      claimLocalInputs,
+      triggerType,
+      triggerInput
     );
+    if (
+      !forcedModeLocksOutTool(previousAssignments, deviceToEmulate) &&
+      forcedModeLocksOutTool(finalAssignments, updatedDeviceToEmulate)
+    ) {
+      // Callers set their state before syncing, so put back what this change touched (this
+      // closure still holds the values from before it) if it is turned down
+      lockoutConfirm.confirm(apply, () => {
+        const has = (key: keyof NonNullable<typeof params>) => !!params && key in params;
+        if (has('name')) {
+          setName(name);
+        }
+        if (has('deviceToEmulate')) {
+          setDeviceToEmulate(deviceToEmulate);
+        }
+        if (has('currentEmulMode')) {
+          setCurrentEmulMode(currentEmulMode);
+        }
+        if (has('usbMode')) {
+          setUsbMode(usbMode);
+        }
+        if (has('forcedConsole')) {
+          setForcedConsole(forcedConsole);
+        }
+        if (has('specificConsole')) {
+          setSpecificConsole(specificConsole);
+        }
+        if (has('xinputOnWindows')) {
+          setXinputOnWindows(xinputOnWindows);
+        }
+        if (has('ps4OrPs5Mode')) {
+          setPs4OrPs5Mode(ps4OrPs5Mode);
+        }
+        if (has('bluetoothMode')) {
+          setBluetoothMode(bluetoothMode);
+        }
+        if (has('hostAssignments')) {
+          setHostAssignments(hostAssignments);
+        }
+        if (has('claimLocalInputs')) {
+          setClaimLocalInputs(claimLocalInputs);
+        }
+        if (has('triggerType')) {
+          setTriggerType(triggerType);
+        }
+        if (has('triggerInput')) {
+          setTriggerInput(triggerInput);
+        }
+      });
+      return;
+    }
+    apply();
   };
 
   // Profiles that only use the board's own pins claim them unless told otherwise, so a second such
@@ -10077,6 +10211,7 @@ function BlankProfileWizard({
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder maw={560} mx="auto" my="md">
+      {lockoutConfirm.modal}
       <Stack gap="md">
         <Group justify="space-between" align="flex-start">
           <Group gap="xs">
@@ -10202,6 +10337,11 @@ function BlankProfileWizard({
                   }}
                 />
               )}
+              {usbMode === 'forced' &&
+                forcedModeHidesTool(forcedConsole, deviceToEmulate) &&
+                (triggerType === 'always' || getSelectedInput(triggerInput) === undefined) && (
+                  <ForcedModeLockoutAlert />
+                )}
               {usbMode === 'specific' && (
                 <DropdownBox
                   title="activation.consoleType"

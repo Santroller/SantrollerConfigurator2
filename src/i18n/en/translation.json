@@ -2192,6 +2192,11 @@
     "specificConsoleDesc": "Enable to apply this profile when plugged into a specific device, for example setting this to PS3 would only apply this profile when plugged into a PS3.",
     "forcedType": "Force device type",
     "forcedTypeDesc": "Enable to ignore console detection and always use a specific mode for this profile.",
+    "forcedLockout": {
+      "title": "You won't be able to configure this device",
+      "confirm": "Use this mode anyway",
+      "desc": "The configurator can't connect to the device in this mode, so once this rule applies you won't be able to change the configuration. Add a hold button trigger so the rule only applies while that button is held, then plug in without holding it whenever you need to configure the device."
+    },
     "localInputs": "Claim directly wired inputs",
     "localInputsDesc": "Claims the buttons and sensors wired straight to this board's pins. Controllers in this profile's rules, like a PS1/2 controller or Wii extension, are claimed already, so this is only needed for inputs that aren't on one. Only one profile can claim them at a time, and the highest one in the sidebar wins.",
     "xboxOneAuth": "Stay active through Xbox One authentication",
@@ -6172,13 +6177,16 @@
   },
   "compatibility": {
     "title": "Console Compatibility",
-    "subtitle": "Which emulation mode to use on each console, how console authentication works, and setup for Wii Brainslug and PS2 PADEMU.",
+    "subtitle": "Which emulation mode to use on each console, from the NES to the PS5, how console authentication works, and setup guides for Wii and PS2 homebrew and the RPCS3 emulator.",
     "tabs": {
       "matrix": "Compatibility",
       "modes": "Emulation Modes",
-      "plugins": "Plugins & Homebrew",
+      "wii": "Wii Bluetooth",
       "auth": "Authentication",
-      "festival": "Fortnite Festival"
+      "festival": "Fortnite Festival",
+      "brainslug": "Wii Brainslug",
+      "pademu": "PS2 PADEMU",
+      "rpcs3": "RPCS3"
     },
     "matrix": {
       "filterLabel": "Console:",
@@ -6186,8 +6194,8 @@
         "all": "All Consoles",
         "playstation": "PlayStation (PS2-PS5)",
         "xbox": "Xbox (OG, 360, One, Series)",
-        "nintendo": "Nintendo (Wii, Switch)",
-        "pc": "PC / Mac / Linux"
+        "nintendo": "Nintendo (NES to Switch 2)",
+        "pc": "PC / Mac / Linux / Arcade"
       },
       "columns": {
         "console": "Console",
@@ -6217,12 +6225,34 @@
           "connection": "Direct USB",
           "notes": "No setup needed. Whammy, tilt and RGB LEDs all work."
         },
+        "pc_arcade": {
+          "console": "PC",
+          "games": "Spice2x (DanceCon), PD-Loader (Project DIVA), MIDI software, keyboard games",
+          "recommendedMode": "Spice2x / PD-Loader console mode, MIDI, or Keyboard & Mouse",
+          "connection": "Direct USB",
+          "notes": "Force the Spice2x or PD-Loader console mode on the profile for those loaders. MIDI and Keyboard & Mouse profiles show up as standard USB MIDI and keyboard devices."
+        },
+        "pc_bluetooth": {
+          "console": "PC / Mac / Android / iOS",
+          "games": "Anything that takes a Bluetooth gamepad or keyboard",
+          "recommendedMode": "Bluetooth Gamepad / Instrument / Keyboard",
+          "connection": "Bluetooth (Pico W or USB dongle)",
+          "notes": "Pair like any Bluetooth controller. Most consoles won't pair with a Bluetooth gamepad, so use a second Pico W as a Bluetooth receiver for those.",
+          "pluginOrAuth": "Pico W, Pico 2 W or a USB Bluetooth dongle"
+        },
+        "gh_arcade": {
+          "console": "Guitar Hero Arcade cabinet",
+          "games": "Guitar Hero Arcade",
+          "recommendedMode": "Guitar Hero Arcade console mode",
+          "connection": "Direct USB",
+          "notes": "Acts as the cabinet's guitar. Force the Guitar Hero Arcade console mode on the profile."
+        },
         "ps3": {
           "console": "PlayStation 3",
-          "games": "Guitar Hero, Rock Band, DJ Hero and regular games",
-          "recommendedMode": "PS3 Guitar / PS3 Drums / PS3 Gamepad",
+          "games": "Guitar Hero, Rock Band (including Pro Keys and Pro Guitar), DJ Hero, GH Live, Power Gig, racing games and regular games",
+          "recommendedMode": "PS3 Guitar / Drums / Turntable / Pro Keys / Pro Guitar / Wheel / Gamepad",
           "connection": "Direct USB",
-          "notes": "Works out of the box. The PS3 doesn't authenticate controllers."
+          "notes": "Works out of the box. The PS3 doesn't authenticate controllers. Wheels appear as a Logitech G27, since PS3 racing games only take wheels they know."
         },
         "ps2_usb": {
           "console": "PlayStation 2",
@@ -6231,6 +6261,13 @@
           "connection": "Direct USB",
           "notes": "These later PS2 rhythm games support USB instruments directly."
         },
+        "ps2_port": {
+          "console": "PlayStation 2",
+          "games": "Any PS2 game, including Guitar Hero 1 & 2, Taiko no Tatsujin, pop'n music, beatmania IIDX, GuitarFreaks and DrumMania",
+          "recommendedMode": "PS2 controller port emulation (Gamepad / GH Guitar / Taiko / pop'n / beatmania / GuitarFreaks / DrumMania)",
+          "connection": "PS2 controller port (wired)",
+          "notes": "Wire the Pico to a PS2 controller plug and it acts as a real PS2 controller. No homebrew needed, and it works with retail discs."
+        },
         "ps2_pademu": {
           "console": "PlayStation 2",
           "games": "Guitar Hero 1 & 2, regular DualShock games",
@@ -6238,6 +6275,13 @@
           "connection": "USB (with PADEMU) or PS2 controller port",
           "notes": "Older PS2 games only read controllers in the front controller ports. Either use OPL with PADEMU, or wire the Pico to a PS2 controller port.",
           "pluginOrAuth": "<pademu>PADEMU in Open PS2 Loader</pademu>"
+        },
+        "ps2_keyboardmania": {
+          "console": "PlayStation 2",
+          "games": "KeyboardMania",
+          "recommendedMode": "KeyboardMania Controller",
+          "connection": "Direct USB",
+          "notes": "A KeyboardMania profile is detected by the PS2 automatically and acts as the official USB KeyboardMania controller."
         },
         "ps4_rb4": {
           "console": "PlayStation 4",
@@ -6248,11 +6292,11 @@
         },
         "ps4_native": {
           "console": "PlayStation 4",
-          "games": "PS4 games, including the home menu",
-          "recommendedMode": "PS4 Gamepad / Instrument",
+          "games": "PS4 games, including the home menu, Taiko no Tatsujin, Project DIVA and racing games",
+          "recommendedMode": "PS4 Gamepad / Instrument / Taiko / Project DIVA / Wheel",
           "connection": "USB + USB Host passthrough",
           "notes": "Needs authentication. Plug a DualShock 4 or Mayflash MAGPS4 into the Santroller USB Host port.",
-          "pluginOrAuth": "<auth>DualShock 4 / MAGPS4</auth> or <orbis>GoldHEN OrbisInstrumentalizer</orbis>"
+          "pluginOrAuth": "<auth>DualShock 4 / MAGPS4</auth>"
         },
         "ps45_festival": {
           "console": "PlayStation 4 / 5",
@@ -6270,18 +6314,18 @@
         },
         "ps5_native": {
           "console": "PlayStation 5",
-          "games": "PS5 games",
-          "recommendedMode": "PS5 Gamepad / Instrument",
+          "games": "PS5 games, including racing games",
+          "recommendedMode": "PS5 Gamepad / Instrument / Fight Stick / Wheel",
           "connection": "USB + USB Host passthrough",
           "notes": "PS5 games need a Besavior P5General plugged into the Santroller USB Host port.",
           "pluginOrAuth": "<auth>Besavior P5General</auth>"
         },
         "x360": {
           "console": "Xbox 360",
-          "games": "Guitar Hero, Rock Band, DJ Hero and regular games",
-          "recommendedMode": "Xbox 360 Guitar / Drums / Gamepad",
+          "games": "Guitar Hero, Rock Band (including Pro Keys and Pro Guitar), DJ Hero, GH Live, dance, racing, arcade stick and flight stick games",
+          "recommendedMode": "Xbox 360 Guitar / Drums / Turntable / Pro Keys / Pro Guitar / Wheel / Dance Pad / Gamepad",
           "connection": "Direct USB",
-          "notes": "Santroller handles Xbox 360 authentication itself, so no extra hardware is needed."
+          "notes": "Santroller handles Xbox 360 authentication itself, so no extra hardware is needed. A Microphone profile on its own shows up as the Logitech USB Microphone for singing."
         },
         "xbone_festival": {
           "console": "Xbox One / Series X|S",
@@ -6292,18 +6336,18 @@
         },
         "xbone_native": {
           "console": "Xbox One / Series X|S",
-          "games": "Rock Band 4 and other Xbox One / Series games",
-          "recommendedMode": "Xbox One Gamepad / Instrument",
+          "games": "Rock Band 4, Guitar Hero Live, racing games and other Xbox One / Series games",
+          "recommendedMode": "Xbox One Gamepad / Instrument / GH Live Guitar / Wheel, or Wireless Legacy Adapter",
           "connection": "USB Host passthrough or I2C auth chip",
           "notes": "Authenticate with official or most third-party Xbox One controllers on the USB Host port, or with an auth chip taken from an Xbox One controller and wired over I2C.",
           "pluginOrAuth": "<auth>Xbox One controller or I2C auth chip</auth>"
         },
         "wii_rb": {
           "console": "Nintendo Wii & Wii U",
-          "games": "Rock Band 1, 2, 3, Beatles",
-          "recommendedMode": "Rock Band Guitar / Drums (Wii USB)",
+          "games": "Rock Band 1, 2, 3, Beatles, Green Day, LEGO Rock Band",
+          "recommendedMode": "Rock Band Guitar / Drums / Pro Keys / Pro Guitar (Wii USB)",
           "connection": "Direct USB",
-          "notes": "Wii Rock Band games use USB instruments. Set the emulation mode to Rock Band and plug in."
+          "notes": "Wii Rock Band games use USB instruments. Use a Rock Band profile and plug in. Pro Keys and both Pro Guitars work in Rock Band 3."
         },
         "wii_gh": {
           "console": "Nintendo Wii & Wii U",
@@ -6313,12 +6357,40 @@
           "notes": "Santroller can act as a Wii Remote over Bluetooth using a Pico W or a USB Bluetooth dongle. This works on an unmodified Wii with retail discs. Otherwise, use Brainslug on a modded Wii or wire up a Wii extension cable.",
           "pluginOrAuth": "<wii>Bluetooth (Pico W or USB dongle)</wii> or <brainslug>Brainslug (USB)</brainslug>"
         },
+        "wii_ext": {
+          "console": "Nintendo Wii & Wii U",
+          "games": "Guitar Hero, DJ Hero, Taiko no Tatsujin, Classic Controller games",
+          "recommendedMode": "Wii extension emulation (GH Guitar / GH Drums / Turntable / Taiko / Classic Controller)",
+          "connection": "Wii Remote extension port (wired)",
+          "notes": "Wire the Pico to a Wii extension plug and it acts as an extension in a real Wii Remote. Guitar Hero guitars and drums, DJ Hero turntables and Taiko drums are sent as those extensions; every other profile type is sent as a Classic Controller."
+        },
         "switch": {
-          "console": "Nintendo Switch",
-          "games": "All Switch games (e.g. Taiko, Rhythm Sprout)",
-          "recommendedMode": "Nintendo Switch Pro Controller",
+          "console": "Nintendo Switch / Switch 2",
+          "games": "All Switch games (e.g. Taiko no Tatsujin, Project DIVA, Rhythm Sprout)",
+          "recommendedMode": "Switch Pro Controller, Taiko Drum or Project DIVA controller",
           "connection": "Direct USB",
-          "notes": "Enable \"Pro Controller Wired Communication\" under System Settings → Controllers and Sensors."
+          "notes": "Enable \"Pro Controller Wired Communication\" under System Settings → Controllers and Sensors. Taiko and Project DIVA profiles act as the licensed HORI controllers."
+        },
+        "gamecube": {
+          "console": "GameCube (and Wii GameCube ports)",
+          "games": "All GameCube games, plus GameCube-controller games on the Wii",
+          "recommendedMode": "GameCube controller emulation (Gamepad / Speed Force wheel)",
+          "connection": "GameCube controller port (wired)",
+          "notes": "Wire the Pico to a GameCube controller plug. Wheel profiles act as a Speed Force wheel."
+        },
+        "n64": {
+          "console": "Nintendo 64",
+          "games": "All N64 games",
+          "recommendedMode": "N64 controller emulation",
+          "connection": "N64 controller port (wired)",
+          "notes": "Uses the same wiring as GameCube emulation. Set the console to N64 on the GameCube / N64 emulation device."
+        },
+        "snes": {
+          "console": "SNES / NES",
+          "games": "All SNES and NES games",
+          "recommendedMode": "SNES / NES controller emulation",
+          "connection": "SNES or NES controller port (wired)",
+          "notes": "Wire the Pico to a SNES or NES controller plug, then pick the console on the SNES / NES emulation device."
         },
         "ogxbox": {
           "console": "Original Xbox",
@@ -6326,11 +6398,19 @@
           "recommendedMode": "Original Xbox (ogxbox)",
           "connection": "USB to Xbox port adapter",
           "notes": "Santroller speaks the original Xbox controller protocol. You need a USB to Xbox controller port adapter cable."
+        },
+        "rpcs3": {
+          "console": "RPCS3 (PS3 emulator)",
+          "games": "Guitar Hero, Rock Band, DJ Hero, Guitar Hero Live",
+          "recommendedMode": "PS3 instrument (switches automatically)",
+          "connection": "Direct USB",
+          "notes": "Rock Band, DJ Hero and GH Live instruments use USB passthrough with no setup. Guitar Hero guitars need a one-time setup with RPCS3's SDL pad handler.",
+          "pluginOrAuth": "<rpcs3>RPCS3 setup guide</rpcs3>"
         }
       }
     },
     "modes": {
-      "intro": "Set the emulation mode under <strong>Controller Settings → Emulation Type</strong>.",
+      "intro": "Each profile's controller type decides what it emulates, and Santroller detects which console it's plugged into. To pick the console yourself, use <strong>Force Console Mode</strong> on the profile's assignment.",
       "cards": {
         "ghGuitar": {
           "title": "Guitar Hero Guitar",
@@ -6368,6 +6448,25 @@
           "description": "Acts like a DJ Hero turntable: platter encoders, the three stream buttons, crossfader, Euphoria button and effects dial.",
           "features": ["High-resolution platter tracking", "Crossfader calibration"]
         },
+        "ghl": {
+          "title": "Guitar Hero Live Guitar",
+          "badge": "GH Live",
+          "description": "Acts like a Guitar Hero Live guitar, with the 6-button (3x2) fret layout, strum bar, whammy, tilt and Hero Power.",
+          "features": [
+            "Works on PS3, Wii U, Xbox 360, PS4 and Xbox One",
+            "On Xbox One, a Guitar Hero Live profile works alongside the Wireless Legacy Adapter"
+          ]
+        },
+        "proInstruments": {
+          "title": "Rock Band 3 Pro Instruments",
+          "badge": "Pro",
+          "description": "Acts like the Rock Band 3 Pro Keys keyboard or the Mustang and Squier Pro Guitars.",
+          "features": [
+            "Works on PS3, Xbox 360 and Wii",
+            "A MIDI keyboard can be played as Pro Keys",
+            "A real Squier or Mustang Pro Guitar can be read over MIDI or from its neck"
+          ]
+        },
         "festival": {
           "title": "Fortnite Festival",
           "badge": "Fortnite Festival",
@@ -6380,93 +6479,83 @@
           ]
         },
         "gamepad": {
-          "title": "Gamepad & Arcade",
+          "title": "Gamepad, Fight Stick & Dance Pad",
           "badge": "General",
-          "description": "Modes for regular controllers, dance pads and arcade games.",
+          "description": "Modes for regular controllers, arcade sticks, flight sticks and dance pads.",
           "features": [
-            "XInput (PC/Xbox), DirectInput (PS3/Switch) and original Xbox",
-            "BEMANI controllers on PS2: Pop'n Music, beatmania IIDX, GuitarFreaks and DrumMania",
-            "Spice2x (as a DanceCon2040 pad) and PD-Loader (Project DIVA) on PC"
+            "XInput (PC/Xbox), DirectInput (PS3/Switch), PS4, PS5 and original Xbox",
+            "Fight stick and flight stick types on Xbox 360, plus fight sticks on PS4 and PS5",
+            "Dance pads on Xbox 360 and PC"
+          ]
+        },
+        "arcadeRhythm": {
+          "title": "Taiko, Project DIVA & BEMANI",
+          "badge": "Arcade Rhythm",
+          "description": "Drums and button controllers for arcade-style rhythm games.",
+          "features": [
+            "<strong>Taiko no Tatsujin:</strong> HORI drum on Switch and PS4, PS2 Taiko drum through the controller port, and the Wii Taiko drum extension",
+            "<strong>Project DIVA:</strong> HORI controller on Switch and PS4, PD-Loader on PC",
+            "<strong>BEMANI on PS2:</strong> pop'n music, beatmania IIDX, GuitarFreaks and DrumMania through the controller port, and KeyboardMania over USB"
+          ]
+        },
+        "wheel": {
+          "title": "Racing Wheel",
+          "badge": "Wheel",
+          "description": "Acts like the wheel each console's racing games expect.",
+          "features": [
+            "Logitech G27 on PS3 and G29 on PS4, plus native PS5 and Xbox One wheel support",
+            "Xbox 360 and original Xbox wheels",
+            "Speed Force wheel on the GameCube"
+          ]
+        },
+        "consolePorts": {
+          "title": "Retro Controller Ports",
+          "badge": "Wired",
+          "description": "Wire the Pico straight to a console's own controller plug instead of using USB.",
+          "features": [
+            "<strong>PS2:</strong> Gamepad, Guitar Hero guitar, Taiko and BEMANI controllers",
+            "<strong>Wii Remote extension:</strong> Guitar Hero guitar and drums, DJ Hero turntable, Taiko drum, or Classic Controller",
+            "<strong>GameCube / N64:</strong> one plug wiring, pick the console in the device settings",
+            "<strong>SNES / NES:</strong> one plug wiring, pick the console in the device settings"
+          ]
+        },
+        "pcModes": {
+          "title": "PC & Arcade Loaders",
+          "badge": "PC",
+          "description": "Console modes for specific PC software and arcade hardware. Force them on the profile's assignment.",
+          "features": [
+            "<strong>Spice2x:</strong> appears as a DanceCon pad",
+            "<strong>PD-Loader:</strong> Project DIVA Arcade on PC",
+            "<strong>Guitar Hero Arcade:</strong> acts as the cabinet's guitar",
+            "<strong>Tip:</strong> the configurator can't connect while these modes are forced, so add a hold button trigger to the rule and plug in without holding it to configure the device"
+          ]
+        },
+        "keyboardMidiMic": {
+          "title": "Keyboard, MIDI & Microphone",
+          "badge": "Extras",
+          "description": "Profiles that show up as standard USB devices instead of a controller.",
+          "features": [
+            "<strong>Keyboard & Mouse:</strong> bind any input to a key or mouse movement, over USB or Bluetooth",
+            "<strong>MIDI:</strong> a class-compliant USB MIDI device for DAWs and drum software",
+            "<strong>Microphone:</strong> passes a USB mic on the USB Host port through as a Logitech USB Microphone, which Rock Band, Guitar Hero and other singing games accept"
           ]
         }
       }
     },
-    "plugins": {
-      "wiiBluetooth": {
-        "title": "Wii & Wii U: Wii Remote emulation",
-        "subtitle": "Connects over Bluetooth. No console mods or homebrew needed.",
-        "badge": "Recommended",
-        "alertTitle": "Works on an unmodified console",
-        "alertBody": "Santroller can <strong>act as a Wii Remote</strong> over Bluetooth, so you can play <strong>Guitar Hero, Band Hero and DJ Hero</strong> on a stock Wii or Wii U with retail discs.",
-        "hardwareTitle": "What you need",
-        "hardwarePicoW": "<strong>Raspberry Pi Pico W / Pico 2 W:</strong> uses the built-in CYW43439 Bluetooth radio.",
-        "hardwarePicoWWarning": "Some cheap \"Pico W\" boards from AliExpress use an ESP8285/ESP8266 chip instead. These don't have Bluetooth and won't work.",
-        "hardwareDongle": "<strong>Regular Pico + Bluetooth dongle:</strong> plug a CSR8510 or BCM20702 dongle into the Pico's USB host port.",
-        "pairingTitle": "Pairing",
-        "pairingSteps": [
-          "Turn on <strong>Wii Remote Emulation</strong> for your device in the Configurator.",
-          "Turn on your instrument and the Wii / Wii U.",
-          "Press the <strong>SYNC</strong> button on the console, then press SYNC on your controller.",
-          "The controller connects as a Wii Remote with a guitar or drum extension."
-        ]
-      },
-      "brainslug": {
-        "title": "Wii: Santroller Brainslug",
-        "subtitle": "Lets Guitar Hero, Band Hero and DJ Hero on Wii use wired USB instruments",
-        "badge": "Wii Homebrew",
-        "intro": "Guitar Hero and DJ Hero on Wii only look for instruments plugged into a Wii Remote. If you're using a wired USB controller without Bluetooth, <strong>Santroller Brainslug</strong> is a homebrew patch that makes these games read USB instruments instead.",
-        "discTitle": "Using game discs (Homebrew Channel)",
-        "discSteps": [
-          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug releases <icon /></extlink>.",
-          "Extract <code>sd.zip</code> to the root of your Wii's SD card.",
-          "Plug your instrument into one of the Wii's USB ports.",
-          "Insert the game disc and open the Homebrew Channel.",
-          "Launch <strong>Brainslug</strong>. The game will boot with USB instrument support."
-        ],
-        "usbLoaderTitle": "Using USB Loader GX",
-        "usbLoaderAlertTitle": "Load games from USB, not SD",
-        "usbLoaderAlertBody": "The game <strong>has to be loaded from a USB drive</strong>. Loading it from the SD card stops Brainslug from loading its modules.",
-        "usbLoaderSteps": [
-          "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug releases <icon /></extlink>.",
-          "Extract <code>sd.zip</code> to the root of your SD card.",
-          "In <code>/bcs/dols/</code>, rename <code>RGHE52.dol</code> to the <strong>Title ID</strong> of your game (e.g. <code>SXEE52.dol</code> for Guitar Hero 5). Make a copy for each game you want to use.",
-          "Open USB Loader GX.",
-          "Select the game and go to <strong>Settings</strong> → <strong>Game Load</strong>.",
-          "Set <strong>Game IOS</strong> to <code>Custom</code>.",
-          "Set <strong>Custom Game IOS</strong> to <code>249</code> (or your cIOS slot).",
-          "Set <strong>Alternate DOL</strong> to <code>Load from SD/USB</code>.",
-          "Save, plug in your instrument and start the game."
-        ]
-      },
-      "pademu": {
-        "title": "PS2: PADEMU in Open PS2 Loader",
-        "subtitle": "Use USB instruments in older PS2 games on a modded PS2",
-        "badge": "PS2 Homebrew",
-        "intro": "Older PS2 games, including Guitar Hero 1 and 2, only read controllers in the front controller ports and ignore USB. <strong>PADEMU</strong>, built into Open PS2 Loader, makes USB controllers show up as PS2 controllers.",
-        "note": "<strong>Note:</strong> Santroller switches to PS3 mode when plugged into a PS2. PADEMU sees a PS3 guitar and presents it to the game as a PS2 Guitar Hero controller. PADEMU only works for games launched from OPL, not retail discs.",
-        "steps": [
-          "Plug your Santroller controller into one of the PS2's USB ports.",
-          "Plug a normal PS2 controller into port 2, so you can still get around the menus.",
-          "Make sure you have a recent build of <extlink>Open PS2 Loader (OPL) <icon /></extlink>.",
-          "Start OPL and press Start to open <strong>Settings</strong>.",
-          "Go to <strong>Configure PADEMU</strong>.",
-          "Set <strong>Pad Emulator</strong> to <code>On</code>.",
-          "Set <strong>Pad Emulator Mode</strong> to <code>DualShock3/4 USB</code>.",
-          "Set <strong>Multitap Emulation</strong> to <code>Off</code>.",
-          "Set <strong>Settings For Port</strong> to <code>1P</code> and <strong>Emulation</strong> to <code>On</code>.",
-          "Press <strong>OK</strong>, then <strong>Save Changes</strong>.",
-          "Start the game from OPL."
-        ]
-      },
-      "orbis": {
-        "title": "PS4: OrbisInstrumentalizer",
-        "subtitle": "Removes instrument restrictions on a jailbroken PS4",
-        "badge": "PS4 Jailbreak",
-        "cardTitle": "OrbisInstrumentalizer",
-        "cardSubtitle": "A GoldHEN plugin for jailbroken PS4s.",
-        "cardBody": "Patches Rock Band 4 and Guitar Hero Live to remove the instrument and authentication checks, so any USB guitar or drum kit works without an auth controller plugged into the USB Host port.",
-        "viewOnGithub": "View on GitHub"
-      }
+    "wiiBluetooth": {
+      "alertTitle": "Works on an unmodified console",
+      "alertBody": "Santroller can <strong>act as a Wii Remote</strong> over Bluetooth, so you can play <strong>Guitar Hero, Band Hero and DJ Hero</strong> on a stock Wii or Wii U with retail discs.",
+      "hardwareTitle": "What you need",
+      "hardwarePicoW": "<strong>Raspberry Pi Pico W / Pico 2 W:</strong> uses the built-in CYW43439 Bluetooth radio.",
+      "hardwarePicoWWarning": "Some cheap \"Pico W\" boards from AliExpress use an ESP8285/ESP8266 chip instead. These don't have Bluetooth and won't work.",
+      "hardwareDongle": "<strong>Regular Pico + Bluetooth dongle:</strong> plug a CSR8510 or BCM20702 dongle into the Pico's USB host port.",
+      "pairingTitle": "Pairing",
+      "pairingSteps": [
+        "Turn on <strong>Wii Remote Emulation</strong> for your device in the Configurator.",
+        "Turn on your instrument and the Wii / Wii U.",
+        "Press the <strong>SYNC</strong> button on the console, then press SYNC on your controller.",
+        "The controller connects as a Wii Remote with a guitar or drum extension."
+      ]
     },
     "auth": {
       "wla": {
@@ -6569,6 +6658,218 @@
         "navigation": "<strong>Menu navigation:</strong> Bind keys like the arrow keys, Enter and Escape to buttons or button combos (e.g. Start + Select) so you can get around Fortnite's menus.",
         "assignments": "<strong>Choose when it's used:</strong> Under <strong>Assignments</strong>, set the profile as the default, or have it activate when you hold a button (like Green or Start) while plugging in.",
         "save": "<strong>Save:</strong> Click <strong>Save Settings</strong>."
+      }
+    },
+    "brainslug": {
+      "intro": "Guitar Hero and DJ Hero on Wii only look for instruments plugged into a Wii Remote. If you're using a wired USB controller without Bluetooth, <strong>Santroller Brainslug</strong> is a homebrew patch that makes these games read USB instruments instead.",
+      "needTitle": "What you need",
+      "need": [
+        "A Wii with the <strong>Homebrew Channel</strong> installed.",
+        "An SD card for the Wii.",
+        "To load games from a USB drive: <strong>USB Loader GX</strong> and a cIOS (usually in slot 249)."
+      ],
+      "sd": {
+        "title": "Set up the SD card",
+        "body": "Download <code>sd.zip</code> from the <extlink>Santroller Brainslug releases <icon /></extlink> and extract it to the root of the SD card. It should look like this:",
+        "parts": {
+          "app": {
+            "title": "apps/brainslug",
+            "body": "The Brainslug app, which shows up in the Homebrew Channel. Used to play from a game disc."
+          },
+          "modules": {
+            "title": "bslug",
+            "body": "The Santroller module and what it needs. Both ways of playing load it from here."
+          },
+          "dol": {
+            "title": "RGHE52.dol",
+            "body": "Only for USB Loader GX. It gets renamed after each game's ID, see below."
+          }
+        }
+      },
+      "playTitle": "Start the game",
+      "playBody": "There are two ways to start it, depending on whether you play from the game disc or from a USB drive.",
+      "disc": {
+        "title": "Playing from a game disc",
+        "steps": [
+          "Plug your instrument into one of the Wii's USB ports.",
+          "Insert the game disc and open the Homebrew Channel.",
+          "Launch <strong>Brainslug</strong>. The game boots with USB instrument support."
+        ]
+      },
+      "usbLoader": {
+        "title": "Playing from USB Loader GX",
+        "alertTitle": "Load games from USB, not SD",
+        "alertBody": "The game <strong>has to be loaded from a USB drive</strong>. Loading it from the SD card stops Brainslug from loading its modules.",
+        "renameBody": "USB Loader GX looks for a file named after the game's ID at the root of the SD card. Rename <code>RGHE52.dol</code> to your game's ID, and make a copy for each game you play. For example, Guitar Hero 5 (USA) is <code>SXEE52</code>:",
+        "settingsBody": "Then in USB Loader GX, select the game, open its <strong>Settings</strong> and go to <strong>Game Load</strong>:",
+        "parts": {
+          "ios": {
+            "title": "Game IOS: Custom",
+            "body": "Set <strong>Game IOS</strong> to <strong>Custom</strong>. A <strong>Custom Game IOS</strong> row appears under it."
+          },
+          "customIos": {
+            "title": "Custom Game IOS: 249",
+            "body": "Set it to <strong>249</strong>, or the slot your cIOS is installed in."
+          },
+          "dol": {
+            "title": "Alternate DOL: Load from SD/USB",
+            "body": "Set <strong>Alternate DOL</strong> to <strong>Load from SD/USB</strong>, so it boots the renamed file instead of the game's own."
+          },
+          "save": {
+            "title": "Save",
+            "body": "Press <strong>Save</strong>, plug in your instrument and start the game."
+          }
+        }
+      }
+    },
+    "pademu": {
+      "intro": "Older PS2 games, including Guitar Hero 1 and 2, only read controllers in the front controller ports and ignore USB. <strong>PADEMU</strong>, built into Open PS2 Loader, makes USB controllers show up as PS2 controllers.",
+      "note": "<strong>Note:</strong> Santroller switches to PS3 mode when plugged into a PS2. PADEMU sees a PS3 guitar and presents it to the game as a PS2 Guitar Hero controller. PADEMU only works for games launched from OPL, not retail discs.",
+      "before": {
+        "title": "Before you start",
+        "steps": [
+          "Plug your Santroller controller into one of the PS2's USB ports.",
+          "Plug a normal PS2 controller into port 2, so you can still get around the menus.",
+          "<strong>Leave port 1 empty.</strong> PADEMU puts your controller in port 1, and a real controller plugged in there stops it from showing up.",
+          "Make sure you have a recent build of <extlink>Open PS2 Loader (OPL) <icon /></extlink>."
+        ]
+      },
+      "menu": {
+        "title": "Open the PADEMU settings",
+        "body": "Start OPL and press <strong>Start</strong> to open its menu, then pick <strong>Controller Settings</strong> and <strong>Configure PADEMU</strong> at the bottom of it.",
+        "perGame": "These are the global settings, used by every game. To set them for just one game, highlight it in the game list, press <strong>Triangle</strong>, pick <strong>Configure PADEMU</strong> and set <strong>Settings Mode</strong> to <code>Per Game</code>.",
+        "parts": {
+          "controller": {
+            "title": "Controller Settings",
+            "body": "Opens the controller settings, with <strong>Configure PADEMU</strong> at the bottom."
+          },
+          "save": {
+            "title": "Save Changes",
+            "body": "Once PADEMU is set up, come back here and pick <strong>Save Changes</strong>, or the settings are gone when OPL restarts."
+          }
+        }
+      },
+      "dialog": {
+        "title": "Set up PADEMU",
+        "body": "Change the rows marked below and leave the rest as they are.",
+        "parts": {
+          "enable": {
+            "title": "Pad Emulator: On",
+            "body": "Turns PADEMU on."
+          },
+          "mode": {
+            "title": "Pad Emulator Mode: DualShock3/4 USB",
+            "body": "Your controller is in PS3 mode on a PS2, so PADEMU reads it like a DualShock 3 over USB."
+          },
+          "mtap": {
+            "title": "Multitap Emulation: Off",
+            "body": "Only one player is emulated, so leave the multitap off."
+          },
+          "port": {
+            "title": "Settings For Port: 1P, Emulation: On",
+            "body": "Pick port <strong>1P</strong>, then turn <strong>Emulation</strong> on for it, so the game sees your controller in port 1."
+          },
+          "ok": {
+            "title": "OK",
+            "body": "Press <strong>OK</strong>, then <strong>Save Changes</strong> in the menu."
+          }
+        }
+      },
+      "playTitle": "Save and start the game",
+      "play": "Pick <strong>Save Changes</strong> in the menu, then start the game from OPL. PADEMU only works for games launched from OPL, not retail discs."
+    },
+    "rpcs3": {
+      "alertTitle": "Two ways RPCS3 reads instruments",
+      "alertBody": "It depends on the game. <strong>Guitar Hero</strong> games read the guitar through RPCS3's own Gamepad Settings, which need a one-time setup with the SDL handler. <strong>Rock Band</strong>, <strong>DJ Hero</strong> and <strong>Guitar Hero Live</strong> get the instrument through USB passthrough, which needs no setup at all.",
+      "gh": {
+        "title": "Guitar Hero guitars: SDL pad handler",
+        "intro": "This covers Guitar Hero III, World Tour, 5, Warriors of Rock and the other PS3 Guitar Hero games. RPCS3 has to be told the guitar is a Guitar Hero guitar. Its <strong>SDL</strong> handler recognises one, but only while your controller is in PS3 mode. The controller switches to PS3 mode by itself once RPCS3 probes it when a game boots, so to set it up without booting a game, switch it here first.",
+        "steps": {
+          "switch": {
+            "title": "Switch the guitar to PS3 mode",
+            "body": "Plug the guitar in over USB and connect to it here. Its profile has to emulate a <strong>Guitar Hero Guitar</strong> with <strong>Use USB passthrough with RPCS3</strong> turned on (it's on by default). The button disconnects the guitar from the configurator, which can't see controllers in PS3 mode."
+          },
+          "open": {
+            "title": "Open RPCS3's Gamepad Settings",
+            "body": "In RPCS3, press <strong>Pads</strong> in the toolbar (or go to <strong>Configuration → Devices → Pads</strong>) and stay on the <strong>Player 1</strong> tab."
+          },
+          "configure": {
+            "title": "Set up Player 1",
+            "body": "Change the parts marked below and leave everything else as it is."
+          },
+          "back": {
+            "title": "Unplug the guitar and plug it back in",
+            "body": "That puts it back in its normal mode, so the configurator can see it again. You won't need the button again: once a game boots, RPCS3 probes the guitar, it switches to PS3 mode by itself, and RPCS3 uses the settings you saved."
+          }
+        },
+        "switch": {
+          "button": "Switch to PS3 mode",
+          "connectPrompt": "Connect your guitar to switch it to PS3 mode.",
+          "doneTitle": "Your guitar is in PS3 mode",
+          "doneBody": "It stays in PS3 mode until you unplug it. Carry on with RPCS3's Gamepad Settings.",
+          "blocked": {
+            "bluetooth": "The configurator is connected over Bluetooth. RPCS3 needs the guitar on USB, so plug it in and connect to it over USB instead.",
+            "firmware": "Your controller's firmware is too old to switch from here. Update it, or boot any game in RPCS3 with the guitar plugged in, which switches it to PS3 mode too.",
+            "profile": "None of the active profiles emulate a <strong>Guitar Hero Guitar</strong> with <strong>Use USB passthrough with RPCS3</strong> turned on. Set the profile's device to emulate to Guitar Hero Guitar and check that option is on in its settings.",
+            "unsaved": "Save your changes first. The guitar only leaves PS3 mode when you unplug it, and anything unsaved is lost then."
+          }
+        },
+        "dialog": {
+          "device": "Your guitar",
+          "parts": {
+            "handler": {
+              "title": "Handlers: SDL",
+              "body": "Set the handler to <strong>SDL</strong>, the handler that recognises a PS3 Guitar Hero guitar."
+            },
+            "device": {
+              "title": "Devices: your guitar",
+              "body": "Pick your guitar from the list. If it isn't there, press <strong>Refresh</strong> next to the handler. If it still isn't there, go back to step 1: it has to be in PS3 mode."
+            },
+            "deviceClass": {
+              "title": "Device Class: Guitar, Guitar Hero",
+              "body": "Set the first box to <strong>Guitar</strong> and the second to <strong>Guitar Hero</strong>, so games see a Guitar Hero guitar instead of a regular controller."
+            },
+            "save": {
+              "title": "Save",
+              "body": "Press <strong>Save</strong>. This is RPCS3's global setup, so it applies to every game that doesn't have its own custom gamepad config."
+            }
+          }
+        },
+        "troubleshooting": {
+          "title": "Troubleshooting",
+          "items": [
+            "<strong>The guitar isn't in the Devices list:</strong> press <strong>Refresh</strong>. It only stays in PS3 mode until it's unplugged, so if you replugged it, switch it again.",
+            "<strong>The game treats it as a regular controller:</strong> check the Device Class is <strong>Guitar</strong> / <strong>Guitar Hero</strong> on the player tab the guitar is on, and that the game doesn't have its own custom gamepad config overriding it.",
+            "<strong>More than one profile active:</strong> the controller only switches to PS3 mode for RPCS3 while it acts as a single gamepad. With several USB gamepad profiles active at once, it stays in its PC mode.",
+            "<strong>Linux:</strong> SDL reads the guitar through its hidraw node. Install the configurator's udev rules, which cover PS3 guitars, then replug the guitar."
+          ]
+        }
+      },
+      "passthrough": {
+        "title": "Rock Band, DJ Hero and Guitar Hero Live: USB passthrough",
+        "intro": "RPCS3 passes these instruments through to the game as if they were plugged into a real PS3. Your controller switches itself to PS3 mode when RPCS3 probes it, so there is nothing to set up in RPCS3's Gamepad Settings. This works for profiles emulating:",
+        "instruments": [
+          "Rock Band guitars and drums",
+          "Rock Band 3 Pro Keys and Pro Guitars (Mustang and Squier)",
+          "DJ Hero turntables",
+          "Guitar Hero Live guitars"
+        ],
+        "stepsTitle": "Using it",
+        "steps": [
+          "Check the profile has <strong>Use USB passthrough with RPCS3</strong> turned on. It's on by default, in the profile's settings.",
+          "Plug the controller in over USB.",
+          "Boot the game in RPCS3. The controller switches to PS3 mode when RPCS3 probes it, and the game picks it up like it would on a PS3.",
+          "Afterwards, unplug it and plug it back in to put it back in its normal mode."
+        ],
+        "conflicts": {
+          "title": "Make sure RPCS3 isn't also using the instrument another way",
+          "items": [
+            "<strong>No instruments set up as pads:</strong> in RPCS3's <strong>Pads</strong> settings, no player should have an instrument <strong>Device Class</strong> (Guitar, Drum or DJ), or a passthrough instrument picked as its device. A player set up for Guitar Hero with the steps above counts too, so set it back to <strong>Standard (Pad)</strong> before playing a passthrough game.",
+            "<strong>No emulated turntables or GH Live guitars:</strong> in <strong>Configuration → I/O</strong>, set <strong>DJ Hero Emulated Turntable</strong> and <strong>Guitar Hero Live Emulated Guitar</strong> to <code>Null</code>. Otherwise RPCS3 adds its own emulated instrument alongside yours, or uses it in place of yours."
+          ]
+        },
+        "singleController": "Passthrough only kicks in while the controller acts as a single gamepad. With several USB gamepad profiles active at once, it stays in its PC mode.",
+        "drivers": "<strong>Windows:</strong> no driver changes (such as Zadig) are needed. In PS3 mode the controller asks Windows to use WinUSB for itself. <strong>Linux:</strong> RPCS3 opens the instrument through libusb, which needs access to the USB device itself. The configurator's udev rules cover this, so install them (or reinstall them, if you installed them before this guide existed), then replug the controller."
       }
     }
   },

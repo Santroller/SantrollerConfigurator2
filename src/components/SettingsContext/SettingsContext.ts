@@ -629,6 +629,8 @@ export interface ConfigState {
   needsUf2Update: boolean;
   // The controller takes firmware uploads streamed as output reports (see firmwareUpdate)
   streamedFirmwareUpload: boolean;
+  // The firmware takes Rpcs3ModeCommand (see switchToRpcs3Mode)
+  rpcs3ModeCommand: boolean;
   // What couldn't be carried over when a Santroller 1 config was imported
   // (translation keys and params, translated when shown)
   legacyImportWarnings: LegacyWarning[];
@@ -641,6 +643,9 @@ export interface Actions {
   forgetBluetoothHosts: () => Promise<void>;
   // Turn off a wireless controller on the USB host port or over bluetooth, by its hotplug event's sourceId
   turnOffController: (sourceId: number) => Promise<void>;
+  // Switch the controller to PS3 mode now, as if RPCS3 had probed it, so RPCS3's pad settings can
+  // see it. PS3 mode has no config interface, so this disconnects, until the controller is replugged
+  switchToRpcs3Mode: () => Promise<void>;
   checkLogin: () => void;
   setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
@@ -917,6 +922,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     firmwareVerificationMissing: false,
     needsUf2Update: false,
     streamedFirmwareUpload: false,
+    rpcs3ModeCommand: false,
     legacyImportWarnings: [],
     scanningBluetooth: false,
   };
@@ -2847,6 +2853,30 @@ const configStore = create<ConfigState & Actions>()(
         console.error('Failed to send turn off command', e);
       }
     },
+    switchToRpcs3Mode: async () => {
+      const state = get();
+      if (!state.hidDevice || !state.connected) {
+        return;
+      }
+      try {
+        const cmdBuffer = proto.Command.encode(
+          proto.Command.create({ rpcs3Mode: proto.Rpcs3ModeCommand.create() })
+        )
+          .ldelim()
+          .finish();
+        const outBuffer = new ArrayBuffer(63);
+        new Uint8Array(outBuffer).set(cmdBuffer);
+        await state.hidDevice.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
+      } catch (e) {
+        console.error('Failed to send RPCS3 mode command', e);
+        return;
+      }
+      // It won't come back with the config interface, so don't wait for it
+      set((state) => {
+        state.waitingForReload = false;
+      });
+      await get().disconnect();
+    },
     scanBluetooth: async () => {
       const state = get();
       if (!state.hidDevice || state.scanningBluetooth) {
@@ -3214,6 +3244,7 @@ const configStore = create<ConfigState & Actions>()(
               firmwareVerificationMissing,
               needsUf2Update: !!info.needsUf2Update || slowBootStage || firmwareVerificationMissing,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
+              rpcs3ModeCommand: !!info.rpcs3ModeCommand,
               keepaliveTimeout: timeout,
               activeProfiles,
               deferredMode,

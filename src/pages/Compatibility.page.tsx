@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  IconAlertTriangle,
   IconArrowsExchange,
   IconBluetooth,
   IconBrandWindows,
@@ -8,18 +7,17 @@ import {
   IconCpu,
   IconDeviceGamepad,
   IconDeviceGamepad2,
+  IconDisc,
   IconDownload,
   IconExternalLink,
   IconInfoCircle,
   IconKey,
   IconPlug,
   IconShieldLock,
-  IconTerminal2,
 } from '@tabler/icons-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
-  Accordion,
   Alert,
   Anchor,
   Badge,
@@ -39,6 +37,10 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
+import { BrainslugGuide } from '@/components/Compatibility/BrainslugGuide';
+import { PademuGuide } from '@/components/Compatibility/PademuGuide';
+import { Rpcs3Guide } from '@/components/Compatibility/Rpcs3Guide';
+import { WiiBluetoothGuide } from '@/components/Compatibility/WiiBluetoothGuide';
 import { Layout } from '@/components/Layout/Layout';
 
 type ConsoleEcosystem = 'playstation' | 'xbox' | 'nintendo' | 'pc';
@@ -54,18 +56,23 @@ interface CompatibilityRow {
 // Sections the requirements column can link to. The translated text marks each link with
 // <tag>...</tag>, so a single requirement can point at several sections.
 const REQUIREMENT_SECTIONS: Record<string, { tab: string; section: string }> = {
-  wii: { tab: 'plugins', section: 'wii-bluetooth' },
-  brainslug: { tab: 'plugins', section: 'brainslug' },
-  pademu: { tab: 'plugins', section: 'pademu' },
-  orbis: { tab: 'plugins', section: 'orbis' },
+  wii: { tab: 'wii', section: 'wii-bluetooth' },
+  brainslug: { tab: 'brainslug', section: 'brainslug' },
+  pademu: { tab: 'pademu', section: 'pademu' },
   auth: { tab: 'auth', section: 'auth-hardware' },
+  rpcs3: { tab: 'rpcs3', section: 'rpcs3-gh' },
 };
 
 const COMPATIBILITY_TABLE: CompatibilityRow[] = [
   { id: 'pc', ecosystem: 'pc', status: 'nativePlugAndPlay', statusColor: 'teal' },
+  { id: 'pc_arcade', ecosystem: 'pc', status: 'nativePlugAndPlay', statusColor: 'teal' },
+  { id: 'pc_bluetooth', ecosystem: 'pc', status: 'nativeWireless', statusColor: 'teal' },
+  { id: 'gh_arcade', ecosystem: 'pc', status: 'nativeProtocol', statusColor: 'teal' },
   { id: 'ps3', ecosystem: 'playstation', status: 'nativePlugAndPlay', statusColor: 'teal' },
   { id: 'ps2_usb', ecosystem: 'playstation', status: 'nativeUsb', statusColor: 'teal' },
+  { id: 'ps2_port', ecosystem: 'playstation', status: 'nativeProtocol', statusColor: 'teal' },
   { id: 'ps2_pademu', ecosystem: 'playstation', status: 'setupRequired', statusColor: 'orange' },
+  { id: 'ps2_keyboardmania', ecosystem: 'playstation', status: 'nativeUsb', statusColor: 'teal' },
   { id: 'ps4_rb4', ecosystem: 'playstation', status: 'legacyMode', statusColor: 'blue' },
   { id: 'ps4_native', ecosystem: 'playstation', status: 'authRequired', statusColor: 'yellow' },
   { id: 'ps45_festival', ecosystem: 'playstation', status: 'noAuthNeeded', statusColor: 'teal' },
@@ -76,8 +83,13 @@ const COMPATIBILITY_TABLE: CompatibilityRow[] = [
   { id: 'xbone_native', ecosystem: 'xbox', status: 'authRequired', statusColor: 'yellow' },
   { id: 'wii_rb', ecosystem: 'nintendo', status: 'nativeUsb', statusColor: 'teal' },
   { id: 'wii_gh', ecosystem: 'nintendo', status: 'nativeWireless', statusColor: 'teal' },
+  { id: 'wii_ext', ecosystem: 'nintendo', status: 'nativeProtocol', statusColor: 'teal' },
   { id: 'switch', ecosystem: 'nintendo', status: 'nativePlugAndPlay', statusColor: 'teal' },
+  { id: 'gamecube', ecosystem: 'nintendo', status: 'nativeProtocol', statusColor: 'teal' },
+  { id: 'n64', ecosystem: 'nintendo', status: 'nativeProtocol', statusColor: 'teal' },
+  { id: 'snes', ecosystem: 'nintendo', status: 'nativeProtocol', statusColor: 'teal' },
   { id: 'ogxbox', ecosystem: 'xbox', status: 'nativeProtocol', statusColor: 'teal' },
+  { id: 'rpcs3', ecosystem: 'pc', status: 'setupRequired', statusColor: 'orange' },
 ];
 
 const RICH_COMPONENTS: Record<string, React.ReactElement> = {
@@ -85,17 +97,6 @@ const RICH_COMPONENTS: Record<string, React.ReactElement> = {
   code: <Code />,
   br: <br />,
 };
-
-const BRAINSLUG_RELEASES = 'https://github.com/Santroller/santroller-bslug/releases/latest';
-const OPL_RELEASES = 'https://github.com/ps2homebrew/Open-PS2-Loader/releases';
-const ORBIS_INSTRUMENTALIZER = 'https://github.com/InvoxiPlayGames/OrbisInstrumentalizer';
-
-function externalLink(href: string, iconSize = 12): Record<string, React.ReactElement> {
-  return {
-    extlink: <Anchor href={href} target="_blank" rel="noopener noreferrer" />,
-    icon: <IconExternalLink size={iconSize} />,
-  };
-}
 
 function RichText({
   i18nKey,
@@ -136,8 +137,15 @@ const EMULATION_MODES = [
   { id: 'rbGuitar', color: 'blue' },
   { id: 'rbDrums', color: 'teal' },
   { id: 'djh', color: 'violet' },
+  { id: 'ghl', color: 'dark' },
+  { id: 'proInstruments', color: 'indigo' },
   { id: 'festival', color: 'grape' },
   { id: 'gamepad', color: 'gray' },
+  { id: 'arcadeRhythm', color: 'pink' },
+  { id: 'wheel', color: 'orange' },
+  { id: 'consolePorts', color: 'cyan' },
+  { id: 'pcModes', color: 'lime' },
+  { id: 'keyboardMidiMic', color: 'yellow' },
 ];
 
 const AUTH_METHODS = [
@@ -149,10 +157,16 @@ const AUTH_METHODS = [
 
 const AUTH_HARDWARE_ROWS = ['xbone', 'ps4', 'ps5'];
 
+const TABS = ['matrix', 'modes', 'wii', 'brainslug', 'pademu', 'auth', 'festival', 'rpcs3'];
+
 export function CompatibilityPage() {
   const { t, i18n } = useTranslation();
   const [consoleFilter, setConsoleFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string | null>('matrix');
+  // A link can open a tab directly, eg /compatibility#rpcs3
+  const [activeTab, setActiveTab] = useState<string | null>(() => {
+    const hash = window.location.hash.slice(1);
+    return TABS.includes(hash) ? hash : 'matrix';
+  });
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
 
   // Scroll once the target tab has rendered its panel
@@ -233,14 +247,23 @@ export function CompatibilityPage() {
             <Tabs.Tab value="modes" leftSection={<IconDeviceGamepad2 size={16} />}>
               {t('compatibility.tabs.modes')}
             </Tabs.Tab>
-            <Tabs.Tab value="plugins" leftSection={<IconTerminal2 size={16} />}>
-              {t('compatibility.tabs.plugins')}
+            <Tabs.Tab value="wii" leftSection={<IconBluetooth size={16} />}>
+              {t('compatibility.tabs.wii')}
+            </Tabs.Tab>
+            <Tabs.Tab value="brainslug" leftSection={<IconDownload size={16} />}>
+              {t('compatibility.tabs.brainslug')}
+            </Tabs.Tab>
+            <Tabs.Tab value="pademu" leftSection={<IconDeviceGamepad size={16} />}>
+              {t('compatibility.tabs.pademu')}
             </Tabs.Tab>
             <Tabs.Tab value="auth" leftSection={<IconShieldLock size={16} />}>
               {t('compatibility.tabs.auth')}
             </Tabs.Tab>
             <Tabs.Tab value="festival" leftSection={<IconBrandWindows size={16} />}>
               {t('compatibility.tabs.festival')}
+            </Tabs.Tab>
+            <Tabs.Tab value="rpcs3" leftSection={<IconDisc size={16} />}>
+              {t('compatibility.tabs.rpcs3')}
             </Tabs.Tab>
           </Tabs.List>
 
@@ -372,228 +395,19 @@ export function CompatibilityPage() {
             </Stack>
           </Tabs.Panel>
 
-          {/* ================= TAB 3: PLUGINS & HOMEBREW ================= */}
-          <Tabs.Panel value="plugins">
-            <Stack gap="lg">
-              {/* Wireless Wii Remote Emulation Guide (Recommended) */}
-              <Paper
-                id="wii-bluetooth"
-                withBorder
-                radius="md"
-                p="lg"
-                style={{ borderColor: 'var(--mantine-color-teal-6)' }}
-              >
-                <Group justify="space-between" mb="sm">
-                  <Group gap="xs">
-                    <ThemeIcon color="teal" variant="light" size="lg" radius="md">
-                      <IconBluetooth size={20} />
-                    </ThemeIcon>
-                    <div>
-                      <Title order={3} size="h4">
-                        {t('compatibility.plugins.wiiBluetooth.title')}
-                      </Title>
-                      <Text size="xs" c="dimmed">
-                        {t('compatibility.plugins.wiiBluetooth.subtitle')}
-                      </Text>
-                    </div>
-                  </Group>
-                  <Badge color="teal" variant="filled">
-                    {t('compatibility.plugins.wiiBluetooth.badge')}
-                  </Badge>
-                </Group>
+          {/* ================= WII BLUETOOTH ================= */}
+          <Tabs.Panel value="wii">
+            <WiiBluetoothGuide />
+          </Tabs.Panel>
 
-                <Alert
-                  color="teal"
-                  icon={<IconCheck size={16} />}
-                  title={t('compatibility.plugins.wiiBluetooth.alertTitle')}
-                  mb="md"
-                >
-                  <Text size="xs">
-                    <RichText i18nKey="compatibility.plugins.wiiBluetooth.alertBody" />
-                  </Text>
-                </Alert>
+          {/* ================= WII BRAINSLUG ================= */}
+          <Tabs.Panel value="brainslug">
+            <BrainslugGuide />
+          </Tabs.Panel>
 
-                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
-                  <Card withBorder radius="md" p="sm">
-                    <Text size="sm" fw={600} c="teal" mb={4}>
-                      {t('compatibility.plugins.wiiBluetooth.hardwareTitle')}
-                    </Text>
-                    <List size="xs" spacing={4}>
-                      <List.Item>
-                        <RichText i18nKey="compatibility.plugins.wiiBluetooth.hardwarePicoW" />
-                        <Text size="xs" c="red" fw={500} mt={2}>
-                          {t('compatibility.plugins.wiiBluetooth.hardwarePicoWWarning')}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <RichText i18nKey="compatibility.plugins.wiiBluetooth.hardwareDongle" />
-                      </List.Item>
-                    </List>
-                  </Card>
-
-                  <Card withBorder radius="md" p="sm">
-                    <Text size="sm" fw={600} c="teal" mb={4}>
-                      {t('compatibility.plugins.wiiBluetooth.pairingTitle')}
-                    </Text>
-                    <List type="ordered" size="xs" spacing={4}>
-                      <RichListItems i18nKey="compatibility.plugins.wiiBluetooth.pairingSteps" />
-                    </List>
-                  </Card>
-                </SimpleGrid>
-              </Paper>
-
-              {/* Brainslug Wii Guide */}
-              <Paper id="brainslug" withBorder radius="md" p="lg">
-                <Group justify="space-between" mb="sm">
-                  <Group gap="xs">
-                    <ThemeIcon color="red" variant="light" size="lg" radius="md">
-                      <IconDownload size={20} />
-                    </ThemeIcon>
-                    <div>
-                      <Title order={3} size="h4">
-                        {t('compatibility.plugins.brainslug.title')}
-                      </Title>
-                      <Text size="xs" c="dimmed">
-                        {t('compatibility.plugins.brainslug.subtitle')}
-                      </Text>
-                    </div>
-                  </Group>
-                  <Badge color="red" variant="light">
-                    {t('compatibility.plugins.brainslug.badge')}
-                  </Badge>
-                </Group>
-
-                <Text size="xs" mb="md">
-                  <RichText i18nKey="compatibility.plugins.brainslug.intro" />
-                </Text>
-
-                <Accordion variant="separated" radius="md">
-                  <Accordion.Item value="disc">
-                    <Accordion.Control>
-                      <Text size="sm" fw={600}>
-                        {t('compatibility.plugins.brainslug.discTitle')}
-                      </Text>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <List type="ordered" size="xs" spacing="xs">
-                        <RichListItems
-                          i18nKey="compatibility.plugins.brainslug.discSteps"
-                          components={externalLink(BRAINSLUG_RELEASES)}
-                        />
-                      </List>
-                    </Accordion.Panel>
-                  </Accordion.Item>
-
-                  <Accordion.Item value="usbloader">
-                    <Accordion.Control>
-                      <Text size="sm" fw={600}>
-                        {t('compatibility.plugins.brainslug.usbLoaderTitle')}
-                      </Text>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <Alert
-                        color="red"
-                        icon={<IconAlertTriangle size={16} />}
-                        title={t('compatibility.plugins.brainslug.usbLoaderAlertTitle')}
-                        mb="sm"
-                      >
-                        <Text size="xs">
-                          <RichText i18nKey="compatibility.plugins.brainslug.usbLoaderAlertBody" />
-                        </Text>
-                      </Alert>
-
-                      <List type="ordered" size="xs" spacing="xs">
-                        <RichListItems
-                          i18nKey="compatibility.plugins.brainslug.usbLoaderSteps"
-                          components={externalLink(BRAINSLUG_RELEASES)}
-                        />
-                      </List>
-                    </Accordion.Panel>
-                  </Accordion.Item>
-                </Accordion>
-              </Paper>
-
-              {/* PS2 PADEMU Guide */}
-              <Paper id="pademu" withBorder radius="md" p="lg">
-                <Group justify="space-between" mb="sm">
-                  <Group gap="xs">
-                    <ThemeIcon color="indigo" variant="light" size="lg" radius="md">
-                      <IconDeviceGamepad size={20} />
-                    </ThemeIcon>
-                    <div>
-                      <Title order={3} size="h4">
-                        {t('compatibility.plugins.pademu.title')}
-                      </Title>
-                      <Text size="xs" c="dimmed">
-                        {t('compatibility.plugins.pademu.subtitle')}
-                      </Text>
-                    </div>
-                  </Group>
-                  <Badge color="indigo" variant="light">
-                    {t('compatibility.plugins.pademu.badge')}
-                  </Badge>
-                </Group>
-
-                <Text size="xs" mb="md">
-                  <RichText i18nKey="compatibility.plugins.pademu.intro" />
-                </Text>
-
-                <Alert color="blue" icon={<IconInfoCircle size={16} />} mb="md">
-                  <Text size="xs">
-                    <RichText i18nKey="compatibility.plugins.pademu.note" />
-                  </Text>
-                </Alert>
-
-                <List type="ordered" size="xs" spacing="xs">
-                  <RichListItems
-                    i18nKey="compatibility.plugins.pademu.steps"
-                    components={externalLink(OPL_RELEASES)}
-                  />
-                </List>
-              </Paper>
-
-              {/* Modded Console Plugins */}
-              <Paper id="orbis" withBorder radius="md" p="lg">
-                <Group justify="space-between" mb="sm">
-                  <Group gap="xs">
-                    <ThemeIcon color="green" variant="light" size="lg" radius="md">
-                      <IconShieldLock size={20} />
-                    </ThemeIcon>
-                    <div>
-                      <Title order={3} size="h4">
-                        {t('compatibility.plugins.orbis.title')}
-                      </Title>
-                      <Text size="xs" c="dimmed">
-                        {t('compatibility.plugins.orbis.subtitle')}
-                      </Text>
-                    </div>
-                  </Group>
-                  <Badge color="green" variant="light">
-                    {t('compatibility.plugins.orbis.badge')}
-                  </Badge>
-                </Group>
-
-                <Card withBorder radius="md" p="sm">
-                  <Title order={4} size="h5" mb={4}>
-                    {t('compatibility.plugins.orbis.cardTitle')}
-                  </Title>
-                  <Text size="xs" c="dimmed" mb="xs">
-                    {t('compatibility.plugins.orbis.cardSubtitle')}
-                  </Text>
-                  <Text size="xs" mb="xs">
-                    {t('compatibility.plugins.orbis.cardBody')}
-                  </Text>
-                  <Anchor
-                    href={ORBIS_INSTRUMENTALIZER}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="xs"
-                  >
-                    {t('compatibility.plugins.orbis.viewOnGithub')} <IconExternalLink size={10} />
-                  </Anchor>
-                </Card>
-              </Paper>
-            </Stack>
+          {/* ================= PS2 PADEMU ================= */}
+          <Tabs.Panel value="pademu">
+            <PademuGuide />
           </Tabs.Panel>
 
           {/* ================= TAB 4: AUTHENTICATION PASSTHROUGH ================= */}
@@ -778,6 +592,11 @@ export function CompatibilityPage() {
                 </List>
               </Paper>
             </Stack>
+          </Tabs.Panel>
+
+          {/* ================= TAB 6: RPCS3 ================= */}
+          <Tabs.Panel value="rpcs3">
+            <Rpcs3Guide />
           </Tabs.Panel>
         </Tabs>
       </Container>

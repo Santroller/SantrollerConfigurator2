@@ -28,6 +28,21 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="12ba", ATTRS{idProduct}=="2438", TAG+="ua
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="12ba", ATTRS{idProduct}=="2530", TAG+="uaccess", MODE="0660", GROUP="input"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="12ba", ATTRS{idProduct}=="2538", TAG+="uaccess", MODE="0660", GROUP="input"
 
+# PS3, for RPCS3's USB passthrough, which opens the USB device itself through libusb rather than hidraw
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0100", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0120", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0140", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0200", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0210", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="0218", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="074b", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2330", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2338", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2430", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2438", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2530", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="12ba", ATTR{idProduct}=="2538", TAG+="uaccess", MODE="0660", GROUP="input"
+
 # Wii (Rock Band)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1bad", ATTRS{idProduct}=="0004", TAG+="uaccess", MODE="0660", GROUP="input"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1bad", ATTRS{idProduct}=="0005", TAG+="uaccess", MODE="0660", GROUP="input"
