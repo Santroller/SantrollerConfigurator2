@@ -5539,6 +5539,20 @@
         ],
         "warning": "Santroller doesn't have the firmware space to bundle all the necessary Broadcom firmware internally, so some dongles may not work or they may not be reliable."
       },
+      "bt_controllers": {
+        "name": "Bluetooth Controllers",
+        "interfaceType": "Bluetooth (Pico W or USB dongle)",
+        "badge": "Wireless",
+        "description": "Controllers Santroller can connect to and read over Bluetooth, through a Pico W's built-in wireless or a supported USB Bluetooth dongle.",
+        "details": [
+          "DualShock 3, DualShock 4 (including PS4 guitars) and DualSense",
+          "Xbox One S, Elite 2 and Series controllers",
+          "Switch and Switch 2 Pro Controllers and Joy-Cons, and Nintendo Switch Online controllers",
+          "Wii Remotes with their extensions, and the Wii U Pro Controller",
+          "Steam Controllers (original and 2026) and the Guitar Hero Live iOS guitar, over Bluetooth LE",
+          "Another Santroller controller, generic Bluetooth gamepads, and Bluetooth LE MIDI"
+        ]
+      },
       "usb_ps_controllers": {
         "name": "PlayStation DualShock 3 / 4 & DualSense",
         "interfaceType": "USB Host port",
@@ -5588,7 +5602,8 @@
           "Wired Rock Band Stratocaster and drums",
           "Xbox 360 Guitar Hero Live dongle",
           "Rock Band 3 Pro Guitars through the Xbox 360 MIDI Pro Adapter",
-          "Official and third-party wired Xbox 360 controllers"
+          "Official and third-party wired Xbox 360 controllers",
+          "Xbox 360 chatpads plugged into a wired controller, read as a keyboard"
         ]
       },
       "usb_x360_wireless_receiver": {
@@ -5599,7 +5614,8 @@
         "details": [
           "Works with wireless Les Paul, World Tour and GH5 guitars, Rock Band guitars and drums, and DJ Hero turntables",
           "Official Microsoft receivers and clones both work",
-          "Sync with the receiver's button; controllers connecting and disconnecting are detected automatically"
+          "Sync with the receiver's button; controllers connecting and disconnecting are detected automatically",
+          "Xbox 360 chatpads on wireless controllers, read as a keyboard"
         ]
       },
       "usb_xone_series": {
@@ -5611,7 +5627,8 @@
           "Official and most third-party wired Xbox One / Series controllers",
           "Xbox One Guitar Hero Live dongle",
           "Skylanders, LEGO Dimensions and Disney Infinity portals",
-          "Authentication for Xbox One and Series consoles"
+          "Authentication for Xbox One and Series consoles",
+          "Xbox One chatpads, read as a keyboard (wired, or through the Xbox Wireless Adapter)"
         ]
       },
       "usb_xone_wireless_adapter": {
@@ -5664,6 +5681,18 @@
           "HORI Taiko no Tatsujin drum (Switch)"
         ]
       },
+      "usb_microphones": {
+        "name": "USB Microphones & Headsets",
+        "interfaceType": "USB Host port",
+        "badge": "Audio",
+        "description": "Plug a USB microphone into the USB Host port, and Santroller passes it through as a microphone of its own, so you can sing with the same controller you play on.",
+        "details": [
+          "Any USB Audio Class 1 microphone, or the microphone half of a USB headset",
+          "Shows up next to your controller, so one cable carries both",
+          "With no other profile on USB, it shows up on its own as a Logitech USB Microphone, the one Wii and PS2 games look for",
+          "Xbox 360 and Xbox One only take a microphone on its own like this, not alongside a controller"
+        ]
+      },
       "usb_streamdeck": {
         "name": "Elgato Stream Deck & Stream Deck Pedal",
         "interfaceType": "USB Host port",
@@ -5685,6 +5714,7 @@
           "Xbox 360 Big Button controllers (through their receiver)",
           "Steam Controller and Steam Deck",
           "Google Stadia controller",
+          "Logitech G29 wheel in its PS4 mode: steering, pedals, the H shifter and the buttons around its dial",
           "Another Santroller controller"
         ]
       },
@@ -5968,6 +5998,19 @@
         "details": [
           "Outputs DMX512 (250 kbps) on one GPIO; needs an RS-485 transceiver such as a MAX485",
           "Up to 512 channels; channels can follow inputs, notes, multiplier, Star Power and Rock Band Stage Kit fog / strobe / lights"
+        ]
+      },
+      "led_mono_display": {
+        "name": "Monochrome OLED Displays (SSD1306 / SSD1309 / SH1106 / SH1107)",
+        "interfaceType": "I2C or SPI",
+        "badge": "Display",
+        "description": "Small OLED screens that show text, images, bars and joystick positions, driven from your inputs like LEDs.",
+        "details": [
+          "128 x 64 and 128 x 32 panels, and 128 x 128 or 64 x 128 SH1107 panels",
+          "SSD1309 for the 2.42\" displays without a charge pump",
+          "I2C (address 0x3C by default) or SPI with a data / command pin; chip select and reset are optional",
+          "Text, images, bars, rectangles, circles and a joystick box, each shown or filled by an input",
+          "Rotate in quarter turns to mount it sideways or upside down"
         ]
       },
       "led_discrete": {
