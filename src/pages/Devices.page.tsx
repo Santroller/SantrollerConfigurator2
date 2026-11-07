@@ -3097,6 +3097,21 @@ function BluetoothDevice({ id }: { id: string }) {
           )
         }
       />
+      <Switch
+        mb="md"
+        label={t('devices.bluetooth_config_only.label')}
+        description={t('devices.bluetooth_config_only.description')}
+        checked={!bt.disableConfigOnly}
+        onChange={(event) =>
+          updateDevice(
+            {
+              deviceid: parseInt(id, 10),
+              bt: { ...bt, disableConfigOnly: !event.currentTarget.checked },
+            },
+            id
+          )
+        }
+      />
       <Group justify="space-between" mb="md" wrap="nowrap">
         <Text size="sm" c="dimmed">
           {t('devices.bluetooth_forget_hosts.description')}

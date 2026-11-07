@@ -9,6 +9,10 @@
     "dmx": "DMX",
     "xbox360Rf": "Xbox 360 RF Module",
     "adcBattery": "Battery Voltage (ADC pin)",
+    "bluetooth_config_only": {
+      "label": "Configure over Bluetooth while no profile uses it",
+      "description": "Advertise over Bluetooth just for the configurator when no profile is emulating a Bluetooth controller. Turn this off to keep Bluetooth quiet until a Bluetooth profile is active."
+    },
     "bluetooth_timeout": {
       "label": "Turn Bluetooth off after (seconds)",
       "description": "When this controller is used over Bluetooth, turn Bluetooth off once no buttons have been pressed for this long. The next press turns it back on and reconnects. Use 0 to keep it on."
