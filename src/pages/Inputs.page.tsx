@@ -11240,6 +11240,32 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           />
         </>
       )}
+      {!simpleMode && !standby && !mic && (
+        <>
+          <Space h="md" />
+          <NumberInput
+            label={t('main.minReportInterval.label')}
+            description={t('main.minReportInterval.description')}
+            min={0}
+            max={50}
+            step={1}
+            allowDecimal={false}
+            value={profile.opts.minReportIntervalMs ?? 0}
+            onChange={(val) =>
+              updateProfile(
+                {
+                  ...profile,
+                  opts: {
+                    ...profile.opts,
+                    minReportIntervalMs: Math.min(50, Math.max(0, Math.round(Number(val) || 0))),
+                  },
+                },
+                profileIdx
+              )
+            }
+          />
+        </>
+      )}
       {!simpleMode && !standby && (
         <>
           {(profile.opts.deviceToEmulate === proto.SubType.GuitarHeroGuitar ||

@@ -265,6 +265,10 @@
         "description": "Turn this on if the wake button connects its pin to 3.3V rather than ground."
       }
     },
+    "minReportInterval": {
+      "label": "Minimum time between USB reports (ms)",
+      "description": "Leave at 0 unless you need it. If several controllers on one USB hub stop working properly, try 4 to 10 ms. Higher values add that much input latency."
+    },
     "disconnectBluetoothOnSuspend": {
       "label": "Disconnect Bluetooth controllers when the PC sleeps",
       "description": "When this profile's USB connection goes to sleep, disconnect the Bluetooth controllers using it so they turn off instead of running their batteries down. Turning a controller back on still wakes the PC."
