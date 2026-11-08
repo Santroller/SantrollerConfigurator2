@@ -56,6 +56,7 @@ import {
   parseVersionReport,
 } from './firmwareVersion';
 import { KeepaliveTimer, startKeepaliveTimer, stopKeepaliveTimer } from './keepaliveTimer';
+import { migrateLedPatterns } from './ledPatternEffect';
 import { truncateProfileName } from './profileName';
 import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './savedConfigFields';
 import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
@@ -788,6 +789,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   const centeredTilt = centerTilt(config);
   const fixedDeadzones = fixAbsoluteTriggerDeadzones(config);
   const migratedTriggers = migrateMappingTriggers(config);
+  const migratedLedPatterns = migrateLedPatterns(config);
   config.profiles?.forEach((profile) => {
     profile.assignments?.forEach((list) => {
       list.assignments?.forEach((assignment) => {
@@ -882,7 +884,12 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     updatePercentage: 0,
     // so the repaired config can be saved
     configModified:
-      splitTargets || centeredTilt || fixedDeadzones || migratedSlotIds || migratedTriggers,
+      splitTargets ||
+      centeredTilt ||
+      fixedDeadzones ||
+      migratedSlotIds ||
+      migratedTriggers ||
+      migratedLedPatterns,
     waitingForReload: false,
     reloadLost: false,
     updating: false,

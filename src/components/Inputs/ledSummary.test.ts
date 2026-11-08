@@ -100,6 +100,12 @@ describe('LED summaries', () => {
     expect(ledModeDetail({ playerMapping: { playerId: 2 } }, t)).toBe('Player 2');
     expect(
       ledModeDetail(
+        { playerMapping: { playerId: 1, style: proto.PlayerLedStyle.PlayerLedSwitch } },
+        t
+      )
+    ).toBe('Nintendo Switch style');
+    expect(
+      ledModeDetail(
         {
           statusMapping: {
             type: proto.StatusLedType.StatusConsoleMode,

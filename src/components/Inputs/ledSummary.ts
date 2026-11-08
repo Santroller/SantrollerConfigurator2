@@ -99,7 +99,10 @@ export function ledModeDetail(mapping: proto.ILedMapping, t: TFunction): string 
     return selected ? t(`devices.${selected.kind}`, { defaultValue: selected.kind }) : undefined;
   }
   if (mapping.playerMapping) {
-    return t('leds.summary.player', { player: mapping.playerMapping.playerId });
+    const style = proto.PlayerLedStyle[mapping.playerMapping.style ?? -1];
+    return style
+      ? t(`leds.playerStyle.${style}`)
+      : t('leds.summary.player', { player: mapping.playerMapping.playerId });
   }
   if (mapping.statusMapping) {
     const status = t(`leds.status.${proto.StatusLedType[mapping.statusMapping.type]}`);

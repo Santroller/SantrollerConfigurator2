@@ -1964,6 +1964,7 @@
     "section_led": "LED",
     "section_display": "Display",
     "section_trigger": "Controlled by",
+    "section_effect": "Effect",
     "summary_output": "Lights",
     "summary_output_display": "Shows",
     "summary": {
@@ -1998,7 +1999,6 @@
     "invert_desc": "Invert output pin logic so active-low LEDs work (low = on, high = off)",
     "type": {
       "input": "Input Based",
-      "pattern": "Pattern Based",
       "static": "Static",
       "euphoria": "DJ Hero Euphoria",
       "player": "Player Number",
@@ -2011,10 +2011,17 @@
     },
     "speed": "Speed",
     "brightness": "Brightness",
+    "effect": {
+      "label": "Effect",
+      "description": "Drawn over what the LED shows while it is lit. A released colour shows as it is.",
+      "none": "None",
+      "EffectBreathing": "Breathing",
+      "EffectBlink": "Blink",
+      "EffectRainbow": "Rainbow",
+      "rainbow_brightness": "Rainbow brightness"
+    },
     "pattern": {
       "label": "Pattern",
-      "PatternRainbow": "Rainbow",
-      "PatternFade": "Breathing",
       "PatternStatic": "Static",
       "PatternHeatmap": "Heatmap",
       "PatternSpread": "Spread"
@@ -2041,6 +2048,15 @@
     "mpr121_pin_description": "Electrodes 4 to 11 can drive an LED. Touch sensing stops before the first electrode used this way, so wire touch inputs to the lower electrodes.",
     "mpr121_electrode": "Electrode {{pin}}",
     "playerId": "Player number",
+    "playerStyle": {
+      "label": "Player LEDs",
+      "description": "One player per mapping, or all of this mapping's LEDs showing the player number together, in the order they are listed above",
+      "single": "One player",
+      "PlayerLedSequential": "One LED per player (Xbox 360, Wii)",
+      "PlayerLedPlayStation3": "PlayStation 3 style",
+      "PlayerLedSwitch": "Nintendo Switch style",
+      "PlayerLedPlayStation5": "PlayStation 5 style (5 LEDs)"
+    },
     "rumble": {
       "label": "Rumble motor",
       "RumbleLeft": "Left (large) motor",
