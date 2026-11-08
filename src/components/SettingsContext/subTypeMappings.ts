@@ -67,6 +67,51 @@ function convertGuitarFamily(m: proto.IMapping, subType: proto.SubType): proto.I
   return m;
 }
 
+// The guitars that send their strum on the d-pad, as GH / RB guitars do on every console
+const DPAD_STRUM_GUITARS: proto.SubType[] = [
+  proto.SubType.GuitarHeroGuitar,
+  proto.SubType.RockBandGuitar,
+  proto.SubType.PowerGigGuitar,
+  proto.SubType.RockRevolutionGuitar,
+];
+
+const STRUM_DPAD: [proto.GuitarHeroLiveGuitarButtonType, proto.GamepadButtonType][] = [
+  [
+    proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp,
+    proto.GamepadButtonType.Gamepad_DpadUp,
+  ],
+  [
+    proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown,
+    proto.GamepadButtonType.Gamepad_DpadDown,
+  ],
+];
+
+/**
+ * Keeps the strum on the strum bar when switching between a 5 fret guitar and a GHL guitar. The 5
+ * fret guitars strum with d-pad up / down, while GHL has its own strum outputs, so a strummed
+ * d-pad would otherwise end up as GHL's d-pad (or GHL's strum would be dropped).
+ */
+function convertStrum(
+  m: proto.IMapping,
+  prevSubType: proto.SubType | null | undefined,
+  subType: proto.SubType
+): proto.IMapping {
+  const out = m.mapping;
+  if (
+    subType === proto.SubType.LiveGuitar &&
+    prevSubType != null &&
+    DPAD_STRUM_GUITARS.includes(prevSubType)
+  ) {
+    const pair = STRUM_DPAD.find(([, dpad]) => dpad === out?.gamepadButton);
+    return pair ? { ...m, mapping: { ghlButton: pair[0] } } : m;
+  }
+  if (DPAD_STRUM_GUITARS.includes(subType)) {
+    const pair = STRUM_DPAD.find(([strum]) => strum === out?.ghlButton);
+    return pair ? { ...m, mapping: { gamepadButton: pair[1] } } : m;
+  }
+  return m;
+}
+
 // The gamepad axes a wheel sends its steering and pedals on, see the firmware's WheelAxisMapping
 const WHEEL_GAMEPAD_AXES: [proto.WheelAxisType, proto.GamepadAxisType][] = [
   [proto.WheelAxisType.Wheel_Steering, proto.GamepadAxisType.Gamepad_LeftStickX],
@@ -102,7 +147,7 @@ function suitsSubType(m: proto.IMapping, subType: proto.SubType | null | undefin
 
 /**
  * Fits a profile's mappings to the type it now emulates: GH and RB guitar outputs are converted,
- * and any other instrument output the new type can't drive is dropped instead of being left to
+ * the strum follows the strum bar between 5 fret and GHL guitars, and any other instrument output the new type can't drive is dropped instead of being left to
  * write the wrong report. Mappings are untouched unless the type changed.
  */
 export function remapMappingsForSubType(
@@ -114,7 +159,14 @@ export function remapMappingsForSubType(
     return profile.mappings;
   }
   return profile.mappings
-    .map((m) => (subType != null ? convertWheelAxes(convertGuitarFamily(m, subType), subType) : m))
+    .map((m) =>
+      subType != null
+        ? convertWheelAxes(
+            convertStrum(convertGuitarFamily(m, subType), prevSubType, subType),
+            subType
+          )
+        : m
+    )
     .filter((m) => suitsSubType(m, subType));
 }
 

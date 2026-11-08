@@ -138,6 +138,56 @@ describe('remapMappingsForSubType', () => {
     ]);
   });
 
+  it('moves a 5 fret d-pad strum onto the GHL strum outputs', () => {
+    const profile = profileWith(proto.SubType.LiveGuitar, [
+      { mapping: { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }, input: gpio(2) },
+      { mapping: { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown }, input: gpio(3) },
+      { mapping: { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft }, input: gpio(4) },
+      start,
+    ]);
+    const mappings = remapMappingsForSubType(proto.SubType.GuitarHeroGuitar, profile)!;
+    expect(mappings.map((m) => m.mapping)).toEqual([
+      { ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp },
+      { ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown },
+      { gamepadButton: proto.GamepadButtonType.Gamepad_DpadLeft },
+      start.mapping,
+    ]);
+    expect(mappings[0].input).toEqual(gpio(2));
+  });
+
+  it('moves the GHL strum back onto the d-pad for a 5 fret guitar', () => {
+    const profile = profileWith(proto.SubType.RockBandGuitar, [
+      {
+        mapping: { ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumUp },
+        input: gpio(2),
+      },
+      {
+        mapping: {
+          ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_StrumDown,
+        },
+        input: gpio(3),
+      },
+      {
+        mapping: { ghlButton: proto.GuitarHeroLiveGuitarButtonType.GuitarHeroLiveGuitar_White1 },
+        input: gpio(4),
+      },
+    ]);
+    const mappings = remapMappingsForSubType(proto.SubType.LiveGuitar, profile)!;
+    expect(mappings.map((m) => m.mapping)).toEqual([
+      { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp },
+      { gamepadButton: proto.GamepadButtonType.Gamepad_DpadDown },
+    ]);
+  });
+
+  it('leaves a gamepad d-pad alone when switching to GHL', () => {
+    const profile = profileWith(proto.SubType.LiveGuitar, [
+      { mapping: { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp }, input: gpio(2) },
+    ]);
+    expect(remapMappingsForSubType(proto.SubType.Gamepad, profile)!.map((m) => m.mapping)).toEqual([
+      { gamepadButton: proto.GamepadButtonType.Gamepad_DpadUp },
+    ]);
+  });
+
   it('leaves mappings alone when the device type is unchanged', () => {
     const mappings: proto.IMapping[] = [
       {
