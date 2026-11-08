@@ -13,7 +13,7 @@ export function RadioFirmwareAlert() {
   const hung = useConfigStore((state) => state.hung);
   const latest = useConfigStore((state) => state.latest);
   const firmwareNewer = useConfigStore((state) => state.firmwareNewer);
-  const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
+  const uf2Required = useConfigStore((state) => state.uf2Required);
   const deviceVersion = useConfigStore((state) => state.radioFirmwareVersion);
   const bundledVersion = useConfigStore((state) => state.bundledRadioFirmwareVersion);
   const missing = useConfigStore((state) => state.missingStaticFirmware);
@@ -26,7 +26,7 @@ export function RadioFirmwareAlert() {
   if (
     !connected ||
     hung ||
-    needsUf2Update ||
+    uf2Required ||
     (!latest && !firmwareNewer) ||
     (status !== 'missing' && status !== 'outdated')
   ) {

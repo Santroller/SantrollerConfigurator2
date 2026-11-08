@@ -630,15 +630,12 @@ export interface ConfigState {
   ghArcadeSide: number | null;
   missingStaticFirmware: boolean;
   // Content version of the controller's radio firmware area (Xbox adapter, CYW43), 0 when it's missing or
-  // predates versioning. Null when the controller can't have it written over OTA, and needs a UF2 instead
+  // predates versioning. Null from firmware without the radio area, which uf2Required already covers
   radioFirmwareVersion: number | null;
   // The version this tool ships (santroller_radio.bin), null until it's loaded or if it's missing
   bundledRadioFirmwareVersion: number | null;
-  // The bootloader's flash layout is older than the firmware's, so updates have to go through a UF2
-  bootloaderOutdated: boolean;
   // The device has to be reflashed from a UF2 once before it can update over OTA (see needsUf2BeforeOta)
   uf2Required: boolean;
-  needsUf2Update: boolean;
   // The controller takes firmware uploads streamed as output reports (see firmwareUpdate)
   streamedFirmwareUpload: boolean;
   // The firmware takes Rpcs3ModeCommand (see switchToRpcs3Mode)
@@ -941,9 +938,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     missingStaticFirmware: false,
     radioFirmwareVersion: null,
     bundledRadioFirmwareVersion: null,
-    bootloaderOutdated: false,
     uf2Required: false,
-    needsUf2Update: false,
     streamedFirmwareUpload: false,
     rpcs3ModeCommand: false,
     legacyImportWarnings: [],
@@ -3023,7 +3018,7 @@ const configStore = create<ConfigState & Actions>()(
         return;
       }
       // The device refuses it anyway, the update has to come from a UF2 with the matching bootloader
-      if (state.bootloaderOutdated || state.uf2Required) {
+      if (state.uf2Required) {
         console.error('Firmware update requires a UF2 instead of OTA');
         return;
       }
@@ -3145,7 +3140,6 @@ const configStore = create<ConfigState & Actions>()(
       stopInUseRetryTimer();
       set((state) => {
         state.uf2Required = true;
-        state.needsUf2Update = true;
       });
       if (!device.opened) {
         await device.open();
@@ -3160,7 +3154,6 @@ const configStore = create<ConfigState & Actions>()(
         } = await checkFirmwareVersion(device);
         set((state) => {
           state.uf2Required = needsUf2BeforeOta(firmwareBuild);
-          state.needsUf2Update = state.uf2Required;
         });
         const { activeProfiles, deferredMode } = await readActiveProfiles(device);
         let deviceType = 'pico_w';
@@ -3217,14 +3210,7 @@ const configStore = create<ConfigState & Actions>()(
               updateError: undefined,
               missingStaticFirmware: !!info.missingStaticFirmware,
               radioFirmwareVersion: info.radioFirmwareVersion ?? null,
-              bootloaderOutdated: !!info.bootloaderOutdated,
               uf2Required,
-              // Missing radio firmware is part of the device's needsUf2Update, but when it can be
-              // written over OTA it's offered separately (see radioFirmwareUpdate)
-              needsUf2Update:
-                (info.radioFirmwareVersion != null
-                  ? !!info.bootloaderOutdated
-                  : !!info.needsUf2Update) || uf2Required,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
               rpcs3ModeCommand: !!info.rpcs3ModeCommand,
               keepaliveTimeout: timeout,

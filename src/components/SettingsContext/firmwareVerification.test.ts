@@ -92,7 +92,6 @@ describe('one-time UF2 migration for firmware too old for OTA', () => {
       expect(state.configLoadError).toBeNull();
       expect(state.firmwareBuild).toBe(build);
       expect(state.uf2Required).toBe(needsUf2);
-      expect(state.needsUf2Update).toBe(needsUf2);
     }
   );
 

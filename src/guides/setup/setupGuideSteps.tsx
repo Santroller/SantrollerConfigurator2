@@ -1116,13 +1116,12 @@ export function SetupConnectStep(props: GuideStepProps) {
   const updatePercentage = useConfigStore((state) => state.updatePercentage);
   const applyingUpdate = useConfigStore((state) => state.applyingUpdate);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
-  const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
   const uf2Required = useConfigStore((state) => state.uf2Required);
 
   // The main page has the full set of update messages; this covers the common case
   const updateStatus = connected && !hung && (
     <>
-      {bootloaderOutdated || uf2Required ? (
+      {uf2Required ? (
         <Uf2UpdateAlert />
       ) : !latest && !firmwareNewer ? (
         <Alert

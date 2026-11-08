@@ -1,27 +1,19 @@
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, Group, Space } from '@mantine/core';
-import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
-// Some updates can't go over OTA and need the device reflashed from a UF2. Explains why, with the downloads
+// Firmware too old to update over OTA (see needsUf2BeforeOta) has to be reflashed from a UF2 once, with
+// the downloads. The UF2 carries the bootloader and the radio firmware too.
 export function Uf2UpdateAlert() {
   const { t } = useTranslation();
-  const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
-  const uf2Required = useConfigStore((state) => state.uf2Required);
-  // Either reason covers the dongle firmware too, as the UF2 carries both
-  const key = bootloaderOutdated
-    ? 'bootloaderOutdated'
-    : uf2Required
-      ? 'uf2Required'
-      : 'missingDongleFirmware';
   return (
     <Alert
       variant="light"
       color="yellow"
-      title={t(`connect.${key}Title`)}
+      title={t('connect.uf2RequiredTitle')}
       icon={<IconExclamationCircle />}
     >
-      {t(`connect.${key}`)}
+      {t('connect.uf2Required')}
       <Space h="md" />
       <Group>
         <Button

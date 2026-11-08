@@ -79,10 +79,7 @@ export function ConnectPage() {
   const latest = useConfigStore((state) => state.latest);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
-  const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
-  const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
   const uf2Required = useConfigStore((state) => state.uf2Required);
-  const uf2Only = bootloaderOutdated || uf2Required;
   const [advancedModalOpened, { open: openAdvancedModal, close: closeAdvancedModal }] =
     useDisclosure(false);
   const [udevModalOpened, { open: openUdevModal, close: closeUdevModal }] = useDisclosure(false);
@@ -621,7 +618,7 @@ export function ConnectPage() {
           </Alert>
         )}
 
-        {!latest && !firmwareNewer && !uf2Only && connected && !hung && (
+        {!latest && !firmwareNewer && !uf2Required && connected && !hung && (
           <Alert
             variant="light"
             color="red"
@@ -651,7 +648,7 @@ export function ConnectPage() {
           </Alert>
         )}
 
-        {needsUf2Update && connected && !hung && (
+        {uf2Required && connected && !hung && (
           <>
             <Space h="md" />
             <Uf2UpdateAlert />

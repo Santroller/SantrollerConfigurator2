@@ -3001,8 +3001,6 @@
     "downloadPico2": "Download UF2 (Pico 2 / RP2350)",
     "sellerWarningTitle": "Note",
     "sellerWarning": "If you have purchased this device from a seller, it should already have Santroller on it, and you should be able to just use the Connect button. If for some reason you need to reset the device to factory settings, you should ask the seller for a UF2 file instead of using the ones below, as the seller can provide a UF2 that has everything set up already, while the UF2 files below are blank and have no configuration.",
-    "missingDongleFirmwareTitle": "Xbox Wireless Dongle Firmware Missing",
-    "missingDongleFirmware": "Your device is missing the Xbox Wireless dongle firmware. This can't be updated over OTA, so you'll need to reflash via UF2 to restore dongle support.",
     "radioFirmware": {
       "missingTitle": "Wireless Firmware Missing",
       "missing": "Your controller is missing the Xbox Wireless adapter firmware. It can be installed now, without reflashing.",
@@ -3011,10 +3009,8 @@
       "install": "Install Wireless Firmware",
       "failed": "The wireless firmware didn't install. Try again, and if it keeps failing, reflash the controller from a UF2."
     },
-    "bootloaderOutdatedTitle": "Firmware Update Needs a UF2",
-    "bootloaderOutdated": "This update changes how the device's flash is laid out, which the bootloader has to know about. That can't be updated over OTA, so you'll need to reflash via UF2 this once. Updates after that can go over OTA again.",
     "uf2RequiredTitle": "Firmware Update Needs a UF2",
-    "uf2Required": "Your device's firmware or bootloader is too old to update over OTA, which can also lower its polling rate. Reflash via UF2 this once. Updates after that can go over OTA as usual.",
+    "uf2Required": "Your device's firmware is too old to update over OTA. Reflash via UF2 this once, which also brings its bootloader and wireless firmware up to date. Updates after that can go over OTA as usual.",
     "advancedMode": {
       "button": "Switch to Advanced Mode",
       "title": "Enable Advanced Mode?",
