@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IconExclamationCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, Space, TextInput } from '@mantine/core';
@@ -5,6 +6,7 @@ import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
 import { Layout } from '@/components/Layout/Layout';
 import { SellerImageUpload } from '@/components/SettingsContext/SellerImageUpload';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { Uf2BuildError, Uf2BuildErrorCode } from '@/components/SettingsContext/uf2Layout';
 
 export function CommercialToolPage() {
   const connect = useConfigStore((state) => state.connect);
@@ -18,6 +20,15 @@ export function CommercialToolPage() {
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const { t } = useTranslation();
+  const [uf2Error, setUf2Error] = useState<Uf2BuildErrorCode | 'unknown' | null>(null);
+  const onBuildUf2 = async (pico2: boolean) => {
+    setUf2Error(null);
+    try {
+      await buildUf2(pico2);
+    } catch (e) {
+      setUf2Error(e instanceof Uf2BuildError ? e.code : 'unknown');
+    }
+  };
   const login = useConfigStore((state) => state.login);
   const seller = useConfigStore((state) => state.seller);
   const sellerCheck = useConfigStore((state) => state.sellerCheck);
@@ -89,13 +100,26 @@ export function CommercialToolPage() {
               <Button onClick={() => setSimpleMode(true)}>{t('commercial.showCustomer')}</Button>
             )}
             <Space h="md" />
-            <Button disabled={updating} onClick={() => buildUf2(false)}>
+            <Button disabled={updating} onClick={() => onBuildUf2(false)}>
               {t('commercial.buildUf2Pico')}
             </Button>
             <Space h="md" />
-            <Button disabled={updating} onClick={() => buildUf2(true)}>
+            <Button disabled={updating} onClick={() => onBuildUf2(true)}>
               {t('commercial.buildUf2Pico2')}
             </Button>
+            {uf2Error && (
+              <>
+                <Space h="md" />
+                <Alert
+                  variant="light"
+                  color="red"
+                  title={t('commercial.buildUf2Error.title')}
+                  icon={<IconExclamationCircle />}
+                >
+                  {t(`commercial.buildUf2Error.${uf2Error}`)}
+                </Alert>
+              </>
+            )}
             <Space h="md" />
             <DeviceIdentitySettings commercial />
             <Space h="md" />

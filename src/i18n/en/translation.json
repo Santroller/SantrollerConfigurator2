@@ -3105,6 +3105,12 @@
     "showCustomer": "Show customer version of tool",
     "buildUf2Pico": "Build UF2 from Current Config (Pico 1 / RP2040)",
     "buildUf2Pico2": "Build UF2 from Current Config (Pico 2 / RP2350)",
+    "buildUf2Error": {
+      "title": "Unable to build UF2",
+      "configTooLarge": "This config is too large to fit in the space the firmware reserves for it. Remove some profiles or devices and try again.",
+      "layoutMissing": "The firmware files for this board are missing or out of date. Please reload the tool and try again.",
+      "unknown": "Something went wrong building the UF2. Please try again."
+    },
     "toolName": "Tool name",
     "toolLogo": "Tool Logo",
     "toolLogoError": "Unable to process this logo. Please choose a valid PNG or JPEG image.",

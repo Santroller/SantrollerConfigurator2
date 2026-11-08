@@ -60,6 +60,7 @@ import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
 import { remapMappingsForSubType } from './subTypeMappings';
 import { centerTilt } from './tiltCenter';
 import { fixAbsoluteTriggerDeadzones, migrateMappingTriggers } from './triggerDeadzone';
+import { configFlashAddress, parseFirmwareLayout, Uf2BuildError } from './uf2Layout';
 
 // sourceId is unique per interface (including virtual wireless controller slots), older
 // firmware doesn't send it so fall back to port / interface
@@ -731,7 +732,8 @@ export interface Actions {
   loadDefaults: (device: DeviceStatus | ProfileSlot | undefined, presetId?: string) => void;
   clearConsole: () => void;
   clearMidi: () => void;
-  buildUf2: (pico2: boolean) => void;
+  // Throws a Uf2BuildError if the config can't go in a UF2
+  buildUf2: (pico2: boolean) => Promise<void>;
   setSellerToolName: (name: string) => void;
   setSellerToolLogo: (image: File) => Promise<void>;
   setSellerToolFavicon: (image: File) => Promise<void>;
@@ -2521,9 +2523,9 @@ const configStore = create<ConfigState & Actions>()(
       set((state) => {
         state.legacyImportWarnings = [];
       }),
-    buildUf2: (pico2: boolean) => {
+    buildUf2: async (pico2: boolean) => {
       const { buffer, mainLen, auxLen } = get().buildConfigBuffer(true);
-      buildUf2FromConfig(pico2, { buffer, mainLen, auxLen });
+      await buildUf2FromConfig(pico2, { buffer, mainLen, auxLen });
     },
     saveConfig: async (immediate = false, committing = false) => {
       const state = get();
@@ -3572,11 +3574,16 @@ export async function buildUf2FromConfig(
   pico2: boolean,
   { buffer, mainLen, auxLen }: { buffer: Uint8Array; mainLen: number; auxLen: number }
 ) {
-  const uf2File = new Uint8Array(
-    await (
-      await fetch(pico2 ? '/santroller_pico2.uf2' : '/santroller_pico1.uf2', { cache: 'no-cache' })
-    ).arrayBuffer()
-  );
+  const board = pico2 ? 'pico2' : 'pico1';
+  const [uf2Response, layoutResponse] = await Promise.all([
+    fetch(`/santroller_${board}.uf2`, { cache: 'no-cache' }),
+    fetch(`/santroller_${board}_layout.json`, { cache: 'no-cache' }),
+  ]);
+  if (!layoutResponse.ok) {
+    throw new Uf2BuildError('layoutMissing', `No firmware layout for ${board}`);
+  }
+  const layout = parseFirmwareLayout(await layoutResponse.json().catch(() => null));
+  const uf2File = new Uint8Array(await uf2Response.arrayBuffer());
   const crc = new CRC32().calculate(buffer);
 
   const infoBuffer = new Uint8Array(24);
@@ -3590,14 +3597,12 @@ export async function buildUf2FromConfig(
   const sectorSize = 4 * 1024;
   const blockSize = 256;
   const uf2BlockSize = 512;
-  const flashSize = 2 * 1024 * 1024;
   const rawSize = buffer.length + infoBuffer.length;
+  const eepromAddr = configFlashAddress(layout, rawSize);
   const outBuffer = new Uint8Array(Math.ceil(rawSize / blockSize) * blockSize);
   const padding = outBuffer.length - rawSize;
   outBuffer.set(buffer, padding);
   outBuffer.set(infoBuffer, padding + buffer.length);
-  const baseAddr = 0x10000000;
-  const eepromAddr = baseAddr + flashSize - outBuffer.length;
   const blockCount = Math.ceil(outBuffer.length / blockSize);
   const firstBlock = decodeBlock(uf2File.slice(0, uf2BlockSize));
   let blocks: UF2BlockData[] = [];
@@ -3658,7 +3663,11 @@ export async function buildUf2FromJson(file: File | null, pico2: boolean) {
     const buffer: Uint8Array = new Uint8Array(bufferMain.length + bufferAux.length);
     buffer.set(bufferMain, 0);
     buffer.set(bufferAux, bufferMain.length);
-    buildUf2FromConfig(pico2, { buffer, mainLen: bufferMain.length, auxLen: bufferAux.length });
+    await buildUf2FromConfig(pico2, {
+      buffer,
+      mainLen: bufferMain.length,
+      auxLen: bufferAux.length,
+    });
   } catch (e) {
     console.log(e);
   }
