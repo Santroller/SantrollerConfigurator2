@@ -65,7 +65,7 @@ describe('RP2350B pins', () => {
   it('stores switch network pins above GP31 in pinsHigh', async () => {
     const { switchNetworkPins, withSwitchNetworkPins } =
       await import('@/components/Devices/matrixPins');
-    const network = withSwitchNetworkPins({ buttons: [] }, [0, 31, 32, 47]);
+    const network = withSwitchNetworkPins({ pins: 0, buttons: [] }, [0, 31, 32, 47]);
     expect(network.pins).toBe((1 | (2 ** 31)) >>> 0);
     expect(network.pinsHigh).toBe(1 | (1 << 15));
     expect(switchNetworkPins(network)).toEqual([0, 31, 32, 47]);
