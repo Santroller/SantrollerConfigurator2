@@ -570,6 +570,9 @@ export interface ConfigState {
   savedConfig: Uint8Array;
   connected: boolean;
   hung: boolean;
+  // It stopped responding before its config was read, so the config here isn't the controller's.
+  // A hang later on leaves a good config here, which can still be exported
+  hungOnConnect: boolean;
   // Connected, but the config couldn't be read. Nothing is sent to the controller then, as the config
   // here isn't the controller's and saving it would replace the controller's
   configLoadError: 'inUse' | 'failed' | null;
@@ -909,6 +912,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     applyingUpdate: false,
     connected: false,
     hung: false,
+    hungOnConnect: false,
     configLoadError: null,
     detecting: false,
     seller: false,
@@ -2311,6 +2315,7 @@ const configStore = create<ConfigState & Actions>()(
         state.keepaliveTimeout = undefined;
         state.connected = state.waitingForReload;
         state.hung = false;
+        state.hungOnConnect = false;
         state.configLoadError = null;
         state.updating = false;
         state.hidDevice = undefined;
@@ -3211,6 +3216,7 @@ const configStore = create<ConfigState & Actions>()(
               seller: old.seller,
               connected: true,
               hung: false,
+              hungOnConnect: false,
               configLoadError: null,
               updating: false,
               hidDevice: device,
@@ -3293,6 +3299,7 @@ const configStore = create<ConfigState & Actions>()(
               ...old,
               connected: true,
               hung: true,
+              hungOnConnect: true,
               hidDevice: device,
               crc: 0,
             }),

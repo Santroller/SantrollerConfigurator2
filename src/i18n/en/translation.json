@@ -2978,6 +2978,7 @@
     "legacyImportDismiss": "Dismiss",
     "hungTitle": "Controller not responding",
     "hung": "The Pico stopped responding to keepalive requests. It remains connected so you can open Debug and retrieve its logs. Disconnect it manually when you are done.",
+    "hungExport": "Anything you changed since the last save is still here. Export the config to keep it, then load it back in once the controller is working again.",
     "inUseTitle": "Open in another configurator",
     "inUse": "This controller is already open in another configurator, over USB or Bluetooth. Close that one and this will open the controller by itself. Using both at once would mix up their changes.",
     "configLoadFailedTitle": "Couldn't read the config from the controller",

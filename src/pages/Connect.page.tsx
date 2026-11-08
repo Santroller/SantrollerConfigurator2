@@ -66,8 +66,12 @@ export function ConnectPage() {
   const configLoadErrorMessage = useConfigStore((state) => state.configLoadErrorMessage);
   const hidDevice = useConfigStore((state) => state.hidDevice);
   const connectDevice = useConfigStore((state) => state.connectDevice);
+  const hungOnConnect = useConfigStore((state) => state.hungOnConnect);
   // The config here isn't the controller's, so there's nothing to export or replace
   const noConfig = hung || !!configLoadError;
+  // A controller that stopped responding after its config was read still has that config here, and
+  // exporting it may be the only way to keep changes that never got saved
+  const canExport = !configLoadError && !hungOnConnect;
   const updating = useConfigStore((state) => state.updating);
   const updatePercentage = useConfigStore((state) => state.updatePercentage);
   const applyingUpdate = useConfigStore((state) => state.applyingUpdate);
@@ -298,7 +302,7 @@ export function ConnectPage() {
               {t('connect.bootloader')}
             </Button>
             <Space h="md" />
-            <Button disabled={updating || noConfig} onClick={exportConfig}>
+            <Button disabled={updating || !canExport} onClick={exportConfig}>
               {t('connect.export')}
             </Button>
             <Space h="md" />
@@ -370,6 +374,20 @@ export function ConnectPage() {
             icon={<IconExclamationCircle />}
           >
             {t('connect.hung')}
+            {canExport && (
+              <>
+                <Space h="xs" />
+                {t('connect.hungExport')}
+                {simpleMode && (
+                  <>
+                    <Space h="xs" />
+                    <Button size="xs" disabled={updating} onClick={exportConfig}>
+                      {t('connect.export')}
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
           </Alert>
         )}
         {!hung && configLoadError === 'inUse' && (

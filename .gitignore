@@ -137,6 +137,7 @@ src/components/Legacy/legacy.js
 src/components/Legacy/legacy.d.ts
 public/santroller*.uf2
 public/santroller_ota_*.bin
+public/santroller_radio.bin
 public/commit.hash
 public/commit.build
 

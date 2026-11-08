@@ -83,6 +83,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const toolInfo = useConfigStore((state) => state.toolInfo);
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const configModified = useConfigStore((state) => state.configModified && state.connected);
+  // A profile switching modes makes the controller re-enumerate, and until it comes back there's
+  // no device to save to
+  const deviceGone = useConfigStore((state) => state.connected && !state.hidDevice);
+  const waitingForReload = useConfigStore((state) => state.waitingForReload);
+  // Every live edit also reloads the device in place for a moment, so only count a reload that
+  // lasts, or the button would flash grey on each edit
+  const [slowReload, setSlowReload] = useState(false);
+  useEffect(() => {
+    if (!waitingForReload) {
+      setSlowReload(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowReload(true), 300);
+    return () => clearTimeout(timer);
+  }, [waitingForReload]);
+  const reloading = deviceGone || slowReload;
   const nav = useNavigate();
   const location = useLocation();
   const profilePage = useMatch('/profiles');
@@ -447,6 +463,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                               : 'red'
                       }
                       loading={saveStatus === 'saving'}
+                      disabled={reloading && (saveStatus === 'idle' || saveStatus === 'error')}
                       loaderProps={{ type: 'dots' }}
                       leftSection={
                         saveStatus === 'saved' ? (
@@ -479,6 +496,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         radius="md"
                         variant="default"
                         leftSection={<IconArrowBackUp size={16} stroke={1.5} />}
+                        disabled={reloading}
                         onClick={() => setDiscardOpened(true)}
                       >
                         {t('save.discard', 'Discard changes')}
