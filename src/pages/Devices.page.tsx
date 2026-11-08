@@ -89,6 +89,8 @@ import {
 
 // matches the firmware default when the field is unset
 const DEFAULT_TURNTABLE_POLL_INTERVAL_MS = 5;
+// Matches WII_DEFAULT_POLL_INTERVAL_MS in the firmware
+const DEFAULT_WII_POLL_INTERVAL_MS = 5;
 
 function I2CDevice({
   device,
@@ -591,12 +593,12 @@ function WiiExtensionDevice({ id }: { id: string }) {
         }
       />
       <NumberInput
-        label={t('wii.turntablePollInterval.label')}
-        description={t('wii.turntablePollInterval.description')}
+        label={t('wii.pollInterval.label')}
+        description={t('wii.pollInterval.description')}
         min={1}
         step={1}
         allowDecimal={false}
-        value={wii.turntablePollIntervalMs ?? DEFAULT_TURNTABLE_POLL_INTERVAL_MS}
+        value={wii.turntablePollIntervalMs ?? DEFAULT_WII_POLL_INTERVAL_MS}
         onChange={(value) =>
           updateDevice(
             {
@@ -604,9 +606,7 @@ function WiiExtensionDevice({ id }: { id: string }) {
               wii: {
                 ...wii,
                 turntablePollIntervalMs:
-                  typeof value === 'number' && value >= 1
-                    ? value
-                    : DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
+                  typeof value === 'number' && value >= 1 ? value : DEFAULT_WII_POLL_INTERVAL_MS,
               },
             },
             id

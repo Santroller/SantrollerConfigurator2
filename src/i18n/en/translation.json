@@ -786,9 +786,9 @@
     }
   },
   "wii": {
-    "turntablePollInterval": {
-      "label": "DJ Hero turntable poll interval (ms)",
-      "description": "Time between reads of a detected DJ Hero turntable (defaults to 5). The table velocities are movement since the last read, so reading too often shrinks them. Minimum 1."
+    "pollInterval": {
+      "label": "Poll interval (ms)",
+      "description": "Time between reads of the plugged in controller (defaults to 5, like a Wii Remote). Some third party guitars only update their inputs when left alone between reads, and DJ Hero turntable velocities are movement since the last read, so reading too often loses inputs. Minimum 1."
     }
   },
   "pick_value": "Pick value",
