@@ -7,16 +7,13 @@ import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 export function Uf2UpdateAlert() {
   const { t } = useTranslation();
   const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
-  const slowBootStage = useConfigStore((state) => state.slowBootStage);
-  const firmwareVerificationMissing = useConfigStore((state) => state.firmwareVerificationMissing);
-  // Either bootloader reason covers the dongle firmware too, as the UF2 carries both
+  const uf2Required = useConfigStore((state) => state.uf2Required);
+  // Either reason covers the dongle firmware too, as the UF2 carries both
   const key = bootloaderOutdated
     ? 'bootloaderOutdated'
-    : slowBootStage
-      ? 'slowBootStage'
-      : firmwareVerificationMissing
-        ? 'firmwareVerification'
-        : 'missingDongleFirmware';
+    : uf2Required
+      ? 'uf2Required'
+      : 'missingDongleFirmware';
   return (
     <Alert
       variant="light"

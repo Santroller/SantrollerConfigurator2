@@ -81,9 +81,8 @@ export function ConnectPage() {
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const needsUf2Update = useConfigStore((state) => state.needsUf2Update);
   const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
-  const slowBootStage = useConfigStore((state) => state.slowBootStage);
-  const firmwareVerificationMissing = useConfigStore((state) => state.firmwareVerificationMissing);
-  const uf2Only = bootloaderOutdated || slowBootStage || firmwareVerificationMissing;
+  const uf2Required = useConfigStore((state) => state.uf2Required);
+  const uf2Only = bootloaderOutdated || uf2Required;
   const [advancedModalOpened, { open: openAdvancedModal, close: closeAdvancedModal }] =
     useDisclosure(false);
   const [udevModalOpened, { open: openUdevModal, close: closeUdevModal }] = useDisclosure(false);

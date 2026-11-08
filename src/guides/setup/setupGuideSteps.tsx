@@ -1117,13 +1117,12 @@ export function SetupConnectStep(props: GuideStepProps) {
   const applyingUpdate = useConfigStore((state) => state.applyingUpdate);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
   const bootloaderOutdated = useConfigStore((state) => state.bootloaderOutdated);
-  const slowBootStage = useConfigStore((state) => state.slowBootStage);
-  const firmwareVerificationMissing = useConfigStore((state) => state.firmwareVerificationMissing);
+  const uf2Required = useConfigStore((state) => state.uf2Required);
 
   // The main page has the full set of update messages; this covers the common case
   const updateStatus = connected && !hung && (
     <>
-      {bootloaderOutdated || slowBootStage || firmwareVerificationMissing ? (
+      {bootloaderOutdated || uf2Required ? (
         <Uf2UpdateAlert />
       ) : !latest && !firmwareNewer ? (
         <Alert

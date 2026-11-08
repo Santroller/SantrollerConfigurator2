@@ -16,7 +16,7 @@ function featureReport(id: number, payload: Uint8Array) {
   return new DataView(bytes.buffer);
 }
 
-describe('one-time UF2 migration for image verification', () => {
+describe('one-time UF2 migration for firmware too old for OTA', () => {
   const receiveFeatureReport = vi.fn<HIDDevice['receiveFeatureReport']>();
   const sendFeatureReport = vi.fn<HIDDevice['sendFeatureReport']>();
   const device: Partial<HIDDevice> = {
@@ -43,17 +43,18 @@ describe('one-time UF2 migration for image verification', () => {
     useConfigStore.setState({ ...initialConfig });
   });
 
+  // What the firmware reports about itself is ignored, only the build counts
   it.each([
     { build: undefined, firmwareVerification: undefined, needsUf2: true },
-    { build: undefined, firmwareVerification: false, needsUf2: true },
-    { build: undefined, firmwareVerification: true, needsUf2: false },
+    { build: undefined, firmwareVerification: true, needsUf2: true },
     { build: 3492, firmwareVerification: undefined, needsUf2: true },
-    { build: 3493, firmwareVerification: undefined, needsUf2: false },
-    { build: 3494, firmwareVerification: true, needsUf2: false },
-    { build: 3494, firmwareVerification: false, needsUf2: true },
+    { build: 3520, firmwareVerification: true, needsUf2: true },
+    { build: 3521, firmwareVerification: undefined, needsUf2: false },
+    { build: 3522, firmwareVerification: false, needsUf2: false },
+    { build: 3522, firmwareVerification: true, slowBootStage: true, needsUf2: false },
   ])(
-    'uses installed build $build and capability $firmwareVerification (UF2=$needsUf2)',
-    async ({ build, firmwareVerification, needsUf2 }) => {
+    'uses installed build $build, whatever the firmware reports (UF2=$needsUf2)',
+    async ({ build, firmwareVerification, slowBootStage, needsUf2 }) => {
       const data = new Uint8Array();
       const info = proto.ConfigInfo.encode({
         dataSize: 0,
@@ -62,6 +63,7 @@ describe('one-time UF2 migration for image verification', () => {
         dataCrc: new CRC32().calculate(data),
         magic: 0x53414e54,
         firmwareVerification,
+        slowBootStage,
       }).finish();
       receiveFeatureReport.mockImplementation(async (id) => {
         switch (id) {
@@ -89,16 +91,16 @@ describe('one-time UF2 migration for image verification', () => {
       const state = useConfigStore.getState();
       expect(state.configLoadError).toBeNull();
       expect(state.firmwareBuild).toBe(build);
-      expect(state.firmwareVerificationMissing).toBe(needsUf2);
+      expect(state.uf2Required).toBe(needsUf2);
       expect(state.needsUf2Update).toBe(needsUf2);
     }
   );
 
-  it('refuses direct OTA calls when verification is missing', async () => {
+  it('refuses direct OTA calls from firmware too old for OTA', async () => {
     useConfigStore.setState({
       hidDevice: device as HIDDevice,
       connected: true,
-      firmwareVerificationMissing: true,
+      uf2Required: true,
     });
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     await useConfigStore.getState().firmwareUpdate();

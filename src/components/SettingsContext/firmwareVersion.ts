@@ -16,31 +16,21 @@ export function parseVersionReport(report: DataView) {
   return { version, build };
 }
 
-// pico_w_compat builds booted with the slow generic_03h boot stage from when the board was added
-// (build 2850) until 3439. The boot stage is in the bootloader, which OTA updates don't replace.
-// Firmware from 3439 on reports slowBootStage itself, as an OTA update past it still leaves the old
-// bootloader, but older firmware can't, so for those the build says it.
-const SLOW_BOOT_STAGE_FIRST_BUILD = 2850;
-const SLOW_BOOT_STAGE_FIXED_BUILD = 3439;
+// Whether the device has to be reflashed from a UF2 once before it can update over OTA again. This
+// only goes by the installed build: anything the firmware reports about itself only arrives once the
+// firmware reporting it is installed, which would take an OTA update first. Anything at MIN_OTA_BUILD
+// or later got there through the UF2, so it has a current bootloader as well.
+//
+// Raise MIN_OTA_BUILD when an update needs something new from the firmware doing the update, or from
+// a bootloader OTA updates can't replace:
+// - 3439 fixed the slow generic_03h boot stage in pico_w_compat bootloaders (from 2850)
+// - 3493 verifies the image's SHA-256 before installing it
+// - 3521 ends the devices the update doesn't need first, as some setups hung partway through it
+//
+// Unnumbered builds (from before build numbers, or built without the git history) can't be placed
+// against it, so they need the UF2 too.
+const MIN_OTA_BUILD = 3521;
 
-export function hasSlowBootStageBuild(type: string, build: number | undefined) {
-  return (
-    type === 'pico_w_compat' &&
-    build !== undefined &&
-    build >= SLOW_BOOT_STAGE_FIRST_BUILD &&
-    build < SLOW_BOOT_STAGE_FIXED_BUILD
-  );
-}
-
-// Build 3493 first enabled SHA256 verification. Check the installed build before uploading,
-// as earlier firmware cannot report the capability. Unnumbered builds use the capability instead.
-const FIRMWARE_VERIFICATION_FIRST_BUILD = 3493;
-
-export function needsFirmwareVerificationUf2(
-  build: number | undefined,
-  verification?: boolean | null
-) {
-  return build === undefined
-    ? verification !== true
-    : build < FIRMWARE_VERIFICATION_FIRST_BUILD || verification === false;
+export function needsUf2BeforeOta(build: number | undefined) {
+  return build === undefined || build < MIN_OTA_BUILD;
 }

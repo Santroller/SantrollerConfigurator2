@@ -50,11 +50,7 @@ import { CRC32 } from '@/CRC32.js';
 import { splitExtraTargets } from './assignmentTargets';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
 import { proto } from './config.js';
-import {
-  hasSlowBootStageBuild,
-  needsFirmwareVerificationUf2,
-  parseVersionReport,
-} from './firmwareVersion';
+import { needsUf2BeforeOta, parseVersionReport } from './firmwareVersion';
 import { KeepaliveTimer, startKeepaliveTimer, stopKeepaliveTimer } from './keepaliveTimer';
 import { migrateLedPatterns } from './ledPatternEffect';
 import { truncateProfileName } from './profileName';
@@ -640,9 +636,8 @@ export interface ConfigState {
   bundledRadioFirmwareVersion: number | null;
   // The bootloader's flash layout is older than the firmware's, so updates have to go through a UF2
   bootloaderOutdated: boolean;
-  // The bootloader reads flash slowly. OTA updates still work, but only a UF2 replaces the bootloader
-  slowBootStage: boolean;
-  firmwareVerificationMissing: boolean;
+  // The device has to be reflashed from a UF2 once before it can update over OTA (see needsUf2BeforeOta)
+  uf2Required: boolean;
   needsUf2Update: boolean;
   // The controller takes firmware uploads streamed as output reports (see firmwareUpdate)
   streamedFirmwareUpload: boolean;
@@ -947,8 +942,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     radioFirmwareVersion: null,
     bundledRadioFirmwareVersion: null,
     bootloaderOutdated: false,
-    slowBootStage: false,
-    firmwareVerificationMissing: false,
+    uf2Required: false,
     needsUf2Update: false,
     streamedFirmwareUpload: false,
     rpcs3ModeCommand: false,
@@ -3029,7 +3023,7 @@ const configStore = create<ConfigState & Actions>()(
         return;
       }
       // The device refuses it anyway, the update has to come from a UF2 with the matching bootloader
-      if (state.bootloaderOutdated || state.slowBootStage || state.firmwareVerificationMissing) {
+      if (state.bootloaderOutdated || state.uf2Required) {
         console.error('Firmware update requires a UF2 instead of OTA');
         return;
       }
@@ -3150,7 +3144,7 @@ const configStore = create<ConfigState & Actions>()(
       stopReloadReconnectTimer();
       stopInUseRetryTimer();
       set((state) => {
-        state.firmwareVerificationMissing = true;
+        state.uf2Required = true;
         state.needsUf2Update = true;
       });
       if (!device.opened) {
@@ -3165,8 +3159,8 @@ const configStore = create<ConfigState & Actions>()(
           newer: firmwareNewer,
         } = await checkFirmwareVersion(device);
         set((state) => {
-          state.firmwareVerificationMissing = needsFirmwareVerificationUf2(firmwareBuild);
-          state.needsUf2Update = state.firmwareVerificationMissing;
+          state.uf2Required = needsUf2BeforeOta(firmwareBuild);
+          state.needsUf2Update = state.uf2Required;
         });
         const { activeProfiles, deferredMode } = await readActiveProfiles(device);
         let deviceType = 'pico_w';
@@ -3201,14 +3195,7 @@ const configStore = create<ConfigState & Actions>()(
           const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
           const timeout = startKeepaliveTimer(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
           const fresh = InitState(config, aux);
-          // Firmware too old to report it is caught by its build instead, so it goes straight to a
-          // UF2 rather than an OTA update first
-          const slowBootStage =
-            !!info.slowBootStage || hasSlowBootStageBuild(deviceType, firmwareBuild);
-          const firmwareVerificationMissing = needsFirmwareVerificationUf2(
-            firmwareBuild,
-            info.firmwareVerification
-          );
+          const uf2Required = needsUf2BeforeOta(firmwareBuild);
           set(
             (old) => ({
               ...old,
@@ -3231,16 +3218,13 @@ const configStore = create<ConfigState & Actions>()(
               missingStaticFirmware: !!info.missingStaticFirmware,
               radioFirmwareVersion: info.radioFirmwareVersion ?? null,
               bootloaderOutdated: !!info.bootloaderOutdated,
-              slowBootStage,
-              firmwareVerificationMissing,
+              uf2Required,
               // Missing radio firmware is part of the device's needsUf2Update, but when it can be
               // written over OTA it's offered separately (see radioFirmwareUpdate)
               needsUf2Update:
                 (info.radioFirmwareVersion != null
                   ? !!info.bootloaderOutdated
-                  : !!info.needsUf2Update) ||
-                slowBootStage ||
-                firmwareVerificationMissing,
+                  : !!info.needsUf2Update) || uf2Required,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
               rpcs3ModeCommand: !!info.rpcs3ModeCommand,
               keepaliveTimeout: timeout,
