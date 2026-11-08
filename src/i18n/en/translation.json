@@ -4499,7 +4499,7 @@
           "plainNote": "Without the wireless chip, the Pico uses a USB Bluetooth adapter plugged into a USB host port instead. Wire one up as shown below.",
           "wirelessText": "The Pico W's radio is built in, so there's nothing to wire. Add the Bluetooth driver on the right.",
           "dongleTitle": "Wire a USB Host Port",
-          "dongleSupport": "Not every adapter works yet. <strong>Realtek and Intel</strong> adapters, which covers most cheap current ones, need firmware the Pico can't load yet. Adapters that work without it, like <strong>Broadcom BCM20702</strong> or <strong>CSR8510</strong> based ones, are the ones to get.",
+          "dongleSupport": "Not every adapter works yet. <strong>Realtek and Intel</strong> adapters, which covers most cheap current ones, need firmware the Pico can't load yet. They seem to work, but nothing can see them. Many branded adapters are Realtek inside, like the <strong>TP-Link UB500</strong>, newer <strong>TP-Link UB400</strong>s, <strong>ASUS USB-BT500</strong> and most <strong>UGREEN</strong> and <strong>Edimax</strong> ones, so check the chip rather than the name. Adapters that work without it, like <strong>Broadcom BCM20702</strong> or <strong>CSR8510</strong> based ones, are the ones to get.",
           "driverTitle": "Bluetooth Driver",
           "driverDesc": "Adds the Bluetooth driver, which uses the Pico W's own radio.",
           "driverDescDongle": "Adds the USB host port, then the Bluetooth driver, which uses the adapter plugged into it. The port's pins can be changed once it's added.",

@@ -749,7 +749,7 @@ export interface Actions {
     innerMapping: number | undefined,
     request: DetectInputRequest
   ) => void;
-  testLed: (profileId: number, ledId?: number, durationMs?: number) => Promise<void>;
+  testLed: (profileIdx: number, ledId?: number, durationMs?: number) => Promise<void>;
 }
 
 // Standby lighting is only used once no other profile matched, so it's kept below them all, and other
@@ -1731,9 +1731,11 @@ const configStore = create<ConfigState & Actions>()(
       });
     },
 
-    testLed: async (profileId: number, ledId?: number, durationMs: number = 2000) => {
+    testLed: async (profileIdx: number, ledId?: number, durationMs: number = 2000) => {
       const dev = get().hidDevice;
-      if (!dev) {
+      // The firmware knows profiles by their uid, not where they are in the list
+      const profileId = get().config.profiles?.[profileIdx]?.opts?.uid;
+      if (!dev || profileId == null) {
         return;
       }
       const infoBuffer = proto.Command.encode(
