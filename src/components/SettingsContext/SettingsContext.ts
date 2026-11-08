@@ -589,6 +589,8 @@ export interface ConfigState {
   updateError?: 'notApplied' | 'noReconnect';
   detected: number;
   type: string;
+  // How many GPIOs the device's chip has: 48 on an RP2350B, 30 otherwise (and from older firmware)
+  gpioCount: number;
   updatePercentage: number;
   detectedMapping?: number;
   detectedActivation?: number;
@@ -908,6 +910,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     guiDevices,
     console: '',
     type: '',
+    gpioCount: 30,
     sendingKeepAlive: false,
     refreshingBluetooth: false,
     toolInfo,
@@ -3233,6 +3236,7 @@ const configStore = create<ConfigState & Actions>()(
               hidDevice: device,
               crc: info.dataCrc,
               type: deviceType,
+              gpioCount: info.gpioCount || 30,
               latest,
               firmwareNewer,
               firmwareVersion,

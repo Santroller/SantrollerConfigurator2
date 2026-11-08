@@ -60,7 +60,12 @@ import {
   hasPinConfiguration,
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
-import { matrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
+import {
+  matrixPins,
+  switchNetworkPins,
+  withMatrixPins,
+  withSwitchNetworkPins,
+} from '@/components/Devices/matrixPins';
 import { DeviceContext, PinBox } from '@/components/Devices/Pins';
 import { displayPanel, displayPanels } from '@/components/Inputs/displayRender';
 import {
@@ -73,11 +78,14 @@ import {
 } from '@/components/Selection/Selection';
 import {
   AllPinsNamed,
-  AnalogPins,
+  analogPinsFor,
   AnalogPinsNamed,
+  DEFAULT_GPIO_COUNT,
   I2CGroups,
+  isAnalogPin,
   MisoPins,
   MosiPins,
+  PinOption,
   RxPins,
   SckPins,
   SclPins,
@@ -85,6 +93,8 @@ import {
   SPIGroups,
   TxPins,
   UARTGroups,
+  WirelessChipPins,
+  wirelessChipPins,
 } from '@/devices/pico/pins';
 
 // matches the firmware default when the field is unset
@@ -262,7 +272,9 @@ function DeviceGateSection({ id }: { id: string }) {
                   ? {
                       analog: true,
                       pinMode: proto.PinMode.Floating,
-                      pin: AnalogPins.includes(gate.pin) ? gate.pin : -1,
+                      pin: isAnalogPin(gate.pin, useConfigStore.getState().gpioCount)
+                        ? gate.pin
+                        : -1,
                     }
                   : { analog: false, pinMode: proto.PinMode.PullUp }
               )
@@ -1674,10 +1686,9 @@ function BatteryLevel({ level }: { level?: number }) {
   );
 }
 
-const ADC_BATTERY_PINS = [26, 27, 28, 29];
-
 function AdcBatteryDevice({ id }: { id: string }) {
   const { t } = useTranslation();
+  const gpioCount = useConfigStore((state) => state.gpioCount);
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -1703,7 +1714,10 @@ function AdcBatteryDevice({ id }: { id: string }) {
         label={t('battery.pin')}
         description={t('battery.pin_description')}
         allowDeselect={false}
-        data={ADC_BATTERY_PINS.map((pin) => ({ value: `${pin}`, label: t('pin', { pin }) }))}
+        data={analogPinsFor(gpioCount).map((pin) => ({
+          value: `${pin}`,
+          label: t('pin', { pin }),
+        }))}
         value={`${battery.pin}`}
         onChange={(val) => val != null && update({ pin: parseInt(val, 10) })}
       />
@@ -2455,8 +2469,11 @@ function PowerManagementDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
-const usbHostValidPins = Object.fromEntries(
-  Object.entries(AllPinsNamed).filter(([pin, _]) => AllPinsNamed[(Number(pin) + 1).toString()])
+// Two pins in a row, so both have to be on the chip
+const usbHostValidPins: { [pin: number]: PinOption } = Object.fromEntries(
+  Object.entries(AllPinsNamed)
+    .filter(([pin, _]) => AllPinsNamed[(Number(pin) + 1).toString()])
+    .map(([pin, option]) => [pin, { ...option, lastPin: Number(pin) + 1 }])
 );
 const usbHostData = [
   { label: 'usb.selector.dpFirst', value: 'false' },
@@ -2780,6 +2797,7 @@ function EncoderDevice({ id }: { id: string }) {
 }
 function SwitchNetworkDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
+  const gpioCount = useConfigStore((state) => state.gpioCount);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const { t } = useTranslation();
@@ -2789,6 +2807,10 @@ function SwitchNetworkDevice({ id }: { id: string }) {
   }
   const network = device.switchNetwork;
   const buttons = network.buttons ?? [];
+  const networkPins = switchNetworkPins(network);
+  const networkPinOptions = Object.fromEntries(
+    Object.entries(AllPinsNamed).filter(([pin, _]) => networkPins.includes(parseInt(pin, 10)))
+  );
 
   const updateNetwork = (next: proto.ISwitchNetworkDevice) =>
     updateDevice({ deviceid: parseInt(id, 10), switchNetwork: next }, id);
@@ -2801,21 +2823,23 @@ function SwitchNetworkDevice({ id }: { id: string }) {
     >
       <MultiSelect
         label={t('switchNetwork.pins')}
-        value={Array.from(Array(32).keys())
-          .filter((pin) => network.pins! & (1 << pin))
-          .map((pin) => pin.toString())}
-        data={Object.entries(AllPinsNamed).map(([value, pin]) => ({
-          value,
-          label: t(pin.label, pin),
-        }))}
+        value={networkPins.map((pin) => pin.toString())}
+        data={Object.entries(AllPinsNamed)
+          .filter(([, pin]) => pin.pin < gpioCount)
+          .map(([value, pin]) => ({
+            value,
+            label: t(pin.label, pin),
+          }))}
         clearable
         maxValues={32}
         searchable
         onChange={(val) =>
-          updateNetwork({
-            ...network,
-            pins: val.reduce((acc, pin) => acc | (1 << parseInt(pin, 10)), 0),
-          })
+          updateNetwork(
+            withSwitchNetworkPins(
+              network,
+              val.map((pin) => parseInt(pin, 10))
+            )
+          )
         }
       />
       <Stack mt="md">
@@ -2825,11 +2849,7 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.pin')}
               pin={button.pin}
-              valid={Object.fromEntries(
-                Object.entries(AllPinsNamed).filter(
-                  ([pin, _]) => network.pins! & (1 << parseInt(pin, 10))
-                )
-              )}
+              valid={networkPinOptions}
               dispatch={(pin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], pin };
@@ -2839,11 +2859,7 @@ function SwitchNetworkDevice({ id }: { id: string }) {
             <PinBox
               label={t('switchNetwork.other_pin')}
               pin={button.otherPin}
-              valid={Object.fromEntries(
-                Object.entries(AllPinsNamed).filter(
-                  ([pin, _]) => network.pins! & (1 << parseInt(pin, 10))
-                )
-              )}
+              valid={networkPinOptions}
               dispatch={(otherPin) => {
                 const next = [...buttons];
                 next[index] = { ...next[index], otherPin };
@@ -2880,6 +2896,7 @@ function SwitchNetworkDevice({ id }: { id: string }) {
 }
 
 function MatrixDevice({ id }: { id: string }) {
+  const gpioCount = useConfigStore((state) => state.gpioCount);
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -2911,10 +2928,12 @@ function MatrixDevice({ id }: { id: string }) {
       <MultiSelect
         label={t('matrix.output_pins')}
         value={matrixPins(matrix, 'out').map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map((item) => ({
-          value: item[0],
-          label: t(item[1].label, item[1]),
-        }))}
+        data={Object.entries(AllPinsNamed)
+          .filter(([, pin]) => pin.pin < gpioCount)
+          .map((item) => ({
+            value: item[0],
+            label: t(item[1].label, item[1]),
+          }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -2935,10 +2954,12 @@ function MatrixDevice({ id }: { id: string }) {
       <MultiSelect
         label={t('matrix.input_pins')}
         value={matrixPins(matrix, 'in').map((x) => x.toString())}
-        data={Object.entries(AllPinsNamed).map((item) => ({
-          value: item[0],
-          label: t(item[1].label, item[1]),
-        }))}
+        data={Object.entries(AllPinsNamed)
+          .filter(([, pin]) => pin.pin < gpioCount)
+          .map((item) => ({
+            value: item[0],
+            label: t(item[1].label, item[1]),
+          }))}
         clearable
         maxValues={32}
         onChange={(val) =>
@@ -3035,6 +3056,94 @@ function PSXEmulationDevice({ id }: { id: string }) {
   );
 }
 
+// Where the board's CYW43 wireless chip is wired. Pico W / Pico 2 W are the default; RP2350B boards like the Waveshare
+// RP2350B-Plus-W use other pins, and other boards can give theirs.
+function WirelessPinsSettings({
+  bt,
+  update,
+}: {
+  bt: proto.IBluetoothDevice;
+  update: (changes: Partial<proto.IBluetoothDevice>) => void;
+}) {
+  const { t } = useTranslation();
+  const gpioCount = useConfigStore((state) => state.gpioCount);
+  const preset = bt.wirelessPins ?? proto.WirelessPins.WirelessPinsPicoW;
+  const pins = wirelessChipPins(bt);
+  const rp2350b = gpioCount > DEFAULT_GPIO_COUNT;
+  const options = [
+    {
+      value: `${proto.WirelessPins.WirelessPinsPicoW}`,
+      label: t('devices.bluetooth_wireless_pins.pico_w'),
+    },
+    {
+      value: `${proto.WirelessPins.WirelessPinsWaveshareRp2350bPlusW}`,
+      label: t('devices.bluetooth_wireless_pins.waveshare_rp2350b_plus_w'),
+      // GP36 - GP39 only exist on an RP2350B
+      disabled: !rp2350b && preset !== proto.WirelessPins.WirelessPinsWaveshareRp2350bPlusW,
+    },
+    {
+      value: `${proto.WirelessPins.WirelessPinsCustom}`,
+      label: t('devices.bluetooth_wireless_pins.custom'),
+    },
+  ];
+  const customPin = (
+    field: 'wlOnPin' | 'wlDataPin' | 'wlCsPin' | 'wlClockPin',
+    key: keyof WirelessChipPins
+  ) => (
+    <PinBox
+      label={`devices.bluetooth_wireless_pins.${key}`}
+      pin={pins[key]}
+      valid={AllPinsNamed}
+      dispatch={(pin) => update({ [field]: pin })}
+    />
+  );
+  return (
+    <Stack gap="xs" mt="xs">
+      <Select
+        label={t('devices.bluetooth_wireless_pins.label')}
+        description={t('devices.bluetooth_wireless_pins.description')}
+        allowDeselect={false}
+        data={options}
+        value={`${preset}`}
+        onChange={(val) => {
+          if (val == null) {
+            return;
+          }
+          const wirelessPins = parseInt(val, 10) as proto.WirelessPins;
+          // Start custom pins from the ones in use, so only the different ones need changing
+          update(
+            wirelessPins === proto.WirelessPins.WirelessPinsCustom
+              ? {
+                  wirelessPins,
+                  wlOnPin: pins.on,
+                  wlDataPin: pins.data,
+                  wlCsPin: pins.cs,
+                  wlClockPin: pins.clock,
+                }
+              : { wirelessPins }
+          );
+        }}
+      />
+      {preset === proto.WirelessPins.WirelessPinsCustom && (
+        <SimpleGrid cols={2}>
+          {customPin('wlOnPin', 'on')}
+          {customPin('wlDataPin', 'data')}
+          {customPin('wlCsPin', 'cs')}
+          {customPin('wlClockPin', 'clock')}
+        </SimpleGrid>
+      )}
+      {rp2350b && preset === proto.WirelessPins.WirelessPinsPicoW && (
+        <Text size="sm" c="yellow">
+          {t('devices.bluetooth_wireless_pins.rp2350b_hint')}
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        {t('devices.bluetooth_wireless_pins.restart_note')}
+      </Text>
+    </Stack>
+  );
+}
+
 function BluetoothDevice({ id }: { id: string }) {
   const { t } = useTranslation();
   const status = useConfigStore((state) => state.deviceStatus[id]);
@@ -3080,6 +3189,12 @@ function BluetoothDevice({ id }: { id: string }) {
         valid={AllPinsNamed}
         dispatch={(syncPin) =>
           updateDevice({ deviceid: parseInt(id, 10), bt: { ...bt, syncPin } }, id)
+        }
+      />
+      <WirelessPinsSettings
+        bt={bt}
+        update={(changes) =>
+          updateDevice({ deviceid: parseInt(id, 10), bt: { ...bt, ...changes } }, id)
         }
       />
       <NumberInput

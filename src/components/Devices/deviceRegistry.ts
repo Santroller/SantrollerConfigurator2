@@ -1,6 +1,7 @@
 import i18next from 'i18next';
-import { matrixAllPins } from '@/components/Devices/matrixPins';
+import { matrixAllPins, switchNetworkPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
+import { wirelessChipPins } from '@/devices/pico/pins';
 
 // Every field of a device but its id and gate is one of the kinds of device
 export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid' | 'gate'>;
@@ -306,7 +307,15 @@ const deviceRegistry: DeviceDefinitions = {
   bt: {
     category: 'controllers',
     create: () => ({}),
-    pins: ({ syncPin }) => (syncPin != null && syncPin >= 0 ? [syncPin] : []),
+    // The wireless chip's pins too, when the config says the board has it somewhere other than a Pico W does. The
+    // Pico W's are left out: they're only taken while the chip is found, so they're free on a plain Pico.
+    pins: (bt) => [
+      ...(bt.syncPin != null && bt.syncPin >= 0 ? [bt.syncPin] : []),
+      ...((bt.wirelessPins ?? proto.WirelessPins.WirelessPinsPicoW) ===
+      proto.WirelessPins.WirelessPinsPicoW
+        ? []
+        : Object.values(wirelessChipPins(bt)).filter((pin) => pin >= 0)),
+    ],
   },
   protarNeck: {
     category: 'instruments',
@@ -327,7 +336,7 @@ const deviceRegistry: DeviceDefinitions = {
   switchNetwork: {
     category: 'expansion',
     create: () => ({ pins: 0, buttons: [] }),
-    pins: ({ pins }) => Array.from(Array(32).keys()).filter((pin) => pins & (1 << pin)),
+    pins: (network) => switchNetworkPins(network),
     formatStatus: () => '',
   },
   crkdDrum: {

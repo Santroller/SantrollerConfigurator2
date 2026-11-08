@@ -9,7 +9,7 @@ const fields = {
   out: { low: 'outPins', high: 'outPinsHigh' },
 } as const;
 
-function maskPins(mask: number | null | undefined, base: number): number[] {
+export function maskPins(mask: number | null | undefined, base: number): number[] {
   const pins: number[] = [];
   for (let bit = 0; bit < 32; bit++) {
     if (((mask ?? 0) >>> bit) & 1) {
@@ -19,7 +19,7 @@ function maskPins(mask: number | null | undefined, base: number): number[] {
   return pins;
 }
 
-function pinsMask(pins: number[], base: number): number {
+export function pinsMask(pins: number[], base: number): number {
   return (
     pins
       .filter((pin) => pin >= base && pin < base + 32)
@@ -67,4 +67,18 @@ export function addMatrixPins(
   pins: number[]
 ): proto.IMatrixDevice {
   return withMatrixPins(matrix, side, [...matrixPins(matrix, side), ...pins]);
+}
+
+// A switch network stores its pins the same way: GPIO 0-31 in pins, GPIO 32-63 in pinsHigh
+export function switchNetworkPins(
+  network: proto.ISwitchNetworkDevice | null | undefined
+): number[] {
+  return [...maskPins(network?.pins, 0), ...maskPins(network?.pinsHigh, 32)];
+}
+
+export function withSwitchNetworkPins(
+  network: proto.ISwitchNetworkDevice | null | undefined,
+  pins: number[]
+): proto.ISwitchNetworkDevice {
+  return { ...network, pins: pinsMask(pins, 0), pinsHigh: pinsMask(pins, 32) };
 }

@@ -1,7 +1,7 @@
 import { addMatrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
-import { AnalogPins } from '@/devices/pico/pins';
+import { isAnalogPin } from '@/devices/pico/pins';
 import { findDeviceStatus } from '../guideConfig';
 import { gpPin } from '../wiringText';
 
@@ -521,7 +521,7 @@ export function applyRecommendedPinout(family: GuitarFamily = 'gh') {
     // Only the ADC pins read analog, so the tilt switch on GP11 stays a digital pull-up input
     const isAxis =
       (rec.target.type as string) === 'ghAxis' || (rec.target.type as string) === 'rbAxis';
-    const isAnalog = isAxis && AnalogPins.includes(rec.pin);
+    const isAnalog = isAxis && isAnalogPin(rec.pin, store.gpioCount);
     const idx = findMappingIndex(currentProfile, rec.target);
 
     if (idx !== -1) {

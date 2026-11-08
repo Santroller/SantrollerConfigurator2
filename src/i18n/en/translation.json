@@ -9,6 +9,19 @@
     "dmx": "DMX",
     "xbox360Rf": "Xbox 360 RF Module",
     "adcBattery": "Battery Voltage (ADC pin)",
+    "bluetooth_wireless_pins": {
+      "label": "Wireless chip pins",
+      "description": "Where the board's CYW43439 wireless chip is wired. Only change this for boards that aren't a Raspberry Pi Pico W or Pico 2 W.",
+      "pico_w": "Raspberry Pi Pico W / Pico 2 W (GP23, GP24, GP25, GP29)",
+      "waveshare_rp2350b_plus_w": "Waveshare RP2350B-Plus-W (GP36 - GP39)",
+      "custom": "Custom",
+      "on": "Power (WL_ON)",
+      "data": "Data (WL_D)",
+      "cs": "Chip select (WL_CS)",
+      "clock": "Clock (WL_CLK)",
+      "rp2350b_hint": "This is an RP2350B board, which usually has its wireless chip on other pins than a Pico 2 W. If Bluetooth isn't found, pick your board here.",
+      "restart_note": "Saving a change to these pins restarts the device."
+    },
     "bluetooth_config_only": {
       "label": "Configure over Bluetooth while no profile uses it",
       "description": "Advertise over Bluetooth just for the configurator when no profile is emulating a Bluetooth controller. Turn this off to keep Bluetooth quiet until a Bluetooth profile is active."

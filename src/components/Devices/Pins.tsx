@@ -5,6 +5,7 @@ import '@/i18n/config';
 
 import { useTranslation } from 'react-i18next';
 import { useProfileLabels } from '@/components/Labels/useProfileLabels';
+import { pinAvailable, PinOption } from '@/devices/pico/pins';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
 import { getLabel } from './pinUtils';
 
@@ -12,7 +13,7 @@ export const DeviceContext = createContext<string | undefined>(undefined);
 
 export function PinBox({
   pin,
-  valid,
+  valid: allValid,
   error,
   label,
   dispatch,
@@ -20,7 +21,8 @@ export function PinBox({
   optional,
 }: {
   pin: number;
-  valid: { [pin: number]: { label: string; channel?: string; pin: number } };
+  // Every option, for any chip: the ones the connected chip doesn't have are left out
+  valid: { [pin: number]: PinOption };
   error?: string;
   label: string;
   dispatch?: (pin: number) => void;
@@ -34,6 +36,10 @@ export function PinBox({
 
   const guiDevices = useProfileLabels();
   const devices = useConfigStore((state) => state.deviceStatus);
+  const gpioCount = useConfigStore((state) => state.gpioCount);
+  const valid: { [pin: number]: PinOption } = Object.fromEntries(
+    Object.entries(allValid).filter(([, option]) => pinAvailable(option, gpioCount))
+  );
 
   const currentDevice = effectiveDeviceId ? devices[effectiveDeviceId] : undefined;
   const parentId = currentDevice?.parentId;
