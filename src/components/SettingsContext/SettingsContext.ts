@@ -58,6 +58,7 @@ import {
 import { KeepaliveTimer, startKeepaliveTimer, stopKeepaliveTimer } from './keepaliveTimer';
 import { migrateLedPatterns } from './ledPatternEffect';
 import { truncateProfileName } from './profileName';
+import { fetchBundledRadioFirmware, radioFirmwareVersionOf } from './radioFirmware';
 import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './savedConfigFields';
 import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
 import { remapMappingsForSubType } from './subTypeMappings';
@@ -92,6 +93,11 @@ const FIRMWARE_UPLOAD_CHUNK_SIZE = 63;
 const FIRMWARE_UPLOAD_PROGRESS_END = 50;
 // How many times a streamed block is sent before giving up
 const FIRMWARE_STREAMED_BLOCK_ATTEMPTS = 3;
+// WebHID over bluetooth on Linux goes through the kernel's uhid, which queues 32 output reports for
+// bluetoothd and drops the rest ("Output queue is full"), and a 4096 byte block is 66 of them. A keepalive
+// is a write the controller acknowledges once it has handled everything queued before it, so sending one
+// this often keeps the queue from filling.
+const FIRMWARE_STREAMED_REPORTS_PER_BARRIER = 16;
 // Roughly what the bootloader spends swapping one 4KB sector (2 erases + 2 programs)
 const FIRMWARE_APPLY_MS_PER_SECTOR = 110;
 const FIRMWARE_REBOOT_MS = 2_000;
@@ -587,7 +593,7 @@ export interface ConfigState {
   updating: boolean;
   applyingUpdate: boolean;
   // Why the last firmware update didn't take, if it didn't
-  updateError?: 'notApplied' | 'noReconnect';
+  updateError?: 'notApplied' | 'noReconnect' | 'radioFirmware';
   detected: number;
   type: string;
   // How many GPIOs the device's chip has: 48 on an RP2350B, 30 otherwise (and from older firmware)
@@ -624,6 +630,11 @@ export interface ConfigState {
   // Guitar Hero Arcade cabinet side the device saved for itself, written back untouched
   ghArcadeSide: number | null;
   missingStaticFirmware: boolean;
+  // Content version of the controller's radio firmware area (Xbox adapter, CYW43), 0 when it's missing or
+  // predates versioning. Null when the controller can't have it written over OTA, and needs a UF2 instead
+  radioFirmwareVersion: number | null;
+  // The version this tool ships (santroller_radio.bin), null until it's loaded or if it's missing
+  bundledRadioFirmwareVersion: number | null;
   // The bootloader's flash layout is older than the firmware's, so updates have to go through a UF2
   bootloaderOutdated: boolean;
   // The bootloader reads flash slowly. OTA updates still work, but only a UF2 replaces the bootloader
@@ -683,6 +694,8 @@ export interface Actions {
   connectBluetooth: () => void;
   connectDevice: (device: HIDDevice) => Promise<void>;
   firmwareUpdate: () => void;
+  // Writes the radio firmware area this tool ships, when the controller's is missing or older
+  radioFirmwareUpdate: () => Promise<void>;
   login: () => void;
   disconnect: () => void;
   reconnect: (device: HIDDevice) => void;
@@ -927,6 +940,8 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     tlvEntries: aux.tlvEntries ?? [],
     ghArcadeSide: aux.ghArcadeSide ?? null,
     missingStaticFirmware: false,
+    radioFirmwareVersion: null,
+    bundledRadioFirmwareVersion: null,
     bootloaderOutdated: false,
     slowBootStage: false,
     firmwareVerificationMissing: false,
@@ -2942,6 +2957,66 @@ const configStore = create<ConfigState & Actions>()(
         });
       }
     },
+    radioFirmwareUpdate: async () => {
+      const state = get();
+      const hidDevice = state.hidDevice;
+      if (!hidDevice || state.radioFirmwareVersion === null) {
+        return;
+      }
+      set((state) => {
+        state.updatePercentage = 1;
+        state.updating = true;
+        state.updateError = undefined;
+        if (state.keepaliveTimeout) {
+          stopKeepaliveTimer(state.keepaliveTimeout);
+          state.keepaliveTimeout = undefined;
+        }
+      });
+      while (get().sendingKeepAlive || get().writing) {
+        await delay(KEEPALIVE_INTERVAL_MS);
+      }
+      let error: 'radioFirmware' | undefined;
+      try {
+        const image = await fetchBundledRadioFirmware();
+        if (!image) {
+          throw new Error('Radio firmware image is unavailable');
+        }
+        const expected = radioFirmwareVersionOf(image);
+        await uploadFirmwareImage(
+          hidDevice,
+          image,
+          true,
+          state.streamedFirmwareUpload,
+          (fraction) => set((old) => ({ ...old, updatePercentage: 1 + fraction * 98 }))
+        );
+        // Nothing reboots, so read back what the controller has now. It only takes the table of
+        // contents once every entry checks out
+        const info = await readConfigInfo(hidDevice, false);
+        set((state) => {
+          state.radioFirmwareVersion = info.radioFirmwareVersion ?? null;
+          state.missingStaticFirmware = !!info.missingStaticFirmware;
+        });
+        if (info.radioFirmwareVersion !== expected) {
+          throw new Error(
+            `Controller reports radio firmware ${info.radioFirmwareVersion} after writing ${expected}`
+          );
+        }
+      } catch (e) {
+        console.error('Failed to update radio firmware', e);
+        error = 'radioFirmware';
+      }
+      const current = get();
+      const timeout =
+        current.hidDevice?.opened && !current.keepaliveTimeout
+          ? startKeepaliveTimer(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS)
+          : current.keepaliveTimeout;
+      set((state) => {
+        state.updatePercentage = 0;
+        state.updating = false;
+        state.updateError = error;
+        state.keepaliveTimeout = timeout;
+      });
+    },
     firmwareUpdate: async () => {
       const state = get();
       if (!state.hidDevice) {
@@ -2973,121 +3048,17 @@ const configStore = create<ConfigState & Actions>()(
           await fetch(`santroller_ota_${state.type}.bin`, { cache: 'no-cache' })
         ).bytes();
         firmwareSize = updateFile.length;
-        const fastFirmwareUploadReports = findFastFirmwareUploadReports(hidDevice);
-        const firmwareInfo = proto.FirmwareUpdate.create({
-          chunkOffset: 0,
-          chunkSize: FIRMWARE_UPLOAD_CHUNK_SIZE,
-          firmwareSize: updateFile.length,
-          offset: 0,
-        });
-        const firmwareInfoReport = new Uint8Array(63);
-        const uploadFast = async (sendChunk: (chunk: BufferSource) => Promise<void>) => {
-          firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
-          firmwareInfo.chunkOffset = 0;
-          firmwareInfo.offset = 0;
-          firmwareInfoReport.fill(0);
-          firmwareInfoReport.set(
-            proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
-          );
-          await hidDevice.sendFeatureReport(
-            proto.ReportId.ReportIdUpdateFirmware,
-            firmwareInfoReport
-          );
-
-          const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
-          let offset = 0;
-          while (offset < updateFile.length) {
-            const blockOffset = offset % FIRMWARE_BLOCK_SIZE;
-            const chunkSize = Math.min(
-              FIRMWARE_UPLOAD_CHUNK_SIZE,
-              FIRMWARE_BLOCK_SIZE - blockOffset,
-              updateFile.length - offset
-            );
-            uploadReport.fill(0);
-            uploadReport.set(updateFile.subarray(offset, offset + chunkSize));
-            await sendChunk(uploadReport);
-            offset += chunkSize;
-            if (offset % FIRMWARE_BLOCK_SIZE === 0 || offset === updateFile.length) {
-              set((old) => ({
-                ...old,
-                updatePercentage:
-                  1 + (offset / updateFile.length) * (FIRMWARE_UPLOAD_PROGRESS_END - 1),
-              }));
-            }
-          }
-        };
-        // Over bluetooth each acknowledged write is a round trip, so stream each block as output
-        // reports (written without response) and then send the firmware update info for the next
-        // block. That is acknowledged once the block is written, and refused if any of it went
-        // missing, in which case the block is sent again.
-        const uploadStreamed = async () => {
-          firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
-          const sendInfo = async (offset: number) => {
-            firmwareInfo.chunkOffset = 0;
-            firmwareInfo.offset = offset;
-            firmwareInfoReport.fill(0);
-            firmwareInfoReport.set(
-              proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish()
-            );
-            await hidDevice.sendFeatureReport(
-              proto.ReportId.ReportIdUpdateFirmware,
-              firmwareInfoReport
-            );
-          };
-          await sendInfo(0);
-          const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
-          for (let block = 0; block < updateFile.length; block += FIRMWARE_BLOCK_SIZE) {
-            const blockEnd = Math.min(block + FIRMWARE_BLOCK_SIZE, updateFile.length);
-            for (let attempt = 1; ; attempt++) {
-              for (let offset = block; offset < blockEnd; offset += FIRMWARE_UPLOAD_CHUNK_SIZE) {
-                uploadReport.fill(0);
-                uploadReport.set(
-                  updateFile.subarray(
-                    offset,
-                    Math.min(offset + FIRMWARE_UPLOAD_CHUNK_SIZE, blockEnd)
-                  )
-                );
-                await hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, uploadReport);
-              }
-              // the last block finishes the upload, and the controller reboots to apply it
-              if (blockEnd === updateFile.length) {
-                break;
-              }
-              try {
-                await sendInfo(blockEnd);
-                break;
-              } catch (e) {
-                if (attempt >= FIRMWARE_STREAMED_BLOCK_ATTEMPTS) {
-                  throw e;
-                }
-                console.warn(`Firmware block at ${block} didn't arrive, sending it again`, e);
-                // back to the start of the block
-                await sendInfo(block);
-              }
-            }
+        await uploadFirmwareImage(
+          hidDevice,
+          updateFile,
+          false,
+          state.streamedFirmwareUpload,
+          (fraction) =>
             set((old) => ({
               ...old,
-              updatePercentage:
-                1 + (blockEnd / updateFile.length) * (FIRMWARE_UPLOAD_PROGRESS_END - 1),
-            }));
-          }
-        };
-        if (state.streamedFirmwareUpload) {
-          await uploadStreamed();
-        } else if (
-          fastFirmwareUploadReports.featureReport &&
-          reportByteLength(fastFirmwareUploadReports.featureReport) === FIRMWARE_UPLOAD_CHUNK_SIZE
-        ) {
-          await uploadFast((chunk) =>
-            hidDevice.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, chunk)
-          );
-        } else if (fastFirmwareUploadReports.outputReport) {
-          await uploadFast((chunk) =>
-            hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, chunk)
-          );
-        } else {
-          throw new Error('Firmware does not advertise supported fast OTA upload reports');
-        }
+              updatePercentage: 1 + fraction * (FIRMWARE_UPLOAD_PROGRESS_END - 1),
+            }))
+        );
       } catch (e) {
         console.error('Failed to update firmware', e);
         const current = get();
@@ -3252,10 +3223,18 @@ const configStore = create<ConfigState & Actions>()(
               firmwareBuild,
               updateError: undefined,
               missingStaticFirmware: !!info.missingStaticFirmware,
+              radioFirmwareVersion: info.radioFirmwareVersion ?? null,
               bootloaderOutdated: !!info.bootloaderOutdated,
               slowBootStage,
               firmwareVerificationMissing,
-              needsUf2Update: !!info.needsUf2Update || slowBootStage || firmwareVerificationMissing,
+              // Missing radio firmware is part of the device's needsUf2Update, but when it can be
+              // written over OTA it's offered separately (see radioFirmwareUpdate)
+              needsUf2Update:
+                (info.radioFirmwareVersion != null
+                  ? !!info.bootloaderOutdated
+                  : !!info.needsUf2Update) ||
+                slowBootStage ||
+                firmwareVerificationMissing,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
               rpcs3ModeCommand: !!info.rpcs3ModeCommand,
               keepaliveTimeout: timeout,
@@ -3267,6 +3246,14 @@ const configStore = create<ConfigState & Actions>()(
             true
           );
           await device.sendFeatureReport(proto.ReportId.ReportIdLoaded, new Uint8Array([0]));
+          if (info.radioFirmwareVersion != null) {
+            fetchBundledRadioFirmware().then((image) => {
+              const version = image ? radioFirmwareVersionOf(image) : null;
+              set((state) => {
+                state.bundledRadioFirmwareVersion = version;
+              });
+            });
+          }
           // A config repaired on load only reaches the device once it's sent, so send it to the
           // live config, flash keeps the old one until it's saved
           if (fresh.configModified) {
@@ -3343,7 +3330,124 @@ export const useConfigStore = Object.assign(useScopedConfigStore, {
   getInitialState: configStore.getInitialState,
 });
 
-async function fetchConfigData(device: HIDDevice, saved: boolean) {
+// Sends a firmware image over the config interface: the app (which the controller then reboots to apply)
+// or the radio firmware area (which it writes in place)
+async function uploadFirmwareImage(
+  hidDevice: HIDDevice,
+  updateFile: Uint8Array,
+  radio: boolean,
+  streamed: boolean,
+  onProgress: (fraction: number) => void
+) {
+  const fastFirmwareUploadReports = findFastFirmwareUploadReports(hidDevice);
+  const firmwareInfo = proto.FirmwareUpdate.create({
+    chunkOffset: 0,
+    chunkSize: FIRMWARE_UPLOAD_CHUNK_SIZE,
+    firmwareSize: updateFile.length,
+    offset: 0,
+    radioFirmware: radio ? true : null,
+  });
+  const firmwareInfoReport = new Uint8Array(63);
+  const uploadFast = async (sendChunk: (chunk: BufferSource) => Promise<void>) => {
+    firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
+    firmwareInfo.chunkOffset = 0;
+    firmwareInfo.offset = 0;
+    firmwareInfoReport.fill(0);
+    firmwareInfoReport.set(proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish());
+    await hidDevice.sendFeatureReport(proto.ReportId.ReportIdUpdateFirmware, firmwareInfoReport);
+
+    const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
+    let offset = 0;
+    while (offset < updateFile.length) {
+      const blockOffset = offset % FIRMWARE_BLOCK_SIZE;
+      const chunkSize = Math.min(
+        FIRMWARE_UPLOAD_CHUNK_SIZE,
+        FIRMWARE_BLOCK_SIZE - blockOffset,
+        updateFile.length - offset
+      );
+      uploadReport.fill(0);
+      uploadReport.set(updateFile.subarray(offset, offset + chunkSize));
+      await sendChunk(uploadReport);
+      offset += chunkSize;
+      if (offset % FIRMWARE_BLOCK_SIZE === 0 || offset === updateFile.length) {
+        onProgress(offset / updateFile.length);
+      }
+    }
+  };
+  // Over bluetooth each acknowledged write is a round trip, so stream each block as output
+  // reports (written without response) and then send the firmware update info for the next
+  // block. That is acknowledged once the block is written, and refused if any of it went
+  // missing, in which case the block is sent again.
+  const uploadStreamed = async () => {
+    firmwareInfo.chunkSize = FIRMWARE_UPLOAD_CHUNK_SIZE;
+    const sendInfo = async (offset: number) => {
+      firmwareInfo.chunkOffset = 0;
+      firmwareInfo.offset = offset;
+      firmwareInfoReport.fill(0);
+      firmwareInfoReport.set(proto.FirmwareUpdate.encodeDelimited(firmwareInfo).ldelim().finish());
+      await hidDevice.sendFeatureReport(proto.ReportId.ReportIdUpdateFirmware, firmwareInfoReport);
+    };
+    // Web Bluetooth writes the characteristic itself, it's only WebHID that goes through uhid
+    const needsBarriers = !(hidDevice instanceof BluetoothConfigDevice);
+    let sinceBarrier = 0;
+    const barrier = () =>
+      hidDevice.sendFeatureReport(proto.ReportId.ReportIdKeepalive, new Uint8Array([0]));
+    await sendInfo(0);
+    const uploadReport = new Uint8Array(FIRMWARE_UPLOAD_CHUNK_SIZE);
+    for (let block = 0; block < updateFile.length; block += FIRMWARE_BLOCK_SIZE) {
+      const blockEnd = Math.min(block + FIRMWARE_BLOCK_SIZE, updateFile.length);
+      for (let attempt = 1; ; attempt++) {
+        for (let offset = block; offset < blockEnd; offset += FIRMWARE_UPLOAD_CHUNK_SIZE) {
+          uploadReport.fill(0);
+          uploadReport.set(
+            updateFile.subarray(offset, Math.min(offset + FIRMWARE_UPLOAD_CHUNK_SIZE, blockEnd))
+          );
+          await hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, uploadReport);
+          if (needsBarriers && ++sinceBarrier >= FIRMWARE_STREAMED_REPORTS_PER_BARRIER) {
+            sinceBarrier = 0;
+            await barrier();
+          }
+        }
+        // the last block finishes the upload (an app update then reboots to apply it)
+        if (blockEnd === updateFile.length) {
+          if (needsBarriers && sinceBarrier > 0) {
+            // A radio update answers this once it's written. An app update may already be rebooting
+            await barrier().catch(() => undefined);
+          }
+          break;
+        }
+        try {
+          await sendInfo(blockEnd);
+          break;
+        } catch (e) {
+          if (attempt >= FIRMWARE_STREAMED_BLOCK_ATTEMPTS) {
+            throw e;
+          }
+          console.warn(`Firmware block at ${block} didn't arrive, sending it again`, e);
+          // back to the start of the block
+          await sendInfo(block);
+        }
+      }
+      onProgress(blockEnd / updateFile.length);
+    }
+  };
+  if (streamed) {
+    await uploadStreamed();
+  } else if (
+    fastFirmwareUploadReports.featureReport &&
+    reportByteLength(fastFirmwareUploadReports.featureReport) === FIRMWARE_UPLOAD_CHUNK_SIZE
+  ) {
+    await uploadFast((chunk) =>
+      hidDevice.sendFeatureReport(proto.ReportId.ReportIdUploadFirmware, chunk)
+    );
+  } else if (fastFirmwareUploadReports.outputReport) {
+    await uploadFast((chunk) => hidDevice.sendReport(proto.ReportId.ReportIdUploadFirmware, chunk));
+  } else {
+    throw new Error('Firmware does not advertise supported fast OTA upload reports');
+  }
+}
+
+async function readConfigInfo(device: HIDDevice, saved: boolean) {
   const infoData = await receiveFeatureReport(
     device,
     saved ? proto.ReportId.ReportIdConfigInfoSaved : proto.ReportId.ReportIdConfigInfo
@@ -3359,6 +3463,11 @@ async function fetchConfigData(device: HIDDevice, saved: boolean) {
       `${saved ? 'saved' : 'current'} config info was unreadable (${infoBytes.length} bytes: ${hexBytes(infoBytes)}): ${e}`
     );
   }
+  return info;
+}
+
+async function fetchConfigData(device: HIDDevice, saved: boolean) {
+  const info = await readConfigInfo(device, saved);
   if (info.inUseByOtherTool) {
     throw new ConfigInUseError('the controller is open in another configurator');
   }

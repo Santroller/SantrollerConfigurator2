@@ -60,6 +60,7 @@ import { translateLegacyWarning } from '@/components/Legacy/warnings';
 import { proto } from '@/components/SettingsContext/config';
 import { truncateProfileName } from '@/components/SettingsContext/profileName';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { RadioFirmwareAlert } from '@/components/Uf2Update/RadioFirmwareAlert';
 import { Uf2UpdateAlert } from '@/components/Uf2Update/Uf2UpdateAlert';
 import { GuideList } from '../components/GuideList';
 import { ConnectPrompt, StepActions } from '../components/StepActions';
@@ -1145,6 +1146,7 @@ export function SetupConnectStep(props: GuideStepProps) {
           {t('guides.setup.actions.upToDate')}
         </Alert>
       )}
+      <RadioFirmwareAlert />
     </>
   );
 

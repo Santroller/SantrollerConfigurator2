@@ -37,6 +37,7 @@ import { translateLegacyWarning } from '@/components/Legacy/warnings';
 import { NixosUdevSnippet } from '@/components/NixosUdev/NixosUdevSnippet';
 import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothConfigDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { RadioFirmwareAlert } from '@/components/Uf2Update/RadioFirmwareAlert';
 import { Uf2UpdateAlert } from '@/components/Uf2Update/Uf2UpdateAlert';
 import { checkUdevRules, installUdevRules, UdevStatus } from '@/desktop/nativeHid';
 import { requestUpdateCheck, useUpdateCheck } from '@/desktop/updateCheckStore';
@@ -639,6 +640,8 @@ export function ConnectPage() {
             <Uf2UpdateAlert />
           </>
         )}
+
+        <RadioFirmwareAlert />
 
         {navigator.hid && !isDesktop && (
           <>
