@@ -3213,7 +3213,7 @@ const configStore = create<ConfigState & Actions>()(
               crc: info.dataCrc,
               type: deviceType,
               gpioCount: info.gpioCount || 30,
-              latest: false,
+              latest,
               firmwareNewer,
               firmwareVersion,
               firmwareBuild,
