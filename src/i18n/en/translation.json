@@ -2655,6 +2655,7 @@
       "Gamepad_RightPaddle2": "Right Paddle (Lower)",
       "Gamepad_LeftGripTouch": "Left Grip Touch",
       "Gamepad_RightGripTouch": "Right Grip Touch",
+      "Gamepad_Misc": "Misc Button",
       "Gamepad_South": "South Button",
       "Gamepad_East": "East Button",
       "Gamepad_West": "West Button",

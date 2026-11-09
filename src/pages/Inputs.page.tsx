@@ -1878,6 +1878,7 @@ const HOST_ONLY_OUTPUTS = new Set([
   'Gamepad_RightPaddle2',
   'Gamepad_LeftGripTouch',
   'Gamepad_RightGripTouch',
+  'Gamepad_Misc',
 ]);
 
 function DropdownOutputBox<
