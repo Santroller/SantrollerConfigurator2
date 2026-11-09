@@ -32,17 +32,36 @@ describe('parseVersionReport', () => {
 
 describe('needsUf2BeforeOta', () => {
   it('requires UF2 for installed builds before the minimum OTA build', () => {
-    expect(needsUf2BeforeOta(3438)).toBe(true);
-    expect(needsUf2BeforeOta(3492)).toBe(true);
-    expect(needsUf2BeforeOta(3520)).toBe(true);
+    expect(needsUf2BeforeOta(3438, 'pico_w_compat')).toBe(true);
+    expect(needsUf2BeforeOta(3492, 'pico_w_compat')).toBe(true);
+    expect(needsUf2BeforeOta(3520, 'pico_w_compat')).toBe(true);
   });
 
   it('allows OTA from the minimum OTA build on', () => {
-    expect(needsUf2BeforeOta(3521)).toBe(false);
-    expect(needsUf2BeforeOta(3522)).toBe(false);
+    expect(needsUf2BeforeOta(3521, 'pico_w_compat')).toBe(false);
+    expect(needsUf2BeforeOta(3522, 'pico_w_compat')).toBe(false);
   });
 
   it('requires UF2 for unnumbered firmware', () => {
     expect(needsUf2BeforeOta(undefined)).toBe(true);
+    expect(needsUf2BeforeOta(undefined, 'pico_w_compat')).toBe(true);
+  });
+
+  it('holds RP2040 boards to the RP2040 minimum', () => {
+    expect(needsUf2BeforeOta(3520, 'pico_w_compat')).toBe(true);
+    expect(needsUf2BeforeOta(3521, 'pico_w_compat')).toBe(false);
+    expect(needsUf2BeforeOta(3525, 'pico_w')).toBe(false);
+  });
+
+  // 3526 moved RP2350 builds from a 4MB layout to a 2MB one
+  it('holds RP2350 boards to the RP2350 minimum', () => {
+    expect(needsUf2BeforeOta(3525, 'pico2_w_compat')).toBe(true);
+    expect(needsUf2BeforeOta(3526, 'pico2_w_compat')).toBe(false);
+    expect(needsUf2BeforeOta(3525, 'pico2_w')).toBe(true);
+  });
+
+  it('goes by the stricter minimum before the board is known', () => {
+    expect(needsUf2BeforeOta(3525)).toBe(true);
+    expect(needsUf2BeforeOta(3526)).toBe(false);
   });
 });

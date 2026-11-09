@@ -26,11 +26,18 @@ export function parseVersionReport(report: DataView) {
 // - 3439 fixed the slow generic_03h boot stage in pico_w_compat bootloaders (from 2850)
 // - 3493 verifies the image's SHA-256 before installing it
 // - 3521 ends the devices the update doesn't need first, as some setups hung partway through it
+// - 3526 (RP2350 only) lays flash out for 2MB rather than 4MB. On boards with a 2MB chip the 4MB
+//   layout's download slot wrapped around onto the running firmware, so an OTA update froze partway
+//   and left the board in BOOTSEL. The bootloader holds the layout, so it takes a UF2 to move
 //
 // Unnumbered builds (from before build numbers, or built without the git history) can't be placed
 // against it, so they need the UF2 too.
 const MIN_OTA_BUILD = 3521;
+const MIN_RP2350_OTA_BUILD = 3526;
 
-export function needsUf2BeforeOta(build: number | undefined) {
-  return build === undefined || build < MIN_OTA_BUILD;
+// deviceType is the board the firmware reports it was built for (pico_w_compat, pico2_w_compat...).
+// Before it's known, go by the stricter minimum.
+export function needsUf2BeforeOta(build: number | undefined, deviceType?: string) {
+  const rp2040 = deviceType !== undefined && !deviceType.startsWith('pico2');
+  return build === undefined || build < (rp2040 ? MIN_OTA_BUILD : MIN_RP2350_OTA_BUILD);
 }

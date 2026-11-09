@@ -635,8 +635,12 @@ export interface ConfigState {
   radioFirmwareVersion: number | null;
   // The version this tool ships (santroller_radio.bin), null until it's loaded or if it's missing
   bundledRadioFirmwareVersion: number | null;
-  // The device has to be reflashed from a UF2 once before it can update over OTA (see needsUf2BeforeOta)
+  // The device has to be reflashed from a UF2 once before it can update over OTA (see needsUf2BeforeOta),
+  // or, with flashTooSmallForOta, every time there's an update
   uf2Required: boolean;
+  // The flash chip is smaller than the firmware's layout, so the firmware refuses OTA updates. Only firmware
+  // past the OTA gate reports it, which is where it matters
+  flashTooSmallForOta: boolean;
   // The controller takes firmware uploads streamed as output reports (see firmwareUpdate)
   streamedFirmwareUpload: boolean;
   // The firmware takes Rpcs3ModeCommand (see switchToRpcs3Mode)
@@ -941,6 +945,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     radioFirmwareVersion: null,
     bundledRadioFirmwareVersion: null,
     uf2Required: false,
+    flashTooSmallForOta: false,
     streamedFirmwareUpload: false,
     rpcs3ModeCommand: false,
     legacyImportWarnings: [],
@@ -3190,7 +3195,10 @@ const configStore = create<ConfigState & Actions>()(
           const aux = proto.AuxConfigBlock.decode(data.slice(info.mainSize), info.auxSize);
           const timeout = startKeepaliveTimer(() => get().sendKeepAlive(), KEEPALIVE_INTERVAL_MS);
           const fresh = InitState(config, aux);
-          const uf2Required = needsUf2BeforeOta(firmwareBuild);
+          const flashTooSmallForOta = !!info.flashTooSmallForOta;
+          // A board that can't take OTA only needs the UF2 when there's something to update to
+          const uf2Required =
+            needsUf2BeforeOta(firmwareBuild, deviceType) || (flashTooSmallForOta && !latest);
           set(
             (old) => ({
               ...old,
@@ -3205,7 +3213,7 @@ const configStore = create<ConfigState & Actions>()(
               crc: info.dataCrc,
               type: deviceType,
               gpioCount: info.gpioCount || 30,
-              latest,
+              latest: false,
               firmwareNewer,
               firmwareVersion,
               firmwareBuild,
@@ -3213,6 +3221,7 @@ const configStore = create<ConfigState & Actions>()(
               missingStaticFirmware: !!info.missingStaticFirmware,
               radioFirmwareVersion: info.radioFirmwareVersion ?? null,
               uf2Required,
+              flashTooSmallForOta,
               streamedFirmwareUpload: !!info.streamedFirmwareUpload,
               rpcs3ModeCommand: !!info.rpcs3ModeCommand,
               keepaliveTimeout: timeout,

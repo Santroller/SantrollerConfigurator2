@@ -19,4 +19,14 @@ describe('UF2 update alert', () => {
     expect(html).toContain('santroller_pico1.uf2');
     expect(html).toContain('santroller_pico2.uf2');
   });
+
+  it('says why when the flash chip is too small for OTA', () => {
+    const html = renderToStaticMarkup(
+      <MantineProvider>
+        <Uf2UpdateAlert flashTooSmall />
+      </MantineProvider>
+    );
+    expect(html).toContain('connect.uf2RequiredFlashTooSmall');
+    expect(html).toContain('santroller_pico2.uf2');
+  });
 });

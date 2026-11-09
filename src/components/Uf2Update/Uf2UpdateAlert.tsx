@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Button, Group, Space } from '@mantine/core';
 
 // Firmware too old to update over OTA (see needsUf2BeforeOta) has to be reflashed from a UF2 once, with
-// the downloads. The UF2 carries the bootloader and the radio firmware too.
-export function Uf2UpdateAlert() {
+// the downloads. The UF2 carries the bootloader and the radio firmware too. A board whose flash chip is
+// too small for OTA (flashTooSmall) is updated from a UF2 every time instead.
+export function Uf2UpdateAlert({ flashTooSmall = false }: { flashTooSmall?: boolean }) {
   const { t } = useTranslation();
   return (
     <Alert
@@ -13,7 +14,7 @@ export function Uf2UpdateAlert() {
       title={t('connect.uf2RequiredTitle')}
       icon={<IconExclamationCircle />}
     >
-      {t('connect.uf2Required')}
+      {t(flashTooSmall ? 'connect.uf2RequiredFlashTooSmall' : 'connect.uf2Required')}
       <Space h="md" />
       <Group>
         <Button

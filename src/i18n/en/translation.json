@@ -3011,6 +3011,7 @@
     },
     "uf2RequiredTitle": "Firmware Update Needs a UF2",
     "uf2Required": "Your device's firmware is too old to update over OTA. Reflash via UF2 this once, which also brings its bootloader and wireless firmware up to date. Updates after that can go over OTA as usual.",
+    "uf2RequiredFlashTooSmall": "This board's flash chip is too small to update over OTA. Update it by reflashing via UF2 instead.",
     "advancedMode": {
       "button": "Switch to Advanced Mode",
       "title": "Enable Advanced Mode?",

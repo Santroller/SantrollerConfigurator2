@@ -1117,12 +1117,13 @@ export function SetupConnectStep(props: GuideStepProps) {
   const applyingUpdate = useConfigStore((state) => state.applyingUpdate);
   const firmwareUpdate = useConfigStore((state) => state.firmwareUpdate);
   const uf2Required = useConfigStore((state) => state.uf2Required);
+  const flashTooSmallForOta = useConfigStore((state) => state.flashTooSmallForOta);
 
   // The main page has the full set of update messages; this covers the common case
   const updateStatus = connected && !hung && (
     <>
       {uf2Required ? (
-        <Uf2UpdateAlert />
+        <Uf2UpdateAlert flashTooSmall={flashTooSmallForOta} />
       ) : !latest && !firmwareNewer ? (
         <Alert
           variant="light"

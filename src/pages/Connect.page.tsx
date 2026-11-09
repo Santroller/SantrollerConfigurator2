@@ -80,6 +80,7 @@ export function ConnectPage() {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const uf2Required = useConfigStore((state) => state.uf2Required);
+  const flashTooSmallForOta = useConfigStore((state) => state.flashTooSmallForOta);
   const [advancedModalOpened, { open: openAdvancedModal, close: closeAdvancedModal }] =
     useDisclosure(false);
   const [udevModalOpened, { open: openUdevModal, close: closeUdevModal }] = useDisclosure(false);
@@ -651,7 +652,7 @@ export function ConnectPage() {
         {uf2Required && connected && !hung && (
           <>
             <Space h="md" />
-            <Uf2UpdateAlert />
+            <Uf2UpdateAlert flashTooSmall={flashTooSmallForOta} />
           </>
         )}
 

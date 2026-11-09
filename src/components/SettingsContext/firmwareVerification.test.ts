@@ -52,9 +52,11 @@ describe('one-time UF2 migration for firmware too old for OTA', () => {
     { build: 3521, firmwareVerification: undefined, needsUf2: false },
     { build: 3522, firmwareVerification: false, needsUf2: false },
     { build: 3522, firmwareVerification: true, slowBootStage: true, needsUf2: false },
+    { build: 3525, deviceType: 'pico2_w_compat', needsUf2: true },
+    { build: 3526, deviceType: 'pico2_w_compat', needsUf2: false },
   ])(
     'uses installed build $build, whatever the firmware reports (UF2=$needsUf2)',
-    async ({ build, firmwareVerification, slowBootStage, needsUf2 }) => {
+    async ({ build, firmwareVerification, slowBootStage, deviceType, needsUf2 }) => {
       const data = new Uint8Array();
       const info = proto.ConfigInfo.encode({
         dataSize: 0,
@@ -74,7 +76,10 @@ describe('one-time UF2 migration for firmware too old for OTA', () => {
             return featureReport(id, version);
           }
           case proto.ReportId.ReportIdGetType:
-            return featureReport(id, new TextEncoder().encode('pico_w_compat\0'));
+            return featureReport(
+              id,
+              new TextEncoder().encode(`${deviceType ?? 'pico_w_compat'}\0`)
+            );
           case proto.ReportId.ReportIdGetActiveProfiles:
             return featureReport(id, proto.GetActiveProfiles.encodeDelimited({}).finish());
           case proto.ReportId.ReportIdConfigInfo:
@@ -91,6 +96,58 @@ describe('one-time UF2 migration for firmware too old for OTA', () => {
       const state = useConfigStore.getState();
       expect(state.configLoadError).toBeNull();
       expect(state.firmwareBuild).toBe(build);
+      expect(state.uf2Required).toBe(needsUf2);
+    }
+  );
+
+  // A board whose flash chip is smaller than the layout can't take OTA at all, so it updates from a UF2
+  // whenever there's an update, and not otherwise
+  it.each([
+    { flashTooSmallForOta: true, latest: false, needsUf2: true },
+    { flashTooSmallForOta: true, latest: true, needsUf2: false },
+    { flashTooSmallForOta: false, latest: false, needsUf2: false },
+  ])(
+    'with flashTooSmallForOta=$flashTooSmallForOta and latest=$latest (UF2=$needsUf2)',
+    async ({ flashTooSmallForOta, latest, needsUf2 }) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, text: async () => (latest ? 'samebld' : 'newbuild') })
+      );
+      const data = new Uint8Array();
+      const info = proto.ConfigInfo.encode({
+        dataSize: 0,
+        mainSize: 0,
+        auxSize: 0,
+        dataCrc: new CRC32().calculate(data),
+        magic: 0x53414e54,
+        flashTooSmallForOta,
+      }).finish();
+      receiveFeatureReport.mockImplementation(async (id) => {
+        switch (id) {
+          case proto.ReportId.ReportIdGetVersion: {
+            const version = new Uint8Array(14);
+            version.set(new TextEncoder().encode('samebld\0'));
+            new DataView(version.buffer).setUint32(10, 3526, true);
+            return featureReport(id, version);
+          }
+          case proto.ReportId.ReportIdGetType:
+            return featureReport(id, new TextEncoder().encode('pico2_w_compat\0'));
+          case proto.ReportId.ReportIdGetActiveProfiles:
+            return featureReport(id, proto.GetActiveProfiles.encodeDelimited({}).finish());
+          case proto.ReportId.ReportIdConfigInfo:
+          case proto.ReportId.ReportIdConfigInfoSaved:
+            return featureReport(id, info);
+          default:
+            throw new Error(`Unexpected report ${id}`);
+        }
+      });
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await useConfigStore.getState().connectDevice(device as HIDDevice);
+
+      const state = useConfigStore.getState();
+      expect(state.configLoadError).toBeNull();
+      expect(state.flashTooSmallForOta).toBe(flashTooSmallForOta);
       expect(state.uf2Required).toBe(needsUf2);
     }
   );
