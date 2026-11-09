@@ -1,4 +1,5 @@
 import React from 'react';
+import type { GuitarFamily } from './guitar/guitarMappingUtils';
 
 export interface GuideStepProps {
   onNext?: () => void;
@@ -16,6 +17,14 @@ export interface GuideStepSource {
   render: React.ComponentType<GuideStepProps>;
   // Where its text is instead, for a step shared between guides
   textKey?: string;
+  // Leave out to always show it. Otherwise, whether it applies to this build, such as a part only
+  // some guitars have
+  visible?: (context: GuideContext) => boolean;
+}
+
+// What a step's visibility can depend on
+export interface GuideContext {
+  guitarFamily: GuitarFamily;
 }
 
 export interface GuideStep extends GuideStepSource {

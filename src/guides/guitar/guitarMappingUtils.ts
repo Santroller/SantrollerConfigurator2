@@ -1,3 +1,4 @@
+import { create } from 'zustand';
 import { addMatrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
@@ -429,6 +430,15 @@ export function getTargetPin(state: ConfigState, target: PinMappingTarget): numb
 }
 
 /**
+ * The pin a target is wired to, for the guide's wiring text: the mapped pin, or the recommended one
+ * before the target is mapped. Re-renders when the pin changes.
+ */
+export function useTargetPin(target: PinMappingTarget, recommendedPin: number): number {
+  const pin = useConfigStore((state) => getTargetPin(state, target));
+  return pin >= 0 ? pin : recommendedPin;
+}
+
+/**
  * Updates the GPIO pin for a mapping target. If mapping doesn't exist, it creates one.
  */
 export function setTargetPin(target: PinMappingTarget, pin: number, isAnalog = false) {
@@ -553,27 +563,57 @@ export function applyRecommendedPinout(family: GuitarFamily = 'gh') {
   );
 }
 
-/**
- * Gets the active guitar family ('gh' or 'rb') from localStorage or current profile.
- */
-export function getGuitarFamily(state?: ConfigState): GuitarFamily {
-  // A connected profile already emulating a GH or RB guitar wins over a previous session's pick
-  const profile = state?.config.profiles?.[state.currentProfile];
-  if (profile?.opts?.deviceToEmulate === proto.SubType.RockBandGuitar) {
-    return 'rb';
-  }
-  if (profile?.opts?.deviceToEmulate === proto.SubType.GuitarHeroGuitar) {
-    return 'gh';
-  }
+const FAMILY_STORAGE_KEY = 'santroller_guitar_family';
+
+function loadPickedFamily(): GuitarFamily | null {
   try {
-    const saved = localStorage.getItem('santroller_guitar_family');
+    const saved = localStorage.getItem(FAMILY_STORAGE_KEY);
     if (saved === 'gh' || saved === 'rb') {
       return saved;
     }
   } catch {
     // Ignore storage issues
   }
-  return 'gh';
+  return null;
+}
+
+// The family last picked in the guide, kept in a store so the steps that depend on it, and which
+// steps the guide has, follow it without a device connected
+const usePickedFamily = create<{ family: GuitarFamily | null }>(() => ({
+  family: loadPickedFamily(),
+}));
+
+// A connected profile already emulating a GH or RB guitar wins over a previous session's pick
+function resolveFamily(
+  deviceToEmulate: proto.SubType | undefined,
+  picked: GuitarFamily | null
+): GuitarFamily {
+  if (deviceToEmulate === proto.SubType.RockBandGuitar) {
+    return 'rb';
+  }
+  if (deviceToEmulate === proto.SubType.GuitarHeroGuitar) {
+    return 'gh';
+  }
+  return picked ?? 'gh';
+}
+
+/**
+ * Gets the active guitar family ('gh' or 'rb') from the current profile or the guide's last pick.
+ */
+export function getGuitarFamily(state?: ConfigState): GuitarFamily {
+  const profile = state?.config.profiles?.[state.currentProfile];
+  return resolveFamily(profile?.opts?.deviceToEmulate, usePickedFamily.getState().family);
+}
+
+/**
+ * The active guitar family, re-rendering when it changes.
+ */
+export function useGuitarFamily(): GuitarFamily {
+  const deviceToEmulate = useConfigStore(
+    (state) => state.config.profiles?.[state.currentProfile]?.opts?.deviceToEmulate
+  );
+  const picked = usePickedFamily((state) => state.family);
+  return resolveFamily(deviceToEmulate, picked);
 }
 
 /**
@@ -581,10 +621,11 @@ export function getGuitarFamily(state?: ConfigState): GuitarFamily {
  */
 export function setGuitarFamily(family: GuitarFamily): void {
   try {
-    localStorage.setItem('santroller_guitar_family', family);
+    localStorage.setItem(FAMILY_STORAGE_KEY, family);
   } catch {
     // Ignore storage issues
   }
+  usePickedFamily.setState({ family });
   const store = useConfigStore.getState();
   const profileIdx = store.currentProfile;
   const profile = store.config.profiles?.[profileIdx];

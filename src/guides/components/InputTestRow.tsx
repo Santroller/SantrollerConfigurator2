@@ -13,6 +13,7 @@ import {
   PinMappingTarget,
   setTargetPin,
 } from '../guitar/guitarMappingUtils';
+import { adcChannel } from '../wiringText';
 
 // GPIOs broken out on the Pico header: GP23-25 are internal and GP29 senses VSYS
 const HEADER_PINS = [...Array.from({ length: 23 }, (_, i) => i), 26, 27, 28];
@@ -94,7 +95,7 @@ export function InputTestRow({
 
   const pinOptions = (isAnalog ? HEADER_ANALOG_PINS : HEADER_PINS).map((p) => ({
     value: String(p),
-    label: `GP${p}${isAnalog ? ` (ADC${p - 26})` : ''}`,
+    label: `GP${p}${isAnalog ? ` (${adcChannel(p)})` : ''}`,
   }));
 
   const isRecommendedMatched = recommendedPin !== undefined && currentPin === recommendedPin;

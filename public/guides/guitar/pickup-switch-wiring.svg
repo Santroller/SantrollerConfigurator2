@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="640" height="380" fill="#ffffff"/>
+
+  <!-- Rails -->
+  <line x1="60" y1="40" x2="360" y2="40" stroke="#d6336c" stroke-width="3"/>
+  <text x="370" y="45" fill="#d6336c" font-weight="bold">3V3</text>
+  <line x1="60" y1="340" x2="360" y2="340" stroke="#212529" stroke-width="3"/>
+  <text x="370" y="345" fill="#212529" font-weight="bold">GND</text>
+
+  <g stroke="#495057" stroke-width="2" fill="none">
+    <!-- Pin 1: 10k to GND -->
+    <line x1="100" y1="210" x2="100" y2="245"/>
+    <rect x="90" y="245" width="20" height="50" fill="#fff"/>
+    <line x1="100" y1="295" x2="100" y2="340"/>
+
+    <!-- Pin 2: 20k to 3V3, 20k to GND -->
+    <line x1="200" y1="40" x2="200" y2="85"/>
+    <rect x="190" y="85" width="20" height="50" fill="#fff"/>
+    <line x1="200" y1="135" x2="200" y2="170"/>
+    <line x1="200" y1="210" x2="200" y2="245"/>
+    <rect x="190" y="245" width="20" height="50" fill="#fff"/>
+    <line x1="200" y1="295" x2="200" y2="340"/>
+
+    <!-- Pin 3: 10k to 3V3 -->
+    <line x1="300" y1="40" x2="300" y2="85"/>
+    <rect x="290" y="85" width="20" height="50" fill="#fff"/>
+    <line x1="300" y1="135" x2="300" y2="170"/>
+  </g>
+
+  <!-- Junction dots on rails -->
+  <g fill="#495057">
+    <circle cx="200" cy="40" r="4"/>
+    <circle cx="300" cy="40" r="4"/>
+    <circle cx="100" cy="340" r="4"/>
+    <circle cx="200" cy="340" r="4"/>
+  </g>
+
+  <!-- Resistor labels -->
+  <g fill="#212529">
+    <text x="118" y="275">10kΩ</text>
+    <text x="218" y="115">20kΩ</text>
+    <text x="218" y="275">20kΩ</text>
+    <text x="318" y="115">10kΩ</text>
+  </g>
+
+  <!-- Switch lugs -->
+  <rect x="70" y="160" width="360" height="60" rx="8" fill="#f1f3f5" stroke="#868e96" stroke-width="1.5"/>
+  <g fill="#e9ecef" stroke="#495057" stroke-width="2">
+    <rect x="84" y="170" width="32" height="40" rx="6"/>
+    <rect x="184" y="170" width="32" height="40" rx="6"/>
+    <rect x="284" y="170" width="32" height="40" rx="6"/>
+    <rect x="384" y="170" width="32" height="40" rx="6" fill="#fff3bf"/>
+  </g>
+  <g fill="#212529" font-weight="bold" text-anchor="middle" font-size="18">
+    <text x="100" y="197">1</text>
+    <text x="200" y="197">2</text>
+    <text x="300" y="197">3</text>
+    <text x="400" y="197">4</text>
+  </g>
+
+  <!-- Pin 4 (common) to ADC -->
+  <line x1="416" y1="190" x2="500" y2="190" stroke="#1971c2" stroke-width="3"/>
+  <text x="508" y="195" fill="#1971c2" font-weight="bold">ADC</text>
+</svg>

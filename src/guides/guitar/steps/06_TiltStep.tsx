@@ -18,16 +18,22 @@ import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
 import { GuideDeviceEditor } from '../../components/GuideDeviceEditor';
+import { gpPin } from '../../wiringText';
 import {
   configureAccelerometerTilt,
   getTargetAnalogValue,
   GUITAR_TARGETS,
   isAccelerometerTiltConfigured,
   useGuitarI2cPins,
+  useTargetPin,
 } from '../guitarMappingUtils';
+
+const TILT_PIN = 11;
 
 export function TiltStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const tiltPin = useTargetPin(GUITAR_TARGETS.TILT, TILT_PIN);
+  const pins = { pin: gpPin(tiltPin), gp: `GP${tiltPin}` };
   const i2cPins = useGuitarI2cPins();
   const connected = useConfigStore((state) => state.connected);
   const isAccelActive = useConfigStore(isAccelerometerTiltConfigured);
@@ -62,7 +68,7 @@ export function TiltStep(props: GuideStepProps) {
             </Alert>
             <List type="ordered" spacing="xs" size="sm">
               <List.Item>{t('guides.direct-pico-guitar.steps.tilt.digitalPinGnd')}</List.Item>
-              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.digitalPinGp')}</List.Item>
+              <List.Item>{t('guides.direct-pico-guitar.steps.tilt.digitalPinGp', pins)}</List.Item>
               <List.Item>{t('guides.direct-pico-guitar.steps.tilt.digitalMount')}</List.Item>
             </List>
           </Stack>
@@ -96,7 +102,7 @@ export function TiltStep(props: GuideStepProps) {
         label={t('guides.direct-pico-guitar.steps.tilt.tiltLabel')}
         target={GUITAR_TARGETS.TILT}
         color="teal"
-        recommendedPin={11}
+        recommendedPin={TILT_PIN}
       />
 
       <Alert
@@ -172,7 +178,7 @@ export function TiltStep(props: GuideStepProps) {
       title={t('guides.direct-pico-guitar.steps.tilt.title')}
       badge={t('guides.direct-pico-guitar.steps.tilt.badge')}
       badgeColor="teal"
-      description={t('guides.direct-pico-guitar.steps.tilt.description')}
+      description={t('guides.direct-pico-guitar.steps.tilt.description', pins)}
       guideContent={guideContent}
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}

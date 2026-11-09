@@ -7,12 +7,15 @@ import { GuideStepNav } from '@/guides/components/GuideStepNav';
 import { DIRECT_PICO_GUITAR_GUIDE } from '@/guides/guitar/guitarGuide';
 import { CONTEXTUAL_GUIDE_REGISTRY, getLocalizedGuide, useGuideById } from '@/guides/registry';
 import { useGuideSteps } from '@/guides/useGuideSteps';
+import { useVisibleSteps } from '@/guides/useVisibleSteps';
 
 export function GuidePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { guideId } = useParams<{ guideId?: string }>();
-  const guide = useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t);
+  const guide = useVisibleSteps(
+    useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t)
+  );
   const contextual = guide.id in CONTEXTUAL_GUIDE_REGISTRY;
   const returnPath = contextual ? '/profiles' : '/guides';
 

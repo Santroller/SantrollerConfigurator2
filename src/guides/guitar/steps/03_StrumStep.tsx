@@ -15,13 +15,20 @@ import {
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
-import { IMAGE_ALT } from '../../wiringText';
-import { GUITAR_TARGETS } from '../guitarMappingUtils';
+import { gpPin, IMAGE_ALT } from '../../wiringText';
+import { GUITAR_TARGETS, useTargetPin } from '../guitarMappingUtils';
+
+const STRUM_UP_PIN = 7;
+const STRUM_DOWN_PIN = 8;
 
 export type StrumWiringMode = 'direct' | 'trace_cut';
 
 export function StrumStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const strumUp = useTargetPin(GUITAR_TARGETS.STRUM_UP, STRUM_UP_PIN);
+  const strumDown = useTargetPin(GUITAR_TARGETS.STRUM_DOWN, STRUM_DOWN_PIN);
+  const upPins = { pin: gpPin(strumUp), gp: `GP${strumUp}` };
+  const downPins = { pin: gpPin(strumDown), gp: `GP${strumDown}` };
 
   const [wiringMode, setWiringMode] = React.useState<StrumWiringMode>(() => {
     const saved = localStorage.getItem('santroller_guitar_strum_mode');
@@ -69,15 +76,19 @@ export function StrumStep(props: GuideStepProps) {
               </Text>
               <List spacing="xs" size="sm">
                 <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepGround')}</List.Item>
-                <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepUp')}</List.Item>
-                <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepDown')}</List.Item>
+                <List.Item>
+                  {t('guides.direct-pico-guitar.steps.strum.directStepUp', upPins)}
+                </List.Item>
+                <List.Item>
+                  {t('guides.direct-pico-guitar.steps.strum.directStepDown', downPins)}
+                </List.Item>
               </List>
               <Group gap={6} mt={4}>
                 <Badge color="cyan" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.strum.strumUpPin')}
+                  {t('guides.direct-pico-guitar.steps.strum.strumUpPin', upPins)}
                 </Badge>
                 <Badge color="indigo" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.strum.strumDownPin')}
+                  {t('guides.direct-pico-guitar.steps.strum.strumDownPin', downPins)}
                 </Badge>
                 <Badge color="gray" variant="filled">
                   {t('guides.direct-pico-guitar.steps.strum.groundPin')}
@@ -128,8 +139,12 @@ export function StrumStep(props: GuideStepProps) {
               </Text>
               <List spacing="xs" size="sm">
                 <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepGround')}</List.Item>
-                <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepUp')}</List.Item>
-                <List.Item>{t('guides.direct-pico-guitar.steps.strum.directStepDown')}</List.Item>
+                <List.Item>
+                  {t('guides.direct-pico-guitar.steps.strum.directStepUp', upPins)}
+                </List.Item>
+                <List.Item>
+                  {t('guides.direct-pico-guitar.steps.strum.directStepDown', downPins)}
+                </List.Item>
               </List>
             </Stack>
           </Card>
@@ -148,14 +163,14 @@ export function StrumStep(props: GuideStepProps) {
         label={t('guides.direct-pico-guitar.steps.strum.strumUpLabel')}
         target={GUITAR_TARGETS.STRUM_UP}
         color="cyan"
-        recommendedPin={7}
+        recommendedPin={STRUM_UP_PIN}
       />
 
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.strum.strumDownLabel')}
         target={GUITAR_TARGETS.STRUM_DOWN}
         color="indigo"
-        recommendedPin={8}
+        recommendedPin={STRUM_DOWN_PIN}
       />
 
       <Alert

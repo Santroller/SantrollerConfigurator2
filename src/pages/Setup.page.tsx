@@ -10,6 +10,7 @@ import { getLocalizedGuide, GUIDE_REGISTRY } from '@/guides/registry';
 import { getSetupGuide, withBuildGuide } from '@/guides/setup/setupGuide';
 import { extrasFor, useSetupPath } from '@/guides/setup/setupPath';
 import { useGuideSteps } from '@/guides/useGuideSteps';
+import { useVisibleSteps } from '@/guides/useVisibleSteps';
 
 export function SetupPage() {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export function SetupPage() {
   const path = useSetupPath((state) => state.path);
   const build = useSetupPath((state) => state.build);
   const extras = useSetupPath((state) => state.extras);
-  const guide = useMemo(() => {
+  const allSteps = useMemo(() => {
     const buildGuide = path === 'fresh' && build ? GUIDE_REGISTRY[build] : undefined;
     // Extras are picked with the build, so only a fresh controller has them
     const picked = path === 'fresh' ? extrasFor(build).filter((id) => extras.includes(id)) : [];
@@ -33,6 +34,7 @@ export function SetupPage() {
       }))
     );
   }, [t, path, build, extras]);
+  const guide = useVisibleSteps(allSteps);
   // A controller that came from a seller is already configured and mapped. Sellers setting
   // up their own devices don't need telling.
   const sellerName = useConfigStore((state) => state.toolInfo?.name);

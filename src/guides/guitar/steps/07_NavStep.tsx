@@ -5,11 +5,16 @@ import { Alert, Group, Image, List, Stack, Text, Title } from '@mantine/core';
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
 import { GuideStepProps } from '@/guides/types';
-import { IMAGE_ALT } from '../../wiringText';
-import { GUITAR_TARGETS } from '../guitarMappingUtils';
+import { gpPin, IMAGE_ALT } from '../../wiringText';
+import { GUITAR_TARGETS, useTargetPin } from '../guitarMappingUtils';
+
+const START_PIN = 9;
+const SELECT_PIN = 10;
 
 export function NavStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const startPin = useTargetPin(GUITAR_TARGETS.START, START_PIN);
+  const selectPin = useTargetPin(GUITAR_TARGETS.SELECT, SELECT_PIN);
 
   const guideContent = (
     <Stack gap="md">
@@ -41,8 +46,12 @@ export function NavStep(props: GuideStepProps) {
       <Title order={4}>{t('guides.common.wiringTitle')}</Title>
       <List type="ordered" spacing="xs" size="sm">
         <List.Item>{t('guides.direct-pico-guitar.steps.nav.navGround')}</List.Item>
-        <List.Item>{t('guides.direct-pico-guitar.steps.nav.startSignal')}</List.Item>
-        <List.Item>{t('guides.direct-pico-guitar.steps.nav.selectSignal')}</List.Item>
+        <List.Item>
+          {t('guides.direct-pico-guitar.steps.nav.startSignal', { pin: gpPin(startPin) })}
+        </List.Item>
+        <List.Item>
+          {t('guides.direct-pico-guitar.steps.nav.selectSignal', { pin: gpPin(selectPin) })}
+        </List.Item>
       </List>
 
       <Alert
@@ -65,14 +74,14 @@ export function NavStep(props: GuideStepProps) {
         label={t('guides.direct-pico-guitar.steps.nav.startLabel')}
         target={GUITAR_TARGETS.START}
         color="cyan"
-        recommendedPin={9}
+        recommendedPin={START_PIN}
       />
 
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.nav.selectLabel')}
         target={GUITAR_TARGETS.SELECT}
         color="cyan"
-        recommendedPin={10}
+        recommendedPin={SELECT_PIN}
       />
 
       <InputTestRow
@@ -88,7 +97,10 @@ export function NavStep(props: GuideStepProps) {
       title={t('guides.direct-pico-guitar.steps.nav.title')}
       badge={t('guides.direct-pico-guitar.steps.nav.badge')}
       badgeColor="cyan"
-      description={t('guides.direct-pico-guitar.steps.nav.description')}
+      description={t('guides.direct-pico-guitar.steps.nav.description', {
+        start: `GP${startPin}`,
+        select: `GP${selectPin}`,
+      })}
       guideContent={guideContent}
       workbenchContent={workbenchContent}
       isFirstStep={props.isFirstStep}

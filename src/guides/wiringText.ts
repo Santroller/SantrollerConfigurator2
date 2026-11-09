@@ -95,3 +95,6 @@ export const picoGpPinExample = (pin: string) => tr(`${WIRING}.picoGpPinExample`
 /** "Pico GP3 (USB host D-)" */
 export const picoUsbHostPin = (pin: string, signal: string) =>
   tr(`${WIRING}.picoUsbHostPin`, { pin, signal });
+
+/** "ADC1", for an analog pin on the Pico header (GP26 - GP28) */
+export const adcChannel = (gp: number) => `ADC${gp - 26}`;

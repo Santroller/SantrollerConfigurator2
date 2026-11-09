@@ -43,7 +43,10 @@ import {
   removeRbMatrixFrets,
   removeRbShiftedFrets,
   useGuitarI2cPins,
+  useTargetPin,
 } from '../guitarMappingUtils';
+
+const FRET_PINS = { green: 2, red: 3, yellow: 4, blue: 5, orange: 6 };
 
 export type FretWiringMode = 'direct' | 'gh5' | 'mpr121' | 'rb_solo' | 'rb_shifted';
 
@@ -192,6 +195,13 @@ export function SoloFretsVisualizer() {
 
 export function FretsStep(props: GuideStepProps) {
   const { t } = useTranslation();
+  const fretPins = {
+    green: useTargetPin(GUITAR_TARGETS.FRET_GREEN, FRET_PINS.green),
+    red: useTargetPin(GUITAR_TARGETS.FRET_RED, FRET_PINS.red),
+    yellow: useTargetPin(GUITAR_TARGETS.FRET_YELLOW, FRET_PINS.yellow),
+    blue: useTargetPin(GUITAR_TARGETS.FRET_BLUE, FRET_PINS.blue),
+    orange: useTargetPin(GUITAR_TARGETS.FRET_ORANGE, FRET_PINS.orange),
+  };
   const i2cPins = useGuitarI2cPins();
   const connected = useConfigStore((state) => state.connected);
   const isGh5Active = useConfigStore((state) => isGh5NeckConfigured(state));
@@ -382,19 +392,25 @@ export function FretsStep(props: GuideStepProps) {
               {t('guides.direct-pico-guitar.steps.frets.stepSolderSignals')}
               <Group gap={6} mt={6} wrap="wrap">
                 <Badge color="green" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.frets.greenPin')}
+                  {t('guides.direct-pico-guitar.steps.frets.greenPin', {
+                    gp: `GP${fretPins.green}`,
+                  })}
                 </Badge>
                 <Badge color="red" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.frets.redPin')}
+                  {t('guides.direct-pico-guitar.steps.frets.redPin', { gp: `GP${fretPins.red}` })}
                 </Badge>
                 <Badge color="yellow" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.frets.yellowPin')}
+                  {t('guides.direct-pico-guitar.steps.frets.yellowPin', {
+                    gp: `GP${fretPins.yellow}`,
+                  })}
                 </Badge>
                 <Badge color="blue" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.frets.bluePin')}
+                  {t('guides.direct-pico-guitar.steps.frets.bluePin', { gp: `GP${fretPins.blue}` })}
                 </Badge>
                 <Badge color="orange" variant="filled">
-                  {t('guides.direct-pico-guitar.steps.frets.orangePin')}
+                  {t('guides.direct-pico-guitar.steps.frets.orangePin', {
+                    gp: `GP${fretPins.orange}`,
+                  })}
                 </Badge>
               </Group>
             </List.Item>
@@ -854,31 +870,31 @@ export function FretsStep(props: GuideStepProps) {
         label={t('guides.direct-pico-guitar.steps.frets.fretGreen')}
         target={GUITAR_TARGETS.FRET_GREEN}
         color="green"
-        recommendedPin={2}
+        recommendedPin={FRET_PINS.green}
       />
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.frets.fretRed')}
         target={GUITAR_TARGETS.FRET_RED}
         color="red"
-        recommendedPin={3}
+        recommendedPin={FRET_PINS.red}
       />
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.frets.fretYellow')}
         target={GUITAR_TARGETS.FRET_YELLOW}
         color="yellow"
-        recommendedPin={4}
+        recommendedPin={FRET_PINS.yellow}
       />
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.frets.fretBlue')}
         target={GUITAR_TARGETS.FRET_BLUE}
         color="blue"
-        recommendedPin={5}
+        recommendedPin={FRET_PINS.blue}
       />
       <InputTestRow
         label={t('guides.direct-pico-guitar.steps.frets.fretOrange')}
         target={GUITAR_TARGETS.FRET_ORANGE}
         color="orange"
-        recommendedPin={6}
+        recommendedPin={FRET_PINS.orange}
       />
     </>
   );
