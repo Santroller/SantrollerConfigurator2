@@ -117,6 +117,7 @@ import {
   getActionOptions,
   isActionOutput,
 } from '@/components/Inputs/actionOutputs';
+import { CopyToProfileModal } from '@/components/Inputs/CopyToProfileModal';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
 import {
   DisplayElementEditor,
@@ -10718,6 +10719,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const ruleSelection = useIndexSelection(profileIdx, profile?.assignments?.length ?? 0);
   const mappingSelection = useIndexSelection(profileIdx, profile?.mappings?.length ?? 0);
   const ledSelection = useIndexSelection(profileIdx, profile?.leds?.length ?? 0);
+  // The selected mappings or LEDs being copied to another profile
+  const [copying, setCopying] = useState<{ mappings?: number[]; leds?: number[] } | null>(null);
   const [groupDrag, setGroupDrag] = useState<{
     key: 'assignments' | 'mappings' | 'leds';
     active: number;
@@ -10780,6 +10783,8 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const selectionBar = (key: ListKey) => {
     const { selection, i18n } = lists[key];
     const count = profile[key]?.length ?? 0;
+    // Rules make the slots the other lists read, so only those lists are copied
+    const copyable = key !== 'assignments' && profiles.length > 1;
     return (
       !simpleMode && (
         <SelectionBar
@@ -10792,7 +10797,18 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           deleteTitle={t(`selection.${i18n}.deleteTitle`)}
           deleteDesc={t(`selection.${i18n}.deleteDesc`, { count: selection.selected.length })}
           sticky={false}
-        />
+        >
+          {copyable && (
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconCopy size={14} />}
+              onClick={() => setCopying({ [key]: selection.selected })}
+            >
+              {t('selection.copyTo.button')}
+            </Button>
+          )}
+        </SelectionBar>
       )
     );
   };
@@ -10841,6 +10857,14 @@ function Profile({ profileIdx }: { profileIdx: number }) {
     );
   return (
     <>
+      {copying && (
+        <CopyToProfileModal
+          opened
+          onClose={() => setCopying(null)}
+          profileIdx={profileIdx}
+          items={copying}
+        />
+      )}
       <Modal opened={opened} onClose={close} title={t('defaults_dialog.title')} centered>
         {t('defaults_dialog.desc')}
         <Space h="md" />

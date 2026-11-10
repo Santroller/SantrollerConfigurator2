@@ -3044,6 +3044,22 @@
     "deleteTitle": "Deleting selected items",
     "deleteDesc_one": "Are you sure you wish to delete {{count}} item?",
     "deleteDesc_other": "Are you sure you wish to delete {{count}} items?",
+    "copyTo": {
+      "button": "Copy to profile",
+      "title": "Copy to another profile",
+      "target": "Profile to copy to",
+      "noTargets": "There's no other profile these can be copied to.",
+      "slotsDesc": "Slots are numbered separately in each profile, so pick which of the other profile's slots each slot these read should become.",
+      "slotFrom": "Reads {{slot}}",
+      "leaveOut": "Don't copy what reads this slot",
+      "summary_one": "{{count}} item will be copied.",
+      "summary_other": "{{count}} items will be copied.",
+      "skipped_one": "{{count}} reads a slot that won't be copied, so is left out.",
+      "skipped_other": "{{count}} read a slot that won't be copied, so are left out.",
+      "dropped_one": "{{count}} sends an output the other profile's device type can't, so is left out.",
+      "dropped_other": "{{count}} send an output the other profile's device type can't, so are left out.",
+      "confirm": "Copy"
+    },
     "inputs": {
       "deleteTitle": "Deleting inputs",
       "deleteDesc_one": "Are you sure you wish to delete {{count}} input?",

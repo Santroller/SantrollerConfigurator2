@@ -61,6 +61,7 @@ import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './sav
 import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
 import { remapMappingsForSubType } from './subTypeMappings';
 import { centerTilt } from './tiltCenter';
+import { swapFaceButtonInputs as fixInput } from './faceButtonSwap';
 import { fixAbsoluteTriggerDeadzones, migrateMappingTriggers } from './triggerDeadzone';
 import { configFlashAddress, parseFirmwareLayout, Uf2BuildError } from './uf2Layout';
 
@@ -1016,47 +1017,6 @@ function createDefault(type: string, id: string, parentId?: string) {
   );
 }
 const magic = 0xd2f1e365;
-function fixInput(mapping: proto.IMapping) {
-  // Swap A<->B and Y<->X for wii inputs when swapping between label and legend mode
-  let wiiButton = mapping.input.wiiButton?.button;
-  switch (wiiButton) {
-    case proto.WiiButtonType.WiiButtonClassicA:
-      wiiButton = proto.WiiButtonType.WiiButtonClassicB;
-      break;
-    case proto.WiiButtonType.WiiButtonClassicB:
-      wiiButton = proto.WiiButtonType.WiiButtonClassicA;
-      break;
-    case proto.WiiButtonType.WiiButtonClassicX:
-      wiiButton = proto.WiiButtonType.WiiButtonClassicY;
-      break;
-    case proto.WiiButtonType.WiiButtonClassicY:
-      wiiButton = proto.WiiButtonType.WiiButtonClassicX;
-      break;
-  }
-  if (wiiButton) {
-    mapping.input.wiiButton!.button = wiiButton;
-  }
-  // SNES pads share the Nintendo layout
-  let snesButton = mapping.input.snesButton?.button;
-  switch (snesButton) {
-    case proto.SNESButtonType.SNESButtonA:
-      snesButton = proto.SNESButtonType.SNESButtonB;
-      break;
-    case proto.SNESButtonType.SNESButtonB:
-      snesButton = proto.SNESButtonType.SNESButtonA;
-      break;
-    case proto.SNESButtonType.SNESButtonX:
-      snesButton = proto.SNESButtonType.SNESButtonY;
-      break;
-    case proto.SNESButtonType.SNESButtonY:
-      snesButton = proto.SNESButtonType.SNESButtonX;
-      break;
-  }
-  if (snesButton) {
-    mapping.input.snesButton!.button = snesButton;
-  }
-  return mapping;
-}
 function encodeBase64Url(message: Uint8Array) {
   return message.toBase64().replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
