@@ -10,6 +10,7 @@ import { GuidePage } from './pages/Guide.page';
 import { GuideCatalogPage } from './pages/GuideCatalog.page';
 import { InputsPage } from './pages/Inputs.page';
 import { LabelsPage } from './pages/Labels.page';
+import { MatrixScannerPage } from './pages/MatrixScanner.page';
 import { PeripheralsPage } from './pages/Peripherals.page';
 import { SetupPage } from './pages/Setup.page';
 import { SupportedHardwarePage } from './pages/SupportedHardware.page';
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
   {
     path: '/debug',
     element: <DebugPage />,
+  },
+  {
+    path: '/matrix-scanner',
+    element: <MatrixScannerPage />,
   },
   {
     path: '/labels',

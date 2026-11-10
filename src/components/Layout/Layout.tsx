@@ -14,6 +14,7 @@ import {
   IconDeviceGamepad2,
   IconDeviceGamepad3,
   IconGitCompare,
+  IconGridDots,
   IconGuitarPick,
   IconMoon,
   IconPiano,
@@ -607,6 +608,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     }}
                     label={t('nav.debug', 'Debug')}
                     leftSection={<IconPiano size={16} stroke={1.5} />}
+                  />
+                )}
+                {!simpleMode && (
+                  <NavLink
+                    disabled={updating || hung}
+                    component={RouterNavLink}
+                    to="/matrix-scanner"
+                    onClick={() => {
+                      pollInputs(false);
+                      nav('/matrix-scanner');
+                    }}
+                    label={t('nav.matrixScanner', 'Matrix Scanner')}
+                    leftSection={<IconGridDots size={16} stroke={1.5} />}
                   />
                 )}
                 <NavLink

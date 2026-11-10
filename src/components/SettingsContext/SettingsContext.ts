@@ -23,6 +23,7 @@ import {
   isDeviceKind,
   isSingletonDeviceKind,
 } from '@/components/Devices/deviceRegistry';
+import { pinsMask } from '@/components/Devices/matrixPins';
 import {
   detectedInput,
   detectInputCommand,
@@ -46,6 +47,7 @@ import {
 } from '@/components/Labels/labelRegistry';
 import { importLegacyConfigs } from '@/components/Legacy/importLegacyConfig';
 import { legacyErrorReason, legacyWarning, LegacyWarning } from '@/components/Legacy/warnings';
+import { applyPinPairEvent, PinPairs } from '@/components/PinScanner/pinPairs';
 import { CRC32 } from '@/CRC32.js';
 import { splitExtraTargets } from './assignmentTargets';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
@@ -607,6 +609,9 @@ export interface ConfigState {
   detectedInput?: proto.IInput;
   detectInputRequest?: DetectInputRequest;
   detecting: boolean;
+  // The matrix scanner: whether it is asking the device to scan pin pairs, and the pairs it has found
+  pinPairScanning: boolean;
+  pinPairs: PinPairs;
   lastUpdate: number;
   writeTimeout?: NodeJS.Timeout;
   keepaliveTimeout?: KeepaliveTimer;
@@ -764,6 +769,9 @@ export interface Actions {
     request: DetectInputRequest
   ) => void;
   testLed: (profileIdx: number, ledId?: number, durationMs?: number) => Promise<void>;
+  // Start the device scanning these pins for pairs that connect, or with null stop it
+  scanPinPairs: (pins: number[] | null) => Promise<void>;
+  clearPinPairs: () => void;
 }
 
 // Standby lighting is only used once no other profile matched, so it's kept below them all, and other
@@ -913,6 +921,8 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     hungOnConnect: false,
     configLoadError: null,
     detecting: false,
+    pinPairScanning: false,
+    pinPairs: {},
     seller: false,
     sellerCheck: false,
     latest: true,
@@ -1768,6 +1778,38 @@ const configStore = create<ConfigState & Actions>()(
       new Uint8Array(outBuffer).set(infoBuffer);
       await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
     },
+    scanPinPairs: async (pins: number[] | null) => {
+      set((state) => {
+        state.pinPairScanning = pins !== null;
+        // Pairs still showing as pressed would stay stuck that way once the device stops reporting
+        for (const pair of Object.values(state.pinPairs)) {
+          pair.held = 0;
+        }
+      });
+      const dev = get().hidDevice;
+      if (!dev) {
+        return;
+      }
+      const infoBuffer = proto.Command.encode(
+        proto.Command.create({
+          scanPinPairs: proto.ScanPinPairsCommand.create({
+            enabled: pins !== null,
+            pins: pinsMask(pins ?? [], 0),
+            pinsHigh: pinsMask(pins ?? [], 32),
+          }),
+        })
+      )
+        .ldelim()
+        .finish();
+      const outBuffer = new ArrayBuffer(63);
+      new Uint8Array(outBuffer).set(infoBuffer);
+      await dev.sendFeatureReport(proto.ReportId.ReportIdCommand, outBuffer);
+    },
+    clearPinPairs: () => {
+      set((state) => {
+        state.pinPairs = {};
+      });
+    },
 
     updateConfig: (config: proto.IConfig) => {
       set((state) => {
@@ -2051,6 +2093,9 @@ const configStore = create<ConfigState & Actions>()(
                 deviceEvent.crkdDrum.type
               ] = deviceEvent.crkdDrum.data;
             }
+          }
+          if (deviceEvent.pinPair && state.pinPairScanning) {
+            applyPinPairEvent(state.pinPairs, deviceEvent.pinPair);
           }
           if (!state.polling) {
             continue;

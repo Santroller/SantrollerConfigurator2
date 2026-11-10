@@ -207,6 +207,7 @@
     "devices": "Devices",
     "pinLabels": "Pin Labels",
     "debug": "Debug",
+    "matrixScanner": "Matrix Scanner",
     "profiles": "Profiles",
     "addProfile": "Add profile",
     "addStandbyLighting": "Add standby profile",
@@ -3119,6 +3120,38 @@
     "toolFavicon": "Tool Favicon",
     "toolFaviconError": "Unable to process this favicon. Please choose a valid PNG or JPEG image.",
     "defaultToolName": "Seller Tool"
+  },
+  "matrixScanner": {
+    "title": "Matrix Scanner",
+    "intro": "Work out how the buttons on an unknown board are wired. Wire the board's pads to free pins, start scanning, then press each button on its own. Every pair of pins a button connects is listed, along with what kind of matrix the pairs add up to.",
+    "pins": "Pins to scan",
+    "pinsHint": "Pins already used by a device are left alone.",
+    "start": "Start scanning",
+    "stop": "Stop scanning",
+    "clear": "Clear",
+    "scanning": "Scanning. Press one button at a time: holding two that share a pin can show a pair that isn't really there.",
+    "empty": "No buttons found yet.",
+    "summary": {
+      "buttons_one": "{{count}} button on {{pins}} pins",
+      "buttons_other": "{{count}} buttons on {{pins}} pins",
+      "diodeMatrix": "A matrix with diodes: drive {{drive}}, read {{sense}}.",
+      "matrix": "A matrix: {{drive}} on one side, {{sense}} on the other. Without diodes either side can be driven, so drive the smaller one.",
+      "network": "Some pins pair with pins on both sides, so this isn't a plain matrix. Set it up as a switch network.",
+      "matrixHint": "Set it up as a matrix device with those drive and read pins."
+    },
+    "create": {
+      "matrix": "Create matrix device",
+      "switchNetwork": "Create switch network device",
+      "tooMany": "A switch network holds up to {{max}} buttons. Use a matrix device, or clear and scan fewer buttons."
+    },
+    "table": {
+      "pins": "Pins",
+      "direction": "Direction",
+      "presses": "Presses",
+      "bothWays": "Both ways",
+      "oneWay": "{{from}} → {{to}} only",
+      "pressed": "Pressed"
+    }
   },
   "debug": {
     "midi": {
