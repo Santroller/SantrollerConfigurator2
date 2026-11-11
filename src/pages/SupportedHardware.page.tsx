@@ -77,6 +77,12 @@ const HARDWARE_CATALOG: HardwareItem[] = [
   { id: 'pico_w_wireless', category: 'mcu', badgeColor: 'violet' },
   { id: 'rp2040_derivatives', category: 'mcu', badgeColor: 'cyan' },
   {
+    id: 'waveshare_rp2350_usb_a',
+    category: 'mcu',
+    badgeColor: 'yellow',
+    guideLink: '/guides/usb-host',
+  },
+  {
     id: 'mcu_legacy_promicro',
     category: 'mcu',
     badgeColor: 'orange',

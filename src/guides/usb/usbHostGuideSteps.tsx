@@ -1,6 +1,6 @@
-import { IconCheck, IconPlugConnected, IconUsb } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCheck, IconPlugConnected, IconUsb } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Card, Image, Stack, Table, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Image, Stack, Table, Text, Title } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
@@ -35,6 +35,28 @@ export function UsbHostIntroStep(props: GuideStepProps) {
         iconColor="teal"
         items={t('guides.usb-host.steps.usb-intro.supplies', { returnObjects: true })}
       />
+
+      {/* Boards with a USB-A host port already on them, which need a change before hotplug works */}
+      <Alert
+        color="yellow"
+        variant="light"
+        icon={<IconAlertTriangle size={16} />}
+        title={t('guides.usb-host.steps.usb-intro.waveshareUsbATitle')}
+      >
+        <Stack gap="xs">
+          <Text size="sm">{t('guides.usb-host.steps.usb-intro.waveshareUsbABody')}</Text>
+          <Image
+            src="/guides/usb/waveshare-rp2350-usb-a-r13.png"
+            radius="md"
+            maw={240}
+            mx="auto"
+            alt={t(`${IMAGE_ALT}.waveshareUsbAR13`)}
+          />
+          <Text size="xs" c="dimmed" ta="center">
+            {t('guides.usb-host.steps.usb-intro.waveshareUsbACaption')}
+          </Text>
+        </Stack>
+      </Alert>
     </Stack>
   );
 

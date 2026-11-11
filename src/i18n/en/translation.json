@@ -4521,7 +4521,10 @@
           "colorGreen": "Green",
           "colorWhite": "White",
           "signalDPlus": "D+ (Data Plus)",
-          "signalDMinus": "D- (Data Minus)"
+          "signalDMinus": "D- (Data Minus)",
+          "waveshareUsbATitle": "Using a Waveshare RP2350-USB-A?",
+          "waveshareUsbABody": "This board already has a USB-A host port, but out of the box it has a resistor (R13) that makes the port also work as a USB device. While R13 is fitted, unplugging and replugging devices isn't detected properly, and low-speed devices like many keyboards and mice won't respond at all. Waveshare's own advice is to remove R13, a tiny resistor next to the GP7 pad, left of the RP2350 chip. Once it's removed, the USB-A port only works as a host, which is all Santroller needs.",
+          "waveshareUsbACaption": "R13 is circled in red. Photo: Waveshare"
         },
         "usb-wiring": {
           "shortTitle": "Wiring",
@@ -5260,6 +5263,7 @@
         "inlineFretLeds": "Inline fret LEDs",
         "inlineFretLedSchematic": "Inline fret LED schematic",
         "usbHostCable": "USB Host cable wiring",
+        "waveshareUsbAR13": "Waveshare RP2350-USB-A with resistor R13 circled",
         "usbSocket": "USB socket wiring",
         "rfFatPinout": "Xbox 360 Fat RF Module Connector Pinout",
         "rfSlimScheme": "Xbox 360 Slim RF Module Wiring Scheme",
@@ -5621,6 +5625,18 @@
           "Pro Micro RP2040 boards: a drop-in replacement footprint for old Pro Micro builds",
           "Uses the same firmware as the Pico"
         ]
+      },
+      "waveshare_rp2350_usb_a": {
+        "name": "Waveshare RP2350-USB-A",
+        "interfaceType": "Microcontroller + USB host",
+        "badge": "Needs a mod",
+        "description": "A small RP2350 board with a USB-A host port built in, so you don't need to wire up a USB socket yourself.",
+        "details": [
+          "RP2350A, running the same Santroller firmware as the Pico 2",
+          "USB-C for connecting to the console or PC, USB-A for plugging in a controller"
+        ],
+        "warning": "Out of the box, hotplugging on the USB-A port doesn't work reliably, and low-speed devices such as keyboards and mice won't respond. The board needs a small hardware change first, which the USB Host Port guide covers.",
+        "guideLabel": "USB Host Port guide"
       },
       "mcu_legacy_promicro": {
         "name": "ATmega32U4 Boards (Pro Micro, Arduino Micro, Leonardo)",
