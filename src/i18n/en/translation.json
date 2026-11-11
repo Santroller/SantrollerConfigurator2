@@ -79,6 +79,10 @@
     "usb_device_name": "Name",
     "usb_device_type": "Controller Type",
     "usb_bluetooth_adapter": "Bluetooth Adapter",
+    "usb_bluetooth_adapter_unconfigured": {
+      "description": "A Bluetooth adapter is plugged in, but it won't be used until you add a Bluetooth device.",
+      "button": "Add Bluetooth device"
+    },
     "turn_off_controller": "Turn off",
     "bluetooth_detecting_type": "Detecting…",
     "bluetooth_device_mode": "Mode",

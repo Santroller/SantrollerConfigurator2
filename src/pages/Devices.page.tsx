@@ -2501,12 +2501,18 @@ function USBHostDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const addDevice = useConfigStore((state) => state.addDevice);
+  const hasBluetoothDevice = useConfigStore((state) =>
+    Object.values(state.deviceStatus).some((x) => x.type === 'bt')
+  );
   const device = status.device;
   if (!device.usbHost) {
     throw new Error('device null!');
   }
   const usbHost = device.usbHost;
   const usbDevices = Object.values(status.usbDevices);
+  // A Bluetooth adapter on the host port does nothing until a Bluetooth device is configured
+  const needsBluetoothDevice = usbDevices.some((x) => x.bluetoothAdapter) && !hasBluetoothDevice;
   return (
     <DeviceCard
       connected={Object.values(status.usbDevices).length !== 0}
@@ -2514,6 +2520,22 @@ function USBHostDevice({ id }: { id: string }) {
       image="covers/devices/usbHost.svg"
       deleteDevice={() => deleteDevice(id)}
     >
+      {needsBluetoothDevice && (
+        <Group justify="space-between" mt="md" wrap="nowrap">
+          <Text size="sm" c="yellow">
+            {t('devices.usb_bluetooth_adapter_unconfigured.description')}
+          </Text>
+          <Button
+            size="xs"
+            variant="light"
+            color="yellow"
+            style={{ flexShrink: 0 }}
+            onClick={() => addDevice('bt')}
+          >
+            {t('devices.usb_bluetooth_adapter_unconfigured.button')}
+          </Button>
+        </Group>
+      )}
       {usbDevices.length > 0 && (
         <>
           <Divider my="md" />
