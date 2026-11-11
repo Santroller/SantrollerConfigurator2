@@ -46,7 +46,7 @@ export function UsbHostIntroStep(props: GuideStepProps) {
         <Stack gap="xs">
           <Text size="sm">{t('guides.usb-host.steps.usb-intro.waveshareUsbABody')}</Text>
           <Image
-            src="/guides/usb/waveshare-rp2350-usb-a-r13.png"
+            src="/guides/usb/waveshare-rp2350-usb-a-r13.jpg"
             radius="md"
             maw={240}
             mx="auto"

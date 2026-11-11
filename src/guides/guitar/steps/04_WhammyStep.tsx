@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Image, List, Stack, Text, Title } from '@mantine/core';
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
+import { YdRp2040VrefNote } from '@/guides/components/YdRp2040VrefNote';
 import { GuideStepProps } from '@/guides/types';
 import { adcChannel, gpPin, IMAGE_ALT } from '../../wiringText';
 import { GUITAR_TARGETS, useTargetPin } from '../guitarMappingUtils';
@@ -46,6 +47,8 @@ export function WhammyStep(props: GuideStepProps) {
           </Text>
         </Stack>
       </Alert>
+
+      <YdRp2040VrefNote />
     </Stack>
   );
 

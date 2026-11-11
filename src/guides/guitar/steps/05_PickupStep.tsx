@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Card, Image, List, Stack, Table, Text, Title } from '@mantine/core';
 import { InputTestRow } from '@/guides/components/InputTestRow';
 import { StepWorkbench } from '@/guides/components/StepWorkbench';
+import { YdRp2040VrefNote } from '@/guides/components/YdRp2040VrefNote';
 import { GuideStepProps } from '@/guides/types';
 import { adcChannel, gpPin, IMAGE_ALT } from '../../wiringText';
 import { GUITAR_TARGETS, useTargetPin } from '../guitarMappingUtils';
@@ -46,6 +47,8 @@ export function PickupStep(props: GuideStepProps) {
       >
         <Text size="xs">{t(`${P}.pot2WireDesc`, pins)}</Text>
       </Alert>
+
+      <YdRp2040VrefNote />
 
       <Title order={4}>{t(`${P}.switchTitle`)}</Title>
       <Text size="sm">{t(`${P}.switchIntro`)}</Text>

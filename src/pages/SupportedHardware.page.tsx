@@ -82,6 +82,7 @@ const HARDWARE_CATALOG: HardwareItem[] = [
     badgeColor: 'yellow',
     guideLink: '/guides/usb-host',
   },
+  { id: 'yd_rp2040', category: 'mcu', badgeColor: 'yellow' },
   {
     id: 'mcu_legacy_promicro',
     category: 'mcu',

@@ -5204,6 +5204,11 @@
       }
     },
     "common": {
+      "ydRp2040Vref": {
+        "title": "Using a YD-RP2040?",
+        "body": "Some YD-RP2040 boards (the black board with a USR button and an RGB LED) ship with the VREF jumper left open. That leaves the analog pins without a reference voltage, so their readings jump around or sit at one value while all the digital inputs work fine. If that happens, bridge the two VREF pads next to GP26 with a blob of solder, or run a wire from the VREF pin to 3V3.",
+        "caption": "The VREF jumper, shown open"
+      },
       "wiring": {
         "pin": "Pin {{n}}",
         "pinWithLabel": "Pin {{n}} ({{label}})",
@@ -5263,6 +5268,7 @@
         "inlineFretLeds": "Inline fret LEDs",
         "inlineFretLedSchematic": "Inline fret LED schematic",
         "usbHostCable": "USB Host cable wiring",
+        "ydRp2040Vref": "YD-RP2040 board with the VREF jumper next to GP26 circled",
         "waveshareUsbAR13": "Waveshare RP2350-USB-A with resistor R13 circled",
         "usbSocket": "USB socket wiring",
         "rfFatPinout": "Xbox 360 Fat RF Module Connector Pinout",
@@ -5637,6 +5643,18 @@
         ],
         "warning": "Out of the box, hotplugging on the USB-A port doesn't work reliably, and low-speed devices such as keyboards and mice won't respond. The board needs a small hardware change first, which the USB Host Port guide covers.",
         "guideLabel": "USB Host Port guide"
+      },
+      "yd_rp2040": {
+        "name": "YD-RP2040 (VCC-GND Studio and clones)",
+        "interfaceType": "Microcontroller",
+        "badge": "Check VREF",
+        "description": "A black Pico-sized RP2040 board with USB-C, a USR button and a WS2812 RGB LED, sold under many brand names.",
+        "details": [
+          "Same pinout as the Pico, using the same firmware",
+          "Onboard WS2812 RGB LED on GP23 and USR button on GP24",
+          "Exposes the ADC reference on a VREF pin"
+        ],
+        "warning": "Some of these boards ship with the VREF jumper (next to GP26) left open, so analog inputs like whammy or joysticks read garbage while digital inputs work fine. Bridge the two VREF pads with solder, or wire the VREF pin to 3V3."
       },
       "mcu_legacy_promicro": {
         "name": "ATmega32U4 Boards (Pro Micro, Arduino Micro, Leonardo)",
