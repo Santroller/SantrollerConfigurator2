@@ -143,7 +143,7 @@ function festivalDrums(pro: boolean) {
   const kicks: Partial<Record<proto.RockBandDrumsButtonType, keyof typeof CODE_TO_HID>> = pro
     ? {
         [proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal]: 'Space',
-        [proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal]: 'ControlRight',
+        [proto.RockBandDrumsButtonType.RockBandDrums_Kick2Pedal]: 'ControlLeft',
       }
     : {
         [proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal]: 'KeyK',
