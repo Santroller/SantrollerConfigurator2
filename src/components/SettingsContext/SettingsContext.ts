@@ -472,6 +472,8 @@ export class DeviceStatus {
   updating?: boolean = false;
   updateProgress?: number = 0;
   rebooting?: boolean = false;
+  // A secondary Pico on a different chip to the main one, which can't be updated from it
+  wrongChip?: boolean = false;
   // Battery devices: the battery percentage, once they have read it
   battery?: number;
   // Bluetooth: whether a host (PC, phone, console, or the configurator over BLE) is connected to this controller
@@ -2044,6 +2046,8 @@ const configStore = create<ConfigState & Actions>()(
               if (device.rebooting !== undefined && device.rebooting !== null) {
                 status.rebooting = !!device.rebooting;
               }
+              // Only sent while connected, and checked again whenever it reconnects
+              status.wrongChip = device.connected ? (device.wrongChip ?? status.wrongChip) : false;
             }
           }
           if (deviceEvent.crkdDrum) {

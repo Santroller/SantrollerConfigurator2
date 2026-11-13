@@ -11,6 +11,7 @@ import { DIRECT_PICO_GUITAR_GUIDE } from './guitar/guitarGuide';
 import { INPUT_BEHAVIOR_GUIDE } from './inputs/inputBehaviorGuide';
 import { RGB_LED_GUIDE } from './leds/ledGuide';
 import { MIDI_DIN_GUIDE } from './mididin/midiDinGuide';
+import { PERIPHERAL_PICO_GUIDE } from './peripheral/peripheralGuide';
 import { DJ_TURNTABLE_GUIDE } from './turntable/turntableGuide';
 import { GuideCategory, GuideDefinition, GuideSource } from './types';
 import { USB_HOST_GUIDE } from './usb/usbHostGuide';
@@ -32,6 +33,7 @@ export const GUIDE_REGISTRY: Record<string, GuideSource> = {
   [BT_RECEIVER_GUIDE.id]: BT_RECEIVER_GUIDE,
   [CONSOLE_OUTPUT_GUIDE.id]: CONSOLE_OUTPUT_GUIDE,
   [RGB_LED_GUIDE.id]: RGB_LED_GUIDE,
+  [PERIPHERAL_PICO_GUIDE.id]: PERIPHERAL_PICO_GUIDE,
   [WIRELESS_GUIDE.id]: WIRELESS_GUIDE,
   [XBOX360_RF_GUIDE.id]: XBOX360_RF_GUIDE,
   [XBOX_AUTH_GUIDE.id]: XBOX_AUTH_GUIDE,

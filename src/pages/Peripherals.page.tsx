@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconDownload, IconPlus } from '@tabler/icons-react';
+import { IconAlertTriangle, IconDownload, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
@@ -33,12 +33,12 @@ import {
   getGroupedDevices,
   isDeviceKind,
 } from '@/components/Devices/deviceRegistry';
+import { downloadPeripheralUf2, peripheralBootValid } from '@/components/Devices/peripheralUf2';
 import { DeviceContext } from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import { IdSelectionContext, SelectionBar } from '@/components/Selection/Selection';
-import { proto } from '@/components/SettingsContext/config';
-import { buildUf2FromConfig, useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { deviceEditors } from '@/pages/Devices.page';
 
 const subDeviceKinds: DeviceKind[] = deviceKinds.filter((k) => k !== 'peripheral');
@@ -123,26 +123,9 @@ export function PeripheralsPage() {
       setSelection(on ? [...selected, sel] : selected.filter((other) => other !== sel)),
   };
 
+  const bootPins = { sda: sdaPin, scl: sclPin, idPin, pico2 };
   const handleDownloadUf2 = async () => {
-    const config = proto.Config.create({
-      peripheralBoot: {
-        i2c: {
-          block: sdaPin >= 16 ? 1 : 0,
-          sda: sdaPin,
-          scl: sclPin,
-          clock: 400000,
-        },
-        idPin,
-      },
-    });
-    const aux = proto.AuxConfigBlock.create({});
-    const configBuf = proto.Config.encode(config).finish();
-    const auxBuf = proto.AuxConfigBlock.encode(aux).finish();
-    const buffer = new Uint8Array(configBuf.length + auxBuf.length);
-    buffer.set(configBuf);
-    buffer.set(auxBuf, configBuf.length);
-
-    await buildUf2FromConfig(pico2, { buffer, mainLen: configBuf.length, auxLen: auxBuf.length });
+    await downloadPeripheralUf2(bootPins);
     closeUf2();
   };
 
@@ -215,6 +198,18 @@ export function PeripheralsPage() {
             mb="md"
           >
             {t('peripherals.rebooting_notice')}
+          </Alert>
+        )}
+
+        {status.wrongChip && (
+          <Alert
+            variant="light"
+            color="red"
+            title={t('peripherals.wrong_chip_title')}
+            icon={<IconAlertTriangle size={16} />}
+            mb="md"
+          >
+            {t('peripherals.wrong_chip_notice')}
           </Alert>
         )}
 
@@ -306,6 +301,7 @@ export function PeripheralsPage() {
             <Flex justify="flex-end">
               <Button
                 onClick={handleDownloadUf2}
+                disabled={!peripheralBootValid(bootPins)}
                 color="blue"
                 leftSection={<IconDownload size={16} />}
               >

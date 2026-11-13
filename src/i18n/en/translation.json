@@ -1906,6 +1906,8 @@
     "id_pin": "ID Selection Pin",
     "target_board": "Target Board",
     "download_confirm": "Download UF2",
+    "wrong_chip_title": "Different Chip to the Main Pico",
+    "wrong_chip_notice": "This secondary Pico uses a different chip to the main one (a Pico 1 with a Pico 2, or the other way round), so the main Pico can't keep its firmware up to date and it may not work properly. Use a secondary Pico with the same chip as the main one, flashed with the peripheral UF2 for that chip.",
     "empty": "No sub-devices configured on this peripheral coprocessor yet. Click + to add a device."
   },
   "multiplexer": {
@@ -5200,6 +5202,118 @@
           "driverMissingBadge": "No LED Device Configured",
           "notConfiguredPrompt": "Add an LED device in the Wiring step first.",
           "verifyPrompt": "Once each fret has an LED assigned, press the frets to verify real-time LED triggering."
+        }
+      }
+    },
+    "peripheral-pico": {
+      "title": "Secondary Pico (Peripheral)",
+      "subtitle": "Add a second Pico over I2C for more pins and devices",
+      "description": "Connect a second Raspberry Pi Pico to your controller with four wires, so its pins and the devices wired to it work as part of the main Pico.",
+      "estimatedTime": "15 - 20 mins",
+      "steps": {
+        "periph-intro": {
+          "shortTitle": "Overview",
+          "title": "1. What a Secondary Pico Does",
+          "badge": "Peripheral",
+          "description": "A second Pico that reads inputs and devices for the main one.",
+          "intro": "A secondary Pico (shown as a Peripheral in the configurator) is a second Pico that the main one talks to over I2C. Buttons, analog inputs and devices wired to the secondary Pico show up on the main Pico, and are mapped in its profiles like anything else. The main Pico is still the only one plugged into the console or PC.",
+          "usesTitle": "When to use one",
+          "uses": [
+            "Out of pins: the main Pico has no free GPIOs left for more buttons, sensors or devices.",
+            "Parts far from the main board: put the secondary Pico next to them, so only four wires have to reach back to the main board.",
+            "Splitting devices up: run some devices on the secondary Pico, so they don't share pins or I2C/SPI buses with what's on the main one."
+          ],
+          "supplies": [
+            "A second Pico with the same chip as the main one: a Pico 1 (RP2040) with a Pico 1, a Pico 2 (RP2350) with a Pico 2",
+            "Four wires (five if you use a second secondary Pico)",
+            "Soldering Iron"
+          ],
+          "howTitle": "How it's set up",
+          "how": [
+            "Flash the secondary Pico once with a peripheral UF2, which sets the pins it listens on.",
+            "Wire SDA, SCL, GND and VSYS between the two Picos.",
+            "Add a Peripheral device on the main Pico, on the pins you wired it to, and save.",
+            "Set up the secondary Pico's inputs and devices from the main Pico's configurator."
+          ],
+          "limitsBody": "Up to two secondary Picos can be connected, on addresses 0x75 and 0x76. The secondary Pico never needs to be plugged into the configurator: everything about it is set up from the main Pico, and the main Pico keeps its firmware up to date over the I2C wires."
+        },
+        "periph-flash": {
+          "shortTitle": "Flash",
+          "title": "2. Flash the Secondary Pico",
+          "badge": "Secondary Pico",
+          "description": "Download the peripheral UF2 and copy it onto the secondary Pico.",
+          "intro": "The secondary Pico needs to know which pins to listen on before it can be reached, so those go into the UF2 you flash it with. Pick them on the right, then:",
+          "flashSteps": [
+            "Pick the chip (the same as the main Pico's), the secondary Pico's I2C pins and its ID pin, then click Download Peripheral UF2.",
+            "Hold the BOOTSEL button on the secondary Pico while plugging it into your computer. A drive called RPI-RP2 (Pico 1) or RP2350 (Pico 2) shows up.",
+            "Copy the UF2 onto that drive. The Pico restarts by itself when the copy finishes.",
+            "Unplug it. It won't show up in the configurator; that's expected, it only answers the main Pico."
+          ],
+          "onceBody": "You only need to do this once. From then on the main Pico keeps the secondary Pico up to date by copying its own firmware across, which only works when both have the same chip. A secondary Pico on a different chip is left out of date, and the configurator warns about it. Only flash it again to change the pins chosen here.",
+          "uf2Title": "Peripheral UF2",
+          "uf2Desc": "These are pins on the secondary Pico. They don't have to match the main Pico's.",
+          "busLabel": "I2C pins (SDA / SCL)",
+          "busDesc": "The pair the secondary Pico listens on",
+          "busOption": "GP{{sda}} (SDA) / GP{{scl}} (SCL)",
+          "idDesc": "Leave this pin unconnected for address 0x75, or wire it to GND for 0x76",
+          "downloadError": "The UF2 couldn't be built. Check your connection and try again."
+        },
+        "periph-wiring": {
+          "shortTitle": "Wiring",
+          "title": "3. Wire the Picos Together",
+          "badge": "I2C",
+          "description": "Connect SDA, SCL, GND and power, then add the peripheral to the main Pico.",
+          "wiringSteps": [
+            "SDA: Connect the main Pico's {{mainSda}} to the secondary Pico's {{secSda}}.",
+            "SCL: Connect the main Pico's {{mainScl}} to the secondary Pico's {{secScl}}.",
+            "Ground: Connect a GND pin on each Pico together, such as Pin 38 on both.",
+            "Power: Connect VSYS (Pin 39) on both Picos, so the secondary Pico runs off the main one's USB power. Use VSYS rather than 3V3 or VBUS: each Pico has a diode on VSYS, so either one can still be plugged into USB safely.",
+            "ID pin: Leave the secondary Pico's {{secId}} unconnected, unless this is a second secondary Pico (see below)."
+          ],
+          "secondBody": "Using two secondary Picos? Wire both to the same SDA, SCL, GND and VSYS. On one of them, connect {{secId}} (or whichever ID pin it was flashed with) to GND so it answers on 0x76, then add a second Peripheral device on the main Pico and set its address to 0x76.",
+          "mainUnset": "(pick a pin below)",
+          "tableTitle": "Connections",
+          "thSignal": "Signal",
+          "thMain": "Main Pico",
+          "thSecondary": "Secondary Pico",
+          "idOpen": "{{secId}}: leave unconnected (0x75)",
+          "idToGnd": "{{secId}}: to GND (0x76)",
+          "deviceTitle": "Peripheral on the Main Pico",
+          "deviceDesc": "Adds a Peripheral device to the main Pico, on pins no other device uses. Change its SDA / SCL below to wherever you wired it, and its address to 0x76 if its ID pin goes to GND.",
+          "addedBadge": "Peripheral added at {{address}}",
+          "addBtn": "Add Peripheral"
+        },
+        "periph-test": {
+          "shortTitle": "Test",
+          "title": "4. Save and Check the Connection",
+          "badge": "Verification",
+          "description": "Save, then check that the main Pico finds the secondary one.",
+          "saveText": "The main Pico only starts talking to the secondary Pico once the peripheral is saved to it. Save, then watch the status on the right.",
+          "btnSave": "Save Configuration to Pico",
+          "statusTitle": "Secondary Pico",
+          "statusHint": "If its firmware doesn't match the main Pico's, the main Pico updates it over I2C first, which can take a minute or two. Its inputs are paused meanwhile.",
+          "notAddedBadge": "No Peripheral Added",
+          "waitingBadge": "Not Responding",
+          "connectedBadge": "Connected at {{address}}",
+          "updatingBadge": "Updating Firmware ({{percent}}%)",
+          "rebootingBadge": "Restarting After Update",
+          "wrongChipBadge": "Connected, but on a Different Chip",
+          "openPeripheralBtn": "Open Peripheral Page",
+          "openInputsBtn": "Open Inputs",
+          "nextTitle": "Using the secondary Pico",
+          "nextSteps": [
+            "Buttons and analog inputs: when picking an input for a mapping, choose GPIO (Digital) or GPIO (Analog) with (Peripheral 0x75) after it, then pick the secondary Pico's pin.",
+            "Devices: the secondary Pico has its own page under Peripherals in the sidebar. Add devices there, such as a guitar neck, multiplexer or accelerometer, on the secondary Pico's pins. Their inputs then show up alongside the main Pico's.",
+            "Save after changing anything. The main Pico sends the secondary Pico its setup each time it connects."
+          ],
+          "troubleTitle": "Troubleshooting",
+          "trouble": [
+            "Not Responding: check SDA and SCL aren't swapped, that the GND wire is connected, and that the main Pico's pins match the wiring table.",
+            "Wrong address: the address on the main Pico has to match the ID pin: 0x75 with it unconnected, 0x76 with it on GND. The ID pin is only read when the secondary Pico starts, so power cycle it after changing that wire.",
+            "Different chip: the main Pico can't update a secondary Pico with a different chip to its own. Swap it for one with the same chip as the main Pico, flashed with the matching UF2.",
+            "Wrong pins on the secondary Pico: its pins are the ones in the UF2 it was flashed with. If you're unsure, flash it again from step 2.",
+            "Drops out now and then: keep the wires short. On long runs, add 4.7kΩ pull-up resistors from SDA and SCL to 3V3 on one of the Picos."
+          ]
         }
       }
     },
