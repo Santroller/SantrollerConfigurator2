@@ -10150,7 +10150,7 @@ function BlankProfileWizard({
               psxDev ? { ...psxDev, ps2CntType: item.ps2Cnt } : { ps2CntType: item.ps2Cnt }
             )
           );
-        } else if (item.midiChannel != null) {
+        } else if (item.midiChannel != null || item.midiProGuitar != null) {
           const midiDev = Object.values(deviceStatus).find(
             (d) =>
               !isMidiOutDevice(d.device) &&
