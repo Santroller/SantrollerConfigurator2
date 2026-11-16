@@ -20,6 +20,11 @@ vi.mock('@mantine/core', async (importOriginal) => ({
   Select: vi.fn(() => null),
 }));
 
+// The accelerometer editor reads the store, which these editors don't need
+vi.mock('@/components/SettingsContext/SettingsContext', () => ({
+  useConfigStore: vi.fn(() => undefined),
+}));
+
 vi.mock('./DropdownBox', () => ({
   DropdownBox: vi.fn(() => null),
 }));

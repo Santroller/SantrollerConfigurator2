@@ -803,6 +803,26 @@
       }
     }
   },
+  "deviceSettings": {
+    "title": "{{device}} settings (shared by all profiles)",
+    "edit": "Edit {{device}}",
+    "pollInterval": "Poll interval {{ms}} ms",
+    "accelerometer": {
+      "none": "No filters enabled. The motion gate, median and low pass can clean up strum bar hits and vibration.",
+      "gate": "Motion gate {{tolerance}} g",
+      "median": "Median of {{samples}}",
+      "lowPass": "Low pass {{cutoff}} Hz"
+    },
+    "encoder": {
+      "divisor": "Step divisor {{divisor}}",
+      "deltaRate": "Sampling rate {{rate}} ms"
+    },
+    "multiplexer": {
+      "slow": "Slow multiplexer timing (CD40xx)",
+      "fast": "Standard multiplexer timing (74HC)"
+    },
+    "crkdDrum": "Debounce and pad thresholds are set on the drum."
+  },
   "wii": {
     "pollInterval": {
       "label": "Poll interval (ms)",

@@ -119,6 +119,7 @@ import {
 } from '@/components/Inputs/actionOutputs';
 import { CopyToProfileModal } from '@/components/Inputs/CopyToProfileModal';
 import { DeviceIdentitySettings } from '@/components/Inputs/DeviceNameSetting';
+import { DeviceSettingsLink } from '@/components/Inputs/DeviceSettingsLink';
 import {
   DisplayElementEditor,
   DisplayThumbnail,
@@ -3101,8 +3102,17 @@ function SantrollerInput({
           )}
         </Text>
       )}
-      <InputBehaviorHelpLink
-        stepId={input.cycle ? 'cycling' : input.toggle ? 'toggle' : input.held ? 'held' : undefined}
+      <DeviceSettingsLink
+        input={input}
+        slot={matchingSlot}
+        help={
+          <InputBehaviorHelpLink
+            mt={0}
+            stepId={
+              input.cycle ? 'cycling' : input.toggle ? 'toggle' : input.held ? 'held' : undefined
+            }
+          />
+        }
       />
       <Space h="md" />
       {input.shortcut && (

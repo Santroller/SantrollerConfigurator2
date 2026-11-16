@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { IconBluetooth, IconCpu, IconPlus, IconPower, IconTrash } from '@tabler/icons-react';
 import {
   Accordion,
@@ -53,6 +53,11 @@ import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import {
+  DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
+  DEFAULT_WII_POLL_INTERVAL_MS,
+} from '@/components/Devices/deviceDefaults';
+import { deviceAnchorId, useIsLinkedDevice } from '@/components/Devices/deviceLink';
+import {
   canAddDeviceKind,
   DeviceKind,
   deviceKinds,
@@ -96,11 +101,6 @@ import {
   WirelessChipPins,
   wirelessChipPins,
 } from '@/devices/pico/pins';
-
-// matches the firmware default when the field is unset
-const DEFAULT_TURNTABLE_POLL_INTERVAL_MS = 5;
-// Matches WII_DEFAULT_POLL_INTERVAL_MS in the firmware
-const DEFAULT_WII_POLL_INTERVAL_MS = 5;
 
 function I2CDevice({
   device,
@@ -365,6 +365,19 @@ function DeviceCard({
   const selectable = !!deviceId && !!selection;
   const selected = selectable && selection.isSelected(deviceId);
   const onSelect = (on: boolean) => deviceId && selection?.select(deviceId, on);
+  // Opened from a link to this card (eg from a mapping that uses the device), so bring it into
+  // view and outline it for a moment
+  const linked = useIsLinkedDevice(deviceId);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [highlighted, setHighlighted] = useState(linked);
+  useEffect(() => {
+    if (!linked) {
+      return;
+    }
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const timer = setTimeout(() => setHighlighted(false), 2500);
+    return () => clearTimeout(timer);
+  }, [linked]);
   // Not every device has artwork yet, so those get a placeholder instead of a broken image
   const [failedImage, setFailedImage] = useState<string>();
   // Absolute, so the cover also resolves when the card is shown on a nested route like the guides
@@ -407,15 +420,20 @@ function DeviceCard({
         </Flex>
       </Modal>
       <Card
+        ref={cardRef}
+        id={deviceId ? deviceAnchorId(deviceId) : undefined}
         shadow="sm"
         padding="lg"
         radius="md"
         withBorder
-        style={
-          selectable
-            ? { ...selectableCardStyle, ...(selected ? selectedCardStyle : undefined) }
-            : undefined
-        }
+        style={{
+          ...(selectable ? selectableCardStyle : undefined),
+          ...(selected ? selectedCardStyle : undefined),
+          ...(linked && {
+            outline: `2px solid ${highlighted ? 'var(--mantine-primary-color-filled)' : 'transparent'}`,
+            transition: 'outline-color 1s',
+          }),
+        }}
         onClick={selectable ? (e) => toggleOnBackgroundClick(e, selected, onSelect) : undefined}
       >
         <Flex justify="flex-end" gap={4}>
@@ -732,8 +750,10 @@ function AccelerometerFilters({
   update: (changes: Partial<proto.IAccelerometerDevice>) => void;
 }) {
   const { t } = useTranslation();
+  // Mappings link here to show these filters, so open them rather than leaving them collapsed
+  const linked = useIsLinkedDevice(useContext(DeviceContext));
   return (
-    <Accordion>
+    <Accordion defaultValue={linked ? 'filters' : null}>
       <Accordion.Item value="filters">
         <Accordion.Control>{t('accelerometer.filters.title')}</Accordion.Control>
         <Accordion.Panel>

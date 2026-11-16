@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import { proto } from '@/components/SettingsContext/config';
@@ -73,30 +74,33 @@ const renderMapping = (
   }
 ) =>
   renderToStaticMarkup(
-    <MantineProvider>
-      <SantrollerMapping
-        mapping={{
-          input,
-          mapping: output,
-          min: 0,
-          max: 65535,
-          center: 32767,
-          deadzone,
-          section,
-          ...settings,
-        }}
-        type={proto.SubType.Gamepad}
-        profileIdx={0}
-        mappingIdx={0}
-        mode={proto.FaceButtonMappingMode.LegendBased}
-        legendMode={LegendMode.Xbox360}
-        dispatch={vi.fn()}
-        deleteInput={vi.fn()}
-        copyInput={vi.fn()}
-        expanded
-        onToggleExpanded={vi.fn()}
-      />
-    </MantineProvider>
+    // Mappings from a device link to it
+    <MemoryRouter>
+      <MantineProvider>
+        <SantrollerMapping
+          mapping={{
+            input,
+            mapping: output,
+            min: 0,
+            max: 65535,
+            center: 32767,
+            deadzone,
+            section,
+            ...settings,
+          }}
+          type={proto.SubType.Gamepad}
+          profileIdx={0}
+          mappingIdx={0}
+          mode={proto.FaceButtonMappingMode.LegendBased}
+          legendMode={LegendMode.Xbox360}
+          dispatch={vi.fn()}
+          deleteInput={vi.fn()}
+          copyInput={vi.fn()}
+          expanded
+          onToggleExpanded={vi.fn()}
+        />
+      </MantineProvider>
+    </MemoryRouter>
   );
 
 describe('axis deadzone controls', () => {
