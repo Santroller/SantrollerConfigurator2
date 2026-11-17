@@ -3031,7 +3031,7 @@
     "sellerWarning": "If you have purchased this device from a seller, it should already have Santroller on it, and you should be able to just use the Connect button. If for some reason you need to reset the device to factory settings, you should ask the seller for a UF2 file instead of using the ones below, as the seller can provide a UF2 that has everything set up already, while the UF2 files below are blank and have no configuration.",
     "radioFirmware": {
       "missingTitle": "Wireless Firmware Missing",
-      "missing": "Your controller is missing the Xbox Wireless adapter firmware. It can be installed now, without reflashing.",
+      "missing": "Your controller is missing the wireless firmware for the Xbox Wireless adapter or the Pico W's radio. It can be installed now, without reflashing.",
       "outdatedTitle": "Wireless Firmware Update",
       "outdated": "There's newer firmware for the Xbox Wireless adapter and the Pico W's radio. It's installed separately from the controller firmware, and takes effect the next time the controller is plugged in.",
       "install": "Install Wireless Firmware",
