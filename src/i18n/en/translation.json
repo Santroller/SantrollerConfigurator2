@@ -349,6 +349,10 @@
       "label": "Map Select to D-pad Left on Xbox One/Series, PS4/5 and Switch",
       "description": "Send Select as D-pad Left instead when plugged into an Xbox One/Series, PS4/5 or Switch.Rock Band 4 and Fortnite Festival can use D-pad Left to activate star power, which can work better than Select."
     },
+    "gameCubeAdapterWinUsb": {
+      "label": "Use WinUSB for Dolphin",
+      "description": "On Windows, use the WinUSB driver so Dolphin can use the adapter without installing a driver with Zadig. Most other PC games read the adapter through SDL, which can't see it with WinUSB, so leave this off unless you're playing in Dolphin. Consoles aren't affected either way."
+    },
     "ps3OnRpcs3": {
       "label": "Use USB passthrough with RPCS3",
       "description": "Switch to PS3 mode when RPCS3 detects the controller, so it can be used with RPCS3's USB passthrough. Turn this off to keep the controller in its PC mode while RPCS3 is running."
@@ -2532,7 +2536,8 @@
     "ModeGuitarHeroArcade": "Guitar Hero Arcade",
     "ModeSpice2x": "Spice2x (DanceCon)",
     "ModePdLoader": "PD-Loader (Project Diva)",
-    "ModeKeyboardMania": "KeyboardMania (PS2)"
+    "ModeKeyboardMania": "KeyboardMania (PS2)",
+    "ModeGameCubeAdapter": "GameCube Adapter (Switch / Wii U)"
   },
   "legendMode": {
     "label": "Legend mode",

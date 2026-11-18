@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
-import { forcedModeLocksOutTool } from './forcedModeLockout';
+import { forcedModeLocksOutTool, profileForcesMode } from './forcedModeLockout';
 
 const forced = (forcedType: proto.ConsoleMode | null): proto.IProfileAssignmentInfo => ({
   consoleType: { consoleType: null, forcedType },
@@ -39,5 +39,30 @@ describe('forced mode lockout', () => {
         proto.SubType.Gamepad
       )
     ).toBe(true);
+  });
+});
+
+describe('profileForcesMode', () => {
+  const profile = (...rules: proto.IProfileAssignmentInfo[][]): proto.IProfile => ({
+    opts: {
+      uid: 1,
+      name: 'test',
+      deviceToEmulate: proto.SubType.Gamepad,
+      faceButtonMappingMode: proto.FaceButtonMappingMode.LegendBased,
+    },
+    assignments: rules.map((assignments) => ({ assignments })),
+  });
+
+  it('finds the mode in any rule', () => {
+    const p = profile([held], [held, forced(proto.ConsoleMode.ModeGameCubeAdapter)]);
+    expect(profileForcesMode(p, proto.ConsoleMode.ModeGameCubeAdapter)).toBe(true);
+    expect(profileForcesMode(p, proto.ConsoleMode.ModePs3)).toBe(false);
+  });
+
+  it('is false without a forced mode', () => {
+    expect(profileForcesMode(profile([forced(null)]), proto.ConsoleMode.ModeGameCubeAdapter)).toBe(
+      false
+    );
+    expect(profileForcesMode(undefined, proto.ConsoleMode.ModeGameCubeAdapter)).toBe(false);
   });
 });

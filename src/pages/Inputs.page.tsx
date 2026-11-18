@@ -126,7 +126,11 @@ import {
   newDisplayElement,
 } from '@/components/Inputs/DisplayElementEditor';
 import { DropdownBox, StandardEnum } from '@/components/Inputs/DropdownBox';
-import { forcedModeHidesTool, forcedModeLocksOutTool } from '@/components/Inputs/forcedModeLockout';
+import {
+  forcedModeHidesTool,
+  forcedModeLocksOutTool,
+  profileForcesMode,
+} from '@/components/Inputs/forcedModeLockout';
 import { GuidedAxisCalibration } from '@/components/Inputs/GuidedAxisCalibration';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -11407,6 +11411,25 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                     {
                       ...profile,
                       opts: { ...profile.opts, ps3OnRpcs3: event.currentTarget.checked },
+                    },
+                    profileIdx
+                  )
+                }
+              />
+            </>
+          )}
+          {profileForcesMode(profile, proto.ConsoleMode.ModeGameCubeAdapter) && (
+            <>
+              <Space h="md" />
+              <Switch
+                label={t('main.gameCubeAdapterWinUsb.label')}
+                description={t('main.gameCubeAdapterWinUsb.description')}
+                checked={!!profile.opts.gameCubeAdapterWinUsb}
+                onChange={(event) =>
+                  updateProfile(
+                    {
+                      ...profile,
+                      opts: { ...profile.opts, gameCubeAdapterWinUsb: event.currentTarget.checked },
                     },
                     profileIdx
                   )

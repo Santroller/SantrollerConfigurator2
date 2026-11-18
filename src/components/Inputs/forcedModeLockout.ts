@@ -30,3 +30,15 @@ export function forcedModeLocksOutTool(
       getSelectedInput(x.inputAnyTime?.input) !== undefined
   );
 }
+
+/** Whether any of the profile's rules forces this console mode */
+export function profileForcesMode(
+  profile: proto.IProfile | undefined,
+  mode: proto.ConsoleMode
+): boolean {
+  return (
+    profile?.assignments?.some((rule) =>
+      rule.assignments?.some((x) => x.consoleType?.forcedType === mode)
+    ) ?? false
+  );
+}
