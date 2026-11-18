@@ -3945,6 +3945,16 @@
           "deviceStatusDesc": "Adds the Wii extension driver on GP{{sda}} (SDA) and GP{{scl}} (SCL), which can be changed once it's added. The next step sets up a profile for each extension you'll plug in.",
           "driverConfiguredBadge": "Wii Driver Added on GP{{sda}} & GP{{scl}}",
           "enableDriverBtn": "Add Wii Driver"
+        },
+        "wii-tilt": {
+          "shortTitle": "Tilt",
+          "title": "Star Power Tilt Sensor",
+          "description": "Add a tilt switch or I2C accelerometer to the adapter, for Star Power / Overdrive on a Wii guitar.",
+          "placementTitle": "The sensor goes in the adapter",
+          "placementText": "Wii guitars have no tilt sensor of their own, as the Wii Remote in them handled tilt. The sensor goes in the adapter instead, so it only follows the guitar if the adapter is fixed to it, such as built into the Wii Remote slot on the back of the guitar. Line it up with the neck the way the Wii Remote sat.",
+          "i2cShared": "The accelerometer shares the Wii extension's SDA / SCL pins; connect it in parallel with the extension socket.",
+          "noGuitarTitle": "No Wii guitar profile",
+          "noGuitarText": "Tilt is only used by guitars. To add it, go back and pick the Wii guitar in the previous step; otherwise, skip this step."
         }
       },
       "check": {

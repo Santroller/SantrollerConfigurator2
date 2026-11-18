@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   IconAlertTriangle,
   IconCheck,
@@ -12,6 +13,7 @@ import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { findDeviceStatus } from '../guideConfig';
+import { TiltStep } from '../guitar/steps/06_TiltStep';
 import { GuideStepProps } from '../types';
 import { gpPin, IMAGE_ALT, pinWithLabel, signalWithName } from '../wiringText';
 
@@ -250,6 +252,67 @@ export function WiiWiringStep(props: GuideStepProps) {
         props.onNext?.();
       }}
       onPrevious={props.onPrevious}
+    />
+  );
+}
+
+// The profile reading a Wii guitar, which the profiles step made if one was picked
+function wiiGuitarProfile(profiles: proto.IProfile[] | null | undefined) {
+  return (profiles ?? []).findIndex((profile) =>
+    (profile.assignments ?? []).some((list) =>
+      (list.assignments ?? []).some((item) => item.wiiExt === proto.WiiExtType.WiiGuitarHeroGuitar)
+    )
+  );
+}
+
+// Step: Tilt. Wii guitars have no tilt sensor of their own, as the Wii Remote in them did that, so
+// one goes in the adapter and drives tilt on the Wii guitar's profile
+export function WiiTiltStep(props: GuideStepProps) {
+  const { t } = useTranslation();
+  const S = 'guides.wii-adapter.steps.wii-tilt';
+  const profileIdx = useConfigStore((state) => wiiGuitarProfile(state.config.profiles));
+  const currentProfile = useConfigStore((state) => state.currentProfile);
+
+  // The tilt mapping and its live reading are on the profile being edited, so that's the guitar's
+  React.useEffect(() => {
+    if (profileIdx !== -1 && useConfigStore.getState().currentProfile !== profileIdx) {
+      useConfigStore.getState().setActiveProfile(profileIdx.toString(), 0);
+    }
+  }, [profileIdx]);
+
+  if (profileIdx === -1) {
+    return (
+      <StepWorkbench
+        title={t('guides.direct-pico-guitar.steps.tilt.title')}
+        badge={t('guides.direct-pico-guitar.steps.tilt.badge')}
+        badgeColor="teal"
+        description={t(`${S}.description`)}
+        guideContent={
+          <Alert color="blue" icon={<IconInfoCircle size={16} />} title={t(`${S}.noGuitarTitle`)}>
+            {t(`${S}.noGuitarText`)}
+          </Alert>
+        }
+        workbenchContent={null}
+        isFirstStep={props.isFirstStep}
+        isLastStep={props.isLastStep}
+        onNext={props.onNext}
+        onPrevious={props.onPrevious}
+      />
+    );
+  }
+  // Waits for the guitar's profile to be selected, so the step opens on the tilt it already has
+  if (currentProfile !== profileIdx) {
+    return null;
+  }
+  return (
+    <TiltStep
+      {...props}
+      note={
+        <Alert color="blue" icon={<IconInfoCircle size={16} />} title={t(`${S}.placementTitle`)}>
+          {t(`${S}.placementText`)}
+        </Alert>
+      }
+      i2cShared={t(`${S}.i2cShared`)}
     />
   );
 }

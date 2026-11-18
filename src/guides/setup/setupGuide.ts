@@ -136,13 +136,17 @@ export function withBuildGuide(
     };
   }
   const buildSteps = nest(build);
+  // A build's own step can come after a shared one, like the Wii adapter's tilt, which needs the
+  // profiles the controllers step makes, so it stays with the ending from there on
+  const firstFinish = buildSteps.findIndex(isFinishStep);
+  const split = firstFinish === -1 ? buildSteps.length : firstFinish;
   return {
     ...guide,
     steps: [
       ...guide.steps.slice(0, at + 1),
-      ...buildSteps.filter((step) => !isFinishStep(step)),
+      ...buildSteps.slice(0, split),
       ...extraSteps,
-      ...buildSteps.filter(isFinishStep),
+      ...buildSteps.slice(split),
       ...guide.steps.slice(at + 1),
     ],
   };

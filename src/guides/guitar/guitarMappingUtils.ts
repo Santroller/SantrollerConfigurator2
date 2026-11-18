@@ -694,7 +694,8 @@ function removeNeckMappings(ids: number[], remove: (input: proto.IInput) => bool
   return true;
 }
 
-const GUITAR_I2C_KINDS = ['gh5Neck', 'mpr121', 'accelerometer'] as const;
+// A Wii adapter's extension socket counts too, as an accelerometer added for tilt has to join its bus
+const GUITAR_I2C_KINDS = ['gh5Neck', 'mpr121', 'accelerometer', 'wii'] as const;
 
 /**
  * The I2C bus the guitar's add-ons share: the pins of one that's already added, which can be changed
@@ -717,7 +718,8 @@ export function useGuitarI2cPins() {
   const accel = useConfigStore(
     (state) => findDeviceStatus(state, 'accelerometer')?.device.accelerometer?.i2c
   );
-  const i2c = gh5 ?? mpr121 ?? accel;
+  const wii = useConfigStore((state) => findDeviceStatus(state, 'wii')?.device.wii?.i2c);
+  const i2c = gh5 ?? mpr121 ?? accel ?? wii;
   const sda = i2c?.sda ?? PICO_I2C1.sda;
   const scl = i2c?.scl ?? PICO_I2C1.scl;
   return { sda, scl, sdaPin: gpPin(sda), sclPin: gpPin(scl) };

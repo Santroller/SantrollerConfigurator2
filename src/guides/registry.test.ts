@@ -60,9 +60,17 @@ describe('guide text', () => {
 
   it('build guides end with the shared steps that fit them', () => {
     const ending = (id: string) => GUIDE_REGISTRY[id].steps.slice(-3).map((step) => step.id);
-    expect(ending('wii-adapter')).toEqual(['hostDevices', 'games', 'test']);
+    expect(ending('wii-adapter')).toEqual(['wii-tilt', 'games', 'test']);
     expect(ending('direct-pico-guitar').slice(-2)).toEqual(['games', 'test']);
     expect(ending('dj-turntable').slice(-2)).toEqual(['tt-wiring', 'test']);
+  });
+
+  it('keeps a build step placed after the controllers step there inside the setup guide', () => {
+    const guide = withBuildGuide(getLocalizedGuide(getSetupGuide('fresh', 'wii-adapter')), {
+      guide: getLocalizedGuide(GUIDE_REGISTRY['wii-adapter']),
+    });
+    const ids = guide.steps.map((step) => step.id);
+    expect(ids.indexOf('wii-adapter__hostDevices')).toBe(ids.indexOf('wii-adapter__wii-tilt') - 1);
   });
 
   it('runs a build guide whole inside the setup guide, testing once', () => {

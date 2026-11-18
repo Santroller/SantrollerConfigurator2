@@ -30,7 +30,14 @@ import {
 
 const TILT_PIN = 11;
 
-export function TiltStep(props: GuideStepProps) {
+export interface TiltStepProps extends GuideStepProps {
+  // Shown under the intro, for a build that needs a word on where the sensor goes
+  note?: React.ReactNode;
+  // What else is on the accelerometer's SDA / SCL pins, in place of the GH5 neck / MPR121 note
+  i2cShared?: string;
+}
+
+export function TiltStep({ note, i2cShared, ...props }: TiltStepProps) {
   const { t } = useTranslation();
   const tiltPin = useTargetPin(GUITAR_TARGETS.TILT, TILT_PIN);
   const pins = { pin: gpPin(tiltPin), gp: `GP${tiltPin}` };
@@ -47,6 +54,7 @@ export function TiltStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <Text size="sm">{t('guides.direct-pico-guitar.steps.tilt.intro')}</Text>
+      {note}
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List>
@@ -84,7 +92,7 @@ export function TiltStep(props: GuideStepProps) {
               <List.Item>{t('guides.direct-pico-guitar.steps.tilt.i2cScl', i2cPins)}</List.Item>
             </List>
             <Text size="xs" c="dimmed">
-              {t('guides.direct-pico-guitar.steps.tilt.i2cShared')}
+              {i2cShared ?? t('guides.direct-pico-guitar.steps.tilt.i2cShared')}
             </Text>
           </Stack>
         </Tabs.Panel>
