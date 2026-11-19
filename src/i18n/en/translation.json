@@ -4560,7 +4560,7 @@
           "signalDPlus": "D+ (Data Plus)",
           "signalDMinus": "D- (Data Minus)",
           "waveshareUsbATitle": "Using a Waveshare RP2350-USB-A?",
-          "waveshareUsbABody": "This board already has a USB-A host port, but out of the box it has a resistor (R13) that makes the port also work as a USB device. While R13 is fitted, unplugging and replugging devices isn't detected properly, and low-speed devices like many keyboards and mice won't respond at all. Waveshare's own advice is to remove R13, a tiny resistor next to the GP7 pad, left of the RP2350 chip. Once it's removed, the USB-A port only works as a host, which is all Santroller needs.",
+          "waveshareUsbABody": "This board already has a USB-A host port, but out of the box it has a resistor (R13) that makes the port also work as a USB device. While R13 is fitted, unplugging and replugging devices isn't detected properly, and many devices won't work at all, including some guitars as well as low-speed devices like many keyboards and mice. Waveshare's own advice is to remove R13, a tiny resistor next to the GP7 pad, left of the RP2350 chip. You don't need a soldering iron: snipping it with flush wire cutters or cutting through it with a craft knife both work fine. Be careful not to damage the parts and traces next to it. Once it's removed, the USB-A port only works as a host, which is all Santroller needs.",
           "waveshareUsbACaption": "R13 is circled in red. Photo: Waveshare"
         },
         "usb-wiring": {
