@@ -2673,7 +2673,11 @@ const configStore = create<ConfigState & Actions>()(
             const subDevices = Object.values(state.deviceStatus)
               .filter((sub) => sub.parentId === x.id)
               .map((sub) => sub.device);
-            dev.peripheral.devices = subDevices as proto.Device[];
+            // Device.create is a shallow copy, so peripheral is still the store's frozen object
+            dev.peripheral = proto.PeripheralDevice.create({
+              ...dev.peripheral,
+              devices: subDevices as proto.Device[],
+            });
           }
           return dev;
         });
