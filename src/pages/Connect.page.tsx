@@ -44,6 +44,13 @@ import { requestUpdateCheck, useUpdateCheck } from '@/desktop/updateCheckStore';
 
 const isDesktop = 'isTauri' in window;
 const isLinuxWeb = !isDesktop && desktopOs() === 'linux';
+// Every iOS browser is WebKit underneath, so none of them have WebHID or Web Bluetooth. Bluefy
+// adds Web Bluetooth, which is enough to configure controllers over BLE. iPads ask for the desktop
+// site by default, so they look like a Mac with a touch screen.
+const isIos =
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const BLUEFY_URL = 'https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055';
 
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
@@ -234,7 +241,23 @@ export function ConnectPage() {
           <Space h="xs" />
           <NixosUdevSnippet />
         </Modal>
-        {!navigator.hid && !bluetoothSupported && (
+        {!navigator.hid && !bluetoothSupported && isIos && (
+          <Alert
+            variant="light"
+            color="red"
+            title={t('connect.browserNotSupported')}
+            icon={<IconExclamationCircle />}
+          >
+            <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
+              {t('connect.iosNotSupported')}
+            </Text>
+            <Space h="md" />
+            <Button component="a" href={BLUEFY_URL} target="_blank" rel="noreferrer">
+              {t('connect.getBluefy')}
+            </Button>
+          </Alert>
+        )}
+        {!navigator.hid && !bluetoothSupported && !isIos && (
           <Alert
             variant="light"
             color="red"

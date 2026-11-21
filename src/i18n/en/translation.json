@@ -2997,6 +2997,8 @@
     },
     "webHidNotSupported": "This browser does not support WebHID, so Santroller will not work.\nYou need to use a Chromium-based browser (Firefox-based browsers don't support WebHID), or the desktop app.",
     "browserNotSupported": "Browser Unsupported",
+    "iosNotSupported": "Browsers on iOS and iPadOS support neither WebHID nor Web Bluetooth, so Santroller will not work here.\nInstall Bluefy, a free browser with Web Bluetooth support, and open this page in it to configure your controller over Bluetooth. Over Bluetooth, only controllers with a Bluetooth-capable board (such as a Pico W) can be configured.",
+    "getBluefy": "Get Bluefy on the App Store",
     "disconnect": "Disconnect from Santroller powered device",
     "configuratorVersion": "Configurator version: {{version}}",
     "checkForUpdates": "Check for updates",
