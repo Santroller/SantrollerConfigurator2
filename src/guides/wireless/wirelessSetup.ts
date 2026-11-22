@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Bus, findBusConflicts } from '@/components/Devices/busConflicts';
 import { getDevicePins } from '@/components/Devices/deviceRegistry';
 import { migrateSlotIds } from '@/components/Inputs/slotRemap';
 import { retargetRule } from '@/components/SettingsContext/assignmentTargets';
@@ -176,22 +177,24 @@ export function fuelGaugeConflicts(
 ): string[] {
   const conflicts = new Set<string>();
   const gaugePins = [GAUGE_I2C.sda, GAUGE_I2C.scl];
+  const gaugeBus: Bus = {
+    type: 'i2c',
+    block: GAUGE_I2C.block,
+    pins: { sda: GAUGE_I2C.sda, scl: GAUGE_I2C.scl },
+    clock: 400000,
+  };
+  for (const conflict of findBusConflicts(
+    deviceStatus,
+    gaugeBus,
+    null,
+    undefined,
+    (_, status) => !!status.device.max1704x
+  )) {
+    conflicts.add(`I2C0 (GP${conflict.bus.pins.sda} / GP${conflict.bus.pins.scl})`);
+  }
   for (const status of Object.values(deviceStatus)) {
     if (status.device.max1704x) {
       continue;
-    }
-    const kind = Object.keys(status.device).find(
-      (key) =>
-        key !== 'deviceid' && key !== 'gate' && status.device[key as keyof proto.IDevice] != null
-    );
-    const value = kind ? (status.device[kind as keyof proto.IDevice] as { i2c?: unknown }) : null;
-    const i2c = value?.i2c as proto.II2CDevice | undefined;
-    if (
-      i2c &&
-      i2c.block === GAUGE_I2C.block &&
-      (i2c.sda !== GAUGE_I2C.sda || i2c.scl !== GAUGE_I2C.scl)
-    ) {
-      conflicts.add(`I2C0 (GP${i2c.sda} / GP${i2c.scl})`);
     }
     for (const pin of getDevicePins(status.device)) {
       if (gaugePins.includes(pin)) {

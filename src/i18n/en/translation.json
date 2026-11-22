@@ -1088,6 +1088,11 @@
     "position_based": "Position Based",
     "description": "Face buttons are in different positions on different controllers. For example, if you were to use a Wii Classic controller on an Xbox 360, label based mode will map A to A and B to B, while position based mode would swap A with B and X with Y."
   },
+  "bus": {
+    "conflict": "Another device uses this channel on different pins",
+    "conflict_detail": "{{bus}} is also used by {{devices}} on different pins. A channel can only be on one set of pins, so move one of them to the same pins or another channel. If they're on different connectors, use \"Enable only when pin matches\" on both, with the same pin set to opposite levels or voltage ranges that don't overlap, so only one loads at a time.",
+    "i2c_shared_clock": "This bus runs at {{clock}} kHz, the slowest speed of the devices on it ({{devices}})."
+  },
   "i2c": {
     "sda": {
       "label": "SDA Pin",

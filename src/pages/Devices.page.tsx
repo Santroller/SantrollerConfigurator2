@@ -52,6 +52,7 @@ import '@/i18n/config';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
+import { BusType, deviceBusConflicts, i2cBusClock } from '@/components/Devices/busConflicts';
 import {
   DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
   DEFAULT_WII_POLL_INTERVAL_MS,
@@ -102,6 +103,58 @@ import {
   wirelessChipPins,
 } from '@/devices/pico/pins';
 
+// Other devices that could be loaded with this one, using the same hardware block on other pins
+function useBusConflicts(type: BusType) {
+  const id = useContext(DeviceContext);
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  return useMemo(
+    () => (id ? deviceBusConflicts(deviceStatus, id, type) : []),
+    [deviceStatus, id, type]
+  );
+}
+
+function BusConflictNotice({
+  type,
+  block,
+  conflicts,
+}: {
+  type: BusType;
+  block: number;
+  conflicts: ReturnType<typeof deviceBusConflicts>;
+}) {
+  const { t } = useTranslation();
+  if (conflicts.length === 0) {
+    return null;
+  }
+  return (
+    <Text size="xs" c="red" mt={4} mb="xs">
+      {t('bus.conflict_detail', {
+        bus: `${type.toUpperCase()}${block}`,
+        devices: [...new Set(conflicts.map((conflict) => conflict.title))].join(', '),
+      })}
+    </Text>
+  );
+}
+
+// The bus runs at the slowest clock of the devices on it, which may be slower than this one asks for
+function I2CClockNotice() {
+  const { t } = useTranslation();
+  const id = useContext(DeviceContext);
+  const deviceStatus = useConfigStore((state) => state.deviceStatus);
+  const clock = useMemo(() => (id ? i2cBusClock(deviceStatus, id) : null), [deviceStatus, id]);
+  if (!clock || clock.slower.length === 0) {
+    return null;
+  }
+  return (
+    <Text size="xs" c="dimmed" mt={4} mb="xs">
+      {t('bus.i2c_shared_clock', {
+        clock: clock.clock / 1000,
+        devices: [...new Set(clock.slower)].join(', '),
+      })}
+    </Text>
+  );
+}
+
 function I2CDevice({
   device,
   dispatch,
@@ -109,7 +162,11 @@ function I2CDevice({
   device: proto.II2CDevice;
   dispatch: (device: proto.II2CDevice) => void;
 }) {
-  const error = (I2CGroups[device.sda] !== I2CGroups[device.scl] && 'i2c.incorrect_group') || '';
+  const conflicts = useBusConflicts('i2c');
+  const error =
+    (I2CGroups[device.sda] !== I2CGroups[device.scl] && 'i2c.incorrect_group') ||
+    (conflicts.length > 0 && 'bus.conflict') ||
+    '';
   return (
     <>
       <PinBox
@@ -126,6 +183,8 @@ function I2CDevice({
         valid={SclPins}
         dispatch={(pin) => dispatch({ ...device, scl: pin, block: parseInt(I2CGroups[pin], 10) })}
       />
+      <BusConflictNotice type="i2c" block={device.block} conflicts={conflicts} />
+      <I2CClockNotice />
     </>
   );
 }
@@ -149,6 +208,7 @@ function SPIDevice({
   noMiso?: boolean;
   noSck?: boolean;
 }) {
+  const conflicts = useBusConflicts('spi');
   const error =
     (new Set(
       [
@@ -158,6 +218,7 @@ function SPIDevice({
       ].filter((x) => x)
     ).size !== 1 &&
       'spi.incorrect_group') ||
+    (conflicts.length > 0 && 'bus.conflict') ||
     '';
 
   return (
@@ -193,6 +254,7 @@ function SPIDevice({
           dispatch={(pin) => dispatch({ ...device, block: parseInt(SPIGroups[pin], 10), sck: pin })}
         />
       )}
+      <BusConflictNotice type="spi" block={device.block} conflicts={conflicts} />
     </>
   );
 }
@@ -204,7 +266,11 @@ function UARTDevice({
   device: proto.IUARTDevice;
   dispatch: (device: proto.IUARTDevice) => void;
 }) {
-  const error = (UARTGroups[device.tx] !== UARTGroups[device.rx] && 'uart.incorrect_group') || '';
+  const conflicts = useBusConflicts('uart');
+  const error =
+    (UARTGroups[device.tx] !== UARTGroups[device.rx] && 'uart.incorrect_group') ||
+    (conflicts.length > 0 && 'bus.conflict') ||
+    '';
 
   return (
     <>
@@ -222,6 +288,7 @@ function UARTDevice({
         valid={RxPins}
         dispatch={(pin) => dispatch({ ...device, rx: pin, block: parseInt(UARTGroups[pin], 10) })}
       />
+      <BusConflictNotice type="uart" block={device.block} conflicts={conflicts} />
     </>
   );
 }
