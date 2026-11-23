@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import { proto } from '@/components/SettingsContext/config';
+import { subtypeFromStored, subtypeOldValue } from '@/components/SettingsContext/subtypeNumbering';
 import { MIDI_PERCUSSION_CHANNEL } from '@/devices/midi';
 
 export type InputKind = Exclude<
@@ -630,20 +631,20 @@ export function getSlotDeviceKind(item: proto.IProfileAssignmentInfo): string | 
 // firmware's SLOT_UNTYPED, so they are numbered after every subtype.
 export const SLOT_UNTYPED = 0xffff;
 
+// A slot's type. For subtypes it's the value in the old numbering, so slots keep the order (and ids) they had before
+// the renumbering, matching the firmware's slot_subtype.
 export function getSlotSubtype(item: proto.IProfileAssignmentInfo): number {
-  return (
+  const subtype =
     (item.xboxOneAuth != null ? proto.SubType.Gamepad : undefined) ??
     item.usbType ??
     item.usbDevice?.subtype ??
     item.bluetoothType ??
     item.bluetoothDevice?.subtype ??
-    item.ps2Cnt ??
-    item.snesCnt ??
-    item.joybusCnt ??
-    item.wiiExt ??
-    item.midiProGuitar ??
-    SLOT_UNTYPED
-  );
+    item.midiProGuitar;
+  if (subtype != null) {
+    return subtypeOldValue(subtypeFromStored(subtype));
+  }
+  return item.ps2Cnt ?? item.snesCnt ?? item.joybusCnt ?? item.wiiExt ?? SLOT_UNTYPED;
 }
 
 // The newest deviceSlotIdVersion, matching the firmware's SLOT_ID_VERSION_LATEST

@@ -52,6 +52,7 @@ import { CRC32 } from '@/CRC32.js';
 import { splitExtraTargets } from './assignmentTargets';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
 import { proto } from './config.js';
+import { swapFaceButtonInputs as fixInput } from './faceButtonSwap';
 import { needsUf2BeforeOta, parseVersionReport } from './firmwareVersion';
 import { KeepaliveTimer, startKeepaliveTimer, stopKeepaliveTimer } from './keepaliveTimer';
 import { migrateLedPatterns } from './ledPatternEffect';
@@ -60,8 +61,8 @@ import { fetchBundledRadioFirmware, radioFirmwareVersionOf } from './radioFirmwa
 import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './savedConfigFields';
 import { resizeSellerFavicon, resizeSellerLogo } from './sellerLogo';
 import { remapMappingsForSubType } from './subTypeMappings';
+import { migrateAuxSubtypes, migrateConfigSubtypes, subtypeFromStored } from './subtypeNumbering';
 import { centerTilt } from './tiltCenter';
-import { swapFaceButtonInputs as fixInput } from './faceButtonSwap';
 import { fixAbsoluteTriggerDeadzones, migrateMappingTriggers } from './triggerDeadzone';
 import { configFlashAddress, parseFirmwareLayout, Uf2BuildError } from './uf2Layout';
 
@@ -72,13 +73,14 @@ export function usbDeviceKey(event: proto.IUsbDeviceHotplugEvent): number {
   return event.sourceId ?? event.port! * 256 + event.interface!;
 }
 
-// Older firmware encodes SubType signed from a byte, so Unknown (255) arrives as -1
+// Older firmware encodes SubType signed from a byte, so Unknown (255) arrives as -1, and firmware from before the
+// renumbering sends the old values
 export function normalizeSubType(subtype: number): proto.SubType;
 export function normalizeSubType(
   subtype: number | null | undefined
 ): proto.SubType | null | undefined;
 export function normalizeSubType(subtype: number | null | undefined) {
-  return subtype == null ? subtype : ((subtype & 0xff) as proto.SubType);
+  return subtype == null ? subtype : subtypeFromStored(subtype & 0xff);
 }
 
 export * from './config.js';
@@ -804,6 +806,9 @@ function migrateVersion2SlotIds(config: proto.IConfig): boolean {
 }
 
 function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState {
+  // first, as the fix-ups below go by subtype
+  const migratedSubtypes = migrateConfigSubtypes(config);
+  migrateAuxSubtypes(aux);
   const splitTargets = splitExtraTargets(config);
   const migratedSlotIds = migrateVersion2SlotIds(config);
   // The firmware doesn't care where it is, so this isn't a change that needs saving
@@ -909,6 +914,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     updatePercentage: 0,
     // so the repaired config can be saved
     configModified:
+      migratedSubtypes ||
       splitTargets ||
       centeredTilt ||
       fixedDeadzones ||
