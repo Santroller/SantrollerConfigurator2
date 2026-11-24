@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconAlertCircle,
+  IconAlertTriangle,
   IconArrowBackUp,
   IconBook,
   IconBuildingStore,
@@ -49,9 +50,11 @@ import {
   Modal,
   NavLink,
   Space,
+  Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { findProfileShadow } from '../Inputs/profileShadowing';
 import { proto } from '../SettingsContext/config';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
 import classes from './Layout.module.css';
@@ -75,6 +78,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const currentProfileInstance = useConfigStore((state) => state.currentProfileInstance);
   const activeProfiles = useConfigStore((state) => state.activeProfiles);
   const profiles = useConfigStore((state) => state.config.profiles!);
+  // Profiles that one further up is always picked ahead of
+  const shadowedBy = useMemo(
+    () => profiles.map((_, i) => findProfileShadow(profiles, i)),
+    [profiles]
+  );
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
   const addStandbyProfile = useConfigStore((state) => state.addStandbyProfile);
@@ -644,6 +652,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         >
                           <span>{x.opts.name}</span>
                           <Group gap={4} wrap="nowrap">
+                            {shadowedBy[i] && (
+                              <Tooltip
+                                multiline
+                                w={240}
+                                label={t('main.profile_never_matches', {
+                                  name: profiles[shadowedBy[i]!.profileIdx]?.opts.name ?? '',
+                                })}
+                              >
+                                <IconAlertTriangle
+                                  size={14}
+                                  color="var(--mantine-color-orange-6)"
+                                  aria-label={t('main.profile_never_matches', {
+                                    name: profiles[shadowedBy[i]!.profileIdx]?.opts.name ?? '',
+                                  })}
+                                />
+                              </Tooltip>
+                            )}
                             {instanceCount === 1 && (
                               <Badge>{t('main.profile_active', 'Active')}</Badge>
                             )}

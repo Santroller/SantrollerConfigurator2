@@ -173,6 +173,7 @@ import {
 } from '@/components/Inputs/ledEffects';
 import { ledOverlaps, pwmChannelShares } from '@/components/Inputs/ledOverlap';
 import { ledModeDetail, ledOutputSummary } from '@/components/Inputs/ledSummary';
+import { findRuleShadow, RuleShadow } from '@/components/Inputs/profileShadowing';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
 import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
 import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
@@ -7345,6 +7346,67 @@ function ActivationTrigger({
     </Accordion>
   );
 }
+const SHADOW_OUTPUT_LABELS: Partial<Record<keyof proto.IProfileAssignmentInfo, string>> = {
+  bluetooth: 'assignments.emulation_mode.bluetooth',
+  ps2Emulation: 'assignments.emulation_mode.ps2',
+  wiiEmulation: 'assignments.emulation_mode.wii',
+  joybusEmulation: 'assignments.emulation_mode.joybus',
+  snesEmulation: 'assignments.emulation_mode.snes',
+};
+
+// Shown on a rule that a rule further up is always used ahead of
+function RuleShadowAlert({
+  shadow,
+  profileIdx,
+  output,
+}: {
+  shadow: RuleShadow;
+  profileIdx: number;
+  // The rule's own target, naming the output it lost out on
+  output?: proto.IProfileAssignmentInfo;
+}) {
+  const { t } = useTranslation();
+  const name = useConfigStore(
+    (state) => state.config.profiles?.[shadow.profileIdx]?.opts?.name ?? ''
+  );
+  const moveProfile = useConfigStore((state) => state.moveProfile);
+  const num = shadow.listIdx + 1;
+  const outputKey = output
+    ? (Object.keys(SHADOW_OUTPUT_LABELS) as (keyof proto.IProfileAssignmentInfo)[]).find(
+        (key) => output[key] != null
+      )
+    : undefined;
+  const desc = shadow.reason
+    ? t(`assignments.shadowed.${shadow.reason}`, {
+        num,
+        name,
+        output: outputKey ? t(SHADOW_OUTPUT_LABELS[outputKey]!) : '',
+      })
+    : t('assignments.shadowed.sameProfile', { num });
+  return (
+    <Alert
+      variant="light"
+      color="orange"
+      title={t('assignments.shadowed.title')}
+      icon={<IconExclamationCircle size={16} />}
+      mt="xs"
+    >
+      <Text size="xs">{desc}</Text>
+      {shadow.profileIdx !== profileIdx && (
+        <Button
+          size="xs"
+          variant="light"
+          color="orange"
+          mt="xs"
+          onClick={() => moveProfile(profileIdx, shadow.profileIdx)}
+        >
+          {t('assignments.shadowed.move', { name })}
+        </Button>
+      )}
+    </Alert>
+  );
+}
+
 // Shown on a rule forcing a mode that the tool can't connect in, with no held input to skip it
 function ForcedModeLockoutAlert() {
   const { t } = useTranslation();
@@ -8752,6 +8814,11 @@ function SantrollerAssignmentList({
     lists[listIdx] = { ...lists[listIdx], assignments };
     return getProfileSlotIds({ ...profileForSlots, assignments: lists })[listIdx];
   }, [profileForSlots, assignments, listIdx]);
+  const allProfiles = useConfigStore((state) => state.config.profiles);
+  const shadow = useMemo(
+    () => (placeholder ? undefined : findRuleShadow(allProfiles ?? [], profileIdx, listIdx)),
+    [allProfiles, profileIdx, listIdx, placeholder]
+  );
 
   const triggerIdx = assignments.findIndex((x) => OtherAssignmentTypes.some((y) => x[y] != null));
   const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
@@ -9163,6 +9230,9 @@ function SantrollerAssignmentList({
               ))}
             </Group>
           </Card>
+          {shadow && (
+            <RuleShadowAlert shadow={shadow} profileIdx={profileIdx} output={emulationItem} />
+          )}
 
           {!showEditor && (
             <Button

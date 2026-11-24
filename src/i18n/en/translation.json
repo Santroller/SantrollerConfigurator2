@@ -384,7 +384,8 @@
     "delete_profile": "Delete Profile",
     "move_profile_up": "Move up (profiles are checked in order)",
     "move_profile_down": "Move down (profiles are checked in order)",
-    "profile_active": "Active"
+    "profile_active": "Active",
+    "profile_never_matches": "This profile will never be used, as \"{{name}}\" above it is always picked first. Move it above \"{{name}}\" to use it."
   },
   "held": {
     "time": "Time (ms)"
@@ -2269,6 +2270,14 @@
       "title": "You won't be able to configure this device",
       "confirm": "Use this mode anyway",
       "desc": "The configurator can't connect to the device in this mode, so once this rule applies you won't be able to change the configuration. Add a hold button trigger so the rule only applies while that button is held, then plug in without holding it whenever you need to configure the device."
+    },
+    "shadowed": {
+      "title": "This rule will never be used",
+      "sameProfile": "Rule {{num}} above it is used whenever this one would match, as a profile only uses the first of its rules that matches. Drag this rule above rule {{num}}, or give rule {{num}} something more to wait for.",
+      "localInputs": "Profiles are tried from the top, and rule {{num}} of \"{{name}}\" above takes this device's own inputs whenever this rule would match, so there are none left for it.",
+      "devices": "Profiles are tried from the top, and rule {{num}} of \"{{name}}\" above takes the connected controllers this rule needs whenever it would match.",
+      "output": "Profiles are tried from the top, and rule {{num}} of \"{{name}}\" above takes the {{output}} output whenever this rule would match. Only one profile can use it at a time.",
+      "move": "Move this profile above \"{{name}}\""
     },
     "localInputs": "Claim directly wired inputs",
     "localInputsDesc": "Claims the buttons and sensors wired straight to this board's pins. Controllers in this profile's rules, like a PS1/2 controller or Wii extension, are claimed already, so this is only needed for inputs that aren't on one. Only one profile can claim them at a time, and the highest one in the sidebar wins.",
