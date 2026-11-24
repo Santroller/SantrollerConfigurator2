@@ -38,6 +38,7 @@ import {
   IconTemplate,
   IconTrash,
   IconUsb,
+  IconWand,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate } from 'react-router-dom';
@@ -173,7 +174,12 @@ import {
 } from '@/components/Inputs/ledEffects';
 import { ledOverlaps, pwmChannelShares } from '@/components/Inputs/ledOverlap';
 import { ledModeDetail, ledOutputSummary } from '@/components/Inputs/ledSummary';
-import { findRuleShadow, RuleShadow } from '@/components/Inputs/profileShadowing';
+import {
+  findRuleShadow,
+  RuleShadow,
+  unshadowedPosition,
+  unshadowedRulePosition,
+} from '@/components/Inputs/profileShadowing';
 import { getInputLocalDeviceId, migrateSlotIds } from '@/components/Inputs/slotRemap';
 import { XboxOneLegacyAdapterSetting } from '@/components/Inputs/XboxOneLegacyAdapterSetting';
 import { XInputOnWindowsDescription } from '@/components/Inputs/XInputOnWindowsDescription';
@@ -7358,18 +7364,33 @@ const SHADOW_OUTPUT_LABELS: Partial<Record<keyof proto.IProfileAssignmentInfo, s
 function RuleShadowAlert({
   shadow,
   profileIdx,
+  listIdx,
   output,
+  moveRule,
 }: {
   shadow: RuleShadow;
   profileIdx: number;
+  listIdx: number;
   // The rule's own target, naming the output it lost out on
   output?: proto.IProfileAssignmentInfo;
+  // Moves this rule within its profile, left out where rules can't be reordered
+  moveRule?: (to: number) => void;
 }) {
   const { t } = useTranslation();
   const name = useConfigStore(
     (state) => state.config.profiles?.[shadow.profileIdx]?.opts?.name ?? ''
   );
   const moveProfile = useConfigStore((state) => state.moveProfile);
+  const sameProfile = shadow.profileIdx === profileIdx;
+  // Moves it up just far enough that nothing above blocks it
+  const fix = () => {
+    const profiles = useConfigStore.getState().config.profiles ?? [];
+    if (sameProfile) {
+      moveRule?.(unshadowedRulePosition(profiles, profileIdx, listIdx));
+    } else {
+      moveProfile(profileIdx, unshadowedPosition(profiles, profileIdx, listIdx));
+    }
+  };
   const num = shadow.listIdx + 1;
   const outputKey = output
     ? (Object.keys(SHADOW_OUTPUT_LABELS) as (keyof proto.IProfileAssignmentInfo)[]).find(
@@ -7392,15 +7413,9 @@ function RuleShadowAlert({
       mt="xs"
     >
       <Text size="xs">{desc}</Text>
-      {shadow.profileIdx !== profileIdx && (
-        <Button
-          size="xs"
-          variant="light"
-          color="orange"
-          mt="xs"
-          onClick={() => moveProfile(profileIdx, shadow.profileIdx)}
-        >
-          {t('assignments.shadowed.move', { name })}
+      {(!sameProfile || moveRule) && (
+        <Button size="xs" color="orange" mt="xs" leftSection={<IconWand size={14} />} onClick={fix}>
+          {t('assignments.shadowed.fix')}
         </Button>
       )}
     </Alert>
@@ -8752,6 +8767,7 @@ function SantrollerAssignmentList({
   selected = false,
   onSelect,
   placeholder = false,
+  moveRule,
 }: {
   mapping: proto.IProfileAssignment;
   profileIdx: number;
@@ -8769,6 +8785,8 @@ function SantrollerAssignmentList({
   onSelect?: (selected: boolean) => void;
   // Faded, where a dragged group will land
   placeholder?: boolean;
+  // Moves this rule to another spot in the profile
+  moveRule?: (to: number) => void;
 }) {
   const [opened, { open, close }] = useDisclosure(false);
   const [triggerOpened, { open: openTrigger, close: closeTrigger }] = useDisclosure(false);
@@ -9231,7 +9249,13 @@ function SantrollerAssignmentList({
             </Group>
           </Card>
           {shadow && (
-            <RuleShadowAlert shadow={shadow} profileIdx={profileIdx} output={emulationItem} />
+            <RuleShadowAlert
+              shadow={shadow}
+              profileIdx={profileIdx}
+              listIdx={listIdx}
+              output={emulationItem}
+              moveRule={moveRule}
+            />
           )}
 
           {!showEditor && (
@@ -11861,6 +11885,12 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               mapping={mapping}
                               profileIdx={profileIdx}
                               listIdx={mappingIdx}
+                              moveRule={(to) =>
+                                reorderList(
+                                  'assignments',
+                                  dragOrder(profile.assignments?.length ?? 0, [], mappingIdx, to)
+                                )
+                              }
                               expanded={ruleCards.isOpen(mappingIdx)}
                               onToggleExpanded={() => ruleCards.toggle(mappingIdx)}
                               mode={profile.opts.faceButtonMappingMode}

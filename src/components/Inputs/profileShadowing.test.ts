@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
-import { findProfileShadow, findRuleShadow } from './profileShadowing';
+import {
+  findProfileShadow,
+  findRuleShadow,
+  unshadowedPosition,
+  unshadowedRulePosition,
+} from './profileShadowing';
 
 const usb = (extra: Partial<proto.IUsbDeviceAssignment> = {}): proto.IProfileAssignmentInfo => ({
   consoleType: { consoleType: null, forcedType: null, xinputOnWindows: true, ...extra },
@@ -103,5 +108,29 @@ describe('profile shadowing', () => {
       opts: { standbyLighting: true },
     } as proto.IProfile;
     expect(findRuleShadow([standby, profile('B', [usb(), local])], 1, 0)).toBeUndefined();
+  });
+
+  it('moves a profile up only past what blocks it', () => {
+    const profiles = [
+      profile('Drums', [usb(), guitar]),
+      profile('Guitar', [usb(), local]),
+      profile('Other', [usb(), held(5)]),
+      profile('Festival', [usb(), local, held(3)]),
+    ];
+    expect(unshadowedPosition(profiles, 3, 0)).toBe(1);
+  });
+
+  it('moves past every profile that blocks it', () => {
+    const profiles = [
+      profile('Guitar', [usb(), local]),
+      profile('Guitar 2', [usb(), local, held(1)]),
+      profile('Festival', [usb(), local, held(1), held(3)]),
+    ];
+    expect(unshadowedPosition(profiles, 2, 0)).toBe(0);
+  });
+
+  it('moves a rule up only past the rules that block it', () => {
+    const profiles = [profile('A', [usb(), held(9)], [usb(), local], [usb(), local, held(2)])];
+    expect(unshadowedRulePosition(profiles, 0, 2)).toBe(1);
   });
 });

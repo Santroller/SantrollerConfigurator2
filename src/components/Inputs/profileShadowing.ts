@@ -131,6 +131,46 @@ export function findRuleShadow(
   return undefined;
 }
 
+/**
+ * Where to move a profile so a rule of it that another profile blocks gets used: the lowest spot with
+ * nothing above it that blocks it, which keeps the order of everything else as it was. The top
+ * always works, as a profile can't block itself out completely.
+ */
+export function unshadowedPosition(
+  profiles: proto.IProfile[],
+  profileIdx: number,
+  listIdx: number
+): number {
+  for (let to = profileIdx - 1; to > 0; to--) {
+    const moved = [...profiles];
+    moved.splice(to, 0, ...moved.splice(profileIdx, 1));
+    const shadow = findRuleShadow(moved, to, listIdx);
+    if (!shadow || shadow.profileIdx === to) {
+      return to;
+    }
+  }
+  return 0;
+}
+
+/** The same for a rule blocked by one further up in its own profile: where to move the rule to */
+export function unshadowedRulePosition(
+  profiles: proto.IProfile[],
+  profileIdx: number,
+  listIdx: number
+): number {
+  const profile = profiles[profileIdx];
+  for (let to = listIdx - 1; to > 0; to--) {
+    const assignments = [...(profile.assignments ?? [])];
+    assignments.splice(to, 0, ...assignments.splice(listIdx, 1));
+    const moved = [...profiles];
+    moved[profileIdx] = { ...profile, assignments };
+    if (findRuleShadow(moved, profileIdx, to)?.profileIdx !== profileIdx) {
+      return to;
+    }
+  }
+  return 0;
+}
+
 /** Whether every rule of the profile is shadowed, returning the first that is used instead */
 export function findProfileShadow(
   profiles: proto.IProfile[],
