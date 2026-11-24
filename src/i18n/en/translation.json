@@ -76,6 +76,7 @@
     "bluetooth_device_name": "Name",
     "bluetooth_device_mac": "MAC Address",
     "bluetooth_device_type": "Controller Type",
+    "bluetooth_wiimote_host": "Host (Wiimote emulation)",
     "usb_device_name": "Name",
     "usb_device_type": "Controller Type",
     "usb_bluetooth_adapter": "Bluetooth Adapter",

@@ -2231,6 +2231,10 @@ export function CycleDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+
+// Fixed pairing ID the firmware keeps the Wiimote emulator's host under (0xFFFFFFFE as int32)
+const WIIMOTE_HOST_PAIRING_ID = -2;
+
 export function ToggleDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -3445,8 +3449,11 @@ function BluetoothDevice({ id }: { id: string }) {
               const macStr = Array.from(state.macAddress || [])
                 .map((b) => b.toString(16).padStart(2, '0').toUpperCase())
                 .join(':');
-              const ctrlType =
-                state.controllerType != null
+              // The console (or PC) the emulated Wiimote bonded with, not a controller
+              const isWiimoteHost = state.id === WIIMOTE_HOST_PAIRING_ID;
+              const ctrlType = isWiimoteHost
+                ? t('devices.bluetooth_wiimote_host')
+                : state.controllerType != null
                   ? t(
                       `BtControllerType.${proto.BtControllerType[state.controllerType]}`,
                       proto.BtControllerType[state.controllerType]
