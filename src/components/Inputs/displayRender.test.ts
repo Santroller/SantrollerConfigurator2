@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   displaySize,
+  elementFrame,
+  frameAt,
+  frameCount,
   imageAspect,
   MonoFrame,
   packBitmap,
@@ -281,5 +284,43 @@ describe('resizing images', () => {
     expect(proportionalSize('height', 50, 2, 128, 64)).toEqual({ width: 100, height: 50 });
     // Too wide for the display at that height, so both shrink to fit
     expect(proportionalSize('height', 64, 4, 128, 64)).toEqual({ width: 128, height: 32 });
+  });
+});
+
+describe('animation frames', () => {
+  const zzz: proto.IDisplayLedDevice = {
+    deviceId: 1,
+    type: proto.DisplayElementType.DisplayElementText,
+    x: 10,
+    y: 20,
+    text: 'Z',
+    frames: [{ text: 'ZZ' }, { text: 'ZZZ', y: 16 }],
+    frameMs: 300,
+  };
+
+  it('counts the element itself as the first frame', () => {
+    expect(frameCount(zzz)).toBe(3);
+    expect(frameCount({ ...zzz, frames: [] })).toBe(1);
+  });
+
+  it('changes only what a frame sets', () => {
+    expect(elementFrame(zzz, 0)).toBe(zzz);
+    expect(elementFrame(zzz, 1)).toMatchObject({ text: 'ZZ', x: 10, y: 20 });
+    expect(elementFrame(zzz, 2)).toMatchObject({ text: 'ZZZ', x: 10, y: 16 });
+    // Past the end is the element itself
+    expect(elementFrame(zzz, 3)).toBe(zzz);
+  });
+
+  it('keeps the image of a frame without its own', () => {
+    const image = new Uint8Array([0x80]);
+    const own = new Uint8Array([0x40]);
+    const element = { ...zzz, image, frames: [{ x: 1 }, { image: own }] };
+    expect(elementFrame(element, 1).image).toBe(image);
+    expect(elementFrame(element, 2).image).toBe(own);
+  });
+
+  it('loops through the frames, each for frameMs (500 when unset)', () => {
+    expect([0, 299, 300, 600, 899, 900].map((ms) => frameAt(zzz, ms))).toEqual([0, 0, 1, 2, 2, 0]);
+    expect(frameAt({ ...zzz, frameMs: null }, 500)).toBe(1);
   });
 });

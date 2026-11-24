@@ -32,6 +32,7 @@
     },
     "powerManagement": "Battery Power Management",
     "stp16cpc": "STP16CPC LED Driver",
+    "gpioLedGroup": "Group of GPIO LEDs",
     "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
     "worldTourDrum": "World Tour Drum Body",
@@ -207,6 +208,7 @@
     "cancel": "Cancel"
   },
   "nav": {
+    "profilesExplained": "How profiles work",
     "main": "Main",
     "setup": "Set up a new device",
     "devices": "Devices",
@@ -1118,6 +1120,15 @@
       "pin": "Interrupt Pin"
     }
   },
+  "gpioLedGroup": {
+    "description": "LEDs wired straight to the Pico's pins, grouped so one LED mapping can light several of them, eg four LEDs showing the player number, or a pattern running across them. Each LED mapping picks which of these LEDs it lights.",
+    "led": "LED {{led}}",
+    "add": "Add LED",
+    "remove": "Remove LED",
+    "analog": "Dimmable (PWM)",
+    "analog_desc": "Lets the LEDs fade and breathe, instead of being only on or off",
+    "pwm_shared": "{{pins}} share a PWM output with another pin in this group (pins 16 apart, like GP0 and GP16, do), so they always show the same brightness"
+  },
   "stp16cpc": {
     "mosi": {
       "pin": "SDI Pin (Data)"
@@ -1383,6 +1394,41 @@
         "body": "If it's about the hardware wired to the board, it's under <strong>Devices</strong>. If it's about what the controller does, it's in a <strong>profile</strong>."
       }
     }
+  },
+  "profilesExplained": {
+    "title": "How profiles work",
+    "intro": "A <strong>profile</strong> is one complete setup for your controller: its buttons, LEDs and how it connects. Each profile has <strong>rules</strong> that say when to use it, like \"plugged in over USB\" or \"Green held at startup\".",
+    "order": {
+      "title": "Order matters",
+      "body": "Profiles are checked <strong>from the top of the sidebar down</strong>. Put the more specific profile first.",
+      "example": {
+        "festival": {
+          "name": "Festival",
+          "rule": "USB, while Green is held at startup"
+        },
+        "guitar": {
+          "name": "Guitar",
+          "rule": "USB"
+        }
+      },
+      "caption": "Hold Green and you get Festival. Otherwise Festival doesn't match, so you get Guitar. Swap them and Guitar would win every time."
+    },
+    "issues": {
+      "title": "Common problems",
+      "neverUsed": {
+        "problem": "A profile is never used",
+        "fix": "A profile above it is taking the same thing first. Open it and press <strong>Fix this</strong>, or move it up with the arrows in the sidebar."
+      },
+      "holdButton": {
+        "problem": "Holding a button at startup does nothing",
+        "fix": "The profile with the button has to be <strong>above</strong> the normal one."
+      },
+      "twoControllers": {
+        "problem": "Two controllers show up at once",
+        "fix": "Two profiles both match over USB. Give one a button or a connected controller in its rule so only one matches."
+      }
+    },
+    "more": "Want the details? See <guideLink>How assignments work</guideLink> in the setup guide."
   },
   "assignmentsGuide": {
     "openProfiles": "Go to Profiles",
@@ -1826,7 +1872,20 @@
     "preview": "Preview",
     "preview_description": "Every LED on this display in this profile, as if they were all on. The outline is this one, drag it to move it, or use the arrow keys (hold Shift for 8 pixels at a time).",
     "preview_move": "Display preview, drag or use the arrow keys to move this LED",
-    "keep_proportions": "Keep proportions"
+    "keep_proportions": "Keep proportions",
+    "animation": "Animation",
+    "animation_description": "The LED as set above is the first frame. Add more frames to cycle through them while it's shown, starting from the first each time it's shown, eg Z, ZZ, ZZZ. Anything a frame leaves empty stays as it is in the first frame.",
+    "frame": "Frame {{n}}",
+    "add_frame": "Add frame",
+    "remove_frame": "Remove frame",
+    "frame_ms": "Time per frame (ms)",
+    "frame_image_own": "Shows the first frame's image",
+    "frame_image_description": "Stretched to {{width}} x {{height}}, the size of the first frame's image",
+    "frame_position_description": "Leave X and Y empty to stay where the first frame is",
+    "preview_shows": "The preview shows",
+    "preview_play": "Play",
+    "preview_frame": "Frame {{n}}",
+    "preview_frame_description": "Moving the outline moves the frame shown"
   },
   "snes": {
     "clock_pin": "Clock Pin",
@@ -2073,6 +2132,9 @@
       "off_colour": "This mapping shares an LED with {{leds}}. It shows its released colour whenever it isn't active, so {{leds}} never shows. Turn on \"Overlay\" here so the earlier mappings show through while this input is released.",
       "always": "This mapping shares an LED with {{leds}}. It updates that LED all the time, so {{leds}} never shows. When mappings share an LED, only the last one in the list is visible."
     },
+    "dmx_channel": "DMX channel",
+    "dmx_channel_desc": "The fixture's channel, from 1 to the {{count}} channels the DMX device sends",
+    "dmx_channel_error": "Pick a channel the DMX device sends, from 1 up to its channel count",
     "pwmShared": {
       "title": "Shares a PWM output",
       "body": "This pin shares its PWM output with {{leds}}, as pins 16 apart (like GP0 and GP16) do, so they always show the same brightness. Move one of them to another pin."

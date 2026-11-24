@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
-import { ledOverlaps, pwmChannelShares } from './ledOverlap';
+import { groupPwmShares, ledOverlaps, pwmChannelShares } from './ledOverlap';
 
 const input: proto.ILedMapping = { inputMapping: { input: {} } };
 const rumble: proto.ILedMapping = { rumbleMapping: { type: proto.LedRumbleType.RumbleLeft } };
@@ -71,5 +71,49 @@ describe('pwmChannelShares', () => {
 
   it('ignores the same pin, digital pins and unset pins', () => {
     expect(pwmChannelShares([pwm(2), pwm(2), gpio(18), pwm(-1)])).toEqual([[], [], [], []]);
+  });
+});
+
+describe('GPIO LED groups', () => {
+  const devices = (pins: number[], analog = false): proto.IDevice[] => [
+    { deviceid: 7, gpioLedGroup: { pins, analog } },
+  ];
+  const group = (activeLed: number[], mapping = input): proto.ILed => ({
+    device: { gpioGroup: { deviceId: 7, activeLed } },
+    mapping,
+  });
+
+  it("shares the Pico's pins with single GPIO LEDs", () => {
+    const leds = [gpio(3), group([0, 1]), gpio(4)];
+    expect(ledOverlaps(leds, devices([2, 3])).map((x) => x.hides)).toEqual([[], [0], []]);
+  });
+
+  it('overlaps other mappings of the same group only on the LEDs both pick', () => {
+    expect(ledOverlaps([group([0]), group([1])], devices([2, 3])).map((x) => x.hides)).toEqual([
+      [],
+      [],
+    ]);
+    expect(ledOverlaps([group([0, 1]), group([1])], devices([2, 3])).map((x) => x.hides)).toEqual([
+      [],
+      [0],
+    ]);
+  });
+
+  it('leaves out LEDs past the end of the group, and a missing group', () => {
+    expect(ledOverlaps([gpio(3), group([5])], devices([2, 3])).map((x) => x.hides)).toEqual([
+      [],
+      [],
+    ]);
+    expect(ledOverlaps([gpio(3), group([1])]).map((x) => x.hides)).toEqual([[], []]);
+  });
+
+  it('flags dimmable groups sharing a PWM output with other LEDs', () => {
+    const pwm: proto.ILed = { device: { gpio: { pin: 16, analog: true } }, mapping: input };
+    expect(pwmChannelShares([group([0, 1]), pwm], devices([0, 5], true))).toEqual([[1], [0]]);
+    expect(pwmChannelShares([group([0, 1]), pwm], devices([0, 5], false))).toEqual([[], []]);
+  });
+
+  it('flags pins in one group that share a PWM output', () => {
+    expect(groupPwmShares([0, 1, 16, -1, 17, 2])).toEqual([16, 17]);
   });
 });

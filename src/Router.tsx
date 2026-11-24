@@ -12,6 +12,7 @@ import { InputsPage } from './pages/Inputs.page';
 import { LabelsPage } from './pages/Labels.page';
 import { MatrixScannerPage } from './pages/MatrixScanner.page';
 import { PeripheralsPage } from './pages/Peripherals.page';
+import { ProfilesExplainedPage } from './pages/ProfilesExplained.page';
 import { SetupPage } from './pages/Setup.page';
 import { SupportedHardwarePage } from './pages/SupportedHardware.page';
 
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
   {
     path: '/firmware-differences',
     element: <FirmwareDifferencesPage />,
+  },
+  {
+    path: '/profiles-explained',
+    element: <ProfilesExplainedPage />,
   },
   {
     // How Assignments Work is now a step of the setup guide

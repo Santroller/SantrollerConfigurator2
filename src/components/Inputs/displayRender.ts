@@ -375,6 +375,46 @@ export class MonoFrame {
 
 export const STICK_CENTRE = 32767;
 
+// Frames an animation can have after the element's own, as the firmware drops any more
+export const MAX_EXTRA_FRAMES = 16;
+// How long each frame shows when it isn't set, as in the firmware
+export const DEFAULT_FRAME_MS = 500;
+// The display takes 33ms to draw a frame, so shorter frames would be skipped
+export const MIN_FRAME_MS = 50;
+
+// How many frames an element's animation has, counting the element itself as the first
+export function frameCount(element: proto.IDisplayLedDevice) {
+  return 1 + Math.min(MAX_EXTRA_FRAMES, element.frames?.length ?? 0);
+}
+
+export function frameMs(element: proto.IDisplayLedDevice) {
+  return element.frameMs || DEFAULT_FRAME_MS;
+}
+
+// The element as it's drawn in one frame of its animation, 0 being the element itself. A frame only
+// changes what it sets, as in the firmware.
+export function elementFrame(
+  element: proto.IDisplayLedDevice,
+  index: number
+): proto.IDisplayLedDevice {
+  const frame = index > 0 && index < frameCount(element) ? element.frames?.[index - 1] : undefined;
+  if (!frame) {
+    return element;
+  }
+  return {
+    ...element,
+    x: frame.x ?? element.x,
+    y: frame.y ?? element.y,
+    text: frame.text ?? element.text,
+    image: frame.image?.length ? frame.image : element.image,
+  };
+}
+
+// The frame showing at time ms, when the animation started at 0
+export function frameAt(element: proto.IDisplayLedDevice, ms: number) {
+  return Math.floor(ms / frameMs(element)) % frameCount(element);
+}
+
 // The columns of row (0 to h - 1) inside the ellipse that fits a w x h box, none when left > right. A
 // pixel is inside when its centre is, measured in half pixels from the middle so it's all whole numbers.
 export function ellipseSpan(w: number, h: number, row: number) {
@@ -515,6 +555,22 @@ export function proportionalSize(
     width: Math.max(1, Math.min(maxWidth, Math.round(width))),
     height: Math.max(1, Math.min(maxHeight, Math.round(height))),
   };
+}
+
+// An image file stretched to exactly width x height, for a frame of an image that's already sized
+export async function loadDisplayImageAt(file: File, width: number, height: number) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    if (!image.naturalWidth || !image.naturalHeight) {
+      throw new Error('Invalid image dimensions');
+    }
+    return renderDisplayImage(image, width, height);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Scales an image file down to fit the display (never up), then packs it

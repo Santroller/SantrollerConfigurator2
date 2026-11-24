@@ -1,8 +1,15 @@
 import { proto } from '@/components/SettingsContext/config';
+import { ledGroup } from './ledEffects';
+
+// The pins of the LEDs a GPIO group LED picks, leaving out any past the end of the group as the firmware does
+function groupPins(device: proto.ILedDevice, devices: proto.IDevice[]): number[] {
+  const pins = ledGroup(device, devices)?.pins ?? [];
+  return (device.gpioGroup?.activeLed ?? []).filter((i) => i < pins.length).map((i) => pins[i]);
+}
 
 // The physical LEDs a mapping drives, matching LedId in the firmware: the chip it is on (or the
-// Pico's own pins) and its position there
-function physicalLeds(device: proto.ILedDevice): string[] {
+// Pico's own pins) and its position there. Grouped GPIO LEDs share the Pico's pins with the others.
+function physicalLeds(device: proto.ILedDevice, devices: proto.IDevice[]): string[] {
   if (device.rgb) {
     return (device.rgb.activeLed ?? []).map((i) => `${device.rgb!.deviceId}:${i}`);
   }
@@ -26,6 +33,9 @@ function physicalLeds(device: proto.ILedDevice): string[] {
   }
   if (device.gpio) {
     return [`gpio:${device.gpio.pin}`];
+  }
+  if (device.gpioGroup) {
+    return groupPins(device, devices).map((pin) => `gpio:${pin}`);
   }
   return [];
 }
@@ -59,9 +69,10 @@ export interface LedOverlap {
 
 // For each mapping, the other mappings sharing one of its LEDs that it covers up. The firmware
 // updates mappings in order and the last write to an LED wins, so a mapping that always writes
-// covers every earlier mapping updated every poll
-export function ledOverlaps(leds: proto.ILed[]): LedOverlap[] {
-  const physical = leds.map((led) => new Set(physicalLeds(led.device)));
+// covers every earlier mapping updated every poll. devices is the config's devices, for the pins of GPIO
+// LED groups.
+export function ledOverlaps(leds: proto.ILed[], devices: proto.IDevice[] = []): LedOverlap[] {
+  const physical = leds.map((led) => new Set(physicalLeds(led.device, devices)));
   return leds.map((led, idx) => {
     const overlap: LedOverlap = { hides: [], cutsShort: [] };
     if (!alwaysWrites(led)) {
@@ -88,21 +99,42 @@ function pwmOutput(pin: number): number {
   return pin < 32 ? pin % 16 : 16 + ((pin - 32) % 8);
 }
 
-// For each mapping, the other PWM mappings on a different pin that shares its PWM output
-export function pwmChannelShares(leds: proto.ILed[]): number[][] {
-  return leds.map((led) => {
-    const gpio = led.device.gpio;
-    if (!gpio?.analog || gpio.pin < 0) {
-      return [];
-    }
-    return leds.flatMap((other, otherIdx) => {
-      const otherGpio = other.device.gpio;
-      return otherGpio?.analog &&
-        otherGpio.pin >= 0 &&
-        otherGpio.pin !== gpio.pin &&
-        pwmOutput(otherGpio.pin) === pwmOutput(gpio.pin)
+// The pins a mapping dims through PWM
+function pwmPins(device: proto.ILedDevice, devices: proto.IDevice[]): number[] {
+  if (device.gpio?.analog && device.gpio.pin >= 0) {
+    return [device.gpio.pin];
+  }
+  if (ledGroup(device, devices)?.analog) {
+    return groupPins(device, devices).filter((pin) => pin >= 0);
+  }
+  return [];
+}
+
+// For each mapping, the other PWM mappings on a different pin that shares one of its PWM outputs
+export function pwmChannelShares(leds: proto.ILed[], devices: proto.IDevice[] = []): number[][] {
+  const pins = leds.map((led) => pwmPins(led.device, devices));
+  return leds.map((_, idx) =>
+    leds.flatMap((_other, otherIdx) =>
+      otherIdx !== idx &&
+      pins[idx].some((pin) =>
+        pins[otherIdx].some(
+          (otherPin) => otherPin !== pin && pwmOutput(otherPin) === pwmOutput(pin)
+        )
+      )
         ? [otherIdx]
-        : [];
-    });
-  });
+        : []
+    )
+  );
+}
+
+// Pins in a GPIO LED group that would show the same brightness as an earlier one in it, as they share a
+// PWM output
+export function groupPwmShares(pins: number[]): number[] {
+  return pins.filter(
+    (pin, i) =>
+      pin >= 0 &&
+      pins
+        .slice(0, i)
+        .some((other) => other >= 0 && other !== pin && pwmOutput(other) === pwmOutput(pin))
+  );
 }

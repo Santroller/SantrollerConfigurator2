@@ -49,6 +49,14 @@ describe('LED summaries', () => {
     expect(ledOutputSummary(rgb([0]), undefined, t)).toBe('Device missing');
   });
 
+  it('lists the LEDs a GPIO group mapping picks', () => {
+    const group = led({ gpioGroup: { deviceId: 1, activeLed: [0, 2] } });
+    const pins = [2, 3, 4];
+    expect(ledOutputSummary(group, 'Group of GPIO LEDs', t, (n) => `GP${pins[n]}`)).toBe(
+      'Group of GPIO LEDs: LEDs GP2, GP4'
+    );
+  });
+
   it('describes what a display element shows', () => {
     const display = (element: Partial<proto.IDisplayLedDevice>) =>
       led({

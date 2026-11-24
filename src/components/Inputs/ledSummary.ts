@@ -38,6 +38,8 @@ export function ledOutputSummary(
     target = listLeds(device.rgb.activeLed ?? [], t, ledName);
   } else if (device.stp16) {
     target = listLeds(device.stp16.activeLed ?? [], t, ledName);
+  } else if (device.gpioGroup) {
+    target = listLeds(device.gpioGroup.activeLed ?? [], t, ledName);
   } else if (device.vtechExpander) {
     const leds = Array.from({ length: 8 }, (_, bit) => bit).filter(
       (bit) => device.vtechExpander!.activeLed & (1 << bit)

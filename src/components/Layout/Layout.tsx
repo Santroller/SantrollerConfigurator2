@@ -22,6 +22,7 @@ import {
   IconPlus,
   IconRocket,
   IconSettings,
+  IconStack2,
   IconSun,
   IconTag,
   IconTrash,
@@ -130,7 +131,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     location.pathname === '/compatibility' ||
     location.pathname === '/emulation-modes' ||
     location.pathname === '/differences' ||
-    location.pathname === '/firmware-differences';
+    location.pathname === '/firmware-differences' ||
+    location.pathname === '/profiles-explained';
 
   const [docsOpened, setDocsOpened] = useState(isDocPage);
 
@@ -827,6 +829,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   }
                   label={t('nav.compatibility', 'Console Compatibility')}
                   leftSection={<IconDeviceGamepad2 size={16} stroke={1.5} />}
+                />
+                <NavLink
+                  component={RouterNavLink}
+                  to="/profiles-explained"
+                  onClick={() => {
+                    pollInputs(false);
+                    nav('/profiles-explained');
+                  }}
+                  active={location.pathname === '/profiles-explained'}
+                  label={t('nav.profilesExplained', 'How profiles work')}
+                  leftSection={<IconStack2 size={16} stroke={1.5} />}
                 />
                 <NavLink
                   component={RouterNavLink}

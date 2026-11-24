@@ -304,6 +304,12 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi, le, oe }) => [spi.mosi, spi.miso, spi.sck, le, oe],
     formatStatus: () => '',
   },
+  gpioLedGroup: {
+    category: 'lighting',
+    create: () => ({ pins: [], analog: false }),
+    pins: ({ pins }) => pins ?? [],
+    formatStatus: () => '',
+  },
   bt: {
     category: 'controllers',
     create: () => ({}),
@@ -421,6 +427,7 @@ const nonInputDeviceKinds = new Set<DeviceKind>([
   'ws2812',
   'apa102',
   'stp16cpc',
+  'gpioLedGroup',
   'dmx',
   'display',
   'psxEmulation',
@@ -437,6 +444,8 @@ const ledDeviceKinds = new Set<DeviceKind>([
   'apa102',
   'vtechExpander',
   'stp16cpc',
+  'gpioLedGroup',
+  'dmx',
   'display',
 ]);
 const defaultMappingDeviceKinds = new Set<DeviceKind>([

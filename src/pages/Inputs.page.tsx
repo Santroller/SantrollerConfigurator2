@@ -167,6 +167,7 @@ import {
 } from '@/components/Inputs/inputRegistry';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import {
+  deviceLedCount,
   hasSeveralLeds,
   supportedLedEffects,
   withSupportedOptions,
@@ -5548,9 +5549,11 @@ function SantrollerLed({
   const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
     id: ledIdx,
   });
+  // The config's devices, for the pins of GPIO LED groups
+  const configDevices = useConfigStore((state) => state.config.devices) ?? undefined;
   // Switching device drops an effect or player LED style the new one can't show
-  const dispatch = (next: proto.ILed) => dispatchLed(withSupportedOptions(next));
-  const effectTypes = supportedLedEffects(led.device);
+  const dispatch = (next: proto.ILed) => dispatchLed(withSupportedOptions(next, configDevices));
+  const effectTypes = supportedLedEffects(led.device, configDevices);
   const rainbow = led.effect?.type === proto.LedEffectType.EffectRainbow;
   const setInputMapping = (patch: Partial<proto.IInputLedMapping>) =>
     dispatch({
@@ -5578,6 +5581,8 @@ function SantrollerLed({
     deviceId = led.device.rgb.deviceId;
   } else if (led.device.stp16) {
     deviceId = led.device.stp16.deviceId;
+  } else if (led.device.gpioGroup) {
+    deviceId = led.device.gpioGroup.deviceId;
   } else if (led.device.vtechExpander) {
     deviceId = led.device.vtechExpander.deviceId;
   } else if (led.device.mpr121) {
@@ -5596,12 +5601,12 @@ function SantrollerLed({
   const profileLeds = useConfigStore((state) => state.config.profiles?.[profileIdx]?.leds);
   // the other mappings (by index) this one covers up by sharing an LED with them
   const overlap = useMemo(
-    () => (profileLeds ? ledOverlaps(profileLeds)[ledIdx] : undefined),
-    [profileLeds, ledIdx]
+    () => (profileLeds ? ledOverlaps(profileLeds, configDevices)[ledIdx] : undefined),
+    [profileLeds, configDevices, ledIdx]
   );
   const pwmShares = useMemo(
-    () => (profileLeds ? pwmChannelShares(profileLeds)[ledIdx] : []),
-    [profileLeds, ledIdx]
+    () => (profileLeds ? pwmChannelShares(profileLeds, configDevices)[ledIdx] : []),
+    [profileLeds, configDevices, ledIdx]
   );
   const ledInput = led.mapping.inputMapping?.input;
   const mapping = useMemo(() => {
@@ -5662,6 +5667,10 @@ function SantrollerLed({
     }
     return '';
   };
+  // A GPIO group's LEDs go by their pins, as that's what they're wired to
+  const groupPins = device?.device.gpioLedGroup?.pins;
+  const ledPinName = (n: number) =>
+    groupPins && groupPins[n] != null && groupPins[n] >= 0 ? `GP${groupPins[n]}` : `${n}`;
   let deviceValue = <></>;
   if (led.device.gpio) {
     deviceValue = (
@@ -5787,7 +5796,7 @@ function SantrollerLed({
     led,
     device ? DeviceStatus.title(device) : undefined,
     t,
-    (n) => (allLabels[n] ? `${n} (${allLabels[n].join(', ')})` : `${n}`)
+    (n) => (allLabels[n] ? `${ledPinName(n)} (${allLabels[n].join(', ')})` : ledPinName(n))
   );
   // The colours it lights in, where they're set here rather than by the host or a rainbow
   const swatches: string[] = [];
@@ -6074,12 +6083,24 @@ function SantrollerLed({
                               },
                             });
                             break;
+                          case 'gpioLedGroup':
+                            dispatch({
+                              ...led,
+                              device: {
+                                gpioGroup: {
+                                  activeLed: [],
+                                  deviceId: parseInt(val, 10),
+                                },
+                              },
+                            });
+                            break;
                           case 'dmx':
                             dispatch({
                               ...led,
                               device: {
                                 dmx: {
-                                  channel: 0,
+                                  // DMX numbers channels from 1
+                                  channel: 1,
                                   deviceId: parseInt(val, 10),
                                 },
                               },
@@ -6240,8 +6261,18 @@ function SantrollerLed({
                 )}
                 {led.device.dmx && (
                   <NumberInput
+                    label={t('leds.dmx_channel')}
+                    description={t('leds.dmx_channel_desc', {
+                      count: device?.device.dmx?.channelCount ?? 0,
+                    })}
+                    error={
+                      led.device.dmx.channel < 1 ||
+                      led.device.dmx.channel > (device?.device.dmx?.channelCount ?? 0)
+                        ? t('leds.dmx_channel_error')
+                        : undefined
+                    }
                     value={led.device.dmx.channel}
-                    min={0}
+                    min={1}
                     max={device?.device.dmx?.channelCount}
                     onChange={(e) =>
                       dispatch({
@@ -6251,6 +6282,32 @@ function SantrollerLed({
                         },
                       })
                     }
+                  />
+                )}
+                {(led.device.stp16 || led.device.gpioGroup) && (
+                  <MultiSelect
+                    label={t('leds.label')}
+                    value={(led.device.stp16 ?? led.device.gpioGroup)!.activeLed?.map((x) =>
+                      x.toString()
+                    )}
+                    data={Array.from({ length: deviceLedCount(device?.device) }, (_, x) => ({
+                      value: x.toString(),
+                      label:
+                        (led.device.gpioGroup ? `${x} (${ledPinName(x)})` : x.toString()) +
+                        getLedLabel(x),
+                    }))}
+                    clearable
+                    maxValues={led.device.gpioGroup ? 32 : 255}
+                    onChange={(val) => {
+                      const activeLed = val.map((x) => parseInt(x, 10));
+                      dispatch({
+                        ...led,
+                        device: led.device.stp16
+                          ? { stp16: { ...led.device.stp16, activeLed } }
+                          : { gpioGroup: { ...led.device.gpioGroup!, activeLed } },
+                      });
+                    }}
+                    searchable
                   />
                 )}
                 {led.device.vtechExpander && (
@@ -7411,7 +7468,12 @@ function RuleShadowAlert({
       icon={<IconExclamationCircle size={16} />}
       mt="xs"
     >
-      <Text size="xs">{desc}</Text>
+      <Text size="xs">
+        {desc}{' '}
+        <Anchor component={Link} to="/profiles-explained" size="xs">
+          {t('nav.profilesExplained')}
+        </Anchor>
+      </Text>
       {(!sameProfile || moveRule) && (
         <Button size="xs" color="orange" mt="xs" onClick={fix}>
           {t('assignments.shadowed.fix')}

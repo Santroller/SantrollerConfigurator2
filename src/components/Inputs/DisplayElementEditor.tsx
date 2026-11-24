@@ -1,7 +1,10 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import {
+  ActionIcon,
   Button,
+  Card,
   FileButton,
   Group,
   NumberInput,
@@ -13,11 +16,18 @@ import {
   TextInput,
 } from '@mantine/core';
 import {
+  DEFAULT_FRAME_MS,
   displaySize,
+  elementFrame,
+  frameAt,
+  frameCount,
   imageAspect,
   loadDisplayImage,
+  loadDisplayImageAt,
+  MAX_EXTRA_FRAMES,
   MAX_SCALE,
   MAX_TEXT_LENGTH,
+  MIN_FRAME_MS,
   MonoFrame,
   proportionalSize,
   resizeDisplayImage,
@@ -45,20 +55,46 @@ export function newDisplayElement(deviceId: number): proto.IDisplayLedDevice {
 
 // The display with every element of this profile drawn on it, as if each was on. Bars are drawn half full.
 // The current element can be dragged around it, or nudged with the arrow keys.
+// While animations play, how long since they started
+function useAnimationTime(playing: boolean) {
+  const [ms, setMs] = useState(0);
+  useEffect(() => {
+    if (!playing) {
+      setMs(0);
+      return undefined;
+    }
+    const start = performance.now();
+    const timer = setInterval(() => setMs(performance.now() - start), MIN_FRAME_MS);
+    return () => clearInterval(timer);
+  }, [playing]);
+  return ms;
+}
+
 function DisplayPreview({
   elements,
   width,
   height,
-  current,
+  element,
+  shownFrame,
   onMove,
 }: {
   elements: proto.IDisplayLedDevice[];
   width: number;
   height: number;
-  current: proto.IDisplayLedDevice;
+  // The element being edited, which is one of elements
+  element: proto.IDisplayLedDevice;
+  // The frame of it to show and move, or play to animate everything
+  shownFrame: number | 'play';
   onMove: (x: number, y: number) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playing = shownFrame === 'play' && elements.some((other) => frameCount(other) > 1);
+  const ms = useAnimationTime(playing);
+  // Other elements show their first frame while one frame of this one is picked
+  const frameOf = (other: proto.IDisplayLedDevice) =>
+    shownFrame === 'play' ? frameAt(other, ms) : other === element ? shownFrame : 0;
+  // What's outlined and moved: the frame picked, or the element itself while playing
+  const current = elementFrame(element, shownFrame === 'play' ? 0 : shownFrame);
   // Where in the element it was picked up, while it's being dragged
   const grab = useRef<{ x: number; y: number } | null>(null);
   const { t } = useTranslation();
@@ -90,8 +126,8 @@ function DisplayPreview({
       return;
     }
     const frame = new MonoFrame(width, height);
-    for (const element of elements) {
-      frame.drawElement(element, 32768);
+    for (const other of elements) {
+      frame.drawElement(elementFrame(other, frameOf(other)), 32768);
     }
     context.fillStyle = '#000';
     context.fillRect(0, 0, width * PREVIEW_SCALE, height * PREVIEW_SCALE);
@@ -112,7 +148,7 @@ function DisplayPreview({
       size.width * PREVIEW_SCALE - 1,
       size.height * PREVIEW_SCALE - 1
     );
-  }, [elements, width, height, current, size.width, size.height]);
+  }, [elements, width, height, current, size.width, size.height, ms, shownFrame, element]);
   return (
     <>
       <Text size="sm" fw={500}>
@@ -251,9 +287,37 @@ export function DisplayElementEditor({
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [keepProportions, setKeepProportions] = useState(true);
+  const [frameImageError, setFrameImageError] = useState<number | null>(null);
+  // Which frame the preview shows and moves, or play to animate it
+  const [pickedFrame, setPickedFrame] = useState<number | 'play'>('play');
   const { width, height } = displaySize(display);
   const update = (changes: Partial<proto.IDisplayLedDevice>) =>
     dispatch({ ...element, ...changes });
+  const frames = element.frames ?? [];
+  const shownFrame =
+    frames.length === 0
+      ? 0
+      : pickedFrame !== 'play' && pickedFrame > frames.length
+        ? 'play'
+        : pickedFrame;
+  const updateFrame = (i: number, changes: Partial<proto.IDisplayFrame>) =>
+    update({ frames: frames.map((frame, j) => (j === i ? { ...frame, ...changes } : frame)) });
+  // Frames' images stay the size of the element's own, so they go with it when that changes
+  const withImage = (next: { image: Uint8Array; width: number; height: number }) => ({
+    ...next,
+    frames: frames.map((frame) =>
+      frame.image?.length && element.width && element.height
+        ? {
+            ...frame,
+            image: resizeDisplayImage(
+              { image: frame.image, width: element.width, height: element.height },
+              next.width,
+              next.height
+            ).image,
+          }
+        : frame
+    ),
+  });
   const isText = element.type === proto.DisplayElementType.DisplayElementText;
   const isImage = element.type === proto.DisplayElementType.DisplayElementImage;
   const isBar = element.type === proto.DisplayElementType.DisplayElementBar;
@@ -279,7 +343,7 @@ export function DisplayElementEditor({
           height: side === 'height' ? Math.max(1, Math.min(height, value)) : current.height,
         };
     if (size.width !== current.width || size.height !== current.height) {
-      update(resizeDisplayImage(current, size.width, size.height));
+      update(withImage(resizeDisplayImage(current, size.width, size.height)));
     }
   };
   return (
@@ -316,7 +380,10 @@ export function DisplayElementEditor({
             return;
           }
           const type = parseInt(val, 10) as proto.DisplayElementType;
-          // Only what the new type uses is kept
+          // Only what the new type uses is kept, which for frames is only where they are
+          const movingFrames = frames
+            .filter((frame) => frame.x != null || frame.y != null)
+            .map((frame) => ({ x: frame.x, y: frame.y }));
           const cleared = {
             image: null,
             text: null,
@@ -324,6 +391,7 @@ export function DisplayElementEditor({
             stickX: null,
             stickY: null,
             outlineWhenOff: null,
+            frames: movingFrames,
           };
           if (type === proto.DisplayElementType.DisplayElementBar) {
             update({ ...cleared, type, width: 64, height: 8 });
@@ -491,7 +559,7 @@ export function DisplayElementEditor({
               }
               setImageError(false);
               loadDisplayImage(file, width, height)
-                .then((loaded) => update(loaded))
+                .then((loaded) => update(withImage(loaded)))
                 .catch(() => setImageError(true));
             }}
           >
@@ -516,14 +584,155 @@ export function DisplayElementEditor({
         checked={!!element.invert}
         onChange={(event) => update({ invert: event.currentTarget.checked })}
       />
+      <Text size="sm" fw={500} mt="md">
+        {t('display.animation')}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {t('display.animation_description')}
+      </Text>
+      {frames.map((frame, i) => (
+        <Card key={i} withBorder padding="xs" mt="xs">
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="sm" fw={500}>
+              {t('display.frame', { n: i + 2 })}
+            </Text>
+            <ActionIcon
+              color="red"
+              variant="subtle"
+              aria-label={t('display.remove_frame')}
+              onClick={() => update({ frames: frames.filter((_, j) => j !== i) })}
+            >
+              <IconTrash style={{ width: '70%', height: '70%' }} />
+            </ActionIcon>
+          </Group>
+          {isText && (
+            <TextInput
+              mt="xs"
+              label={t('display.text')}
+              maxLength={MAX_TEXT_LENGTH}
+              placeholder={element.text ?? ''}
+              value={frame.text ?? ''}
+              onChange={(event) => {
+                const text = sanitiseDisplayText(event.currentTarget.value);
+                // Empty shows the first frame's text
+                updateFrame(i, { text: text || null });
+              }}
+            />
+          )}
+          {isImage && !!element.width && !!element.height && (
+            <Group mt="xs" gap="xs">
+              <FileButton
+                accept="image/png,image/jpeg,image/gif,image/bmp,image/webp"
+                onChange={(file) => {
+                  if (!file) {
+                    return;
+                  }
+                  setFrameImageError(null);
+                  loadDisplayImageAt(file, element.width!, element.height!)
+                    .then((loaded) => updateFrame(i, { image: loaded.image }))
+                    .catch(() => setFrameImageError(i));
+                }}
+              >
+                {(props) => (
+                  <Button size="xs" variant="light" {...props}>
+                    {t('display.upload_image')}
+                  </Button>
+                )}
+              </FileButton>
+              <Text size="xs" c={frameImageError === i ? 'red' : 'dimmed'}>
+                {frameImageError === i
+                  ? t('display.image_error')
+                  : frame.image?.length
+                    ? t('display.frame_image_description', {
+                        width: element.width,
+                        height: element.height,
+                      })
+                    : t('display.frame_image_own')}
+              </Text>
+            </Group>
+          )}
+          <Group grow mt="xs">
+            <NumberInput
+              label={t('display.x')}
+              min={0}
+              max={width - 1}
+              placeholder={`${element.x}`}
+              value={frame.x ?? ''}
+              onChange={(val) => updateFrame(i, { x: val === '' ? null : Number(val) || 0 })}
+            />
+            <NumberInput
+              label={t('display.y')}
+              min={0}
+              max={height - 1}
+              placeholder={`${element.y}`}
+              value={frame.y ?? ''}
+              onChange={(val) => updateFrame(i, { y: val === '' ? null : Number(val) || 0 })}
+            />
+          </Group>
+          <Text size="xs" c="dimmed" mt={4}>
+            {t('display.frame_position_description')}
+          </Text>
+        </Card>
+      ))}
+      <Group mt="xs" align="flex-end">
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconPlus size={14} />}
+          disabled={frames.length >= MAX_EXTRA_FRAMES}
+          onClick={() => {
+            // Text starts as the frame before's, so Z, ZZ, ZZZ only needs a letter added each time
+            const previous = frames.length ? frames[frames.length - 1].text : element.text;
+            update({ frames: [...frames, isText && previous ? { text: previous } : {}] });
+          }}
+        >
+          {t('display.add_frame')}
+        </Button>
+        {frames.length > 0 && (
+          <NumberInput
+            label={t('display.frame_ms')}
+            min={MIN_FRAME_MS}
+            max={60000}
+            step={50}
+            value={element.frameMs || DEFAULT_FRAME_MS}
+            onChange={(val) => update({ frameMs: Math.max(MIN_FRAME_MS, Number(val) || 0) })}
+          />
+        )}
+      </Group>
       <Space h="sm" />
       <DisplayPreview
         elements={elements}
         width={width}
         height={height}
-        current={element}
-        onMove={(x, y) => update({ x, y })}
+        element={element}
+        shownFrame={shownFrame}
+        onMove={(x, y) =>
+          shownFrame === 'play' || shownFrame === 0
+            ? update({ x, y })
+            : updateFrame(shownFrame - 1, { x, y })
+        }
       />
+      {frames.length > 0 && (
+        <>
+          <Select
+            mt="xs"
+            label={t('display.preview_shows')}
+            description={t('display.preview_frame_description')}
+            allowDeselect={false}
+            value={`${shownFrame}`}
+            onChange={(val) =>
+              val != null && setPickedFrame(val === 'play' ? 'play' : parseInt(val, 10))
+            }
+            data={[
+              { value: 'play', label: t('display.preview_play') },
+              ...Array.from({ length: frames.length + 1 }, (_, n) => ({
+                value: `${n}`,
+                label: t('display.preview_frame', { n: n + 1 }),
+              })),
+            ]}
+          />
+        </>
+      )}
     </>
   );
 }

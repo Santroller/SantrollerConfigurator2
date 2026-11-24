@@ -120,6 +120,41 @@ describe('display element preview', () => {
     expect([...resized.image!]).toEqual([0xf0, 0xf0, 0xf0, 0xf0]);
   });
 
+  const button = (text: string) =>
+    [...container.querySelectorAll('button')].find((b) => b.textContent === text)!;
+
+  it('starts a new frame with the text of the one before', async () => {
+    await render({ ...element, text: 'Z', frames: [{ text: 'ZZ' }] });
+    await act(async () => button('display.add_frame').click());
+    expect(dispatch.mock.lastCall![0].frames).toEqual([{ text: 'ZZ' }, { text: 'ZZ' }]);
+  });
+
+  it('resizes frame images with the element image', async () => {
+    const image = new Uint8Array([0xc0, 0xc0]);
+    await render({
+      ...element,
+      type: proto.DisplayElementType.DisplayElementImage,
+      text: null,
+      scale: null,
+      width: 4,
+      height: 2,
+      image,
+      // Right half lit, and one without its own image
+      frames: [{ image: new Uint8Array([0x30, 0x30]) }, { x: 3 }],
+    });
+    const label = [...container.querySelectorAll('label')].find(
+      (l) => l.textContent === 'display.width'
+    )!;
+    const input = document.getElementById(label.htmlFor) as HTMLInputElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '8');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const frames = dispatch.mock.lastCall![0].frames!;
+    expect([...frames[0].image!]).toEqual([0x0f, 0x0f, 0x0f, 0x0f]);
+    expect(frames[1]).toEqual({ x: 3 });
+  });
+
   it('nudges with the arrow keys, 8 at a time with shift', async () => {
     const canvas = await render();
     await act(async () => {

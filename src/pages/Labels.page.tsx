@@ -35,6 +35,7 @@ import { matrixHasPin } from '@/components/Devices/matrixPins';
 import { PinBox } from '@/components/Devices/Pins';
 import { isLed } from '@/components/Devices/pinUtils';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
+import { deviceLedCount } from '@/components/Inputs/ledEffects';
 import { getLabelKind, LabelKind } from '@/components/Labels/labelRegistry';
 import {
   selectableCardStyle,
@@ -300,14 +301,17 @@ function LedLabel({ id, label, deleteLabel, selected, onSelect }: LabelEditorPro
           label={t('labels.title')}
         />
         <LabelProfiles id={id} label={label} />
-        {(device?.device.ws2812 || device?.device.apa102) && (
+        {deviceLedCount(device?.device) > 0 && (
           <MultiSelect
             label={t('leds.label')}
             value={label.ledLabel!.activeLed?.map((x) => x.toString())}
-            data={Array.from(
-              { length: device.device.ws2812?.count || device.device.apa102?.count || 0 },
-              (_, x) => x.toString()
-            )}
+            data={Array.from({ length: deviceLedCount(device?.device) }, (_, x) => {
+              const pin = device?.device.gpioLedGroup?.pins?.[x];
+              return {
+                value: x.toString(),
+                label: pin != null && pin >= 0 ? `${x} (GP${pin})` : `${x}`,
+              };
+            })}
             clearable
             maxValues={255}
             onChange={(val) =>

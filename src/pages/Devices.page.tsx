@@ -74,6 +74,7 @@ import {
 } from '@/components/Devices/matrixPins';
 import { DeviceContext, PinBox } from '@/components/Devices/Pins';
 import { displayPanel, displayPanels } from '@/components/Inputs/displayRender';
+import { groupPwmShares } from '@/components/Inputs/ledOverlap';
 import {
   IdSelectionContext,
   selectableCardStyle,
@@ -89,6 +90,7 @@ import {
   DEFAULT_GPIO_COUNT,
   I2CGroups,
   isAnalogPin,
+  LedPinsNamed,
   MisoPins,
   MosiPins,
   PinOption,
@@ -2348,6 +2350,79 @@ function JoybusDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+// Plain LEDs on the Pico's pins, grouped so one LED mapping can light several of them, eg as player LEDs
+function GpioLedGroupDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.gpioLedGroup) {
+    throw new Error('device null!');
+  }
+  const group = device.gpioLedGroup;
+  const pins = group.pins ?? [];
+  const update = (next: Partial<proto.IGpioLedGroupDevice>) =>
+    updateDevice({ deviceid: parseInt(id, 10), gpioLedGroup: { ...group, ...next } }, id);
+  const pwmShared = group.analog ? groupPwmShares(pins) : [];
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.gpioLedGroup"
+      image="covers/devices/gpioLedGroup.svg"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('gpioLedGroup.description')}
+      </Text>
+      {pins.map((pin, i) => (
+        <Group key={i} gap="xs" align="flex-end" wrap="nowrap">
+          <Box style={{ flex: 1 }}>
+            <PinBox
+              label={t('gpioLedGroup.led', { led: i })}
+              pin={pin}
+              valid={LedPinsNamed}
+              dispatch={(next) => update({ pins: pins.map((p, j) => (j === i ? next : p)) })}
+            />
+          </Box>
+          <ActionIcon
+            color="red"
+            variant="subtle"
+            mb={4}
+            aria-label={t('gpioLedGroup.remove')}
+            onClick={() => update({ pins: pins.filter((_, j) => j !== i) })}
+          >
+            <IconTrash style={{ width: '70%', height: '70%' }} />
+          </ActionIcon>
+        </Group>
+      ))}
+      <Button
+        variant="light"
+        leftSection={<IconPlus size={16} />}
+        disabled={pins.length >= 32}
+        onClick={() => update({ pins: [...pins, -1] })}
+      >
+        {t('gpioLedGroup.add')}
+      </Button>
+      <Switch
+        label={t('gpioLedGroup.analog')}
+        description={t('gpioLedGroup.analog_desc')}
+        checked={!!group.analog}
+        onChange={(event) => update({ analog: event.currentTarget.checked })}
+      />
+      {pwmShared.length > 0 && (
+        <Text size="xs" c="yellow">
+          {t('gpioLedGroup.pwm_shared', { pins: pwmShared.map((pin) => `GP${pin}`).join(', ') })}
+        </Text>
+      )}
+      <Switch
+        label={t('leds.invert')}
+        description={t('leds.invert_desc')}
+        checked={!!group.inverted}
+        onChange={(event) => update({ inverted: event.currentTarget.checked })}
+      />
+    </DeviceCard>
+  );
+}
 function DMXDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -3544,6 +3619,7 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   ws2812: WS2812Device,
   apa102: APA102Device,
   stp16cpc: STP16CPCDevice,
+  gpioLedGroup: GpioLedGroupDevice,
   bt: BluetoothDevice,
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
