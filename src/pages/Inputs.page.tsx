@@ -38,7 +38,6 @@ import {
   IconTemplate,
   IconTrash,
   IconUsb,
-  IconWand,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate } from 'react-router-dom';
@@ -7414,7 +7413,7 @@ function RuleShadowAlert({
     >
       <Text size="xs">{desc}</Text>
       {(!sameProfile || moveRule) && (
-        <Button size="xs" color="orange" mt="xs" leftSection={<IconWand size={14} />} onClick={fix}>
+        <Button size="xs" color="orange" mt="xs" onClick={fix}>
           {t('assignments.shadowed.fix')}
         </Button>
       )}
