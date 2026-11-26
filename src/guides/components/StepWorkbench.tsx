@@ -3,6 +3,21 @@ import { IconArrowLeft, IconArrowRight, IconCheck, IconUsb } from '@tabler/icons
 import { useTranslation } from 'react-i18next';
 import { Badge, Box, Button, Grid, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { useGuideDeviceGated } from './StepActions';
+import classes from './GuideGate.module.css';
+
+// The CSS stops clicks on greyed out controls, this stops them being used from the keyboard. Tab
+// still moves past them.
+function blockGatedKeys(event: React.KeyboardEvent<HTMLElement>) {
+  const target = event.target as HTMLElement;
+  if (event.key === 'Tab' || target.closest('[data-guide-choice]')) {
+    return;
+  }
+  if (target.matches('button, input, select, textarea, [role]')) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
 
 export interface StepWorkbenchProps {
   title: string;
@@ -41,6 +56,7 @@ export function StepWorkbench({
   const connect = useConfigStore((state) => state.connect);
   const disconnect = useConfigStore((state) => state.disconnect);
   const updating = useConfigStore((state) => state.updating);
+  const gated = useGuideDeviceGated();
 
   const effectiveNextLabel = nextLabel ?? t('guides.nextStep');
 
@@ -68,7 +84,14 @@ export function StepWorkbench({
               )}
             </div>
 
-            <Box mt="xs">{guideContent}</Box>
+            {/* Controls in the instructions are greyed out, the text and links stay usable */}
+            <Box
+              mt="xs"
+              className={gated ? classes.gated : undefined}
+              onKeyDownCapture={gated ? blockGatedKeys : undefined}
+            >
+              {guideContent}
+            </Box>
           </Stack>
         </Grid.Col>
 
@@ -91,7 +114,7 @@ export function StepWorkbench({
                     {t('guides.configAndVerification')}
                   </Text>
 
-                  {connected ? (
+                  {gated ? null : connected ? (
                     <Group gap={6}>
                       <Badge
                         leftSection={
@@ -138,7 +161,7 @@ export function StepWorkbench({
                   )}
                 </Group>
 
-                {!connected && (
+                {!connected && !gated && (
                   <Paper
                     withBorder
                     p="xs"
@@ -153,7 +176,15 @@ export function StepWorkbench({
                   </Paper>
                 )}
 
-                <Box mt={2}>{workbenchContent}</Box>
+                {/* Live status and pin tools are all useless without a controller */}
+                <Box
+                  mt={2}
+                  inert={gated}
+                  aria-disabled={gated || undefined}
+                  style={gated ? { opacity: 0.45, filter: 'grayscale(1)' } : undefined}
+                >
+                  {workbenchContent}
+                </Box>
               </Stack>
             </Paper>
           </Grid.Col>

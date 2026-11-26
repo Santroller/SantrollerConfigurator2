@@ -64,6 +64,7 @@ function MethodPicker({
   const { t } = useTranslation();
   return (
     <SegmentedControl
+      data-guide-choice
       fullWidth
       value={method}
       onChange={(value) => onChange(value as XboxAuthMethod)}
@@ -502,20 +503,6 @@ export function XboxAuthTestStep(props: GuideStepProps) {
     <Stack gap="md">
       <MethodPicker method={method} onChange={setMethod} />
       <Text size="sm">{t(`${P}.auth-test.saveText`)}</Text>
-      {/* The setup guide saves in a step of its own */}
-      {!props.nested && (
-        <Button
-          size="md"
-          color="teal"
-          disabled={!connected}
-          loading={saving}
-          leftSection={<IconDeviceFloppy size={18} />}
-          onClick={handleSave}
-        >
-          {saved ? t('guides.common.btnSaved') : t(`${P}.auth-test.btnSave`)}
-        </Button>
-      )}
-
       <Title order={4}>{t(`${P}.auth-test.consoleTitle`)}</Title>
       <GuideList
         type="ordered"
@@ -536,14 +523,30 @@ export function XboxAuthTestStep(props: GuideStepProps) {
   );
 
   const workbenchContent = (
-    <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          {t(`${P}.auth-test.${method === 'usb' ? 'usbStatusTitle' : 'chipStatusTitle'}`)}
-        </Text>
-        {method === 'usb' ? <UsbHostStatus /> : <AuthChipStatus />}
-      </Stack>
-    </Paper>
+    <Stack gap="md">
+      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed">
+            {t(`${P}.auth-test.${method === 'usb' ? 'usbStatusTitle' : 'chipStatusTitle'}`)}
+          </Text>
+          {method === 'usb' ? <UsbHostStatus /> : <AuthChipStatus />}
+        </Stack>
+      </Paper>
+      {/* Saving needs the controller, so it lives with the live status. The setup guide saves in
+          a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t('guides.common.btnSaved') : t(`${P}.auth-test.btnSave`)}
+        </Button>
+      )}
+    </Stack>
   );
 
   return (

@@ -1,7 +1,7 @@
-import { IconAlertTriangle, IconArrowRight } from '@tabler/icons-react';
+import { IconAlertTriangle, IconArrowRight, IconUsb } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Alert, Button, Space, Text } from '@mantine/core';
+import { Alert, Button, Group, Space, Text } from '@mantine/core';
 import { useConfigStore } from './SettingsContext/SettingsContext';
 
 // Santroller 1 and blank boards never show up as a device, so tell people how to get them
@@ -9,6 +9,8 @@ import { useConfigStore } from './SettingsContext/SettingsContext';
 export function OldFirmwareAlert({ guide = false, mb }: { guide?: boolean; mb?: string }) {
   const { t } = useTranslation();
   const connected = useConfigStore((state) => state.connected);
+  const connect = useConfigStore((state) => state.connect);
+  const updating = useConfigStore((state) => state.updating);
   if (connected) {
     return null;
   }
@@ -21,17 +23,36 @@ export function OldFirmwareAlert({ guide = false, mb }: { guide?: boolean; mb?: 
       icon={<IconAlertTriangle />}
     >
       <Text size="sm">{t(guide ? 'connect.oldFirmwareGuide' : 'connect.oldFirmware')}</Text>
+      {guide && (
+        <Text size="sm" mt="xs">
+          {t('connect.oldFirmwareGuideSetup')}
+        </Text>
+      )}
       <Space h="xs" />
-      <Button
-        size="xs"
-        color="red"
-        variant="light"
-        component={Link}
-        to="/setup"
-        rightSection={<IconArrowRight size={14} />}
-      >
-        {t('connect.setup')}
-      </Button>
+      <Group gap="xs">
+        {/* Guides have no connect button of their own while greyed out */}
+        {guide && typeof navigator !== 'undefined' && 'hid' in navigator && (
+          <Button
+            size="xs"
+            color="red"
+            leftSection={<IconUsb size={14} />}
+            onClick={connect}
+            loading={updating}
+          >
+            {t('guides.connectPico')}
+          </Button>
+        )}
+        <Button
+          size="xs"
+          color="red"
+          variant="light"
+          component={Link}
+          to="/setup"
+          rightSection={<IconArrowRight size={14} />}
+        >
+          {t('connect.setup')}
+        </Button>
+      </Group>
     </Alert>
   );
 }

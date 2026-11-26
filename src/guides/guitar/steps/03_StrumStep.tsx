@@ -51,6 +51,7 @@ export function StrumStep(props: GuideStepProps) {
           {t('guides.direct-pico-guitar.steps.strum.wiringMethodLabel')}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="sm"
           value={wiringMode}
           onChange={handleModeChange}

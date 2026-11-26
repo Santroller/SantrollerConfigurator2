@@ -1,0 +1,22 @@
+/* Greys out and blocks every control in a guide step while no controller is connected. Text,
+   images and links stay usable, as do choices marked data-guide-choice, which only pick which
+   instructions to show. */
+.gated
+  :is(
+    button,
+    input,
+    select,
+    textarea,
+    label,
+    [role='slider'],
+    [role='switch'],
+    [role='checkbox'],
+    [role='radio'],
+    [role='combobox'],
+    :global(.mantine-SegmentedControl-indicator),
+    :global(.mantine-Slider-track)
+  ):not([data-guide-choice], [data-guide-choice] *) {
+  pointer-events: none;
+  opacity: 0.45;
+  filter: grayscale(1);
+}

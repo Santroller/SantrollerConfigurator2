@@ -189,7 +189,14 @@ export function TestStep({
   const guideContent = (
     <Stack gap="md">
       <Text size="sm">{t(`${T}.intro`)}</Text>
-      <StepActions>
+    </Stack>
+  );
+
+  // The live test and saving need the controller, so they sit with the device panel
+  const workbenchContent = (
+    <Stack gap="md">
+      {/* The panel asks for the controller itself */}
+      <StepActions prompt={false}>
         {choices.length === 0 ? (
           <Alert variant="light" color="orange">
             {t(`${T}.noProfiles`)}
@@ -203,7 +210,6 @@ export function TestStep({
                 value={onStandby ? null : String(currentProfile)}
                 onChange={(value) => value != null && setActiveProfile(value, 0)}
                 allowDeselect={false}
-                w={260}
               />
               <Badge color={matching ? 'blue' : 'gray'} mb={8}>
                 {matching ? t('state.active') : t('state.inactive')}
@@ -237,6 +243,7 @@ export function TestStep({
           </Stack>
         )}
       </StepActions>
+      {Check && <Check />}
       {!props.nested && (
         <StepActions prompt={false}>
           <SaveButton />
@@ -250,7 +257,7 @@ export function TestStep({
       {...props}
       {...useFinishText('test')}
       guideContent={guideContent}
-      workbenchContent={Check && <Check />}
+      workbenchContent={workbenchContent}
     />
   );
 }

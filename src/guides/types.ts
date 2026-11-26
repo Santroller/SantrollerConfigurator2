@@ -25,6 +25,9 @@ export interface GuideStepSource {
 // What a step's visibility can depend on
 export interface GuideContext {
   guitarFamily: GuitarFamily;
+  // False only on a build guide opened without a controller, where steps that do nothing but use
+  // one are left out. The setup guide connects partway through, so it always counts as true.
+  connected: boolean;
 }
 
 export interface GuideStep extends GuideStepSource {

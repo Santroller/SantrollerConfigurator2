@@ -87,6 +87,7 @@ function LedChipTypeSelect({
         {t('guides.rgb-leds.steps.led-intro.typeSelectLabel')}
       </Text>
       <SegmentedControl
+        data-guide-choice
         size="sm"
         value={chipType}
         disabled={disabled}
@@ -418,21 +419,6 @@ export function LedReviewStep(props: GuideStepProps) {
 
       <Title order={4}>{t('guides.rgb-leds.steps.led-test.syncTitle')}</Title>
       <Text size="sm">{t('guides.rgb-leds.steps.led-test.syncText')}</Text>
-      <InactivitySettings ledOnly />
-
-      {/* The setup guide saves in a step of its own */}
-      {!props.nested && (
-        <Button
-          size="md"
-          color="teal"
-          disabled={!connected}
-          loading={saving}
-          leftSection={<IconDeviceFloppy size={18} />}
-          onClick={handleSave}
-        >
-          {saved ? t('guides.common.btnSaved') : t('guides.rgb-leds.steps.led-test.btnSave')}
-        </Button>
-      )}
     </Stack>
   );
 
@@ -465,6 +451,21 @@ export function LedReviewStep(props: GuideStepProps) {
           </Text>
         </Stack>
       </Paper>
+      <InactivitySettings ledOnly />
+      {/* Saving needs the controller, so it lives with the live status. The setup guide saves in
+          a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t('guides.common.btnSaved') : t('guides.rgb-leds.steps.led-test.btnSave')}
+        </Button>
+      )}
     </Stack>
   );
 

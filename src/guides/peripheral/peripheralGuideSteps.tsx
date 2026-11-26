@@ -434,20 +434,6 @@ export function PeripheralTestStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <Text size="sm">{t(`${P}.periph-test.saveText`)}</Text>
-      {/* The setup guide saves in a step of its own */}
-      {!props.nested && (
-        <Button
-          size="md"
-          color="teal"
-          disabled={!connected}
-          loading={saving}
-          leftSection={<IconDeviceFloppy size={18} />}
-          onClick={handleSave}
-        >
-          {saved ? t('guides.common.btnSaved') : t(`${P}.periph-test.btnSave`)}
-        </Button>
-      )}
-
       <Title order={4}>{t(`${P}.periph-test.nextTitle`)}</Title>
       <GuideList type="ordered" items={t(`${P}.periph-test.nextSteps`, { returnObjects: true })} />
       {peripheral && (
@@ -470,17 +456,33 @@ export function PeripheralTestStep(props: GuideStepProps) {
   );
 
   const workbenchContent = (
-    <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          {t(`${P}.periph-test.statusTitle`)}
-        </Text>
-        <PeripheralStatus />
-        <Text size="xs" c="dimmed">
-          {t(`${P}.periph-test.statusHint`)}
-        </Text>
-      </Stack>
-    </Paper>
+    <Stack gap="md">
+      <Paper withBorder p="md" radius="md" bg="var(--mantine-color-body)">
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed">
+            {t(`${P}.periph-test.statusTitle`)}
+          </Text>
+          <PeripheralStatus />
+          <Text size="xs" c="dimmed">
+            {t(`${P}.periph-test.statusHint`)}
+          </Text>
+        </Stack>
+      </Paper>
+      {/* Saving needs the controller, so it lives with the live status. The setup guide saves in
+          a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t('guides.common.btnSaved') : t(`${P}.periph-test.btnSave`)}
+        </Button>
+      )}
+    </Stack>
   );
 
   return (

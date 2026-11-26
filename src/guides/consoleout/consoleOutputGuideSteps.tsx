@@ -91,6 +91,7 @@ function ConsoleChoice({
           {t(`${K}.console-intro.consoleSelectLabel`)}
         </Text>
         <SegmentedControl
+          data-guide-choice
           orientation="vertical"
           fullWidth
           value={target}
@@ -106,6 +107,7 @@ function ConsoleChoice({
           {t(`${K}.console-intro.usbSelectLabel`)}
         </Text>
         <SegmentedControl
+          data-guide-choice
           orientation="vertical"
           fullWidth
           value={usbHost ? 'yes' : 'no'}
@@ -124,6 +126,7 @@ function ConsoleChoice({
           {t(`${K}.console-intro.powerSelectLabel`)}
         </Text>
         <SegmentedControl
+          data-guide-choice
           orientation="vertical"
           fullWidth
           value={power}
@@ -643,20 +646,6 @@ export function ConsoleOutputTestStep(props: GuideStepProps) {
   const guideContent = (
     <Stack gap="md">
       <Text size="sm">{t(`${K}.console-test.saveText`)}</Text>
-      {/* The setup guide saves in a step of its own */}
-      {!props.nested && (
-        <Button
-          size="md"
-          color="teal"
-          disabled={!connected}
-          loading={saving}
-          leftSection={<IconDeviceFloppy size={18} />}
-          onClick={handleSave}
-        >
-          {saved ? t('guides.common.btnSaved') : t(`${K}.console-test.btnSave`)}
-        </Button>
-      )}
-
       <Title order={4}>{t(`${K}.console-test.expectTitle`)}</Title>
       <GuideList
         type="ordered"
@@ -717,6 +706,20 @@ export function ConsoleOutputTestStep(props: GuideStepProps) {
         </Stack>
       </Paper>
       <ConsoleTypeCard target={target} />
+      {/* Saving needs the controller, so it lives with the live status. The setup guide saves in
+          a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t('guides.common.btnSaved') : t(`${K}.console-test.btnSave`)}
+        </Button>
+      )}
     </Stack>
   );
 

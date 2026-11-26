@@ -71,6 +71,7 @@ export function BoardPicker({ plainNote }: { plainNote?: React.ReactNode }) {
           {t(`${B}.desc`)}
         </Text>
         <SegmentedControl
+          data-guide-choice
           fullWidth
           size="xs"
           value={board ?? ''}
@@ -363,6 +364,7 @@ export function WirelessBatteryStep(props: GuideStepProps) {
             {t(`${S}.sensorDesc`)}
           </Text>
           <SegmentedControl
+            data-guide-choice
             fullWidth
             size="xs"
             value={sensor}
@@ -704,20 +706,6 @@ export function WirelessTestStep(props: GuideStepProps) {
     <Stack gap="md">
       <Title order={4}>{t(`${S}.testTitle`)}</Title>
       <GuideList type="ordered" items={t(`${S}.testSteps`, { returnObjects: true })} />
-
-      {/* The setup guide saves in a step of its own */}
-      {!props.nested && (
-        <Button
-          size="md"
-          color="teal"
-          disabled={!connected}
-          loading={saving}
-          leftSection={<IconDeviceFloppy size={18} />}
-          onClick={handleSave}
-        >
-          {saved ? t('guides.common.btnSaved') : t(`${S}.btnSave`)}
-        </Button>
-      )}
     </Stack>
   );
 
@@ -746,6 +734,20 @@ export function WirelessTestStep(props: GuideStepProps) {
           )}
         </Stack>
       </Paper>
+      {/* Saving needs the controller, so it lives with the live status. The setup guide saves in
+          a step of its own */}
+      {!props.nested && (
+        <Button
+          size="md"
+          color="teal"
+          disabled={!connected}
+          loading={saving}
+          leftSection={<IconDeviceFloppy size={18} />}
+          onClick={handleSave}
+        >
+          {saved ? t('guides.common.btnSaved') : t(`${S}.btnSave`)}
+        </Button>
+      )}
     </Stack>
   );
 

@@ -55,6 +55,7 @@ export function IntroStep(props: GuideStepProps) {
           {t('guides.direct-pico-guitar.steps.intro.guitarFamilyLabel')}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="sm"
           value={family}
           onChange={(v) => handleFamilyChange(v as GuitarFamily)}

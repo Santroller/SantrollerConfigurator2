@@ -5,6 +5,7 @@ import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core
 import { Layout } from '@/components/Layout/Layout';
 import { OldFirmwareAlert } from '@/components/OldFirmwareAlert';
 import { GuideStepNav } from '@/guides/components/GuideStepNav';
+import { GuideDeviceGateContext } from '@/guides/components/StepActions';
 import { DIRECT_PICO_GUITAR_GUIDE } from '@/guides/guitar/guitarGuide';
 import { CONTEXTUAL_GUIDE_REGISTRY, getLocalizedGuide, useGuideById } from '@/guides/registry';
 import { useGuideSteps } from '@/guides/useGuideSteps';
@@ -14,8 +15,10 @@ export function GuidePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { guideId } = useParams<{ guideId?: string }>();
+  // Steps that only test the controller are left out until one is connected
   const guide = useVisibleSteps(
-    useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t)
+    useGuideById(guideId) ?? getLocalizedGuide(DIRECT_PICO_GUITAR_GUIDE, t),
+    { requireDevice: true }
   );
   const contextual = guide.id in CONTEXTUAL_GUIDE_REGISTRY;
   const returnPath = contextual ? '/profiles' : '/guides';
@@ -75,7 +78,9 @@ export function GuidePage() {
 
         {/* Active Step Content */}
         <Box mt="md">
-          <StepComponent {...stepProps} />
+          <GuideDeviceGateContext value>
+            <StepComponent {...stepProps} />
+          </GuideDeviceGateContext>
         </Box>
       </Container>
     </Layout>

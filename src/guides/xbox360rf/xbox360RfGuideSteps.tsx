@@ -98,6 +98,7 @@ export function Xbox360RfIntroStep(props: GuideStepProps) {
           {t('guides.xbox360-rf.steps.rf-intro.modelSelectLabel')}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="sm"
           value={model}
           onChange={(v) => handleModelChange(v as Xbox360RfModel)}
@@ -300,6 +301,7 @@ export function Xbox360RfWiringStep(props: GuideStepProps) {
           {t('guides.xbox360-rf.steps.rf-intro.modelSelectLabel')}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="xs"
           value={model}
           onChange={(v) => handleModelChange(v as Xbox360RfModel)}
@@ -695,6 +697,7 @@ export function Xbox360RfSyncStep(props: GuideStepProps) {
           {t('guides.xbox360-rf.steps.rf-intro.modelSelectLabel')}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="xs"
           value={model}
           onChange={(v) => handleModelChange(v as Xbox360RfModel)}

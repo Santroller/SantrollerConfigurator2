@@ -274,6 +274,7 @@ function MuxSetupCard({ setup }: { setup: ReturnType<typeof useMuxSetup> }) {
           {t(`${P}.drum-wiring.setupDesc`, pins)}
         </Text>
         <SegmentedControl
+          data-guide-choice
           size="xs"
           value={family}
           onChange={(value) => setFamily(value as DrumFamily)}
@@ -283,6 +284,7 @@ function MuxSetupCard({ setup }: { setup: ReturnType<typeof useMuxSetup> }) {
           ]}
         />
         <SegmentedControl
+          data-guide-choice
           size="xs"
           value={chip}
           onChange={(value) => setChip(value as MuxChip)}

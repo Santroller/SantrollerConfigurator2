@@ -57,7 +57,7 @@ export function TiltStep({ note, i2cShared, ...props }: TiltStepProps) {
       {note}
 
       <Tabs value={tab} onChange={setTab}>
-        <Tabs.List>
+        <Tabs.List data-guide-choice>
           <Tabs.Tab value="digital">
             {t('guides.direct-pico-guitar.steps.tilt.tabDigital')}
           </Tabs.Tab>

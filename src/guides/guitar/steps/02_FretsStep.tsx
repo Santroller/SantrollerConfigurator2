@@ -238,6 +238,10 @@ export function FretsStep(props: GuideStepProps) {
     const val = mode as FretWiringMode;
     setWiringMode(val);
     localStorage.setItem('santroller_guitar_fret_mode', val);
+    // Without a controller this only picks which instructions to show
+    if (!connected) {
+      return;
+    }
 
     // Free the pins and fret mappings of the RB methods that this one replaces (the matrix rows on
     // GP14 / GP15 clash with direct wiring's solo frets), then put the frets back on the GP2-GP6
@@ -329,6 +333,7 @@ export function FretsStep(props: GuideStepProps) {
           size="sm"
           orientation="vertical"
           fullWidth
+          data-guide-choice
           value={wiringMode}
           onChange={handleModeChange}
           data={selectorOptions}
@@ -610,33 +615,6 @@ export function FretsStep(props: GuideStepProps) {
             </Stack>
           </Card>
 
-          <Card withBorder radius="md" p="sm">
-            <Group justify="space-between" align="center">
-              <Stack gap={2}>
-                <Text fw={700} size="sm">
-                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverTitle')}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverDesc')}
-                </Text>
-              </Stack>
-              {isMatrixActive ? (
-                <Badge color="teal" variant="light" size="sm" leftSection={<IconCheck size={12} />}>
-                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverActive')}
-                </Badge>
-              ) : (
-                <Button
-                  size="xs"
-                  color="violet"
-                  leftSection={<IconPlugConnected size={14} />}
-                  onClick={handleEnableRbMatrix}
-                >
-                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverBtn')}
-                </Button>
-              )}
-            </Group>
-          </Card>
-
           <Alert
             color="teal"
             icon={<IconInfoCircle size={16} />}
@@ -744,33 +722,6 @@ export function FretsStep(props: GuideStepProps) {
                 </Table.Tbody>
               </Table>
             </Stack>
-          </Card>
-
-          <Card withBorder radius="md" p="sm">
-            <Group justify="space-between" align="center">
-              <Stack gap={2}>
-                <Text fw={700} size="sm">
-                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverTitle')}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverDesc')}
-                </Text>
-              </Stack>
-              {isShiftedActive ? (
-                <Badge color="teal" variant="light" size="sm" leftSection={<IconCheck size={12} />}>
-                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverActive')}
-                </Badge>
-              ) : (
-                <Button
-                  size="xs"
-                  color="violet"
-                  leftSection={<IconPlugConnected size={14} />}
-                  onClick={handleEnableRbShifted}
-                >
-                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverBtn')}
-                </Button>
-              )}
-            </Group>
           </Card>
 
           <Alert
@@ -1025,6 +976,37 @@ export function FretsStep(props: GuideStepProps) {
       {/* RB 7-Wire Matrix Mode Workbench */}
       {wiringMode === 'rb_solo' && (
         <Stack gap="md">
+          <Card withBorder radius="md" p="sm">
+            <Stack gap="xs">
+              <Text fw={700} size="sm">
+                {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverTitle')}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverDesc')}
+              </Text>
+
+              {isMatrixActive ? (
+                <Badge
+                  color="teal"
+                  size="md"
+                  variant="filled"
+                  leftSection={<IconCheck size={14} />}
+                >
+                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverActive')}
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  color="violet"
+                  leftSection={<IconPlugConnected size={16} />}
+                  onClick={handleEnableRbMatrix}
+                  disabled={!connected}
+                >
+                  {t('guides.direct-pico-guitar.steps.frets.rbSoloDriverBtn')}
+                </Button>
+              )}
+            </Stack>
+          </Card>
           <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-body)">
             <Stack gap="xs">
               <Text size="xs" fw={700} c="dimmed">
@@ -1052,6 +1034,37 @@ export function FretsStep(props: GuideStepProps) {
       {/* RB 7-Wire Shifted Mode Workbench */}
       {wiringMode === 'rb_shifted' && (
         <Stack gap="md">
+          <Card withBorder radius="md" p="sm">
+            <Stack gap="xs">
+              <Text fw={700} size="sm">
+                {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverTitle')}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverDesc')}
+              </Text>
+
+              {isShiftedActive ? (
+                <Badge
+                  color="teal"
+                  size="md"
+                  variant="filled"
+                  leftSection={<IconCheck size={14} />}
+                >
+                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverActive')}
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  color="violet"
+                  leftSection={<IconPlugConnected size={16} />}
+                  onClick={handleEnableRbShifted}
+                  disabled={!connected}
+                >
+                  {t('guides.direct-pico-guitar.steps.frets.rbShiftedDriverBtn')}
+                </Button>
+              )}
+            </Stack>
+          </Card>
           <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-body)">
             <Stack gap="xs">
               <Text size="xs" fw={700} c="dimmed">

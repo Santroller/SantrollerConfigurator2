@@ -17,17 +17,29 @@ export function finishSteps(build: string, check?: React.ComponentType): GuideSt
           {
             id: 'hostDevices',
             textKey: finishTextKey('hostDevices'),
+            // It adds the profiles to the controller, so there is nothing to pick without one
+            visible: ({ connected }) => connected,
             render: (props) => React.createElement(HostDevicesStep, { ...props, plugIn }),
           } satisfies GuideStepSource,
         ]
       : []),
     // Controllers plugged in can be guitars or drums too, which the games step finds in the profiles
     ...(instrument || plugIn
-      ? [{ id: 'games', textKey: finishTextKey('games'), render: GamesStep }]
+      ? [
+          {
+            id: 'games',
+            textKey: finishTextKey('games'),
+            // It sets up profiles on the controller, so there is nothing to pick without one
+            visible: ({ connected }) => connected,
+            render: GamesStep,
+          } satisfies GuideStepSource,
+        ]
       : []),
     {
       id: 'test',
       textKey: finishTextKey('test'),
+      // Without a controller there is nothing to test
+      visible: ({ connected }) => connected,
       render: (props) => React.createElement(TestStep, { ...props, check }),
     },
   ];
