@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
+import { OldFirmwareAlert } from '@/components/OldFirmwareAlert';
 import { GuideStepNav } from '@/guides/components/GuideStepNav';
 import { DIRECT_PICO_GUITAR_GUIDE } from '@/guides/guitar/guitarGuide';
 import { CONTEXTUAL_GUIDE_REGISTRY, getLocalizedGuide, useGuideById } from '@/guides/registry';
@@ -61,6 +62,8 @@ export function GuidePage() {
             </Text>
           </div>
         </Stack>
+
+        <OldFirmwareAlert guide mb="md" />
 
         {/* Step Chapters Navigation */}
         <GuideStepNav

@@ -22,6 +22,7 @@ import {
   Title,
 } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
+import { OldFirmwareAlert } from '@/components/OldFirmwareAlert';
 import { useAllGuides, useGuideCategories } from '@/guides/registry';
 import { GuideCategory } from '@/guides/types';
 
@@ -96,6 +97,8 @@ export function GuideCatalogPage() {
             </Group>
           </Group>
         </Stack>
+
+        <OldFirmwareAlert guide mb="lg" />
 
         {/* Filter & Search Bar */}
         <Group justify="space-between" align="center" mb="lg" gap="sm">

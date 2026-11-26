@@ -10,7 +10,6 @@ import {
   IconRefresh,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import {
   Alert,
   Button,
@@ -35,6 +34,7 @@ import { Layout } from '@/components/Layout/Layout';
 import { LEGACY_CONFIG_ACCEPT } from '@/components/Legacy/importLegacyConfig';
 import { translateLegacyWarning } from '@/components/Legacy/warnings';
 import { NixosUdevSnippet } from '@/components/NixosUdev/NixosUdevSnippet';
+import { OldFirmwareAlert } from '@/components/OldFirmwareAlert';
 import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothConfigDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { RadioFirmwareAlert } from '@/components/Uf2Update/RadioFirmwareAlert';
@@ -481,14 +481,7 @@ export function ConnectPage() {
         {!connected && (
           <>
             <Space h="md" />
-            <Alert
-              variant="light"
-              color="yellow"
-              title={t('connect.oldFirmwareTitle')}
-              icon={<IconAlertTriangle />}
-            >
-              {t('connect.oldFirmware')}
-            </Alert>
+            <OldFirmwareAlert />
           </>
         )}
         {udevStatus?.rulesNeeded && (
@@ -697,14 +690,6 @@ export function ConnectPage() {
             <Space h="md" />
             <Button disabled={updating} onClick={connectBluetooth}>
               {t('connect.connectBluetooth')}
-            </Button>
-          </>
-        )}
-        {!connected && (
-          <>
-            <Space h="md" />
-            <Button component={Link} to="/setup">
-              {t('connect.setup')}
             </Button>
           </>
         )}
