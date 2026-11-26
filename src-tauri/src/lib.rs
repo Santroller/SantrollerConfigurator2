@@ -20,6 +20,8 @@ use tauri::{ipc::{Channel, Request}, AppHandle, Emitter, Manager, State, Url};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
+mod windows_drivers;
+
 // Big enough for any report, the report id in front of it, and any report descriptor
 const BUFFER_SIZE: usize = 4096;
 // How long the worker waits for an input report before it checks for commands again
@@ -683,6 +685,8 @@ pub fn run() {
             save_file,
             check_udev_rules,
             install_udev_rules,
+            windows_drivers::check_windows_drivers,
+            windows_drivers::repair_windows_drivers,
             update_target,
             install_portable_update,
         ])

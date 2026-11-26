@@ -39,7 +39,14 @@ import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothCon
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { RadioFirmwareAlert } from '@/components/Uf2Update/RadioFirmwareAlert';
 import { Uf2UpdateAlert } from '@/components/Uf2Update/Uf2UpdateAlert';
-import { checkUdevRules, installUdevRules, UdevStatus } from '@/desktop/nativeHid';
+import {
+  checkUdevRules,
+  checkWindowsDrivers,
+  installUdevRules,
+  repairWindowsDrivers,
+  UdevStatus,
+  WindowsDriverStatus,
+} from '@/desktop/nativeHid';
 import { requestUpdateCheck, useUpdateCheck } from '@/desktop/updateCheckStore';
 
 const isDesktop = 'isTauri' in window;
@@ -100,8 +107,34 @@ export function ConnectPage() {
   const [udevInstallError, setUdevInstallError] = useState<string | null>(null);
   const [udevInstalledSuccess, setUdevInstalledSuccess] = useState(false);
 
+  const [windowsDrivers, setWindowsDrivers] = useState<WindowsDriverStatus | null>(null);
+  const [repairingWindowsDrivers, setRepairingWindowsDrivers] = useState(false);
+  const [windowsDriversError, setWindowsDriversError] = useState<string | null>(null);
+  const [windowsDriversFixed, setWindowsDriversFixed] = useState(false);
+
   useEffect(() => {
     checkUdevRules().then(setUdevStatus);
+  }, []);
+
+  // The controller may be plugged in after this page opens, and a stale driver hides it from the device
+  // list, so keep looking while on this page
+  useEffect(() => {
+    if (!isDesktop) {
+      return undefined;
+    }
+    let cancelled = false;
+    const check = () =>
+      checkWindowsDrivers().then((status) => {
+        if (!cancelled) {
+          setWindowsDrivers(status);
+        }
+      });
+    check();
+    const timer = window.setInterval(check, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
   return (
     <>
@@ -509,6 +542,67 @@ export function ConnectPage() {
                   </Button>
                 </>
               )}
+            </Alert>
+          </>
+        )}
+
+        {(!!windowsDrivers?.staleInterfaces.length || repairingWindowsDrivers) && (
+          <>
+            <Space h="md" />
+            <Alert
+              variant="light"
+              color="yellow"
+              title={t('connect.windowsDriversTitle')}
+              icon={<IconAlertTriangle />}
+            >
+              <Text size="sm">{t('connect.windowsDriversDesc')}</Text>
+              {windowsDriversError && (
+                <>
+                  <Space h="xs" />
+                  <Text size="sm" c="red">
+                    {windowsDriversError}
+                  </Text>
+                </>
+              )}
+              <Space h="sm" />
+              <Button
+                size="xs"
+                loading={repairingWindowsDrivers}
+                onClick={async () => {
+                  setRepairingWindowsDrivers(true);
+                  setWindowsDriversError(null);
+                  setWindowsDriversFixed(false);
+                  try {
+                    await repairWindowsDrivers();
+                    setWindowsDriversFixed(true);
+                    setWindowsDrivers(await checkWindowsDrivers());
+                  } catch (e) {
+                    setWindowsDriversError(
+                      String(e) === 'cancelled' ? t('connect.windowsDriversCancelled') : String(e)
+                    );
+                  } finally {
+                    setRepairingWindowsDrivers(false);
+                  }
+                }}
+              >
+                {t('connect.fixWindowsDrivers')}
+              </Button>
+            </Alert>
+          </>
+        )}
+
+        {windowsDriversFixed && (
+          <>
+            <Space h="md" />
+            <Alert
+              variant="light"
+              color="green"
+              title={t('connect.windowsDriversFixedTitle')}
+              icon={<IconCheck />}
+              withCloseButton
+              onClose={() => setWindowsDriversFixed(false)}
+            >
+              <Text size="sm">{t('connect.windowsDriversFixedDesc')}</Text>
             </Alert>
           </>
         )}

@@ -302,3 +302,33 @@ export async function installUdevRules(): Promise<void> {
     await invoke('install_udev_rules');
   }
 }
+
+export interface StaleWindowsInterface {
+  instanceId: string;
+  driver: string;
+  expectedDriver: string;
+}
+
+export interface WindowsDriverStatus {
+  isWindows: boolean;
+  staleInterfaces: StaleWindowsInterface[];
+}
+
+// Interfaces Windows left on the driver from an earlier layout (see src-tauri/src/windows_drivers.rs)
+export async function checkWindowsDrivers(): Promise<WindowsDriverStatus | null> {
+  if ('isTauri' in window) {
+    try {
+      return await invoke<WindowsDriverStatus>('check_windows_drivers');
+    } catch (e) {
+      console.warn('Failed to check Windows drivers:', e);
+    }
+  }
+  return null;
+}
+
+// Rejects with "cancelled" when the UAC prompt is declined
+export async function repairWindowsDrivers(): Promise<void> {
+  if ('isTauri' in window) {
+    await invoke('repair_windows_drivers');
+  }
+}
