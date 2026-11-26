@@ -2,16 +2,19 @@ import { IconAlertTriangle, IconArrowRight, IconUsb } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Alert, Button, Group, Space, Text } from '@mantine/core';
+import { migrateSupported } from './Migrate/backend';
 import { useConfigStore } from './SettingsContext/SettingsContext';
 
 // Santroller 1 and blank boards never show up as a device, so tell people how to get them
-// running before they go looking for one. Only shown while nothing is connected.
+// running before they go looking for one. Only shown while nothing is connected, and on the
+// Connect page only where the configurator can't set up Picos itself (Firefox, Safari).
 export function OldFirmwareAlert({ guide = false, mb }: { guide?: boolean; mb?: string }) {
   const { t } = useTranslation();
   const connected = useConfigStore((state) => state.connected);
   const connect = useConfigStore((state) => state.connect);
   const updating = useConfigStore((state) => state.updating);
-  if (connected) {
+  // Where Picos can be set up from the configurator, the Connect page offers that instead
+  if (connected || (!guide && migrateSupported())) {
     return null;
   }
   return (

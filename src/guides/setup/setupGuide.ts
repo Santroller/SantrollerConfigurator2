@@ -85,12 +85,22 @@ function pathSteps(path: SetupPath, build: SetupBuild | null): string[] {
   ];
 }
 
+// Steps the desktop app has already done when it flashed the controller itself. The import step
+// stays, as it shows what didn't come over exactly and can bring in other exported files.
+const FLASHED_HERE_SKIPS = ['export', 'flash', 'connect'];
+
 // Shown on the Setup a new device page rather than in the build guide catalog
-export function getSetupGuide(path: SetupPath, build: SetupBuild | null): GuideSource {
+export function getSetupGuide(
+  path: SetupPath,
+  build: SetupBuild | null,
+  flashedHere = false
+): GuideSource {
   return {
     id: 'setup',
     category: 'mods',
-    steps: pathSteps(path, build).map((id) => STEPS[id]),
+    steps: pathSteps(path, build)
+      .filter((id) => !flashedHere || !FLASHED_HERE_SKIPS.includes(id))
+      .map((id) => STEPS[id]),
   };
 }
 

@@ -7,6 +7,7 @@ import { Layout } from '@/components/Layout/Layout';
 import { SellerImageUpload } from '@/components/SettingsContext/SellerImageUpload';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { Uf2BuildError, Uf2BuildErrorCode } from '@/components/SettingsContext/uf2Layout';
+import { webHidUsable, WebUsbConfigDevice } from '@/components/SettingsContext/WebUsbConfigDevice';
 
 export function CommercialToolPage() {
   const connect = useConfigStore((state) => state.connect);
@@ -83,7 +84,7 @@ export function CommercialToolPage() {
             {t('commercial.requiredDevice.description')}
           </Alert>
         )}
-        {navigator.hid && !connected && (
+        {(webHidUsable() || WebUsbConfigDevice.isSupported()) && !connected && (
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={connect}>
@@ -91,7 +92,7 @@ export function CommercialToolPage() {
             </Button>
           </>
         )}
-        {navigator.hid && connected && (
+        {connected && (
           <>
             <Space h="md" />
             {simpleMode ? (

@@ -20,6 +20,7 @@ use tauri::{ipc::{Channel, Request}, AppHandle, Emitter, Manager, State, Url};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
+mod migrate;
 mod windows_drivers;
 
 // Big enough for any report, the report id in front of it, and any report descriptor
@@ -216,11 +217,17 @@ fn hid_watch(app: AppHandle, state: State<'_, HidState>) -> Result<(), String> {
         while let Some(event) = watch.next().await {
             let changed = match event {
                 HotplugEvent::Connected(info) => {
+                    if migrate::is_migrate_device(info.vendor_id(), info.product_id()) {
+                        let _ = app.emit("migrate-changed", ());
+                    }
                     (info.vendor_id() == SANTROLLER_VID
                         && (info.product_id() == SANTROLLER_PID || info.product_id() == SANTROLLER_V1_PID))
                         || (info.vendor_id() == LOGITECH_VID && info.product_id() == LOGITECH_MIC_PID)
                 }
-                HotplugEvent::Disconnected(_) => true,
+                HotplugEvent::Disconnected(_) => {
+                    let _ = app.emit("migrate-changed", ());
+                    true
+                }
             };
             if changed {
                 let _ = app.emit("hid-changed", ());
@@ -430,6 +437,8 @@ async fn check_udev_rules() -> Result<UdevStatus, String> {
                     && content.contains("2882")
                     // older rules didn't cover the USB devices RPCS3's passthrough opens
                     && content.contains("SUBSYSTEM==\"usb\"")
+                    // older rules didn't let Santroller 1 be read, or Picos be flashed over USB
+                    && content.contains("2e8a")
                     // older rules only had uaccess
                     && (has_logind || content.contains("GROUP=\"input\""))
             } else {
@@ -689,6 +698,12 @@ pub fn run() {
             windows_drivers::repair_windows_drivers,
             update_target,
             install_portable_update,
+            migrate::migrate_scan,
+            migrate::s1_read_config,
+            migrate::s1_bootloader,
+            migrate::s1_saved_presets,
+            migrate::s1_backup_config,
+            migrate::flash_uf2,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run the Santroller Configurator");

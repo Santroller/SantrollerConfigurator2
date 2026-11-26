@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { Layout } from '@/components/Layout/Layout';
+import { MigratePrompt } from '@/components/Migrate/MigratePrompt';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { GuideStepNav, topLevelPosition } from '@/guides/components/GuideStepNav';
 import { getLocalizedGuide, GUIDE_REGISTRY } from '@/guides/registry';
@@ -18,12 +19,13 @@ export function SetupPage() {
   const path = useSetupPath((state) => state.path);
   const build = useSetupPath((state) => state.build);
   const extras = useSetupPath((state) => state.extras);
+  const flashedHere = useSetupPath((state) => state.flashedHere);
   const allSteps = useMemo(() => {
     const buildGuide = path === 'fresh' && build ? GUIDE_REGISTRY[build] : undefined;
     // Extras are picked with the build, so only a fresh controller has them
     const picked = path === 'fresh' ? extrasFor(build).filter((id) => extras.includes(id)) : [];
     return withBuildGuide(
-      getLocalizedGuide(getSetupGuide(path, build), t),
+      getLocalizedGuide(getSetupGuide(path, build, flashedHere), t),
       buildGuide && {
         guide: getLocalizedGuide(buildGuide, t),
         label: t(`guides.setup.build.names.${build}`, '') || undefined,
@@ -33,7 +35,7 @@ export function SetupPage() {
         label: t(`guides.setup.build.extras.${id}.name`),
       }))
     );
-  }, [t, path, build, extras]);
+  }, [t, path, build, extras, flashedHere]);
   const guide = useVisibleSteps(allSteps);
   // A controller that came from a seller is already configured and mapped. Sellers setting
   // up their own devices don't need telling.
@@ -88,6 +90,8 @@ export function SetupPage() {
             </Group>
           </Group>
         </Stack>
+
+        <MigratePrompt />
 
         {fromSeller && (
           <Alert

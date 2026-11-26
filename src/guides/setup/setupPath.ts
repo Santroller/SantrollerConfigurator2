@@ -111,6 +111,10 @@ export const useSetupPath = create<{
   setBuild: (build: SetupBuild) => void;
   extras: string[];
   setExtras: (extras: string[]) => void;
+  // The desktop app flashed the controller and connected to it (and brought its Santroller 1
+  // config over), so the guide skips those steps. Only for this session.
+  flashedHere: boolean;
+  setFlashedHere: (flashedHere: boolean) => void;
 }>((set) => ({
   path: loadPath(),
   setPath: (path) => {
@@ -127,4 +131,6 @@ export const useSetupPath = create<{
     store(EXTRAS_STORAGE_KEY, JSON.stringify(extras));
     set({ extras });
   },
+  flashedHere: false,
+  setFlashedHere: (flashedHere) => set({ flashedHere }),
 }));

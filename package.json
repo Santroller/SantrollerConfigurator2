@@ -34,6 +34,7 @@
     "@tauri-apps/api": "^2.12.3",
     "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-updater": "^2.13.3",
+    "brotli": "^2.1.0",
     "i18next": "^26.3.6",
     "immer": "^10.1.1",
     "protobufjs": "7.4.0",

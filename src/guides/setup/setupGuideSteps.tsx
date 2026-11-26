@@ -1026,9 +1026,15 @@ export function SetupImportStep(props: GuideStepProps) {
   const updating = useConfigStore((state) => state.updating);
   const importLegacyConfig = useConfigStore((state) => state.importLegacyConfig);
   const warnings = useConfigStore((state) => state.legacyImportWarnings);
+  const flashedHere = useSetupPath((state) => state.flashedHere);
 
   const guideContent = (
     <Stack gap="md">
+      {flashedHere && (
+        <Alert variant="light" color="teal" icon={<IconCheck size={18} />}>
+          <Text size="sm">{t('migrate.importedHere')}</Text>
+        </Alert>
+      )}
       <StepSections keys={['santroller1Import']} />
       <StepActions>
         <Group>

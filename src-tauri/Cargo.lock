@@ -3144,6 +3144,7 @@ dependencies = [
 name = "santroller-configurator"
 version = "0.1.0"
 dependencies = [
+ "brotli-decompressor",
  "futures-lite",
  "hidapi",
  "nusb",

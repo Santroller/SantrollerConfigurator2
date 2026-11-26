@@ -7,6 +7,11 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2883", TAG+="ua
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="2886", TAG+="uaccess", MODE="0660", GROUP="input"
 # A Santroller that is only a microphone, as a Logitech USB Microphone (the real one has no hidraw node)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0a03", TAG+="uaccess", MODE="0660", GROUP="input"
+# Santroller 1, whose config is read over USB to bring it over to Santroller 2
+SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="2882", TAG+="uaccess", MODE="0660", GROUP="input"
+# The Pico's bootloader, for installing Santroller when its drive isn't mounted
+SUBSYSTEM=="usb", ATTR{idVendor}=="2e8a", ATTR{idProduct}=="0003", TAG+="uaccess", MODE="0660", GROUP="input"
+SUBSYSTEM=="usb", ATTR{idVendor}=="2e8a", ATTR{idProduct}=="000f", TAG+="uaccess", MODE="0660", GROUP="input"
 
 # Switch
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0f0d", ATTRS{idProduct}=="0092", TAG+="uaccess", MODE="0660", GROUP="input"

@@ -33,10 +33,18 @@ import {
 import { Layout } from '@/components/Layout/Layout';
 import { LEGACY_CONFIG_ACCEPT } from '@/components/Legacy/importLegacyConfig';
 import { translateLegacyWarning } from '@/components/Legacy/warnings';
+import { MigratePrompt } from '@/components/Migrate/MigratePrompt';
+import { useMigrate } from '@/components/Migrate/migrateStore';
+import { INSTALL_FILTERS } from '@/components/Migrate/webBackend';
 import { NixosUdevSnippet } from '@/components/NixosUdev/NixosUdevSnippet';
 import { OldFirmwareAlert } from '@/components/OldFirmwareAlert';
 import { BluetoothConfigDevice } from '@/components/SettingsContext/BluetoothConfigDevice';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import {
+  SANTROLLER_FILTER,
+  webHidUsable,
+  WebUsbConfigDevice,
+} from '@/components/SettingsContext/WebUsbConfigDevice';
 import { RadioFirmwareAlert } from '@/components/Uf2Update/RadioFirmwareAlert';
 import { Uf2UpdateAlert } from '@/components/Uf2Update/Uf2UpdateAlert';
 import {
@@ -62,6 +70,8 @@ const BLUEFY_URL = 'https://apps.apple.com/app/bluefy-web-ble-browser/id14928220
 export function ConnectPage() {
   const connect = useConfigStore((state) => state.connect);
   const connectBluetooth = useConfigStore((state) => state.connectBluetooth);
+  const connectWebUsb = useConfigStore((state) => state.connectWebUsb);
+  const rescanInstallable = useMigrate((state) => state.rescan);
   const disconnect = useConfigStore((state) => state.disconnect);
   const bootloader = useConfigStore((state) => state.bootloader);
   const exportConfig = useConfigStore((state) => state.exportConfig);
@@ -94,6 +104,7 @@ export function ConnectPage() {
   const simpleMode = useConfigStore((state) => state.simpleMode);
   const setSimpleMode = useConfigStore((state) => state.setSimpleMode);
   const uf2Required = useConfigStore((state) => state.uf2Required);
+  const webUsbFirmwareTooOld = useConfigStore((state) => state.webUsbFirmwareTooOld);
   const flashTooSmallForOta = useConfigStore((state) => state.flashTooSmallForOta);
   const [advancedModalOpened, { open: openAdvancedModal, close: closeAdvancedModal }] =
     useDisclosure(false);
@@ -102,6 +113,31 @@ export function ConnectPage() {
   const updateCheckStatus = useUpdateCheck((state) => state.status);
   const { t } = useTranslation();
   const bluetoothSupported = BluetoothConfigDevice.isSupported();
+  // WebHID, or WebUSB where WebHID can't reach the controller (Android)
+  const usbSupported = webHidUsable() || WebUsbConfigDevice.isSupported();
+
+  // Over WebUSB a Santroller 2, a Santroller 1 and a Pico in BOOTSEL can all come from the same chooser, so
+  // one button covers them all. Anything that isn't a Santroller 2 shows up in the install cards once picked
+  const connectUsb = async () => {
+    if (!WebUsbConfigDevice.isSupported()) {
+      connect();
+      return;
+    }
+    let device: USBDevice;
+    try {
+      device = await navigator.usb.requestDevice({
+        filters: [SANTROLLER_FILTER, ...INSTALL_FILTERS],
+      });
+    } catch {
+      // closed without picking anything
+      return;
+    }
+    if (WebUsbConfigDevice.matches(device)) {
+      await connectWebUsb(device);
+    } else {
+      await rescanInstallable();
+    }
+  };
   const [udevStatus, setUdevStatus] = useState<UdevStatus | null>(null);
   const [installingUdev, setInstallingUdev] = useState(false);
   const [udevInstallError, setUdevInstallError] = useState<string | null>(null);
@@ -274,7 +310,12 @@ export function ConnectPage() {
           <Space h="xs" />
           <NixosUdevSnippet />
         </Modal>
-        {!navigator.hid && !bluetoothSupported && isIos && (
+        {webUsbFirmwareTooOld && !connected && (
+          <Alert variant="light" color="red" icon={<IconExclamationCircle />}>
+            {t('connect.webUsbFirmwareTooOld')}
+          </Alert>
+        )}
+        {!usbSupported && !bluetoothSupported && isIos && (
           <Alert
             variant="light"
             color="red"
@@ -290,7 +331,7 @@ export function ConnectPage() {
             </Button>
           </Alert>
         )}
-        {!navigator.hid && !bluetoothSupported && !isIos && (
+        {!usbSupported && !bluetoothSupported && !isIos && (
           <Alert
             variant="light"
             color="red"
@@ -478,12 +519,9 @@ export function ConnectPage() {
             </Button>
           </Alert>
         )}
-        {!connected && (
-          <>
-            <Space h="md" />
-            <OldFirmwareAlert />
-          </>
-        )}
+        <Space h="md" />
+        <MigratePrompt />
+        {!connected && <OldFirmwareAlert />}
         {udevStatus?.rulesNeeded && (
           <>
             <Space h="md" />
@@ -679,13 +717,18 @@ export function ConnectPage() {
         )}
 
         <Space h="md" />
-        {navigator.hid && !connected && (
-          <Button disabled={updating} onClick={connect}>
-            {t('connect.connect')}
+        {usbSupported && !connected && (
+          <Button disabled={updating} onClick={() => void connectUsb()}>
+            {WebUsbConfigDevice.isSupported() ? t('connect.connectUsb') : t('connect.connect')}
           </Button>
         )}
-        {/* Only for browsers without WebHID (like Android), as USB works everywhere else */}
-        {bluetoothSupported && !navigator.hid && !connected && (
+        {WebUsbConfigDevice.isSupported() && !connected && (
+          <Text size="xs" c="dimmed" mt="xs">
+            {t('connect.connectUsbHint')}
+          </Text>
+        )}
+        {/* Only where WebHID can't be used (like Android), as it works for any controller everywhere else */}
+        {bluetoothSupported && !webHidUsable() && !connected && (
           <>
             <Space h="md" />
             <Button disabled={updating} onClick={connectBluetooth}>
@@ -760,7 +803,7 @@ export function ConnectPage() {
 
         <RadioFirmwareAlert />
 
-        {navigator.hid && !isDesktop && (
+        {webHidUsable() && !isDesktop && (
           <>
             <Space h="md" />
             <DesktopDownloadButton />

@@ -65,6 +65,11 @@ import { migrateAuxSubtypes, migrateConfigSubtypes, subtypeFromStored } from './
 import { centerTilt } from './tiltCenter';
 import { fixAbsoluteTriggerDeadzones, migrateMappingTriggers } from './triggerDeadzone';
 import { configFlashAddress, parseFirmwareLayout, Uf2BuildError } from './uf2Layout';
+import {
+  SANTROLLER_FILTER,
+  WebUsbConfigDevice,
+  WebUsbUnsupportedFirmwareError,
+} from './WebUsbConfigDevice';
 
 // sourceId is unique per interface (including virtual wireless controller slots), older
 // firmware doesn't send it so fall back to port / interface
@@ -594,6 +599,11 @@ export interface ConfigState {
   // The controller reloaded but never came back with its config interface, e.g. a profile
   // switched it into a mode like PS3 that doesn't have one
   reloadLost: boolean;
+  // The controller picked over WebUSB runs firmware from before it could be configured that way
+  webUsbFirmwareTooOld: boolean;
+  // A controller configured over WebUSB restarted, and Android only lets it be opened again once it's picked
+  // in the chooser again, which needs a tap
+  webUsbReconnectNeeded: boolean;
   writing: boolean;
   polling: boolean;
   refreshingBluetooth: boolean;
@@ -701,6 +711,10 @@ export interface Actions {
   updateConfig: (config: proto.IConfig) => void;
   deleteDevice: (id: string) => void;
   connect: () => void;
+  // A device picked in the WebUSB chooser (Android)
+  connectWebUsb: (device: USBDevice) => Promise<void>;
+  // Shows the WebUSB chooser to pick the controller again after it restarted, or takes one already picked
+  reconnectWebUsb: (picked?: USBDevice) => Promise<void>;
   connectBluetooth: () => void;
   connectDevice: (device: HIDDevice) => Promise<void>;
   firmwareUpdate: () => void;
@@ -923,6 +937,8 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
       migratedLedPatterns,
     waitingForReload: false,
     reloadLost: false,
+    webUsbFirmwareTooOld: false,
+    webUsbReconnectNeeded: false,
     updating: false,
     applyingUpdate: false,
     connected: false,
@@ -2322,7 +2338,9 @@ const configStore = create<ConfigState & Actions>()(
       }
       // Firmware updates have their own timeout, as they take a lot longer to come back
       const awaitingReload = state.waitingForReload && !state.updating;
+      const overWebUsb = dev instanceof WebUsbConfigDevice;
       set((state) => {
+        state.webUsbReconnectNeeded = overWebUsb && state.waitingForReload;
         state.keepaliveTimeout = undefined;
         state.connected = state.waitingForReload;
         state.hung = false;
@@ -2332,8 +2350,9 @@ const configStore = create<ConfigState & Actions>()(
         state.hidDevice = undefined;
       });
       // The controller may come back in a mode without the config interface (like a profile that
-      // forces PS3 mode), which we never see, so stop waiting for it eventually
-      if (awaitingReload) {
+      // forces PS3 mode), which we never see, so stop waiting for it eventually. Over WebUSB it waits on
+      // the user picking it again instead, which finds that out
+      if (awaitingReload && !overWebUsb) {
         stopReloadReconnectTimer();
         const isBluetooth = dev instanceof BluetoothConfigDevice;
         reloadReconnectTimer = setTimeout(
@@ -2381,6 +2400,7 @@ const configStore = create<ConfigState & Actions>()(
           polling: true,
           waitingForReload: false,
           reloadLost: false,
+          webUsbReconnectNeeded: false,
           ...(finishingUpdate
             ? {
                 updating: false,
@@ -2524,7 +2544,16 @@ const configStore = create<ConfigState & Actions>()(
       await get().saveConfig();
       // The device reloads the new config in place and keeps polling the profile the tool last
       // picked, which may not exist any more, so pick the current one again
-      await get().setActiveProfile(get().currentProfile.toString());
+      try {
+        await get().setActiveProfile(get().currentProfile.toString());
+      } catch (e) {
+        // A config that changes how the device enumerates makes it re-enumerate, which can cut this
+        // off. Reconnecting picks the profile again, so that's fine.
+        if (!get().waitingForReload) {
+          throw e;
+        }
+        console.log('The device reloaded before its profile was picked again', e);
+      }
     },
     factoryReset: async () => {
       const { config } = get().buildConfig();
@@ -3130,6 +3159,18 @@ const configStore = create<ConfigState & Actions>()(
       }, FIRMWARE_APPLY_PROGRESS_INTERVAL_MS);
     },
     connect: async () => {
+      if (WebUsbConfigDevice.isSupported()) {
+        let usbDevice: USBDevice;
+        try {
+          usbDevice = await navigator.usb.requestDevice({ filters: [SANTROLLER_FILTER] });
+        } catch (e) {
+          // the user closed the device picker
+          console.log(e);
+          return;
+        }
+        await get().connectWebUsb(usbDevice);
+        return;
+      }
       if (!navigator.hid) {
         return;
       }
@@ -3145,6 +3186,53 @@ const configStore = create<ConfigState & Actions>()(
       if (devices.length) {
         await get().connectDevice(devices[0]);
       }
+    },
+    connectWebUsb: async (device: USBDevice) => {
+      set((state) => {
+        state.webUsbFirmwareTooOld = false;
+      });
+      const usbDevice = new WebUsbConfigDevice(device);
+      try {
+        await usbDevice.open();
+      } catch (e) {
+        if (e instanceof WebUsbUnsupportedFirmwareError) {
+          set((state) => {
+            state.webUsbFirmwareTooOld = true;
+          });
+          return;
+        }
+        throw e;
+      }
+      await get().connectDevice(usbDevice as unknown as HIDDevice);
+    },
+    reconnectWebUsb: async (picked?: USBDevice) => {
+      let usbDevice: USBDevice;
+      try {
+        usbDevice = picked ?? (await navigator.usb.requestDevice({ filters: [SANTROLLER_FILTER] }));
+      } catch (e) {
+        // the user closed the device picker, they can try again
+        console.log(e);
+        return;
+      }
+      const device = new WebUsbConfigDevice(usbDevice);
+      try {
+        await device.open();
+      } catch (e) {
+        // back in a mode without the config interface, which stalls the config requests
+        console.log('WebUSB reconnect failed', e);
+        set((state) => {
+          state.webUsbReconnectNeeded = false;
+          state.waitingForReload = false;
+          state.connected = false;
+          state.reloadLost = true;
+        });
+        return;
+      }
+      if (get().hidDevice) {
+        await device.close();
+        return;
+      }
+      await get().reconnect(device as unknown as HIDDevice);
     },
     connectBluetooth: async () => {
       if (!BluetoothConfigDevice.isSupported()) {
@@ -3572,6 +3660,84 @@ if (navigator.hid) {
   navigator.hid.addEventListener('connect', connect);
 }
 
+// The same for a controller configured over WebUSB. Its USBDevice is a new one each time it enumerates
+// Chrome on Android doesn't reliably say when the controller comes back, and its connect event can arrive
+// before the disconnect has been dealt with, so while waiting for a reload look for it ourselves as well
+const WEBUSB_RECONNECT_POLL_MS = 500;
+let webUsbReconnectTimer: ReturnType<typeof setTimeout> | undefined;
+// The event and the poll can both find it, and only one of them gets to open it
+let webUsbReconnecting = false;
+
+async function tryWebUsbReconnect(usbDevice: USBDevice) {
+  const state = useConfigStore.getState();
+  if (
+    webUsbReconnecting ||
+    !state.waitingForReload ||
+    state.hidDevice ||
+    !WebUsbConfigDevice.matches(usbDevice)
+  ) {
+    return false;
+  }
+  webUsbReconnecting = true;
+  try {
+    const device = new WebUsbConfigDevice(usbDevice);
+    try {
+      await device.open();
+    } catch (err) {
+      // not ready yet, or back in a mode without the config interface, which stalls the config requests
+      console.log('WebUSB reconnect failed', err);
+      return false;
+    }
+    if (useConfigStore.getState().hidDevice) {
+      await device.close();
+      return false;
+    }
+    await useConfigStore.getState().reconnect(device as unknown as HIDDevice);
+    return true;
+  } finally {
+    webUsbReconnecting = false;
+  }
+}
+
+function pollWebUsbReconnect() {
+  if (webUsbReconnectTimer) {
+    clearTimeout(webUsbReconnectTimer);
+  }
+  webUsbReconnectTimer = setTimeout(async () => {
+    webUsbReconnectTimer = undefined;
+    const state = useConfigStore.getState();
+    // back, or the reload gave up on it
+    if (!state.waitingForReload || state.hidDevice) {
+      return;
+    }
+    for (const usbDevice of await navigator.usb.getDevices()) {
+      if (!usbDevice.opened && (await tryWebUsbReconnect(usbDevice))) {
+        return;
+      }
+    }
+    pollWebUsbReconnect();
+  }, WEBUSB_RECONNECT_POLL_MS);
+}
+
+// The same as WebHID's connect and disconnect, for a controller configured over WebUSB. Its USBDevice is a new
+// one each time it enumerates
+const usbDisconnect = async (e: USBConnectionEvent) => {
+  const device = useConfigStore.getState().hidDevice as unknown;
+  if (device instanceof WebUsbConfigDevice && device.device === e.device) {
+    await useConfigStore.getState().disconnect();
+    if (useConfigStore.getState().waitingForReload) {
+      pollWebUsbReconnect();
+    }
+  }
+};
+const usbConnect = async (e: USBConnectionEvent) => {
+  await tryWebUsbReconnect(e.device);
+};
+if (WebUsbConfigDevice.isSupported()) {
+  navigator.usb.addEventListener('disconnect', usbDisconnect);
+  navigator.usb.addEventListener('connect', usbConnect);
+}
+
 // make sure we disconnect from the device when using HMR in development. Only when this module is
 // replaced, as any other update would remove the listeners without this module adding them back
 if (import.meta.hot) {
@@ -3579,8 +3745,13 @@ if (import.meta.hot) {
     stopReloadReconnectTimer();
     useConfigStore.setState((old) => ({ ...old, waitingForReload: false }));
     useConfigStore.getState().disconnect();
-    navigator.hid.removeEventListener('disconnect', disconnect);
-    navigator.hid.removeEventListener('connect', connect);
+    navigator.hid?.removeEventListener('disconnect', disconnect);
+    navigator.hid?.removeEventListener('connect', connect);
+    navigator.usb?.removeEventListener('disconnect', usbDisconnect);
+    navigator.usb?.removeEventListener('connect', usbConnect);
+    if (webUsbReconnectTimer) {
+      clearTimeout(webUsbReconnectTimer);
+    }
   });
 }
 useConfigStore.getState().checkLogin();

@@ -51,6 +51,7 @@ import {
   Modal,
   NavLink,
   Space,
+  Text,
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
@@ -72,6 +73,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const connected = useConfigStore((state) => state.connected);
   const hung = useConfigStore((state) => state.hung);
   const reloadLost = useConfigStore((state) => state.reloadLost && !state.connected);
+  const webUsbReconnectNeeded = useConfigStore(
+    (state) => state.webUsbReconnectNeeded && !state.hidDevice
+  );
+  const reconnectWebUsb = useConfigStore((state) => state.reconnectWebUsb);
   const deferredMode = useConfigStore((state) => (state.connected ? state.deferredMode : null));
   const updating = useConfigStore((state) => state.updating);
   const pollInputs = useConfigStore((state) => state.pollInputs);
@@ -924,6 +929,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {t('connect.modeDeferred', {
                   mode: t(`consoleMode.${proto.ConsoleMode[deferredMode]}`),
                 })}
+              </Alert>
+              <Space h="md" />
+            </>
+          )}
+          {webUsbReconnectNeeded && (
+            <>
+              <Alert
+                variant="light"
+                color="blue"
+                title={t('connect.webUsbReconnectTitle')}
+                icon={<IconAlertCircle />}
+              >
+                <Text size="sm">{t('connect.webUsbReconnect')}</Text>
+                <Button size="xs" mt="sm" onClick={() => void reconnectWebUsb()}>
+                  {t('connect.webUsbReconnectButton')}
+                </Button>
               </Alert>
               <Space h="md" />
             </>

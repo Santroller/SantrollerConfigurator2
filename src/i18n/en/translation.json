@@ -1175,7 +1175,7 @@
       },
       "connect": {
         "title": "Connect to the configurator",
-        "body": "On the main page, click <strong>Connect to a Santroller powered device</strong> and pick your controller. On the website, use a Chromium-based browser such as Chrome or Edge, or download the desktop app."
+        "body": "On the main page, click <strong>Connect to a Santroller 2 powered device</strong> and pick your controller. On the website, use a Chromium-based browser such as Chrome or Edge, or download the desktop app."
       },
       "update": {
         "title": "Update the firmware if asked",
@@ -3035,9 +3035,101 @@
     "unnamed": "Unknown controller",
     "serial": "Serial number {{serial}}"
   },
+  "migrate": {
+    "deviceConfigName": "Santroller 1",
+    "importedHere": "Santroller 2 is installed, and what you picked has been brought over from Santroller 1. You can bring in other exported files here too, but that replaces what's there now.",
+    "bootsel": {
+      "title": "A Pico is ready to be programmed",
+      "body": {
+        "rp2040": "A Pico (RP2040) is plugged in and waiting in its bootloader. Install Santroller on it and the setup guide will take it from there.",
+        "rp2350": "A Pico 2 (RP2350) is plugged in and waiting in its bootloader. Install Santroller on it and the setup guide will take it from there."
+      },
+      "install": "Install Santroller"
+    },
+    "web": {
+      "title": "Install Santroller 2 on a Pico",
+      "body": "Plug in a Pico while holding its BOOTSEL button, or a controller running Santroller 1, and choose it to install Santroller 2 on it.",
+      "choose": "Choose a Pico"
+    },
+    "santroller1": {
+      "title": "Santroller 1 controller found",
+      "body": "This controller is still running Santroller 1. It can be moved to Santroller 2, bringing its config, and any presets you saved in Santroller 1, over as profiles.",
+      "move": "Move to Santroller 2",
+      "consoleModeTitle": "Santroller 1 controller in a console mode",
+      "consoleMode": "This controller is running Santroller 1 in a console mode, so its config can't be read. Unplug it and plug it back in without holding any mode buttons, so it starts in PC mode, and it can be moved to Santroller 2 from here.",
+      "unreadable": "This controller is running Santroller 1, but couldn't be asked what it is. Unplugging it and plugging it back in may help.",
+      "notPico": "This controller is running Santroller 1 on a board Santroller 2 doesn't support ({{board}}). Santroller 2 needs a Raspberry Pi Pico, so keep using Santroller 1 for this one."
+    },
+    "choose": {
+      "title": "Move to Santroller 2",
+      "loading": "Reading the config off your controller…",
+      "intro": "Pick what to bring over. Each one becomes a profile in Santroller 2.",
+      "fromDevice": "The config on this controller",
+      "preset": "Saved preset: {{name}}",
+      "nothing": "There's nothing to bring over, so the controller will start out empty.",
+      "deviceError": "The config on this controller couldn't be read, so it can't be brought over.",
+      "presetsError": "The presets saved in Santroller 1 couldn't be read.",
+      "presetsFile": "To bring over presets you saved in Santroller 1 too, pick its settings file. It's here:",
+      "pickPresets": "Pick Santroller 1's settings file",
+      "noPresets": "There are no presets saved in that file.",
+      "warning": "Installing Santroller 2 replaces Santroller 1 on this controller. A copy of its config is kept, in case you need it again.",
+      "install": "Install Santroller 2"
+    },
+    "progress": {
+      "title": "Installing Santroller",
+      "bootloader": "Restarting the controller into its bootloader…",
+      "flashing": "Installing Santroller. Don't unplug the controller.",
+      "connecting": "Waiting for the controller to start up…",
+      "importing": "Bringing your Santroller 1 config over. The controller restarts to apply it…",
+      "connectPrompt": "Once it's started up, connect to it to carry on.",
+      "connect": "Connect to the controller",
+      "reconnect": "Santroller 2 is installed. Pick the controller once more so your Santroller 1 config can be sent to it.",
+      "reconnectButton": "Pick the controller",
+      "pickBootsel": {
+        "rp2040": "The controller has restarted into its bootloader. Choose it (RP2 Boot) so Santroller can be installed.",
+        "rp2350": "The controller has restarted into its bootloader. Choose it (RP2350 Boot) so Santroller can be installed."
+      },
+      "pickBootselButton": "Choose the Pico"
+    },
+    "manual": {
+      "body": {
+        "rp2040": "Your browser can't install Santroller on this Pico itself, so copy the firmware over by hand: download it, then drag it onto the drive called RPI-RP2. The Pico restarts by itself once it's copied.",
+        "rp2350": "Your browser can't install Santroller on this Pico itself, so copy the firmware over by hand: download it, then drag it onto the drive called RP2350. The Pico restarts by itself once it's copied."
+      },
+      "failed": "Installing it over USB didn't work:",
+      "download": "Download the firmware",
+      "then": "Once it's restarted, connect to it to carry on."
+    },
+    "mount": {
+      "waiting": "Waiting for the Pico's drive…",
+      "body": {
+        "rp2040": "Santroller couldn't be installed automatically. Open your file manager and mount the drive called RPI-RP2, and it will be installed as soon as the drive shows up.",
+        "rp2350": "Santroller couldn't be installed automatically. Open your file manager and mount the drive called RP2350, and it will be installed as soon as the drive shows up."
+      },
+      "picobootFailed": "Installing over USB didn't work either:"
+    },
+    "done": {
+      "title": "Moved to Santroller 2",
+      "body_one": "Santroller 2 is installed, and your Santroller 1 config has been brought over as a profile. Your controller is ready to use.",
+      "body_other": "Santroller 2 is installed, and your Santroller 1 configs have been brought over as {{count}} profiles. Your controller is ready to use.",
+      "guide": "The setup guide explains how Santroller 2 differs from Santroller 1, and checks over what was brought across, if you'd like to go through it.",
+      "openGuide": "Open the setup guide",
+      "close": "Done"
+    },
+    "failed": {
+      "bootloaderTimeout": "The controller didn't restart into its bootloader.",
+      "cancelled": "Installing Santroller was stopped partway through.",
+      "other": "Something went wrong: {{error}}",
+      "backup": "Keep a copy of the config read off your controller, which can be brought in from the setup guide's import step.",
+      "downloadBackup": "Download the config",
+      "manual": "You can still install Santroller by hand, by following the setup guide."
+    }
+  },
   "connect": {
-    "connect": "Connect to a Santroller powered device",
-    "connectBluetooth": "Connect to a Santroller powered device over Bluetooth",
+    "connect": "Connect to a Santroller 2 powered device",
+    "connectBluetooth": "Connect to a Santroller 2 powered device over Bluetooth",
+    "connectUsb": "Connect over USB",
+    "connectUsbHint": "Works with Santroller 2 devices, controllers still running Santroller 1, and Picos plugged in while holding BOOTSEL (to install Santroller 2 on them).",
     "setup": "Set up a new device",
     "oldFirmwareTitle": "Device not showing up?",
     "oldFirmware": "Devices running Santroller 1, or with no firmware on them yet, will not be detected here. Follow the steps under \"Set up a new device\" to set them up with Santroller 2 first.",
@@ -3081,6 +3173,7 @@
       "mac": "Download the desktop app for macOS",
       "linux": "Download the desktop app for Linux"
     },
+    "webUsbFirmwareTooOld": "This controller's firmware is too old to configure from this browser. Update it with a UF2 from a computer first.",
     "webHidNotSupported": "This browser does not support WebHID, so Santroller will not work.\nYou need to use a Chromium-based browser (Firefox-based browsers don't support WebHID), or the desktop app.",
     "browserNotSupported": "Browser Unsupported",
     "iosNotSupported": "Browsers on iOS and iPadOS support neither WebHID nor Web Bluetooth, so Santroller will not work here.\nInstall Bluefy, a free browser with Web Bluetooth support, and open this page in it to configure your controller over Bluetooth. Over Bluetooth, only controllers with a Bluetooth-capable board (such as a Pico W) can be configured.",
@@ -3114,6 +3207,9 @@
     "updateNotApplied": "The controller came back but is still running the old firmware, so the update didn't apply. Try updating again.",
     "updateNoReconnect": "The controller didn't come back after updating. Try unplugging it and plugging it back in, then connect to it again.",
     "reloadLostTitle": "Controller didn't reconnect",
+    "webUsbReconnectTitle": "Pick the controller again",
+    "webUsbReconnect": "The controller restarted to apply the change. This browser needs you to pick it again before the configurator can carry on.",
+    "webUsbReconnectButton": "Reconnect",
     "reloadLost": "The controller restarted but didn't come back in a mode that can be configured. This usually means the active profile forces a console mode like PS3. Change whatever activates that profile so a different one is used, then connect to it again.",
     "modeDeferredTitle": "Console mode switch is waiting",
     "modeDeferred": "An active profile switches the controller to {{mode}} mode. It stays in its current mode while the configurator is open, as switching would disconnect it, and switches once you close the configurator.",
