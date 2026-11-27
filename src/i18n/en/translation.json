@@ -3393,6 +3393,7 @@
     "midi": {
       "title": "MIDI Monitor",
       "clear": "Clear logs",
+      "time": "+ms",
       "type": "Type",
       "channel": "Channel",
       "data": "Raw",

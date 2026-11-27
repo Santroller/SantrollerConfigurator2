@@ -637,6 +637,8 @@ export interface ConfigState {
   // A mode an active profile forces, held off until the tool disconnects
   deferredMode: proto.ConsoleMode | null;
   midiData: number[][];
+  // When each of midiData arrived, from performance.now()
+  midiTimes: number[];
   console: string;
   sendingKeepAlive: boolean;
   toolInfo?: proto.ISellerConfig;
@@ -964,6 +966,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     activeProfiles: [],
     deferredMode: null,
     midiData: [],
+    midiTimes: [],
     guiDevices,
     console: '',
     type: '',
@@ -1424,6 +1427,7 @@ const configStore = create<ConfigState & Actions>()(
     clearMidi: () => {
       set((state) => {
         state.midiData = [];
+        state.midiTimes = [];
       });
     },
     updateDevice: (device: proto.IDevice, id: string) => {
@@ -1966,14 +1970,18 @@ const configStore = create<ConfigState & Actions>()(
       }
       let btConnected = false;
       let reloaded = false;
+      // Events in one report arrived together, so they share a time
+      const receivedAt = performance.now();
       // One store update per report: the device can send these every millisecond while live
       // values change, and every update re-runs every selector on the page.
       set((state) => {
         for (const deviceEvent of eventList.event) {
           if (deviceEvent.midiDebug) {
             state.midiData.push([...deviceEvent.midiDebug.data!]);
+            state.midiTimes.push(receivedAt);
             if (state.midiData.length > MAX_MIDI_DEBUG_EVENTS) {
               state.midiData.splice(0, state.midiData.length - MAX_MIDI_DEBUG_EVENTS);
+              state.midiTimes.splice(0, state.midiTimes.length - MAX_MIDI_DEBUG_EVENTS);
             }
           }
           if (deviceEvent.cycle) {

@@ -114,11 +114,17 @@ function describeMidi(
   }
 }
 
-function MidiRow({ data }: { data: number[] }) {
+// sinceLast is how long after the message before it this one arrived, in ms
+function MidiRow({ data, sinceLast }: { data: number[]; sinceLast?: number }) {
   const { t } = useTranslation();
   const { type, channel, details } = describeMidi(data, t);
   return (
     <Table.Tr>
+      <Table.Td>
+        <Text ff="monospace" size="sm" c="dimmed">
+          {sinceLast === undefined ? '-' : `+${Math.round(sinceLast)}`}
+        </Text>
+      </Table.Td>
       <Table.Td>{t(`debug.midi.${type}`)}</Table.Td>
       <Table.Td>{channel ?? '-'}</Table.Td>
       <Table.Td>{details}</Table.Td>
@@ -136,6 +142,7 @@ function MidiRow({ data }: { data: number[] }) {
 
 export function DebugPage() {
   const midiData = useConfigStore((state) => state.midiData);
+  const midiTimes = useConfigStore((state) => state.midiTimes);
   const consoleData = useConfigStore((state) => state.console);
   const clearMidi = useConfigStore((state) => state.clearMidi);
   const clearConsole = useConfigStore((state) => state.clearConsole);
@@ -186,6 +193,7 @@ export function DebugPage() {
           <Table>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th>{t('debug.midi.time')}</Table.Th>
                 <Table.Th>{t('debug.midi.type')}</Table.Th>
                 <Table.Th>{t('debug.midi.channel')}</Table.Th>
                 <Table.Th>{t('debug.midi.details.title')}</Table.Th>
@@ -193,9 +201,15 @@ export function DebugPage() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {midiData.toReversed().map((data, index) => (
-                <MidiRow key={index} data={data} />
-              ))}
+              {midiData
+                .map((data, index) => (
+                  <MidiRow
+                    key={index}
+                    data={data}
+                    sinceLast={index > 0 ? midiTimes[index] - midiTimes[index - 1] : undefined}
+                  />
+                ))
+                .toReversed()}
             </Table.Tbody>
           </Table>
         </RequireDevice>
