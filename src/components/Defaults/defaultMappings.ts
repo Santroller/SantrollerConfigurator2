@@ -120,7 +120,6 @@ const WII_DRUM_NOTES = {
   orange: 49,
   green: 45,
   kick: 36,
-  hiHatPedal: 100,
 };
 
 function wiiDrumNote(note: number, deviceid: number, output: proto.IOutput): proto.IMapping {
@@ -1030,9 +1029,6 @@ export function getWiiDefaults(
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad,
         }),
         wiiDrumNote(WII_DRUM_NOTES.kick, deviceId, {
-          ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
-        }),
-        wiiDrumNote(WII_DRUM_NOTES.hiHatPedal, deviceId, {
           ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal,
         }),
         wiiButton(proto.WiiButtonType.WiiButtonClassicDPadUp, deviceId, {
