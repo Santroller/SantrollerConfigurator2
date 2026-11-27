@@ -388,7 +388,8 @@
     "move_profile_up": "Move up (profiles are checked in order)",
     "move_profile_down": "Move down (profiles are checked in order)",
     "profile_active": "Active",
-    "profile_never_matches": "Never used: \"{{name}}\" above always wins. Open it to fix."
+    "profile_never_matches": "Never used: \"{{name}}\" above always wins. Open it to fix.",
+    "profile_ghost_controller": "Always active: unlike your other profiles, this one doesn't wait for a controller to be connected, so consoles see it as an extra controller that does nothing. Add the controller it's for to its rule."
   },
   "held": {
     "time": "Time (ms)"
@@ -2341,6 +2342,10 @@
       "devices": "\"{{name}}\" above always takes these controllers first.",
       "output": "\"{{name}}\" above always takes the {{output}} output first.",
       "fix": "Fix this"
+    },
+    "ghost": {
+      "title": "This profile shows up as an extra controller",
+      "desc": "Your other profiles wait for their controller to be connected, but this rule doesn't, and the profile has none of this board's own inputs set up. Consoles see a controller that never does anything, and games can pick it over the real one. Add the controller it's for to this rule, or delete the profile if you don't need it."
     },
     "localInputs": "Claim directly wired inputs",
     "localInputsDesc": "Claims the buttons and sensors wired straight to this board's pins. Controllers in this profile's rules, like a PS1/2 controller or Wii extension, are claimed already, so this is only needed for inputs that aren't on one. Only one profile can claim them at a time, and the highest one in the sidebar wins.",

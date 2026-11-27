@@ -56,6 +56,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { isGhostProfile } from '../Inputs/ghostProfile';
 import { findProfileShadow } from '../Inputs/profileShadowing';
 import { proto } from '../SettingsContext/config';
 import { useConfigStore } from '../SettingsContext/SettingsContext';
@@ -89,6 +90,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     () => profiles.map((_, i) => findProfileShadow(profiles, i)),
     [profiles]
   );
+  // Profiles that show up as an extra controller that does nothing on an adapter
+  const ghosts = useMemo(() => profiles.map((_, i) => isGhostProfile(profiles, i)), [profiles]);
   const setActiveProfile = useConfigStore((state) => state.setActiveProfile);
   const addProfile = useConfigStore((state) => state.addProfile);
   const addStandbyProfile = useConfigStore((state) => state.addStandbyProfile);
@@ -673,6 +676,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                                   aria-label={t('main.profile_never_matches', {
                                     name: profiles[shadowedBy[i]!.profileIdx]?.opts.name ?? '',
                                   })}
+                                />
+                              </Tooltip>
+                            )}
+                            {ghosts[i] && !shadowedBy[i] && (
+                              <Tooltip multiline w={240} label={t('main.profile_ghost_controller')}>
+                                <IconAlertTriangle
+                                  size={14}
+                                  color="var(--mantine-color-orange-6)"
+                                  aria-label={t('main.profile_ghost_controller')}
                                 />
                               </Tooltip>
                             )}

@@ -131,6 +131,7 @@ import {
   forcedModeLocksOutTool,
   profileForcesMode,
 } from '@/components/Inputs/forcedModeLockout';
+import { isGhostRule } from '@/components/Inputs/ghostProfile';
 import { GuidedAxisCalibration } from '@/components/Inputs/GuidedAxisCalibration';
 import { HidKeyPicker } from '@/components/Inputs/HidKeyPicker';
 import { InactivitySettings } from '@/components/Inputs/InactivitySettings';
@@ -7483,6 +7484,27 @@ function RuleShadowAlert({
   );
 }
 
+// Shown on the rule that keeps a profile always in use on an adapter, where it's an extra controller
+function GhostRuleAlert() {
+  const { t } = useTranslation();
+  return (
+    <Alert
+      variant="light"
+      color="orange"
+      title={t('assignments.ghost.title')}
+      icon={<IconExclamationCircle size={16} />}
+      mt="xs"
+    >
+      <Text size="xs">
+        {t('assignments.ghost.desc')}{' '}
+        <Anchor component={Link} to="/profiles-explained" size="xs">
+          {t('nav.profilesExplained')}
+        </Anchor>
+      </Text>
+    </Alert>
+  );
+}
+
 // Shown on a rule forcing a mode that the tool can't connect in, with no held input to skip it
 function ForcedModeLockoutAlert() {
   const { t } = useTranslation();
@@ -8898,6 +8920,10 @@ function SantrollerAssignmentList({
     () => (placeholder ? undefined : findRuleShadow(allProfiles ?? [], profileIdx, listIdx)),
     [allProfiles, profileIdx, listIdx, placeholder]
   );
+  const ghost = useMemo(
+    () => !placeholder && isGhostRule(allProfiles ?? [], profileIdx, listIdx),
+    [allProfiles, profileIdx, listIdx, placeholder]
+  );
 
   const triggerIdx = assignments.findIndex((x) => OtherAssignmentTypes.some((y) => x[y] != null));
   const triggerItem = triggerIdx !== -1 ? assignments[triggerIdx] : undefined;
@@ -9309,6 +9335,7 @@ function SantrollerAssignmentList({
               ))}
             </Group>
           </Card>
+          {ghost && !shadow && <GhostRuleAlert />}
           {shadow && (
             <RuleShadowAlert
               shadow={shadow}
