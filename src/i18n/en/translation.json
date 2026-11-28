@@ -2586,7 +2586,7 @@
     "search": "Search devices",
     "no_results": "No devices match \"{{query}}\"",
     "categories": {
-      "inputs": "Inputs wired to the Pico",
+      "inputs": "Inputs and expanders",
       "instruments": "Instrument parts",
       "controllers": "Controllers and adapters it reads",
       "output": "Console output",
