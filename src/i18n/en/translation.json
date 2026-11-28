@@ -34,7 +34,7 @@
     "stp16cpc": "STP16CPC LED Driver",
     "gpioLedGroup": "Group of GPIO LEDs",
     "drumKit": "Drum kit pads",
-    "singleInput": "Single input",
+    "singleInput": "Shared GPIO input",
     "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
     "worldTourDrum": "World Tour Drum Body",
@@ -1127,7 +1127,7 @@
     "channel": "Channel"
   },
   "singleInput": {
-    "description": "One input on its own, so mappings on it in every profile can share its calibration (with sync calibration on below). Pick it as a mapping's input.",
+    "description": "A pin as a device, so every mapping on it, in every profile, shares its name and (with sync calibration on below) its calibration. Pick it as a mapping's input.",
     "name": "Name",
     "name_desc": "What it's called everywhere it shows up. This is its pin's label, so it can also be changed on the labels page.",
     "name_no_pin": "Pick a pin to name it"
