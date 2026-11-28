@@ -36,9 +36,8 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
-import { getCycleSlotLabel, getLabel } from '@/components/Devices/pinUtils';
+import { getCycleSlotLabel } from '@/components/Devices/pinUtils';
 import { InputBehaviorHelpLink } from '@/components/InputBehaviorHelpLink';
-import { useProfileLabels } from '@/components/Labels/useProfileLabels';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import {
@@ -116,6 +115,7 @@ import {
   WirelessChipPins,
   wirelessChipPins,
 } from '@/devices/pico/pins';
+import { labelPin, pinName, setPinName } from '@/guides/wiredInputs';
 
 // Other devices that could be loaded with this one, using the same hardware block on other pins
 function useBusConflicts(type: BusType) {
@@ -2590,34 +2590,46 @@ function InputSourceFields({
 }
 // One input as a device, so it can sync its calibration across profiles. It's named by its pin's label.
 function SingleInputDevice({ id }: { id: string }) {
-  const guiDevices = useProfileLabels();
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
   const device = status.device;
+  const input = device.singleInput?.input ?? analogPinInput();
+  // Named by its pin's label
+  const pin = input.gpio?.pin ?? -1;
+  const name = useConfigStore((state) => pinName(state, pin));
   if (!device.singleInput) {
     throw new Error('device null!');
   }
-  const input = device.singleInput.input ?? analogPinInput();
-  // Named by its pin's label
-  const pin = input.gpio?.pin ?? -1;
-  const label = getLabel(t, guiDevices, [], pin, false, false);
   return (
     <DeviceCard
       connected={status.connected}
       title="devices.singleInput"
-      displayTitle={label}
+      displayTitle={name}
       image="covers/devices/singleInput.svg"
       deleteDevice={() => deleteDevice(id)}
     >
       <Text size="sm" c="dimmed">
         {t('singleInput.description')}
       </Text>
+      <TextInput
+        label={t('singleInput.name')}
+        description={t(pin >= 0 ? 'singleInput.name_desc' : 'singleInput.name_no_pin')}
+        placeholder={t('devices.singleInput')}
+        value={name}
+        disabled={pin < 0}
+        onChange={(event) => setPinName(pin, event.currentTarget.value)}
+      />
       <InputSourceFields
         input={input}
-        dispatch={(next) =>
-          updateDevice({ deviceid: parseInt(id, 10), singleInput: { input: next } }, id)
-        }
+        dispatch={(next) => {
+          updateDevice({ deviceid: parseInt(id, 10), singleInput: { input: next } }, id);
+          // The name goes with the input to its new pin, where it can
+          const nextPin = next.gpio?.pin ?? -1;
+          if (name && nextPin !== pin) {
+            labelPin(nextPin, name, pin);
+          }
+        }}
       />
     </DeviceCard>
   );

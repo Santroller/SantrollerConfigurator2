@@ -1,4 +1,5 @@
 import i18next from 'i18next';
+import { labelInProfile } from '@/components/Labels/labelRegistry';
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 
@@ -195,5 +196,46 @@ export function labelPin(pin: number, name: string, fromPin?: number) {
   }
   if (!labelled(pin)) {
     store.addPinLabel(pin, name);
+  }
+}
+
+// The label naming pin in the current profile: one every profile has where there is one
+function pinNameLabel(
+  state: Pick<ConfigState, 'config' | 'currentProfile' | 'guiDevices'>,
+  pin: number
+) {
+  if (pin < 0) {
+    return undefined;
+  }
+  const uid = state.config.profiles?.[state.currentProfile]?.opts?.uid;
+  const onPin = Object.values(state.guiDevices).filter(
+    (label) => label.label?.pin === pin && labelInProfile(label, uid)
+  );
+  return onPin.find((label) => !label.profiles?.length) ?? onPin[0];
+}
+
+// What pin is called (its label), or '' when it has none
+export function pinName(
+  state: Pick<ConfigState, 'config' | 'currentProfile' | 'guiDevices'>,
+  pin: number
+): string {
+  return pinNameLabel(state, pin)?.label?.label ?? '';
+}
+
+// Names pin by its label: changing the one it has, adding one for every profile, or removing it for ''
+export function setPinName(pin: number, name: string) {
+  if (pin < 0) {
+    return;
+  }
+  const store = useConfigStore.getState();
+  const label = pinNameLabel(store, pin);
+  if (!label) {
+    if (name) {
+      store.addPinLabel(pin, name);
+    }
+  } else if (name) {
+    store.updateLabel({ ...label, label: { ...label.label!, label: name } }, label.deviceid);
+  } else {
+    store.deleteLabel(label.deviceid);
   }
 }

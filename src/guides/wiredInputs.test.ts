@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
+
 import '@/i18n/config';
 
 vi.hoisted(() => {
@@ -11,7 +12,7 @@ const { initialConfig, useConfigStore } =
 const { GUITAR_TARGETS, getTargetPin, setTargetPin } = await import('./guitar/guitarMappingUtils');
 const { applyBasePinout, isBasePinoutApplied } = await import('./turntable/turntableSetup');
 const { configureDrumMux, countMappedPads } = await import('./drums/drumSetup');
-const { wiredGpio } = await import('./wiredInputs');
+const { labelPin, pinName, setPinName, wiredGpio } = await import('./wiredInputs');
 
 const profile = (deviceToEmulate: proto.SubType): proto.IProfile => ({
   opts: {
@@ -170,6 +171,54 @@ describe('guides wire pins through single input devices', () => {
       applyBasePinout();
       expect(labelOn(26)).toBe('Crossfader');
       expect(pinLabels().filter((l) => l.pin === 26)).toHaveLength(1);
+    });
+  });
+
+  describe('naming a pin from its single input', () => {
+    beforeEach(() => setUp(proto.SubType.GuitarHeroGuitar));
+    const labelCount = () =>
+      Object.values(useConfigStore.getState().guiDevices).filter((l) => l.label?.pin === 27).length;
+
+    it('adds a label for every profile, then edits that same one', () => {
+      setPinName(27, 'Whammy');
+      expect(pinName(useConfigStore.getState(), 27)).toBe('Whammy');
+      setPinName(27, 'Whammy bar');
+      expect(pinName(useConfigStore.getState(), 27)).toBe('Whammy bar');
+      expect(labelCount()).toBe(1);
+      const label = Object.values(useConfigStore.getState().guiDevices)[0];
+      expect(label.profiles).toEqual([]);
+    });
+
+    it('removes the label when the name is cleared', () => {
+      setPinName(27, 'Whammy');
+      setPinName(27, '');
+      expect(labelCount()).toBe(0);
+      expect(pinName(useConfigStore.getState(), 27)).toBe('');
+    });
+
+    it('ignores an unpicked pin', () => {
+      setPinName(-1, 'Whammy');
+      expect(Object.keys(useConfigStore.getState().guiDevices)).toHaveLength(0);
+    });
+
+    it('moves the name with the input when its pin changes', () => {
+      setTargetPin(GUITAR_TARGETS.WHAMMY, 27, true);
+      setPinName(27, 'My whammy');
+      const [device] = singleInputs();
+      useConfigStore
+        .getState()
+        .updateDevice(
+          {
+            deviceid: device.device.deviceid,
+            singleInput: {
+              input: { gpio: { pin: 28, analog: true, pinMode: proto.PinMode.Floating } },
+            },
+          },
+          device.id
+        );
+      labelPin(28, 'My whammy', 27);
+      expect(pinName(useConfigStore.getState(), 27)).toBe('');
+      expect(pinName(useConfigStore.getState(), 28)).toBe('My whammy');
     });
   });
 });

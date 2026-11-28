@@ -1127,7 +1127,10 @@
     "channel": "Channel"
   },
   "singleInput": {
-    "description": "One input on its own, so mappings on it in every profile can share its calibration (with sync calibration on below). Pick it as a mapping's input, and name it by labelling its pin on the labels page."
+    "description": "One input on its own, so mappings on it in every profile can share its calibration (with sync calibration on below). Pick it as a mapping's input.",
+    "name": "Name",
+    "name_desc": "What it's called everywhere it shows up. This is its pin's label, so it can also be changed on the labels page.",
+    "name_no_pin": "Pick a pin to name it"
   },
   "device_sync_calibration": {
     "label": "Sync calibration",
