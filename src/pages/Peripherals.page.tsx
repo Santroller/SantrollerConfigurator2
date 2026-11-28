@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconAlertTriangle, IconDownload, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -8,10 +8,8 @@ import {
   Affix,
   Alert,
   Button,
-  Combobox,
   Flex,
   Group,
-  InputBase,
   Loader,
   Menu,
   Modal,
@@ -19,20 +17,13 @@ import {
   Progress,
   Select,
   SimpleGrid,
-  Space,
   Stack,
   Text,
   Title,
-  useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
-import {
-  canAddDeviceKind,
-  DeviceKind,
-  deviceKinds,
-  getGroupedDevices,
-  isDeviceKind,
-} from '@/components/Devices/deviceRegistry';
+import { AddDevicePicker } from '@/components/Devices/AddDevicePicker';
+import { canAddDeviceKind, DeviceKind, deviceKinds } from '@/components/Devices/deviceRegistry';
 import { downloadPeripheralUf2, peripheralBootValid } from '@/components/Devices/peripheralUf2';
 import { DeviceContext } from '@/components/Devices/Pins';
 import { Layout } from '@/components/Layout/Layout';
@@ -56,29 +47,8 @@ export function PeripheralsPage() {
     () => subDeviceKinds.filter((kind) => canAddDeviceKind(kind, existingTypes)),
     [existingTypes]
   );
-  const groupedDevices = useMemo(
-    () => getGroupedDevices(availableSubDeviceKinds, t),
-    [availableSubDeviceKinds, t]
-  );
-
-  const [deviceType, setDeviceType] = useState<DeviceKind>(
-    () => groupedDevices[0]?.items[0] ?? availableSubDeviceKinds[0] ?? subDeviceKinds[0]
-  );
-
-  useEffect(() => {
-    if (!availableSubDeviceKinds.includes(deviceType)) {
-      const next = groupedDevices[0]?.items[0] ?? availableSubDeviceKinds[0];
-      if (next) {
-        setDeviceType(next);
-      }
-    }
-  }, [availableSubDeviceKinds, groupedDevices, deviceType]);
   const [opened, { open, close }] = useDisclosure(false);
   const [uf2Opened, { open: openUf2, close: closeUf2 }] = useDisclosure(false);
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-  });
-
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const addDevice = useConfigStore((state) => state.addDevice);
   const deleteDevice = useConfigStore((state) => state.deleteDevice);
@@ -129,28 +99,7 @@ export function PeripheralsPage() {
     closeUf2();
   };
 
-  const handleOpenAdd = () => {
-    if (!availableSubDeviceKinds.includes(deviceType)) {
-      const next = groupedDevices[0]?.items[0] ?? availableSubDeviceKinds[0];
-      if (next) {
-        setDeviceType(next);
-      }
-    }
-    open();
-  };
-
-  const mainElement = (
-    <InputBase
-      component="button"
-      type="button"
-      pointer
-      rightSection={<Combobox.Chevron />}
-      rightSectionPointerEvents="none"
-      onClick={() => combobox.toggleDropdown()}
-    >
-      {t(`devices.${deviceType}`)}
-    </InputBase>
-  );
+  const handleOpenAdd = open;
 
   return (
     <Layout>
@@ -213,52 +162,20 @@ export function PeripheralsPage() {
           </Alert>
         )}
 
-        <Modal opened={opened} onClose={close} title={t('add_device_dialog.title')} centered>
-          <Combobox
-            store={combobox}
-            onOptionSubmit={(val) => {
-              if (isDeviceKind(val)) {
-                setDeviceType(val as DeviceKind);
-              }
-              combobox.closeDropdown();
+        <Modal
+          opened={opened}
+          onClose={close}
+          title={t('add_device_dialog.title')}
+          size="lg"
+          centered
+        >
+          <AddDevicePicker
+            kinds={availableSubDeviceKinds}
+            onPick={(kind) => {
+              addSubDevice(kind);
+              close();
             }}
-          >
-            <Combobox.Target>{mainElement}</Combobox.Target>
-
-            <Combobox.Dropdown>
-              <Combobox.Options mah={300} style={{ overflowY: 'auto' }}>
-                {groupedDevices.map((group) => (
-                  <Combobox.Group
-                    label={t(`add_device_dialog.categories.${group.category}`)}
-                    key={group.category}
-                  >
-                    {group.items.map((item) => (
-                      <Combobox.Option value={item} key={item}>
-                        {t(`devices.${item}`)}
-                      </Combobox.Option>
-                    ))}
-                  </Combobox.Group>
-                ))}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-          <Space h="md" />
-          <Flex justify="flex-end">
-            <Group align="flex-end">
-              <Button
-                onClick={() => {
-                  if (availableSubDeviceKinds.includes(deviceType)) {
-                    addSubDevice(deviceType);
-                  }
-                  close();
-                }}
-                color="red"
-                disabled={!availableSubDeviceKinds.includes(deviceType)}
-              >
-                {t('add_device_dialog.confirm')}
-              </Button>
-            </Group>
-          </Flex>
+          />
         </Modal>
 
         <Modal

@@ -39,6 +39,7 @@ import {
   IconTrash,
   IconUsb,
 } from '@tabler/icons-react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
@@ -80,6 +81,7 @@ import {
   TextInput,
   ThemeIcon,
   Title,
+  Tooltip,
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useTimeout } from '@mantine/hooks';
@@ -97,6 +99,7 @@ import {
   presetsFor,
 } from '@/components/Defaults/mappingPresets';
 import { hasDefaultMappings, isInputDeviceKind } from '@/components/Devices/deviceRegistry';
+import { DRUM_PAD_TYPES, drumLanes, layoutFromKit, padLabel } from '@/components/Devices/drumKit';
 import { matrixHasPin } from '@/components/Devices/matrixPins';
 import { PinBox } from '@/components/Devices/Pins';
 import {
@@ -166,6 +169,7 @@ import {
   ProfileSlot,
   SLOT_ID_VERSION_LATEST,
 } from '@/components/Inputs/inputRegistry';
+import { LedBrightnessInput } from '@/components/Inputs/LedBrightnessInput';
 import { LedColorInput } from '@/components/Inputs/LedColorInput';
 import {
   deviceLedCount,
@@ -2288,6 +2292,24 @@ export function SantrollerLabel({
 
   if (device) {
     switch (device.type) {
+      // Named by what it holds, eg its pin's label
+      case 'singleInput':
+        return device.device.singleInput?.input ? (
+          <SantrollerLabel
+            input={device.device.singleInput.input}
+            label={label}
+            fallback={fallback}
+          />
+        ) : null;
+      case 'drumKit': {
+        const pads = device.device.drumKit?.pads ?? [];
+        const pad = pads.find((p) => p.id === input.drumKit?.pad);
+        return pad ? (
+          <Text>
+            {padLabel(pads, pad, (type) => t(`drumKit.types.${DRUM_PAD_TYPES[type].key}`))}
+          </Text>
+        ) : null;
+      }
       case 'ads1115': {
         const labelsText = getMultiplexerLabel(guiDevices, input.ads1115!.channel, true, false);
         if (labelsText) {
@@ -2565,8 +2587,20 @@ function useDeviceTypes(): string[] {
 
 // The device dropdown's options. Only rendered while the dropdown is open, so it's the only part of
 // an input that has to follow every device's status.
+// What a device is called where one is picked: a single input goes by its pin's label, where it has one
+function deviceDisplayName(
+  t: TFunction<'translation', undefined>,
+  guiDevices: proto.IGuiConfig[],
+  status: DeviceStatus
+) {
+  const pin = status.device.singleInput?.input?.gpio?.pin;
+  const label = pin != null ? getLabel(t, guiDevices, [], pin, false, false) : '';
+  return label || t(`devices.${status.type}`);
+}
+
 function ConnectedDeviceOptions() {
   const { t } = useTranslation();
+  const guiDevices = useProfileLabels();
   const deviceStatus = useConfigStore((state) => state.deviceStatus);
   return (
     <>
@@ -2588,7 +2622,7 @@ function ConnectedDeviceOptions() {
               <Group justify="space-between" wrap="nowrap" w="100%">
                 <Group gap="2">
                   <Text fz="sm" span>
-                    {t(`devices.${item.type}`)}
+                    {deviceDisplayName(t, guiDevices, item)}
                   </Text>
 
                   <Text fz="xs" span opacity="0.7">
@@ -2677,6 +2711,57 @@ function InputDetectButton({
 
 // Guide demos open the cycle's input sections, since they can't be clicked open
 export const ExpandAllAccordionsContext = createContext(false);
+
+// The drum kits set up on the devices page
+function useDrumKits() {
+  return useConfigStore(
+    useShallow((state) =>
+      Object.values(state.deviceStatus)
+        .map((status) => status.device)
+        .filter((device) => device.drumKit)
+    )
+  );
+}
+
+// Links every lane of a drum profile to the pads of a drum kit at once
+function DrumKitLayoutButton({ profileIdx }: { profileIdx: number }) {
+  const { t } = useTranslation();
+  const kits = useDrumKits().filter((kit) => kit.drumKit!.pads?.length);
+  const profile = useConfigStore((state) => state.config.profiles?.[profileIdx]);
+  const updateProfile = useConfigStore((state) => state.updateProfile);
+  if (!profile || !kits.length || !drumLanes(profile.opts.deviceToEmulate)) {
+    return null;
+  }
+  return (
+    <>
+      {kits.map((kit) => (
+        <Tooltip key={kit.deviceid} label={t('drumKit.map_profile_desc')} multiline w={280}>
+          <Button
+            variant="light"
+            onClick={() =>
+              updateProfile(
+                {
+                  ...profile,
+                  mappings: layoutFromKit(
+                    profile.mappings ?? [],
+                    kit.deviceid,
+                    kit.drumKit!,
+                    profile.opts.deviceToEmulate
+                  ),
+                },
+                profileIdx
+              )
+            }
+          >
+            {t('drumKit.map_profile', {
+              kit: `${t('devices.drumKit')} ${kits.length > 1 ? kit.deviceid : ''}`.trim(),
+            })}
+          </Button>
+        </Tooltip>
+      ))}
+    </>
+  );
+}
 
 function SantrollerInput({
   input,
@@ -2910,7 +2995,7 @@ function SantrollerInput({
       deviceValue = (
         <Group gap="2">
           <Text fz="sm" span>
-            {t(`devices.${device.type}`)}
+            {deviceDisplayName(t, guiDevices, device)}
           </Text>
           <Text fz="xs" span opacity="0.7">
             ({DeviceStatus.label(device)})
@@ -6476,17 +6561,36 @@ function SantrollerLed({
                   </>
                 )) ||
                   undefined}
-                <Space h="md" />
-                {!hostSetsColour && (
+                {/* Simple mode hides the effect section, so the rainbow's brightness stays here */}
+                {!hostSetsColour && (!rainbow || simpleMode) && <Space h="md" />}
+                {!hostSetsColour && rainbow && simpleMode && (
+                  <LedBrightnessInput
+                    label={t('leds.effect.rainbow_brightness')}
+                    r={led.device.rgb?.endR}
+                    g={led.device.rgb?.endG}
+                    b={led.device.rgb?.endB}
+                    w={led.device.rgb?.endW}
+                    onChange={({ r, g, b, w }) => {
+                      dispatch({
+                        ...led,
+                        device: {
+                          ...led.device,
+                          rgb: {
+                            ...led.device.rgb!,
+                            endR: r,
+                            endG: g,
+                            endB: b,
+                            endW: w,
+                          },
+                        },
+                      });
+                    }}
+                  />
+                )}
+                {!hostSetsColour && !rainbow && (
                   <Group grow>
                     <LedColorInput
-                      label={
-                        rainbow
-                          ? t('leds.effect.rainbow_brightness')
-                          : led.mapping.staticMapping
-                            ? t('leds.colour')
-                            : t('leds.pressed')
-                      }
+                      label={led.mapping.staticMapping ? t('leds.colour') : t('leds.pressed')}
                       r={led.device.rgb?.endR}
                       g={led.device.rgb?.endG}
                       b={led.device.rgb?.endB}
@@ -6535,6 +6639,84 @@ function SantrollerLed({
                       </Input.Wrapper>
                     )}
                   </Group>
+                )}
+              </>
+            )}
+            {!simpleMode && effectTypes.length > 0 && (
+              <>
+                <LedSectionTitle>{t('leds.section_effect')}</LedSectionTitle>
+                <Select
+                  label={t('leds.effect.label')}
+                  description={t('leds.effect.description')}
+                  renderOption={({ option }) => (
+                    <div>
+                      {option.label}
+                      <Text size="xs" opacity={0.7}>
+                        {t(
+                          `leds.effect.desc_${option.value === 'none' ? 'none' : proto.LedEffectType[parseInt(option.value, 10)]}`
+                        )}
+                      </Text>
+                    </div>
+                  )}
+                  value={led.effect?.type?.toString() ?? 'none'}
+                  allowDeselect={false}
+                  data={[
+                    { value: 'none', label: t('leds.effect.none') },
+                    ...effectTypes.map((x) => ({
+                      value: x.toString(),
+                      label: t(`leds.effect.${proto.LedEffectType[x]}`),
+                    })),
+                  ]}
+                  onChange={(val) => {
+                    if (!val || val === 'none') {
+                      const { effect: _, ...rest } = led;
+                      dispatch(rest as proto.ILed);
+                      return;
+                    }
+                    dispatch({
+                      ...led,
+                      effect: { type: parseInt(val, 10), speed: led.effect?.speed || 10 },
+                    });
+                  }}
+                />
+                {led.effect && (
+                  <>
+                    <Space h="xs" />
+                    <Text size="sm">{t('leds.speed')}</Text>
+                    <Slider
+                      value={led.effect.speed}
+                      min={1}
+                      max={20}
+                      onChange={(speed) => dispatch({ ...led, effect: { ...led.effect!, speed } })}
+                    />
+                    {rainbow && led.device.rgb && !hostSetsColour && (
+                      <>
+                        <Space h="xs" />
+                        <LedBrightnessInput
+                          label={t('leds.effect.rainbow_brightness')}
+                          r={led.device.rgb?.endR}
+                          g={led.device.rgb?.endG}
+                          b={led.device.rgb?.endB}
+                          w={led.device.rgb?.endW}
+                          onChange={({ r, g, b, w }) => {
+                            dispatch({
+                              ...led,
+                              device: {
+                                ...led.device,
+                                rgb: {
+                                  ...led.device.rgb!,
+                                  endR: r,
+                                  endG: g,
+                                  endB: b,
+                                  endW: w,
+                                },
+                              },
+                            });
+                          }}
+                        />
+                      </>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -6727,6 +6909,8 @@ function SantrollerLed({
                         proto.ReactiveRgbPatternType.PatternStatic
                       }
                       label="leds.pattern"
+                      description="leds.pattern.description"
+                      optionDescriptions="leds.pattern.desc_"
                       dispatch={(pattern) =>
                         dispatch({
                           ...led,
@@ -7014,47 +7198,6 @@ function SantrollerLed({
                 >
                   {t('pin_use_current')}
                 </Button>
-              </>
-            )}
-            {!simpleMode && effectTypes.length > 0 && (
-              <>
-                <LedSectionTitle>{t('leds.section_effect')}</LedSectionTitle>
-                <Select
-                  label={t('leds.effect.label')}
-                  description={t('leds.effect.description')}
-                  value={led.effect?.type?.toString() ?? 'none'}
-                  allowDeselect={false}
-                  data={[
-                    { value: 'none', label: t('leds.effect.none') },
-                    ...effectTypes.map((x) => ({
-                      value: x.toString(),
-                      label: t(`leds.effect.${proto.LedEffectType[x]}`),
-                    })),
-                  ]}
-                  onChange={(val) => {
-                    if (!val || val === 'none') {
-                      const { effect: _, ...rest } = led;
-                      dispatch(rest as proto.ILed);
-                      return;
-                    }
-                    dispatch({
-                      ...led,
-                      effect: { type: parseInt(val, 10), speed: led.effect?.speed || 10 },
-                    });
-                  }}
-                />
-                {led.effect && (
-                  <>
-                    <Space h="xs" />
-                    <Text size="sm">{t('leds.speed')}</Text>
-                    <Slider
-                      value={led.effect.speed}
-                      min={1}
-                      max={20}
-                      onChange={(speed) => dispatch({ ...led, effect: { ...led.effect!, speed } })}
-                    />
-                  </>
-                )}
               </>
             )}
           </>
@@ -10878,11 +11021,9 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   const { t } = useTranslation();
   const profiles = useConfigStore((state) => state.config.profiles!);
   const updateProfile = useConfigStore((state) => state.updateProfile);
-  const updateProfiles = useConfigStore((state) => state.updateProfiles);
   const deleteProfile = useConfigStore((state) => state.deleteProfile);
   const cloneProfile = useConfigStore((state) => state.cloneProfile);
   const loadDefaults = useConfigStore((state) => state.loadDefaults);
-  const setSyncMode = useConfigStore((state) => state.setSyncMode);
   const connected = useConfigStore((state) => state.connected);
   const testLed = useConfigStore((state) => state.testLed);
   const [legendMode, setLegendMode] = useState<LegendMode>(readStoredLegendMode);
@@ -10892,7 +11033,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
   );
   const [defaultPreset, setDefaultPreset] = useState<string>('');
   const simpleMode = useConfigStore((state) => state.simpleMode);
-  const syncCalibrations = useConfigStore((state) => state.syncInputs);
   const profile = profiles[profileIdx];
   // Only lights its LEDs while no other profile is active, so it has no rules or inputs
   const standby = !!profile?.opts.standbyLighting;
@@ -11424,17 +11564,6 @@ function Profile({ profileIdx }: { profileIdx: number }) {
           </>
         )}
 
-      {!standby && !mic && (
-        <>
-          <Space h="md" />
-          <Switch
-            label={t('main.syncCalibrations.label')}
-            description={t('main.syncCalibrations.description')}
-            checked={syncCalibrations}
-            onChange={(event) => setSyncMode(event.currentTarget.checked)}
-          />
-        </>
-      )}
       {!simpleMode && !mic && (
         <>
           <Space h="md" />
@@ -12039,6 +12168,7 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                       <Title order={2} size="h3">
                         {t('inputs.title')}
                       </Title>
+                      <DrumKitLayoutButton profileIdx={profileIdx} />
                       {!simpleMode && (
                         <>
                           <Button
@@ -12121,84 +12251,17 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                           legendMode={legendMode}
                           mode={profile.opts.faceButtonMappingMode}
                           dispatch={(val) => {
-                            if (syncCalibrations) {
-                              updateProfiles([
-                                ...profiles.map((profilea) => ({
-                                  ...profilea,
-                                  mappings: [
-                                    ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx === mappingIdx
-                                        ? val
-                                        : inputKey(cMapping.input) === inputKey(val.input) &&
-                                            cMapping.trigger === val.trigger
-                                          ? {
-                                              ...cMapping,
-                                              center: val.center,
-                                              deadzone: val.deadzone,
-                                              min: val.min,
-                                              max: val.max,
-                                            }
-                                          : cMapping
-                                    ),
-                                  ],
-                                  assignments: [
-                                    ...profilea.assignments!.map((cMapping, _) => ({
-                                      ...cMapping,
-                                      assignments: [
-                                        ...cMapping.assignments!.map((cAssignment, _) =>
-                                          inputKey(cAssignment.input?.input) ===
-                                            inputKey(val.input) &&
-                                          cAssignment.input?.trigger === val.trigger
-                                            ? {
-                                                ...cAssignment,
-                                                input: {
-                                                  ...cAssignment!.input!,
-                                                  center: val.center,
-                                                  deadzone: val.deadzone,
-                                                  min: val.min,
-                                                  max: val.max,
-                                                },
-                                              }
-                                            : cAssignment
-                                        ),
-                                      ],
-                                    })),
-                                  ],
-                                  leds: [
-                                    ...profilea.leds!.map((cMapping, _) =>
-                                      inputKey(cMapping.mapping.inputMapping?.input) ===
-                                      inputKey(val.input)
-                                        ? {
-                                            ...cMapping,
-                                            mapping: {
-                                              ...cMapping.mapping,
-                                              inputMapping: {
-                                                ...cMapping.mapping.inputMapping!,
-                                                center: val.center,
-                                                deadzone: val.deadzone,
-                                                min: val.min,
-                                                max: val.max,
-                                              },
-                                            },
-                                          }
-                                        : cMapping
-                                    ),
-                                  ],
-                                })),
-                              ]);
-                            } else {
-                              updateProfile(
-                                {
-                                  ...profile,
-                                  mappings: [
-                                    ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                                      cMappingIdx === mappingIdx ? val : cMapping
-                                    ),
-                                  ],
-                                },
-                                profileIdx
-                              );
-                            }
+                            updateProfile(
+                              {
+                                ...profile,
+                                mappings: [
+                                  ...profile.mappings!.map((cMapping, cMappingIdx) =>
+                                    cMappingIdx === mappingIdx ? val : cMapping
+                                  ),
+                                ],
+                              },
+                              profileIdx
+                            );
                           }}
                           deleteInput={() => deleteFromList('mappings', mappingIdx)}
                           copyInput={() =>
@@ -12230,84 +12293,17 @@ function Profile({ profileIdx }: { profileIdx: number }) {
                               mode={profile.opts.faceButtonMappingMode}
                               legendMode={legendMode}
                               dispatch={(val) => {
-                                if (syncCalibrations) {
-                                  updateProfiles([
-                                    ...profiles.map((profilea, profileIdxa) => ({
-                                      ...profilea,
-                                      mappings: [
-                                        ...profilea.mappings!.map((cMapping, cMappingIdx) =>
-                                          cMappingIdx === mappingIdx && profileIdxa === profileIdx
-                                            ? val
-                                            : inputKey(cMapping.input) === inputKey(val.input) &&
-                                                cMapping.trigger === val.trigger
-                                              ? {
-                                                  ...cMapping,
-                                                  center: val.center,
-                                                  deadzone: val.deadzone,
-                                                  min: val.min,
-                                                  max: val.max,
-                                                }
-                                              : cMapping
-                                        ),
-                                      ],
-                                      assignments: [
-                                        ...profilea.assignments!.map((cMapping, _) => ({
-                                          ...cMapping,
-                                          assignments: [
-                                            ...cMapping.assignments!.map((cAssignment, _) =>
-                                              inputKey(cAssignment.input?.input) ===
-                                                inputKey(val.input) &&
-                                              cAssignment.input?.trigger === val.trigger
-                                                ? {
-                                                    ...cAssignment,
-                                                    input: {
-                                                      ...cAssignment!.input!,
-                                                      center: val.center,
-                                                      deadzone: val.deadzone,
-                                                      min: val.min,
-                                                      max: val.max,
-                                                    },
-                                                  }
-                                                : cAssignment
-                                            ),
-                                          ],
-                                        })),
-                                      ],
-                                      leds: [
-                                        ...profilea.leds!.map((cMapping, _) =>
-                                          inputKey(cMapping.mapping.inputMapping?.input) ===
-                                          inputKey(val.input)
-                                            ? {
-                                                ...cMapping,
-                                                mapping: {
-                                                  ...cMapping.mapping,
-                                                  inputMapping: {
-                                                    ...cMapping.mapping.inputMapping!,
-                                                    center: val.center,
-                                                    deadzone: val.deadzone,
-                                                    min: val.min,
-                                                    max: val.max,
-                                                  },
-                                                },
-                                              }
-                                            : cMapping
-                                        ),
-                                      ],
-                                    })),
-                                  ]);
-                                } else {
-                                  updateProfile(
-                                    {
-                                      ...profile,
-                                      mappings: [
-                                        ...profile.mappings!.map((cMapping, cMappingIdx) =>
-                                          cMappingIdx === mappingIdx ? val : cMapping
-                                        ),
-                                      ],
-                                    },
-                                    profileIdx
-                                  );
-                                }
+                                updateProfile(
+                                  {
+                                    ...profile,
+                                    mappings: [
+                                      ...profile.mappings!.map((cMapping, cMappingIdx) =>
+                                        cMappingIdx === mappingIdx ? val : cMapping
+                                      ),
+                                    ],
+                                  },
+                                  profileIdx
+                                );
                               }}
                               deleteInput={() => deleteFromList('mappings', mappingIdx)}
                               {...selectProps('mappings', mappingIdx)}

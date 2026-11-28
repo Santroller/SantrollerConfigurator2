@@ -1,9 +1,19 @@
+import i18next from 'i18next';
 import { create } from 'zustand';
 import { addMatrixPins, withMatrixPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { isAnalogPin } from '@/devices/pico/pins';
 import { findDeviceStatus } from '../guideConfig';
+import {
+  guidePin,
+  labelPin,
+  outputName,
+  releaseSingleInputs,
+  singleInputFor,
+  singleInputIds,
+  wiredGpio,
+} from '../wiredInputs';
 import { gpPin } from '../wiringText';
 
 export interface PinMappingTarget {
@@ -377,9 +387,16 @@ function profileFamily(profile: proto.IProfile): GuitarFamily {
   return profile.opts?.deviceToEmulate === proto.SubType.RockBandGuitar ? 'rb' : 'gh';
 }
 
+// What a target is called in the profile, as its mapping is, for naming the pin it's wired to
+function targetName(target: PinMappingTarget, profile: proto.IProfile) {
+  const resolved = targetForFamily(target, profileFamily(profile));
+  return outputName({ [resolved.type]: resolved.id }, profile.opts?.deviceToEmulate);
+}
+
 /**
  * Builds a GPIO mapping for a target, or updates an existing one in place. A digital pin driving
  * an axis (eg a tilt switch) uses pressed instead of calibration, as min and max are meaningless.
+ * The pin goes on a single input device (adding one when it needs to).
  */
 function gpioMapping(
   target: PinMappingTarget,
@@ -391,13 +408,8 @@ function gpioMapping(
   const resolved = targetForFamily(target, family);
   const isAxis =
     resolved.type === 'ghAxis' || resolved.type === 'rbAxis' || resolved.type === 'djhAxis';
-  const input: proto.IInput = {
-    gpio: {
-      pin,
-      pinMode: isAnalog ? proto.PinMode.Floating : proto.PinMode.PullUp,
-      analog: isAnalog,
-    },
-  };
+  // On the pin's single input device, which moves with the target when it's rewired
+  const input = singleInputFor(guidePin(pin, isAnalog), existing?.input);
   const mapping: proto.IMapping = existing
     ? { ...existing, mapping: { [resolved.type]: resolved.id }, input }
     : // The turntable's crossfader and effects dial rest in the middle of their travel
@@ -423,10 +435,8 @@ function gpioMapping(
 export function getTargetPin(state: ConfigState, target: PinMappingTarget): number {
   const profile = state.config.profiles?.[state.currentProfile];
   const idx = findMappingIndex(profile, target);
-  if (idx === -1 || !profile?.mappings?.[idx]?.input?.gpio) {
-    return -1;
-  }
-  return profile.mappings[idx].input.gpio.pin ?? -1;
+  const gpio = idx === -1 ? undefined : wiredGpio(state, profile?.mappings?.[idx]?.input);
+  return gpio?.pin ?? -1;
 }
 
 /**
@@ -453,6 +463,8 @@ export function setTargetPin(target: PinMappingTarget, pin: number, isAnalog = f
   const idx = findMappingIndex(profile, target);
   const family = profileFamily(profile);
 
+  const replaced = idx !== -1 ? singleInputIds(currentMappings[idx].input) : [];
+  const fromPin = getTargetPin(store, target);
   if (idx !== -1) {
     currentMappings[idx] = gpioMapping(target, family, pin, isAnalog, currentMappings[idx]);
   } else {
@@ -466,6 +478,8 @@ export function setTargetPin(target: PinMappingTarget, pin: number, isAnalog = f
     },
     profileIdx
   );
+  releaseSingleInputs(replaced);
+  labelPin(pin, targetName(target, profile), fromPin);
 }
 
 /**
@@ -512,6 +526,8 @@ export function applyRecommendedPinout(family: GuitarFamily = 'gh') {
   const currentProfile = store.config.profiles![profileIdx];
   const pinout = family === 'rb' ? RECOMMENDED_PICO_PINOUT_RB : RECOMMENDED_PICO_PINOUT_GH;
   const currentMappings = currentProfile.mappings ? [...currentProfile.mappings] : [];
+  const replaced: number[] = [];
+  const labels: { pin: number; target: PinMappingTarget; from: number }[] = [];
 
   for (const rec of pinout) {
     if (rec.target === GUITAR_TARGETS.UPPER_COMMON || rec.target === GUITAR_TARGETS.SOLO_COMMON) {
@@ -533,8 +549,10 @@ export function applyRecommendedPinout(family: GuitarFamily = 'gh') {
       (rec.target.type as string) === 'ghAxis' || (rec.target.type as string) === 'rbAxis';
     const isAnalog = isAxis && isAnalogPin(rec.pin, store.gpioCount);
     const idx = findMappingIndex(currentProfile, rec.target);
+    labels.push({ pin: rec.pin, target: rec.target, from: getTargetPin(store, rec.target) });
 
     if (idx !== -1) {
+      replaced.push(...singleInputIds(currentMappings[idx].input));
       currentMappings[idx] = gpioMapping(
         rec.target,
         family,
@@ -561,6 +579,9 @@ export function applyRecommendedPinout(family: GuitarFamily = 'gh') {
     },
     profileIdx
   );
+  releaseSingleInputs(replaced);
+  const labelled = useConfigStore.getState().config.profiles![profileIdx];
+  labels.forEach(({ pin, target, from }) => labelPin(pin, targetName(target, labelled), from));
 }
 
 const FAMILY_STORAGE_KEY = 'santroller_guitar_family';
@@ -690,7 +711,9 @@ function removeNeckMappings(ids: number[], remove: (input: proto.IInput) => bool
   if (mappings.length === profile.mappings.length) {
     return false;
   }
+  const removed = profile.mappings.filter((m) => !mappings.includes(m));
   store.updateProfile({ ...profile, mappings }, profileIdx);
+  releaseSingleInputs(removed.flatMap((m) => singleInputIds(m.input)));
   return true;
 }
 
@@ -965,6 +988,7 @@ export function configureRbMatrixFrets(): void {
 
   const devIdNum = parseInt(devId, 10);
   const currentMappings = profile.mappings ? [...profile.mappings] : [];
+  const replaced: number[] = [];
 
   const matrixMappings = [
     // Upper Frets (Row = GP14)
@@ -993,6 +1017,7 @@ export function configureRbMatrixFrets(): void {
     const target = targetForFamily(m.target, 'rb');
     const idx = findMappingIndex(profile, m.target);
     if (idx !== -1) {
+      replaced.push(...singleInputIds(currentMappings[idx].input));
       currentMappings[idx] = {
         ...currentMappings[idx],
         mapping: { [target.type]: target.id },
@@ -1014,6 +1039,7 @@ export function configureRbMatrixFrets(): void {
     },
     profileIdx
   );
+  releaseSingleInputs(replaced);
 }
 
 /**
@@ -1050,6 +1076,9 @@ export function configureRbShiftedFrets(soloPin = 12): void {
   }
 
   const currentMappings = profile.mappings ? [...profile.mappings] : [];
+  const replaced: number[] = [];
+  // Every fret's wire is on its pin's single input device, and so is the solo line they share
+  const solo = singleInputFor(guidePin(soloPin, false));
 
   const fretList = [
     { main: GUITAR_TARGETS.FRET_GREEN, solo: GUITAR_TARGETS.SOLO_GREEN, pin: 2 },
@@ -1060,17 +1089,15 @@ export function configureRbShiftedFrets(soloPin = 12): void {
   ];
 
   for (const item of fretList) {
+    const fret = singleInputFor(guidePin(item.pin, false));
     // Main fret: active when Fret is pressed and Solo is NOT pressed
     const mainInput: proto.IInput = {
-      shifted: {
-        input: { gpio: { pin: item.pin, pinMode: proto.PinMode.PullUp, analog: false } },
-        shift: { gpio: { pin: soloPin, pinMode: proto.PinMode.PullUp, analog: false } },
-        invertShift: true,
-      },
+      shifted: { input: fret, shift: solo, invertShift: true },
     };
     const main = targetForFamily(item.main, 'rb');
     const mainIdx = findMappingIndex(profile, item.main);
     if (mainIdx !== -1) {
+      replaced.push(...singleInputIds(currentMappings[mainIdx].input));
       currentMappings[mainIdx] = {
         ...currentMappings[mainIdx],
         mapping: { [main.type]: main.id },
@@ -1086,14 +1113,11 @@ export function configureRbShiftedFrets(soloPin = 12): void {
 
     // Solo fret: active when Fret is pressed and Solo IS pressed
     const soloInput: proto.IInput = {
-      shifted: {
-        input: { gpio: { pin: item.pin, pinMode: proto.PinMode.PullUp, analog: false } },
-        shift: { gpio: { pin: soloPin, pinMode: proto.PinMode.PullUp, analog: false } },
-        invertShift: false,
-      },
+      shifted: { input: fret, shift: solo, invertShift: false },
     };
     const soloIdx = findMappingIndex(profile, item.solo);
     if (soloIdx !== -1) {
+      replaced.push(...singleInputIds(currentMappings[soloIdx].input));
       currentMappings[soloIdx] = { ...currentMappings[soloIdx], input: soloInput };
     } else {
       currentMappings.push({
@@ -1111,4 +1135,8 @@ export function configureRbShiftedFrets(soloPin = 12): void {
     },
     profileIdx
   );
+  releaseSingleInputs(replaced);
+  // The frets go by their names, and the line they share by what it's for
+  fretList.forEach((item) => labelPin(item.pin, targetName(item.main, profile)));
+  labelPin(soloPin, i18next.t('guides.wired.soloLine'));
 }

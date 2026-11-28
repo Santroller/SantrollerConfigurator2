@@ -36,11 +36,13 @@ import {
   useCombobox,
 } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
-import { getCycleSlotLabel } from '@/components/Devices/pinUtils';
+import { getCycleSlotLabel, getLabel } from '@/components/Devices/pinUtils';
 import { InputBehaviorHelpLink } from '@/components/InputBehaviorHelpLink';
+import { useProfileLabels } from '@/components/Labels/useProfileLabels';
 import { Layout } from '@/components/Layout/Layout';
 import { RequireDevice } from '@/components/RequireDevice/RequireDevice';
 import {
+  DeviceStatus,
   normalizeSubType,
   proto,
   usbDeviceKey,
@@ -52,6 +54,7 @@ import '@/i18n/config';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
+import { AddDevicePicker } from '@/components/Devices/AddDevicePicker';
 import { BusType, deviceBusConflicts, i2cBusClock } from '@/components/Devices/busConflicts';
 import {
   DEFAULT_TURNTABLE_POLL_INTERVAL_MS,
@@ -62,18 +65,27 @@ import {
   canAddDeviceKind,
   DeviceKind,
   deviceKinds,
-  getGroupedDevices,
   hasPinConfiguration,
-  isDeviceKind,
+  isInputDeviceKind,
 } from '@/components/Devices/deviceRegistry';
+import {
+  countPadMappings,
+  DRUM_PAD_TYPES,
+  MAX_DRUM_PADS,
+  newDrumPad,
+  nextPadId,
+  templatePads,
+} from '@/components/Devices/drumKit';
 import {
   matrixPins,
   switchNetworkPins,
   withMatrixPins,
   withSwitchNetworkPins,
 } from '@/components/Devices/matrixPins';
+import { analogPinInput, digitalPinInput } from '@/components/Devices/pinInput';
 import { DeviceContext, PinBox } from '@/components/Devices/Pins';
 import { displayPanel, displayPanels } from '@/components/Inputs/displayRender';
+import { RegisteredInputEditor } from '@/components/Inputs/InputEditorRegistry';
 import { groupPwmShares } from '@/components/Inputs/ledOverlap';
 import {
   IdSelectionContext,
@@ -298,6 +310,25 @@ function UARTDevice({
 const GATE_PIN_MODES = [proto.PinMode.PullUp, proto.PinMode.PullDown, proto.PinMode.Floating];
 
 // Only loads the device while a pin reads a certain way, so devices on different connectors can share pins
+// Keeps every mapping on the same input of the device calibrated the same way, across profiles
+function DeviceSyncCalibrationSection({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const device = useConfigStore((state) => state.deviceStatus[id]?.device);
+  const type = useConfigStore((state) => state.deviceStatus[id]?.type);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  if (!device || !type || !isInputDeviceKind(type)) {
+    return null;
+  }
+  return (
+    <Switch
+      mt="md"
+      label={t('device_sync_calibration.label')}
+      description={t('device_sync_calibration.description')}
+      checked={!!device.syncCalibration}
+      onChange={(e) => updateDevice({ ...device, syncCalibration: e.currentTarget.checked }, id)}
+    />
+  );
+}
 function DeviceGateSection({ id }: { id: string }) {
   const { t } = useTranslation();
   const device = useConfigStore((state) => state.deviceStatus[id]?.device);
@@ -411,12 +442,15 @@ function DeviceCard({
   connectedLabel,
   disconnectedLabel,
   extraBadge,
+  displayTitle,
 }: {
   connected?: boolean;
   id?: string;
   type?: string;
   type_prefix?: string;
   title: string;
+  // Shown in place of title, as it is (eg a label the user gave it)
+  displayTitle?: string;
   image: string;
   children: React.ReactNode;
   deleteDevice: () => void;
@@ -543,7 +577,7 @@ function DeviceCard({
         </Card.Section>
         <Flex mt="md" mb="xs" justify="center" align="center" gap="xs">
           <Title order={2} fw={700}>
-            {id ? t(title, { id }) : t(title)}
+            {displayTitle || (id ? t(title, { id }) : t(title))}
           </Title>{' '}
         </Flex>
         <Center>
@@ -553,6 +587,7 @@ function DeviceCard({
           </Group>
         </Center>
         {children}
+        {deviceId && <DeviceSyncCalibrationSection id={deviceId} />}
         {deviceId && <DeviceGateSection id={deviceId} />}
       </Card>
     </>
@@ -2423,6 +2458,275 @@ function GpioLedGroupDevice({ id }: { id: string }) {
     </DeviceCard>
   );
 }
+// Where an input a device holds is connected: a pin read as analog (eg a piezo) or digital (a switch), or with
+// channels, a channel of a multiplexer or ADS1115, or an MPR121 electrode
+function InputSourceFields({
+  input,
+  channels = false,
+  dispatch,
+}: {
+  input: proto.IInput;
+  channels?: boolean;
+  dispatch: (input: proto.IInput) => void;
+}) {
+  const gpioCount = useConfigStore((state) => state.gpioCount);
+  const sources = useConfigStore(
+    useShallow((state) =>
+      channels
+        ? Object.values(state.deviceStatus).filter(
+            (d) => d.device.multiplexer || d.device.ads1115 || d.device.mpr121
+          )
+        : []
+    )
+  );
+  // Named as everywhere else devices are picked, with their pins to tell two of a kind apart
+  const sourceOptions = [
+    { value: 'analog', label: t('input_source.analog') },
+    { value: 'digital', label: t('input_source.digital') },
+    ...sources.map((source) => {
+      const pins = DeviceStatus.pins(source).map((pin) => `GP${pin}`);
+      return {
+        value: source.id,
+        label: pins.length
+          ? `${DeviceStatus.title(source)} (${pins.join(', ')})`
+          : DeviceStatus.title(source),
+      };
+    }),
+  ];
+  const source = input.gpio
+    ? input.gpio.analog
+      ? 'analog'
+      : 'digital'
+    : `${input.multiplexer?.deviceid ?? input.ads1115?.deviceid ?? input.mpr121?.deviceid ?? 'analog'}`;
+  // Switching between analog and digital keeps the pin, where it can
+  const inputFor = (next: string): proto.IInput => {
+    const pin = input.gpio?.pin ?? -1;
+    if (next === 'analog') {
+      return analogPinInput(isAnalogPin(pin, gpioCount) ? pin : -1);
+    }
+    if (next === 'digital') {
+      return digitalPinInput(pin);
+    }
+    const sourceDevice = sources.find((d) => d.id === next)?.device;
+    const deviceid = Number(next);
+    if (sourceDevice?.multiplexer) {
+      return { multiplexer: { deviceid, channel: 0 } };
+    }
+    if (sourceDevice?.mpr121) {
+      return {
+        mpr121: {
+          deviceid,
+          pin: 0,
+          mode: proto.Mpr121PinMode.Touch,
+          pinMode: proto.PinMode.Floating,
+        },
+      };
+    }
+    return { ads1115: { deviceid, channel: 0 } };
+  };
+  const channelCount = input.ads1115
+    ? 4
+    : sources.find((d) => d.device.deviceid === input.multiplexer?.deviceid)?.device.multiplexer
+          ?.sixteenChannel
+      ? 16
+      : 8;
+  const channel = input.multiplexer?.channel ?? input.ads1115?.channel ?? 0;
+  const gpio = input.gpio ?? (channels ? undefined : analogPinInput().gpio!);
+  return (
+    <Group gap="xs" align="flex-start" wrap="nowrap">
+      <Select
+        style={{ flex: 1 }}
+        label={t('input_source.label')}
+        data={sourceOptions}
+        value={source}
+        allowDeselect={false}
+        onChange={(value) => value != null && value !== source && dispatch(inputFor(value))}
+      />
+      <Stack gap="xs" style={{ flex: 1 }}>
+        {gpio && (
+          <PinBox
+            label={t('input_source.pin')}
+            pin={gpio.pin}
+            valid={gpio.analog ? AnalogPinsNamed : AllPinsNamed}
+            dispatch={(pin) => dispatch({ gpio: { ...gpio, pin } })}
+          />
+        )}
+        {gpio && !gpio.analog && (
+          <Select
+            label={t('gpio.mode.label')}
+            data={[proto.PinMode.PullUp, proto.PinMode.PullDown, proto.PinMode.Floating].map(
+              (pinMode) => ({
+                value: `${pinMode}`,
+                label: t(`gpio.mode.${proto.PinMode[pinMode]}`),
+              })
+            )}
+            value={`${gpio.pinMode}`}
+            allowDeselect={false}
+            onChange={(value) =>
+              value != null && dispatch({ gpio: { ...gpio, pinMode: Number(value) } })
+            }
+          />
+        )}
+        {input.mpr121 && <RegisteredInputEditor input={input} dispatch={dispatch} />}
+        {(input.multiplexer || input.ads1115) && (
+          <Select
+            label={t('input_source.channel')}
+            data={Array.from({ length: channelCount }, (_, c) => `${c}`)}
+            value={`${channel}`}
+            allowDeselect={false}
+            onChange={(value) =>
+              value != null &&
+              dispatch(
+                input.multiplexer
+                  ? { multiplexer: { ...input.multiplexer, channel: Number(value) } }
+                  : { ads1115: { ...input.ads1115!, channel: Number(value) } }
+              )
+            }
+          />
+        )}
+      </Stack>
+    </Group>
+  );
+}
+// One input as a device, so it can sync its calibration across profiles. It's named by its pin's label.
+function SingleInputDevice({ id }: { id: string }) {
+  const guiDevices = useProfileLabels();
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const device = status.device;
+  if (!device.singleInput) {
+    throw new Error('device null!');
+  }
+  const input = device.singleInput.input ?? analogPinInput();
+  // Named by its pin's label
+  const pin = input.gpio?.pin ?? -1;
+  const label = getLabel(t, guiDevices, [], pin, false, false);
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.singleInput"
+      displayTitle={label}
+      image="covers/devices/singleInput.svg"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('singleInput.description')}
+      </Text>
+      <InputSourceFields
+        input={input}
+        dispatch={(next) =>
+          updateDevice({ deviceid: parseInt(id, 10), singleInput: { input: next } }, id)
+        }
+      />
+    </DeviceCard>
+  );
+}
+// Drum pads set up once for every drum layout: each one's input, and the calibration mappings on it start from
+// (and share, while the kit syncs calibration)
+function DrumKitDevice({ id }: { id: string }) {
+  const status = useConfigStore((state) => state.deviceStatus[id]);
+  const updateDevice = useConfigStore((state) => state.updateDevice);
+  const deleteDevice = useConfigStore((state) => state.deleteDevice);
+  const profiles = useConfigStore((state) => state.config.profiles);
+  const device = status.device;
+  if (!device.drumKit) {
+    throw new Error('device null!');
+  }
+  const kit = device.drumKit;
+  const pads = kit.pads ?? [];
+  const deviceid = parseInt(id, 10);
+  const typeName = (type: proto.DrumPadType) => t(`drumKit.types.${DRUM_PAD_TYPES[type].key}`);
+  const update = (next: Partial<proto.IDrumKitDevice>) =>
+    updateDevice({ deviceid, drumKit: { ...kit, ...next } }, id);
+  const updatePad = (padId: number, next: Partial<proto.IDrumPad>) =>
+    update({ pads: pads.map((pad) => (pad.id === padId ? { ...pad, ...next } : pad)) });
+  const typeOptions = Object.keys(DRUM_PAD_TYPES).map((type) => ({
+    value: type,
+    label: typeName(Number(type)),
+  }));
+  return (
+    <DeviceCard
+      connected={status.connected}
+      title="devices.drumKit"
+      image="covers/devices/drumKit.svg"
+      deleteDevice={() => deleteDevice(id)}
+    >
+      <Text size="sm" c="dimmed">
+        {t('drumKit.description')}
+      </Text>
+      {pads.length === 0 && (
+        <Group gap="xs">
+          {(['gh', 'rb'] as const).map((template) => (
+            <Button
+              key={template}
+              variant="light"
+              onClick={() => update({ pads: templatePads(template) })}
+            >
+              {t(`drumKit.template.${template}`)}
+            </Button>
+          ))}
+        </Group>
+      )}
+      {pads.map((pad, i) => {
+        const padId = pad.id ?? 0;
+        const input = pad.input ?? {};
+        const used = countPadMappings(profiles, deviceid, padId);
+        return (
+          <Stack key={padId} gap={4}>
+            <Group gap="xs" align="flex-end" wrap="nowrap">
+              <Badge color={DRUM_PAD_TYPES[pad.type ?? 0].color} mb={8} circle>
+                {i + 1}
+              </Badge>
+              <Select
+                style={{ flex: 1 }}
+                label={t('drumKit.type')}
+                data={typeOptions}
+                value={String(pad.type ?? 0)}
+                allowDeselect={false}
+                onChange={(value) => value != null && updatePad(padId, { type: Number(value) })}
+              />
+              <ActionIcon
+                color="red"
+                variant="subtle"
+                mb={4}
+                aria-label={t('drumKit.remove')}
+                onClick={() => update({ pads: pads.filter((p) => p.id !== pad.id) })}
+              >
+                <IconTrash style={{ width: '70%', height: '70%' }} />
+              </ActionIcon>
+            </Group>
+            <Box pl={34}>
+              <InputSourceFields
+                input={input}
+                channels
+                dispatch={(next) => updatePad(padId, { input: next })}
+              />
+            </Box>
+            <Text size="xs" c="dimmed" pl={34}>
+              {t('drumKit.used', { count: used })}
+            </Text>
+          </Stack>
+        );
+      })}
+      <Button
+        variant="light"
+        leftSection={<IconPlus size={16} />}
+        disabled={pads.length >= MAX_DRUM_PADS}
+        onClick={() =>
+          update({
+            pads: [...pads, newDrumPad(nextPadId(kit), proto.DrumPadType.DrumPadOther)],
+          })
+        }
+      >
+        {t('drumKit.add')}
+      </Button>
+      <Text size="xs" c="dimmed">
+        {t('drumKit.calibrate_hint')}
+      </Text>
+    </DeviceCard>
+  );
+}
 function DMXDevice({ id }: { id: string }) {
   const status = useConfigStore((state) => state.deviceStatus[id]);
   const updateDevice = useConfigStore((state) => state.updateDevice);
@@ -3620,6 +3924,8 @@ export const deviceEditors: Record<DeviceKind, React.FunctionComponent<{ id: str
   apa102: APA102Device,
   stp16cpc: STP16CPCDevice,
   gpioLedGroup: GpioLedGroupDevice,
+  singleInput: SingleInputDevice,
+  drumKit: DrumKitDevice,
   bt: BluetoothDevice,
   vtechExpander: VTechExpanderDevice,
   encoder: EncoderDevice,
@@ -3642,27 +3948,7 @@ export function DevicesPage() {
     () => deviceKinds.filter((kind) => canAddDeviceKind(kind, existingTypes)),
     [existingTypes]
   );
-  const groupedDevices = useMemo(
-    () => getGroupedDevices(availableDeviceKinds, t),
-    [availableDeviceKinds, t]
-  );
-  const [deviceType, setDeviceType] = useState<DeviceKind>(
-    () => groupedDevices[0]?.items[0] ?? availableDeviceKinds[0] ?? deviceKinds[0]
-  );
-
-  useEffect(() => {
-    if (!availableDeviceKinds.includes(deviceType)) {
-      const next = groupedDevices[0]?.items[0] ?? availableDeviceKinds[0];
-      if (next) {
-        setDeviceType(next);
-      }
-    }
-  }, [availableDeviceKinds, groupedDevices, deviceType]);
-
   const [opened, { open, close }] = useDisclosure(false);
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-  });
   const config = useConfigStore(
     useShallow(
       (state) =>
@@ -3689,78 +3975,25 @@ export function DevicesPage() {
       setSelection(on ? [...selected, id] : selected.filter((other) => other !== id)),
   };
 
-  const handleOpenAdd = () => {
-    if (!availableDeviceKinds.includes(deviceType)) {
-      const next = groupedDevices[0]?.items[0] ?? availableDeviceKinds[0];
-      if (next) {
-        setDeviceType(next);
-      }
-    }
-    open();
-  };
-
-  const mainElement = (
-    <InputBase
-      component="button"
-      type="button"
-      pointer
-      rightSection={<Combobox.Chevron />}
-      rightSectionPointerEvents="none"
-      onClick={() => combobox.toggleDropdown()}
-    >
-      {t(`devices.${deviceType}`)}
-    </InputBase>
-  );
+  const handleOpenAdd = open;
   return (
     <>
       <Layout>
         <RequireDevice>
-          <Modal opened={opened} onClose={close} title={t('add_device_dialog.title')} centered>
-            <Combobox
-              store={combobox}
-              onOptionSubmit={(val) => {
-                if (isDeviceKind(val)) {
-                  setDeviceType(val);
-                }
-                combobox.closeDropdown();
+          <Modal
+            opened={opened}
+            onClose={close}
+            title={t('add_device_dialog.title')}
+            size="lg"
+            centered
+          >
+            <AddDevicePicker
+              kinds={availableDeviceKinds}
+              onPick={(kind) => {
+                addDevice(kind);
+                close();
               }}
-            >
-              <Combobox.Target>{mainElement}</Combobox.Target>
-
-              <Combobox.Dropdown>
-                <Combobox.Options mah={300} style={{ overflowY: 'auto' }}>
-                  {groupedDevices.map((group) => (
-                    <Combobox.Group
-                      label={t(`add_device_dialog.categories.${group.category}`)}
-                      key={group.category}
-                    >
-                      {group.items.map((item) => (
-                        <Combobox.Option value={item} key={item}>
-                          {t(`devices.${item}`)}
-                        </Combobox.Option>
-                      ))}
-                    </Combobox.Group>
-                  ))}
-                </Combobox.Options>
-              </Combobox.Dropdown>
-            </Combobox>
-            <Space h="md" />
-            <Flex justify="flex-end">
-              <Group align="flex-end">
-                <Button
-                  onClick={() => {
-                    if (availableDeviceKinds.includes(deviceType)) {
-                      addDevice(deviceType);
-                    }
-                    close();
-                  }}
-                  color="red"
-                  disabled={!availableDeviceKinds.includes(deviceType)}
-                >
-                  {t('add_device_dialog.confirm')}
-                </Button>
-              </Group>
-            </Flex>
+            />
           </Modal>
           <SelectionBar
             total={deviceIds.length}

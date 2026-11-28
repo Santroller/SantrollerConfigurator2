@@ -4,13 +4,16 @@ import { savedDeviceName, savedManufacturerName, savedSellerConfig } from './sav
 
 describe('savedDeviceName', () => {
   it('reads the name from the main section', () => {
-    const main = proto.Config.encode({ deviceName: 'My Guitar', syncCalibrations: true }).finish();
+    const main = proto.Config.encode({
+      deviceName: 'My Guitar',
+      xboxOneLegacyAdapter: true,
+    }).finish();
     expect(savedDeviceName(main)).toBe('My Guitar');
   });
 
   it('is undefined when the device is not named', () => {
     expect(
-      savedDeviceName(proto.Config.encode({ syncCalibrations: true }).finish())
+      savedDeviceName(proto.Config.encode({ xboxOneLegacyAdapter: true }).finish())
     ).toBeUndefined();
   });
 

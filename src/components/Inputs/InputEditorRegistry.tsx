@@ -1,7 +1,9 @@
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Select, Stack } from '@mantine/core';
+import { DRUM_PAD_TYPES, padLabel } from '@/components/Devices/drumKit';
 import { proto } from '@/components/SettingsContext/config';
+import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { DropdownBox } from './DropdownBox';
 import { getSelectedInput, InputKind } from './inputRegistry';
 
@@ -58,6 +60,7 @@ const inputEditors: Partial<Record<InputKind, ComponentType<InputEditorProps>>> 
     />
   ),
   encoder: ({ input, dispatch }) => <EncoderInputEditor input={input} dispatch={dispatch} />,
+  drumKit: ({ input, dispatch }) => <DrumKitInputEditor input={input} dispatch={dispatch} />,
   accelerometer: ({ input, dispatch }) => (
     <DropdownBox
       title="input.title"
@@ -149,6 +152,32 @@ function Mpr121InputEditor({ input, dispatch }: InputEditorProps) {
     </Stack>
   );
 }
+
+// Picks which of a drum kit's pads the input is
+function DrumKitInputEditor({ input, dispatch }: InputEditorProps) {
+  const { t } = useTranslation();
+  const drumKit = input.drumKit!;
+  const pads = useConfigStore(
+    (state) => state.deviceStatus[drumKit.deviceid]?.device.drumKit?.pads ?? NO_PADS
+  );
+  return (
+    <Select
+      label={t('drumKit.input_pad')}
+      data={pads.map((pad) => ({
+        value: `${pad.id}`,
+        label: padLabel(pads, pad, (type) => t(`drumKit.types.${DRUM_PAD_TYPES[type].key}`)),
+      }))}
+      value={`${drumKit.pad}`}
+      allowDeselect={false}
+      onChange={(value) => {
+        if (value !== null) {
+          dispatch({ ...input, drumKit: { ...drumKit, pad: Number(value) } });
+        }
+      }}
+    />
+  );
+}
+const NO_PADS: proto.IDrumPad[] = [];
 
 function EncoderInputEditor({ input, dispatch }: InputEditorProps) {
   const { t } = useTranslation();

@@ -4,6 +4,7 @@ import { getHostSourceType } from '@/components/Inputs/inputRegistry';
 import { proto } from '@/components/SettingsContext/config';
 import { truncateProfileName } from '@/components/SettingsContext/profileName';
 import { useConfigStore } from '@/components/SettingsContext/SettingsContext';
+import { wiredGpio } from '../wiredInputs';
 
 const INSTRUMENT_TYPES = {
   guitar: [proto.SubType.GuitarHeroGuitar, proto.SubType.RockBandGuitar],
@@ -117,7 +118,7 @@ export function holdButtons(profile: proto.IProfile | undefined) {
       !out ||
       !mapping.input ||
       mapping.input.digitalTrigger != null ||
-      mapping.input.gpio?.analog
+      wiredGpio(useConfigStore.getState(), mapping.input)?.analog
     ) {
       return [];
     }

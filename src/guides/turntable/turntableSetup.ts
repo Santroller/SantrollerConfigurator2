@@ -2,6 +2,15 @@ import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { ensureDeviceToEmulate } from '../adapters/adapterLiveStatus';
 import { PinMappingTarget } from '../guitar/guitarMappingUtils';
+import {
+  guidePin,
+  labelPin,
+  outputName,
+  releaseSingleInputs,
+  singleInputFor,
+  singleInputIds,
+  wiredGpio,
+} from '../wiredInputs';
 
 // The platters talk to the base over I2C, so both share I2C1 on GP18 (SDA) / GP19 (SCL). Each
 // platter answers on its own address (left 0x0E, right 0x0D), picked by the device's left flag.
@@ -132,14 +141,20 @@ export function addPlatter(left: boolean) {
   }
 }
 
-function isBaseMapping(mapping: proto.IMapping, base: BasePin) {
-  return mapping.input?.gpio != null && sameOutput(mapping.mapping, base.output);
+function isBaseMapping(
+  state: Pick<ConfigState, 'deviceStatus'>,
+  mapping: proto.IMapping,
+  base: BasePin
+) {
+  return wiredGpio(state, mapping.input) != null && sameOutput(mapping.mapping, base.output);
 }
 
 export function isBasePinoutApplied(state: ConfigState) {
   const mappings = state.config.profiles?.[state.currentProfile]?.mappings ?? [];
   return BASE_PINOUT.every((base) =>
-    mappings.some((m) => isBaseMapping(m, base) && m.input?.gpio?.pin === base.pin)
+    mappings.some(
+      (m) => isBaseMapping(state, m, base) && wiredGpio(state, m.input)?.pin === base.pin
+    )
   );
 }
 
@@ -156,20 +171,20 @@ export function applyBasePinout() {
     return;
   }
   const mappings = [...(profile.mappings ?? [])];
+  const replaced: number[] = [];
+  const labels: { base: BasePin; from: number }[] = [];
   for (const base of BASE_PINOUT) {
+    const existing = mappings.findIndex((m) => isBaseMapping(store, m, base));
+    const current = existing === -1 ? undefined : mappings[existing].input;
+    labels.push({ base, from: wiredGpio(store, current)?.pin ?? -1 });
+    replaced.push(...singleInputIds(current));
     const mapping: proto.IMapping = {
       mapping: base.output,
-      input: {
-        gpio: {
-          pin: base.pin,
-          pinMode: base.analog ? proto.PinMode.Floating : proto.PinMode.PullUp,
-          analog: base.analog,
-        },
-      },
+      // On the pin's single input device
+      input: singleInputFor(guidePin(base.pin, base.analog), current),
       // Both pots rest in the middle of their travel
       ...(base.analog ? { min: 0, max: 65535, center: 32767 } : {}),
     };
-    const existing = mappings.findIndex((m) => isBaseMapping(m, base));
     if (existing === -1) {
       mappings.push(mapping);
     } else {
@@ -177,4 +192,8 @@ export function applyBasePinout() {
     }
   }
   store.updateProfile({ ...profile, mappings }, idx);
+  releaseSingleInputs(replaced);
+  labels.forEach(({ base, from }) =>
+    labelPin(base.pin, outputName(base.output, proto.SubType.DjHeroTurntable), from)
+  );
 }

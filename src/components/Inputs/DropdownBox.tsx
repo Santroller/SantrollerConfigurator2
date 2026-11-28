@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Combobox, InputBase, useCombobox } from '@mantine/core';
+import { Combobox, InputBase, Text, useCombobox } from '@mantine/core';
 
 export type StandardEnum<T> = {
   [id: string]: T | string;
@@ -14,6 +14,7 @@ export function DropdownBox<T extends number>({
   description,
   dispatch,
   exclude,
+  optionDescriptions,
 }: {
   e: StandardEnum<T>;
   val: T;
@@ -22,6 +23,8 @@ export function DropdownBox<T extends number>({
   description?: string;
   dispatch: (input: T) => void;
   exclude?: T[];
+  // Shows each option's description in the dropdown, from the key `${optionDescriptions}${option}`
+  optionDescriptions?: string;
 }) {
   const { t } = useTranslation();
   const inputCombobox = useCombobox({
@@ -77,6 +80,11 @@ export function DropdownBox<T extends number>({
                   selected={e[val as keyof typeof e] === item}
                 >
                   {t(`${label}.${item}`)}
+                  {optionDescriptions && (
+                    <Text size="xs" opacity={0.7}>
+                      {t(`${optionDescriptions}${item}`)}
+                    </Text>
+                  )}
                 </Combobox.Option>
               ))}
         </Combobox.Options>

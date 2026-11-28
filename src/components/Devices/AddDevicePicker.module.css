@@ -1,0 +1,29 @@
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-xs);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  height: 100%;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.tile:hover {
+  background-color: var(--mantine-color-default-hover);
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* Covers are monochrome glyphs, used as a mask so they follow the colour scheme */
+.icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background-color: var(--mantine-color-text);
+}

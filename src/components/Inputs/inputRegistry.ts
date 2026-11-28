@@ -237,6 +237,21 @@ const hasDevice =
   (input: proto.IInput, deviceid: number) =>
     getInput(input)?.deviceid === deviceid;
 
+// The input a device holds (a drum kit's pad, a single input), which reads as if the mapping had it. The
+// store registers how to look it up, as it has the devices.
+let heldInputOf: (input: proto.IInput) => proto.IInput | null | undefined = () => undefined;
+export function setHeldInputResolver(resolve: typeof heldInputOf) {
+  heldInputOf = resolve;
+}
+// Analog unless what it holds is known to be digital. Held inputs can't hold others, as in the firmware.
+function isHeldInputAnalog(input: proto.IInput) {
+  const held = heldInputOf(input);
+  if (!held || held.drumKit || held.singleInput) {
+    return true;
+  }
+  return isAnalogInput(held);
+}
+
 const inputRegistry: Record<InputKind, InputDefinition> = {
   gpio: { isAnalog: (input) => !!input.gpio?.analog },
   fixed: {},
@@ -265,6 +280,14 @@ const inputRegistry: Record<InputKind, InputDefinition> = {
   multiplexer: {
     isAnalog: () => true,
     usesDevice: hasDevice((input) => input.multiplexer),
+  },
+  drumKit: {
+    isAnalog: (input) => isHeldInputAnalog(input),
+    usesDevice: hasDevice((input) => input.drumKit),
+  },
+  singleInput: {
+    isAnalog: (input) => isHeldInputAnalog(input),
+    usesDevice: hasDevice((input) => input.singleInput),
   },
   usbAxis: { isAnalog: () => true, usesDevice: hasDevice((input) => input.usbAxis) },
   usbButton: { usesDevice: hasDevice((input) => input.usbButton) },
@@ -371,6 +394,9 @@ const deviceInputRegistry: Record<string, DeviceInputDefinition> = {
   },
   ads1115: { create: (deviceid) => ({ ads1115: { channel: 0, deviceid } }) },
   multiplexer: { create: (deviceid) => ({ multiplexer: { channel: 0, deviceid } }) },
+  // The kit's first pad, which DrumKitInputEditor changes
+  drumKit: { create: (deviceid) => ({ drumKit: { deviceid, pad: 0 } }) },
+  singleInput: { create: (deviceid) => ({ singleInput: { deviceid } }) },
   accelerometer: {
     create: (deviceid) => ({
       accelerometer: { type: proto.AccelerometerInputType.AccelerometerX, deviceid },
@@ -1243,7 +1269,7 @@ export function isAnalogInput(input: proto.IInput) {
 }
 
 export function isDrumInput(input: proto.IInput): boolean {
-  if (input.crkdDrum) {
+  if (input.crkdDrum || input.drumKit) {
     return true;
   }
   const midi = input.midi;

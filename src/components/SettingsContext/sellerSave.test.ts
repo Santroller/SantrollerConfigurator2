@@ -16,11 +16,11 @@ describe('saving seller-only changes', () => {
     sendFeatureReport.mockReset().mockResolvedValue(undefined);
     useConfigStore.setState({
       ...initialConfig,
-      config: proto.Config.create({ syncCalibrations: false }),
+      config: proto.Config.create({}),
       connected: true,
       hidDevice: device as HIDDevice,
       toolInfo: undefined,
-      savedConfig: proto.Config.encode({ syncCalibrations: false }).finish(),
+      savedConfig: proto.Config.encode({}).finish(),
     });
   });
 
@@ -42,7 +42,6 @@ describe('saving seller-only changes', () => {
       };
       useConfigStore.setState({
         savedConfig: proto.Config.encode({
-          syncCalibrations: false,
           guiConfig: [{ deviceid: 0, seller: original }],
         }).finish(),
         toolInfo: {
@@ -114,12 +113,12 @@ describe('saving seller-only changes', () => {
     'includes a deferred %s edit even when nothing else changes',
     async (field) => {
       useConfigStore.setState({
-        config: proto.Config.create({ syncCalibrations: false, [field]: 'Original' }),
+        config: proto.Config.create({ [field]: 'Original' }),
       });
       await useConfigStore.getState().commitConfig();
       sendFeatureReport.mockClear();
       useConfigStore.setState({
-        config: proto.Config.create({ syncCalibrations: false, [field]: 'Edited' }),
+        config: proto.Config.create({ [field]: 'Edited' }),
       });
       await useConfigStore.getState().saveConfig(true);
       expect(sendFeatureReport).not.toHaveBeenCalled();
@@ -148,7 +147,7 @@ describe('saving seller-only changes', () => {
     expect(savedSellerConfig(useConfigStore.getState().savedConfig)?.name).toBe('Edited Tool');
     expect(useConfigStore.getState().configModified).toBe(false);
     useConfigStore.setState({
-      config: proto.Config.create({ syncCalibrations: false, deviceName: 'Another option' }),
+      config: proto.Config.create({ deviceName: 'Another option' }),
     });
     const uploaded = await useConfigStore.getState().saveConfig(true);
     expect(uploaded).not.toBe(false);

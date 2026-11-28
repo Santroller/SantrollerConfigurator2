@@ -1,17 +1,14 @@
+import { layoutFromKit, newDrumPad, nextPadId } from '@/components/Devices/drumKit';
 import { proto } from '@/components/SettingsContext/config';
 import { ConfigState, useConfigStore } from '@/components/SettingsContext/SettingsContext';
 import { ensureDeviceToEmulate } from '../adapters/adapterLiveStatus';
+import { wiredInput } from '../wiredInputs';
 
 // Every piezo goes through one multiplexer, so a single ADC pin reads them all (with velocity)
 export const MUX_COM_PIN = 26;
 export const MUX_COM_PHYSICAL_PIN = 31;
 export const MUX_SELECT_PINS = [2, 3, 4, 5];
 export const MUX_SELECT_PHYSICAL_PINS = [4, 5, 6, 7];
-
-// Raw reading (0 - 65535) a hit has to pass, so piezo noise at rest doesn't trigger pads
-export const DRUM_THRESHOLD = 4000;
-// How long a hit is held (ms), so a game sees even a short strike
-const DRUM_DEBOUNCE = 30;
 
 export type DrumFamily = 'gh' | 'rb';
 export type MuxChip = '74hc4051' | 'cd4051' | '74hc4067' | 'cd4067';
@@ -30,6 +27,8 @@ export interface DrumPad {
   gh: proto.IOutput;
   // Rock Band kits have no orange pad
   rb?: proto.IOutput;
+  // What it is on the drum kit the guide sets up. Guitar Hero kits' yellow and orange are cymbals.
+  type: Record<DrumFamily, proto.DrumPadType>;
 }
 
 export const DRUM_PADS: DrumPad[] = [
@@ -39,6 +38,7 @@ export const DRUM_PADS: DrumPad[] = [
     color: 'red',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_RedPad },
     rb: { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_RedPad },
+    type: { gh: proto.DrumPadType.DrumPadRed, rb: proto.DrumPadType.DrumPadRed },
   },
   {
     key: 'yellow',
@@ -46,6 +46,7 @@ export const DRUM_PADS: DrumPad[] = [
     color: 'yellow',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_YellowPad },
     rb: { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_YellowPad },
+    type: { gh: proto.DrumPadType.DrumPadYellowCymbal, rb: proto.DrumPadType.DrumPadYellow },
   },
   {
     key: 'blue',
@@ -53,6 +54,7 @@ export const DRUM_PADS: DrumPad[] = [
     color: 'blue',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_BluePad },
     rb: { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_BluePad },
+    type: { gh: proto.DrumPadType.DrumPadBlue, rb: proto.DrumPadType.DrumPadBlue },
   },
   {
     key: 'green',
@@ -60,12 +62,14 @@ export const DRUM_PADS: DrumPad[] = [
     color: 'green',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_GreenPad },
     rb: { rbDrumAxis: proto.RockBandDrumsAxisType.RockBandDrums_GreenPad },
+    type: { gh: proto.DrumPadType.DrumPadGreen, rb: proto.DrumPadType.DrumPadGreen },
   },
   {
     key: 'orange',
     channel: 4,
     color: 'orange',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_OrangePad },
+    type: { gh: proto.DrumPadType.DrumPadOrangeCymbal, rb: proto.DrumPadType.DrumPadOrangeCymbal },
   },
   {
     key: 'kick',
@@ -73,6 +77,7 @@ export const DRUM_PADS: DrumPad[] = [
     color: 'grape',
     gh: { ghDrumAxis: proto.GuitarHeroDrumsAxisType.GuitarHeroDrums_KickPedal },
     rb: { rbDrumButton: proto.RockBandDrumsButtonType.RockBandDrums_Kick1Pedal },
+    type: { gh: proto.DrumPadType.DrumPadKick, rb: proto.DrumPadType.DrumPadKick },
   },
 ];
 
@@ -107,44 +112,24 @@ export function countMappedPads(state: ConfigState, family: DrumFamily) {
     return (
       output &&
       mux &&
-      mappings.some(
-        (m) =>
+      mappings.some((m) => {
+        // On the guide's drum kit, or straight on the multiplexer
+        const input = wiredInput(state, m.input);
+        return (
           sameOutput(m.mapping, output) &&
-          m.input?.multiplexer?.deviceid === Number(mux.id) &&
-          m.input.multiplexer.channel === pad.channel
-      )
+          input?.multiplexer?.deviceid === Number(mux.id) &&
+          input.multiplexer.channel === pad.channel
+        );
+      })
     );
   }).length;
 }
 
-function padMapping(output: proto.IOutput, input: proto.IInput): proto.IMapping {
-  if (output.rbDrumButton != null) {
-    // A button can't take a velocity, so the kick fires once the reading passes the threshold
-    return {
-      mapping: output,
-      input,
-      trigger: proto.AnalogToDigitalTriggerType.JoyHigh,
-      triggerValue: DRUM_THRESHOLD,
-      debounce: DRUM_DEBOUNCE,
-    };
-  }
-  // Drum axes read like triggers, so min + deadzone is the strike threshold
-  return {
-    mapping: output,
-    input,
-    min: 0,
-    max: 65535,
-    center: 0,
-    deadzone: DRUM_THRESHOLD,
-    debounce: DRUM_DEBOUNCE,
-    peakBased: true,
-  };
-}
-
 /**
  * Adds (or updates) the multiplexer on GP26 with select pins GP2 - GP4 (GP5 for 16 channels),
- * switches the profile to the chosen drum kit type, and maps each pad to its multiplexer channel.
- * Existing mappings for the same pads are reused, so running it twice doesn't duplicate them.
+ * switches the profile to the chosen drum kit type, and puts each pad on a drum kit on its multiplexer
+ * channel, then maps the profile's lanes from the kit (replacing the mappings it had for them), so running
+ * it twice doesn't duplicate them.
  */
 export function configureDrumMux(family: DrumFamily, chip: MuxChip) {
   const { sixteen, slow } = MUX_CHIPS.find((c) => c.value === chip)!;
@@ -180,27 +165,52 @@ export function configureDrumMux(family: DrumFamily, chip: MuxChip) {
   const subType = family === 'rb' ? proto.SubType.RockBandDrums : proto.SubType.GuitarHeroDrums;
   ensureDeviceToEmulate([subType], subType);
 
+  // The pads go on a drum kit, which the profile is then mapped from
+  const kitId = configureDrumKit(family, Number(id));
   const store = useConfigStore.getState();
   const idx = store.currentProfile;
   const profile = store.config.profiles?.[idx];
-  if (!profile) {
+  const kit = store.deviceStatus[kitId]?.device.drumKit;
+  if (!profile || !kit) {
     return;
   }
-  const mappings = [...(profile.mappings ?? [])];
-  for (const pad of DRUM_PADS) {
-    const output = padOutput(pad, family);
-    if (!output) {
-      continue;
-    }
-    const mapping = padMapping(output, {
-      multiplexer: { deviceid: Number(id), channel: pad.channel },
+  store.updateProfile(
+    { ...profile, mappings: layoutFromKit(profile.mappings ?? [], Number(kitId), kit, subType) },
+    idx
+  );
+}
+
+/**
+ * Puts the family's pads on a drum kit, each on its multiplexer channel: the kit already there (keeping its
+ * other pads), or a new one. Returns its id.
+ */
+function configureDrumKit(family: DrumFamily, muxId: number): string {
+  const store = useConfigStore.getState();
+  const existing = Object.values(store.deviceStatus).find((d) => d.device.drumKit);
+  const guidePads = DRUM_PADS.filter((pad) => padOutput(pad, family));
+  const inputOf = (pad: DrumPad): proto.IInput => ({
+    multiplexer: { deviceid: muxId, channel: pad.channel },
+  });
+  if (!existing) {
+    return store.addDevice('drumKit', undefined, (device) => {
+      device.drumKit = {
+        pads: guidePads.map((pad, i) => ({
+          ...newDrumPad(i, pad.type[family]),
+          input: inputOf(pad),
+        })),
+      };
     });
-    const current = mappings.findIndex((m) => sameOutput(m.mapping, output));
+  }
+  const pads = [...(existing.device.drumKit!.pads ?? [])];
+  for (const pad of guidePads) {
+    const type = pad.type[family];
+    const current = pads.findIndex((p) => p.type === type);
     if (current === -1) {
-      mappings.push(mapping);
+      pads.push({ ...newDrumPad(nextPadId({ pads }), type), input: inputOf(pad) });
     } else {
-      mappings[current] = mapping;
+      pads[current] = { ...pads[current], input: inputOf(pad) };
     }
   }
-  store.updateProfile({ ...profile, mappings }, idx);
+  store.updateDevice({ deviceid: existing.device.deviceid, drumKit: { pads } }, existing.id);
+  return existing.id;
 }

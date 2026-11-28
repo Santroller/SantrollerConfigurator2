@@ -35,6 +35,7 @@ import {
   inputUsesDevice,
   moveWiiDrumNotesToMidiSlot,
   ProfileSlot,
+  setHeldInputResolver,
   SLOT_ID_VERSION_LATEST,
   withSlotMidiChannel,
 } from '@/components/Inputs/inputRegistry';
@@ -51,6 +52,7 @@ import { applyPinPairEvent, PinPairs } from '@/components/PinScanner/pinPairs';
 import { CRC32 } from '@/CRC32.js';
 import { splitExtraTargets } from './assignmentTargets';
 import { BluetoothConfigDevice } from './BluetoothConfigDevice';
+import { syncEditedCalibrations, unifyCalibrations } from './calibrationSync';
 import { proto } from './config.js';
 import { swapFaceButtonInputs as fixInput } from './faceButtonSwap';
 import { needsUf2BeforeOta, parseVersionReport } from './firmwareVersion';
@@ -170,7 +172,9 @@ function stopFirmwareApplyProgress() {
     firmwareApplyTimer = undefined;
   }
 }
-type DeviceType = keyof Omit<proto.IDevice, 'deviceid' | 'gate'>;
+type DeviceType = keyof Omit<proto.IDevice, 'deviceid' | 'gate' | 'syncCalibration'>;
+// The fields every device has, so the one left is its kind
+const NON_KIND_DEVICE_FIELDS = new Set(['deviceid', 'gate', 'syncCalibration']);
 class HidResponseTimeoutError extends Error {}
 // The config came back incomplete or corrupted, so reading it again may work
 class ConfigReadError extends Error {}
@@ -568,6 +572,38 @@ export function isDeviceAssigned(
   return true;
 }
 
+// The store's devices, as they go in the config
+function storeDevices(state: ConfigState) {
+  return Object.values(state.deviceStatus).map((status) => status.device);
+}
+
+// Takes profiles in place of the config's, keeping each mapping's and LED's live status for the profiles that
+// only had them changed. editedIdx is the profile whose status is rebuilt anyway.
+function replaceProfiles(state: ConfigState, profiles: proto.IProfile[], editedIdx?: number) {
+  const previous = state.config.profiles ?? [];
+  if (profiles === previous) {
+    return;
+  }
+  state.config.profiles = profiles;
+  profiles.forEach((profile, profileIdx) => {
+    if (profile === previous[profileIdx] || profileIdx === editedIdx) {
+      return;
+    }
+    profile.mappings?.forEach((mapping, mappingIdx) => {
+      const status = state.mappingStatus[profileIdx]?.[mappingIdx];
+      if (status) {
+        status.mapping = mapping;
+      }
+    });
+    profile.leds?.forEach((led, ledIdx) => {
+      const status = state.ledStatus[profileIdx]?.[ledIdx];
+      if (status) {
+        status.led = led;
+      }
+    });
+  });
+}
+
 export interface ConfigState {
   deviceStatus: { [id: string]: DeviceStatus };
   mappingStatus: { [id: number]: MappingStatus }[];
@@ -643,7 +679,6 @@ export interface ConfigState {
   sendingKeepAlive: boolean;
   toolInfo?: proto.ISellerConfig;
   simpleMode: boolean;
-  syncInputs: boolean;
   seller: boolean;
   sellerCheck: boolean;
   configModified: boolean;
@@ -683,7 +718,6 @@ export interface Actions {
   // see it. PS3 mode has no config interface, so this disconnects, until the controller is replugged
   switchToRpcs3Mode: () => Promise<void>;
   checkLogin: () => void;
-  setSyncMode: (mode: boolean) => void;
   updateLabel: (config: proto.IGuiConfig, id: number) => void;
   deleteLabel: (id: number) => void;
   deleteLabels: (ids: number[]) => void;
@@ -691,6 +725,8 @@ export interface Actions {
   setLabelShowToCustomer: (ids: number[], show: boolean) => void;
   copyLabel: (config: proto.IGuiConfig) => void;
   addLabel: () => void;
+  // Names a pin in every profile, eg after what a guide wired to it
+  addPinLabel: (pin: number, label: string) => void;
   addLedLabel: () => void;
   addMultiplexerLabel: () => void;
   addMatrixLabel: () => void;
@@ -860,7 +896,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
   for (const x of config.devices || []) {
     const parentIdStr = x.deviceid.toString();
     // Every other field is the device's type, besides its gate
-    const typeName = Object.keys(x).find((k) => k !== 'deviceid' && k !== 'gate') as
+    const typeName = Object.keys(x).find((k) => !NON_KIND_DEVICE_FIELDS.has(k)) as
       DeviceType | undefined;
     // A device whose type this tool doesn't know (e.g. saved by an older build) can't be shown or
     // edited, and the firmware can't build it either, so drop it rather than saving it back
@@ -873,7 +909,7 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     if (x.peripheral?.devices?.length) {
       for (const sub of x.peripheral.devices) {
         const subIdStr = sub.deviceid.toString();
-        const subTypeName = Object.keys(sub).find((k) => k !== 'deviceid' && k !== 'gate') as
+        const subTypeName = Object.keys(sub).find((k) => !NON_KIND_DEVICE_FIELDS.has(k)) as
           DeviceType | undefined;
         if (!subTypeName || !isDeviceKind(subTypeName)) {
           console.warn('Dropping peripheral device with unknown type', sub);
@@ -975,7 +1011,6 @@ function InitState(config: proto.Config, aux: proto.AuxConfigBlock): ConfigState
     refreshingBluetooth: false,
     toolInfo,
     simpleMode: !!toolInfo && !localStorage.getItem('auth'),
-    syncInputs: config.syncCalibrations || false,
     bluetoothStates: aux.bluetoothStates ?? [],
     tlvEntries: aux.tlvEntries ?? [],
     ghArcadeSide: aux.ghArcadeSide ?? null,
@@ -1194,7 +1229,6 @@ const configStore = create<ConfigState & Actions>()(
           ledStatus: fresh.ledStatus,
           guiDevices: fresh.guiDevices,
           toolInfo: fresh.toolInfo,
-          syncInputs: fresh.syncInputs,
           ghArcadeSide: fresh.ghArcadeSide,
           config,
           savedConfig: data.slice(0, info.mainSize),
@@ -1212,12 +1246,6 @@ const configStore = create<ConfigState & Actions>()(
       set((state) => {
         state.configModified = false;
       });
-    },
-    setSyncMode: (mode: boolean) => {
-      set((state) => {
-        state.syncInputs = mode;
-      });
-      get().saveConfig();
     },
     setSellerToolName: async (name: string) => {
       const image = new Uint8Array(await (await fetch('/icons/logo.png')).arrayBuffer());
@@ -1320,6 +1348,17 @@ const configStore = create<ConfigState & Actions>()(
       set((state) => {
         const id = getNextLabelId(state.guiDevices);
         state.guiDevices[id] = createLabelConfig('label', id);
+      });
+      get().saveConfig();
+    },
+    addPinLabel: (pin: number, label: string) => {
+      set((state) => {
+        const id = getNextLabelId(state.guiDevices);
+        state.guiDevices[id] = {
+          deviceid: id,
+          profiles: [],
+          label: { label, pin, showToCustomer: true },
+        };
       });
       get().saveConfig();
     },
@@ -1434,7 +1473,22 @@ const configStore = create<ConfigState & Actions>()(
       set((state) => {
         // Device editors only pass their own settings, so the gate is kept unless it's set (or null to remove it)
         const gate = device.gate === undefined ? state.deviceStatus[id].device.gate : device.gate;
-        state.deviceStatus[id].device = gate === undefined ? device : { ...device, gate };
+        // Same for syncing calibration, which is on the card around every editor
+        const previous = state.deviceStatus[id].device;
+        const syncCalibration =
+          device.syncCalibration === undefined ? previous.syncCalibration : device.syncCalibration;
+        state.deviceStatus[id].device = {
+          ...device,
+          ...(gate !== undefined && { gate }),
+          ...(syncCalibration != null && { syncCalibration }),
+        };
+        // Mappings on its inputs may have been calibrated differently until now
+        if (syncCalibration && !previous.syncCalibration) {
+          replaceProfiles(
+            state,
+            unifyCalibrations(storeDevices(state), state.config.profiles ?? [], parseInt(id, 10))
+          );
+        }
       });
       get().saveConfig();
     },
@@ -1519,6 +1573,7 @@ const configStore = create<ConfigState & Actions>()(
           state.config.profiles![id].opts.deviceToEmulate,
           profile
         );
+        const before = state.config.profiles![id];
         state.config = {
           ...state.config,
           profiles: [
@@ -1529,8 +1584,14 @@ const configStore = create<ConfigState & Actions>()(
         };
         state.detected = -1;
         state.detectedInput = undefined;
+        // Calibrating a mapping on a device that syncs calibration calibrates every other mapping on that input
+        replaceProfiles(
+          state,
+          syncEditedCalibrations(storeDevices(state), before, state.config.profiles!, id),
+          id
+        );
         state.mappingStatus[id] = Object.fromEntries(
-          profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+          state.config.profiles![id].mappings!.map((x, i) => [i, new MappingStatus(i, x)])
         );
         state.activationStatus[id] = Object.fromEntries(
           profile.assignments!.map((x, listIdx) => [
@@ -1542,7 +1603,7 @@ const configStore = create<ConfigState & Actions>()(
           profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
         );
         state.ledStatus[id] = Object.fromEntries(
-          profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
+          state.config.profiles![id].leds!.map((x, i) => [i, new LedStatus(i, x)])
         );
       });
       get().saveConfig();
@@ -1563,6 +1624,7 @@ const configStore = create<ConfigState & Actions>()(
             state.config.profiles![id]?.opts.deviceToEmulate,
             profile
           );
+          const before = state.config.profiles![id];
           state.config = {
             ...state.config,
             profiles: [
@@ -1573,8 +1635,14 @@ const configStore = create<ConfigState & Actions>()(
           };
           state.detected = -1;
           state.detectedInput = undefined;
+          // Calibrating a mapping on a device that syncs calibration calibrates every other mapping on that input
+          replaceProfiles(
+            state,
+            syncEditedCalibrations(storeDevices(state), before, state.config.profiles!, id),
+            id
+          );
           state.mappingStatus[id] = Object.fromEntries(
-            profile.mappings!.map((x, i) => [i, new MappingStatus(i, x)])
+            state.config.profiles![id].mappings!.map((x, i) => [i, new MappingStatus(i, x)])
           );
           state.activationStatus[id] = Object.fromEntries(
             profile.assignments!.map((x, listIdx) => [
@@ -1586,7 +1654,7 @@ const configStore = create<ConfigState & Actions>()(
             profile.assignments!.map((_, listIdx) => [listIdx, new ActivationListStatus(listIdx)])
           );
           state.ledStatus[id] = Object.fromEntries(
-            profile.leds!.map((x, i) => [i, new LedStatus(i, x)])
+            state.config.profiles![id].leds!.map((x, i) => [i, new LedStatus(i, x)])
           );
         });
       });
@@ -2707,7 +2775,6 @@ const configStore = create<ConfigState & Actions>()(
     buildConfig: () => {
       const state = get();
       const config = { ...state.config };
-      config.syncCalibrations = state.syncInputs;
       config.devices = Object.values(state.deviceStatus)
         .filter((x) => !x.parentId)
         .map((x) => {
@@ -3431,6 +3498,19 @@ export const useConfigStore = Object.assign(useScopedConfigStore, {
   setState: configStore.setState,
   subscribe: configStore.subscribe,
   getInitialState: configStore.getInitialState,
+});
+
+// Inputs on a device that holds an input (a drum kit's pad, a single input) read as what it holds
+setHeldInputResolver((input) => {
+  const devices = configStore.getState().deviceStatus;
+  if (input.singleInput) {
+    return devices[input.singleInput.deviceid]?.device.singleInput?.input;
+  }
+  if (input.drumKit) {
+    const { deviceid, pad } = input.drumKit;
+    return devices[deviceid]?.device.drumKit?.pads?.find((p) => p.id === pad)?.input;
+  }
+  return undefined;
 });
 
 // Sends a firmware image over the config interface: the app (which the controller then reboots to apply)

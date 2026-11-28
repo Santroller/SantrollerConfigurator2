@@ -33,6 +33,8 @@
     "powerManagement": "Battery Power Management",
     "stp16cpc": "STP16CPC LED Driver",
     "gpioLedGroup": "Group of GPIO LEDs",
+    "drumKit": "Drum kit pads",
+    "singleInput": "Single input",
     "vtechExpander": "IO Expander from a VTech Guitar",
     "bhDrum": "Band Hero Drum Body",
     "worldTourDrum": "World Tour Drum Body",
@@ -310,10 +312,6 @@
       "SocdUpPriority": "Up priority (up wins, left + right is neutral)",
       "SocdLastInput": "Last input wins",
       "SocdFirstInput": "First input wins"
-    },
-    "syncCalibrations": {
-      "label": "Sync calibrations across inputs",
-      "description": "Synchronise calibrations across inputs that are used multiple times. For example if you have whammy on multiple profiles, turning this on will keep your whammy calibration synchronised, while turning it off means you can have different calibrations per profile."
     },
     "xinput_on_windows": {
       "label": "Controller type on Windows (for USB)",
@@ -1119,6 +1117,52 @@
   "ads1115": {
     "interrupt": {
       "pin": "Interrupt Pin"
+    }
+  },
+  "input_source": {
+    "label": "Connected to",
+    "analog": "Analog pin",
+    "digital": "Digital pin (switch)",
+    "pin": "Pin",
+    "channel": "Channel"
+  },
+  "singleInput": {
+    "description": "One input on its own, so mappings on it in every profile can share its calibration (with sync calibration on below). Pick it as a mapping's input, and name it by labelling its pin on the labels page."
+  },
+  "device_sync_calibration": {
+    "label": "Sync calibration",
+    "description": "Keep every mapping that reads the same input of this device calibrated the same way, so calibrating it in one profile calibrates it in all of them. Buttons only share their trigger point with other buttons."
+  },
+  "drumKit": {
+    "description": "Set up your drum pads once, then every drum layout can play them: pick a pad of this kit as a mapping's input, or map a whole drum profile to the kit at once from the inputs page.",
+    "calibrate_hint": "Calibrate a pad from any mapping on it on the inputs page, where you can see it being hit. Turn on sync calibration below to calibrate each pad once for every layout.",
+    "template": {
+      "gh": "Start with a Guitar Hero kit",
+      "rb": "Start with a Rock Band kit"
+    },
+    "type": "Plays as",
+    "add": "Add pad",
+    "remove": "Remove pad",
+    "input_pad": "Pad",
+    "used_one": "Used by {{count}} mapping",
+    "used_other": "Used by {{count}} mappings",
+    "pad_count_one": "{{count}} pad",
+    "pad_count_other": "{{count}} pads",
+    "map_profile": "Map from {{kit}}",
+    "map_profile_desc": "Map every lane of this layout to the pads of your drum kit, replacing the mappings it has for them",
+    "types": {
+      "other": "Other",
+      "red": "Red pad",
+      "yellow": "Yellow pad",
+      "blue": "Blue pad",
+      "green": "Green pad",
+      "yellowCymbal": "Yellow cymbal",
+      "blueCymbal": "Blue cymbal",
+      "greenCymbal": "Green cymbal",
+      "orangeCymbal": "Orange cymbal",
+      "kick": "Kick pedal",
+      "kick2": "Second kick pedal",
+      "hiHatPedal": "Hi-hat pedal"
     }
   },
   "gpioLedGroup": {
@@ -2111,7 +2155,11 @@
     "brightness": "Brightness",
     "effect": {
       "label": "Effect",
-      "description": "Drawn over what the LED shows while it is lit. A released colour shows as it is.",
+      "description": "Animates the LED on top of what the LED mode and response light it with. A released colour stays still.",
+      "desc_none": "No animation: the LED shows its colour as is.",
+      "desc_EffectBreathing": "Fades the lit colour down to off and back up.",
+      "desc_EffectBlink": "Flashes the lit colour on and off.",
+      "desc_EffectRainbow": "Cycles through the rainbow instead of using the pressed colour, at the brightness set below. Several LEDs are spread across the rainbow.",
       "none": "None",
       "EffectBreathing": "Breathing",
       "EffectBlink": "Blink",
@@ -2119,10 +2167,14 @@
       "rainbow_brightness": "Rainbow brightness"
     },
     "pattern": {
-      "label": "Pattern",
-      "PatternStatic": "Static",
+      "label": "Response",
+      "description": "How the LED responds to the input.",
+      "PatternStatic": "Direct",
       "PatternHeatmap": "Heatmap",
-      "PatternSpread": "Spread"
+      "PatternSpread": "Spread",
+      "desc_PatternStatic": "Lit while the input is pressed, or brighter the further an analog input is pushed.",
+      "desc_PatternHeatmap": "Fills up quickly while the input is held, then slowly fades after release, so it glows brighter the more you play.",
+      "desc_PatternSpread": "With several LEDs, they light one after another as an analog input is pushed further, like a meter."
     },
     "overlay": {
       "label": "Overlay",
@@ -2528,16 +2580,20 @@
   "add_device_dialog": {
     "title": "Add device",
     "confirm": "Add device",
+    "search": "Search devices",
+    "no_results": "No devices match \"{{query}}\"",
     "categories": {
-      "controllers": "Console Controllers & Adapters",
-      "instruments": "Instrument Peripherals",
-      "emulation": "Console Emulation",
-      "expansion": "Expansion & Inputs",
-      "lighting": "LEDs & Lighting",
-      "power": "Power & Battery",
-      "other": "Sensors & Other"
+      "inputs": "Inputs wired to the Pico",
+      "instruments": "Instrument parts",
+      "controllers": "Controllers and adapters it reads",
+      "output": "Console output",
+      "lighting": "LEDs, lighting and displays",
+      "power": "Power and battery",
+      "virtual": "Virtual switches",
+      "other": "Other"
     }
   },
+
   "assignmentType": {
     "wiiExt": "Wii Extension Host",
     "ps2Cnt": "PS1/2 Controller Host",
@@ -3436,6 +3492,9 @@
     }
   },
   "guides": {
+    "wired": {
+      "soloLine": "Solo frets"
+    },
     "navTitle": "Build Guides",
     "catalogTitle": "Build Guides",
     "catalogSubtitle": "Step-by-step wiring instructions, pinouts, and hardware testing for custom controllers and adapters.",
@@ -4299,7 +4358,7 @@
         "muxConfigured": "Mux on GP{{com}} (S0 - S2: GP{{s0}}, GP{{s1}}, GP{{s2}}), {{count}} pads mapped",
         "verifyPrompt": "Each bar is a pad's raw reading, held briefly after a hit, so you can see how hard a hit has to be to get past its threshold.",
         "tipsTitle": "Threshold & Cross-Talk Tips",
-        "tipsText": "Each pad's deadzone on the Inputs page is its strike threshold (a Rock Band kick uses its trigger value instead). If a pad triggers on its own, or hitting one drum triggers an adjacent one (cross-talk), raise that pad's deadzone or debounce there.",
+        "tipsText": "Each pad's min on the Inputs page is its strike threshold (a Rock Band kick uses its trigger value instead). If a pad triggers on its own, or hitting one drum triggers an adjacent one (cross-talk), raise that pad's min or debounce there. With sync calibration on for your drum kit, which it is by default, that changes it in every profile.",
         "title": "Pads"
       }
     },

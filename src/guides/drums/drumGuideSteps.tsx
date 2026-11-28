@@ -21,6 +21,7 @@ import { GuideDeviceEditor } from '../components/GuideDeviceEditor';
 import { GuideList } from '../components/GuideList';
 import { StepWorkbench } from '../components/StepWorkbench';
 import { GuideStepProps } from '../types';
+import { wiredInput } from '../wiredInputs';
 import { IMAGE_ALT, PICO_PHYSICAL_PINS } from '../wiringText';
 import {
   configureDrumMux,
@@ -70,8 +71,10 @@ function PadMonitor({ pad, family }: { pad: DrumPad; family: DrumFamily }) {
     idx === -1 ? 0 : (state.mappingStatus[state.currentProfile]?.[idx]?.stateRaw ?? 0)
   );
   const value = usePeakHold(raw);
-  const mux = mapping?.input?.multiplexer;
-  const gpio = mapping?.input?.gpio;
+  // What the pad is wired to, through the drum kit the guide puts it on
+  const wired = useConfigStore((state) => wiredInput(state, mapping?.input));
+  const mux = wired?.multiplexer;
+  const gpio = wired?.gpio;
   const source = !output
     ? t(`${P}.drum-wiring.padUnused`)
     : !mapping

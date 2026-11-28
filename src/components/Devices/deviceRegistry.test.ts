@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import i18next from 'i18next';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { proto } from '@/components/SettingsContext/config';
@@ -6,6 +8,7 @@ import {
   canAddDeviceKind,
   createDeviceConfig,
   DEVICE_CATEGORIES,
+  deviceCover,
   deviceKinds,
   getDeviceCategory,
   getDeviceName,
@@ -250,5 +253,14 @@ describe('input device kinds', () => {
       expect(isInputDeviceKind(kind)).toBe(false);
     }
     expect(isInputDeviceKind('mpr121')).toBe(true);
+  });
+});
+
+describe('deviceCover', () => {
+  it('points every kind at cover art that exists', () => {
+    const missing = deviceKinds.filter(
+      (kind) => !existsSync(resolve(__dirname, '../../../public', deviceCover(kind)))
+    );
+    expect(missing).toEqual([]);
   });
 });

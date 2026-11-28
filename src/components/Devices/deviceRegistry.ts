@@ -2,9 +2,12 @@ import i18next from 'i18next';
 import { matrixAllPins, switchNetworkPins } from '@/components/Devices/matrixPins';
 import { proto } from '@/components/SettingsContext/config';
 import { wirelessChipPins } from '@/devices/pico/pins';
+import { analogPinInput } from './pinInput';
 
-// Every field of a device but its id and gate is one of the kinds of device
-export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid' | 'gate'>;
+const analogPinDevice = () => ({ input: analogPinInput() });
+
+// Every field of a device but its id, gate and calibration syncing is one of the kinds of device
+export type DeviceKind = Exclude<keyof proto.IDevice, 'deviceid' | 'gate' | 'syncCalibration'>;
 
 export type DeviceStatusSnapshot = {
   id: string;
@@ -17,16 +20,18 @@ export type DeviceStatusSnapshot = {
   usbDevices: Record<number, unknown>;
 };
 
+// The order they're listed in when adding a device
 export type DeviceCategory =
-  'controllers' | 'instruments' | 'emulation' | 'expansion' | 'lighting' | 'power' | 'other';
+  'inputs' | 'instruments' | 'controllers' | 'output' | 'lighting' | 'power' | 'virtual' | 'other';
 
 export const DEVICE_CATEGORIES: readonly DeviceCategory[] = [
-  'controllers',
+  'inputs',
   'instruments',
-  'emulation',
-  'expansion',
+  'controllers',
+  'output',
   'lighting',
   'power',
+  'virtual',
   'other',
 ] as const;
 
@@ -47,6 +52,8 @@ type DeviceDefinitions = {
     // What a configured one is called, for kinds that cover more than one part. Otherwise it's the
     // kind's own name.
     name?: (device: NonNullable<proto.IDevice[Kind]>) => string;
+    // Whether a new one starts out syncing calibration
+    syncCalibration?: boolean;
   };
 };
 
@@ -56,7 +63,7 @@ const uart = (baudrate = 0) => ({ tx: -1, rx: -1, block: 0, baudrate });
 
 const deviceRegistry: DeviceDefinitions = {
   accelerometer: {
-    category: 'other',
+    category: 'inputs',
     create: () => ({ i2c: i2c(400000) }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
@@ -66,7 +73,7 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   xboxOneAuth: {
-    category: 'controllers',
+    category: 'output',
     create: () => ({ i2c: i2c(400000), resetPin: -1 }),
     pins: ({ i2c, resetPin }) => [
       i2c.sda,
@@ -75,7 +82,7 @@ const deviceRegistry: DeviceDefinitions = {
     ],
   },
   mpr121: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({ i2c: i2c(400000), touchpadCount: 0, ddrPins: 0, enablePins: 0 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
@@ -137,7 +144,7 @@ const deviceRegistry: DeviceDefinitions = {
         : i18next.t('disconnected', 'Disconnected'),
   },
   multiplexer: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({
       s0Pin: -1,
       s1Pin: -1,
@@ -202,12 +209,12 @@ const deviceRegistry: DeviceDefinitions = {
         : i18next.t('disconnected', 'Disconnected'),
   },
   wiiEmulation: {
-    category: 'emulation',
+    category: 'output',
     create: () => ({ i2c: i2c(400000) }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   psxEmulation: {
-    category: 'emulation',
+    category: 'output',
     create: () => ({
       commandPin: -1,
       attentionPin: -1,
@@ -224,12 +231,12 @@ const deviceRegistry: DeviceDefinitions = {
     ],
   },
   joybusEmulation: {
-    category: 'emulation',
+    category: 'output',
     create: () => ({ dataPin: -1, console: proto.JoybusConsole.JoybusConsoleGameCube }),
     pins: ({ dataPin }) => [dataPin],
   },
   snesEmulation: {
-    category: 'emulation',
+    category: 'output',
     create: () => ({
       clockPin: -1,
       latchPin: -1,
@@ -239,7 +246,7 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ clockPin, latchPin, dataPin }) => [clockPin, latchPin, dataPin],
   },
   peripheral: {
-    category: 'instruments',
+    category: 'other',
     create: () => ({ i2c: i2c(400000), address: 0x75 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
     detail: ({ address }) => `0x${address.toString(16)}`,
@@ -250,12 +257,12 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ uart }) => [uart.tx, uart.rx],
   },
   ads1115: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({ i2c: i2c(400000), interrupt: -1 }),
     pins: ({ i2c }) => [i2c.sda, i2c.scl],
   },
   encoder: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({ dataPin: -1 }),
     pins: ({ dataPin }) => (dataPin >= 0 ? [dataPin, dataPin + 1] : []),
   },
@@ -304,6 +311,26 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi, le, oe }) => [spi.mosi, spi.miso, spi.sck, le, oe],
     formatStatus: () => '',
   },
+  // Pads set up once for every drum layout, see drumKit.ts
+  drumKit: {
+    category: 'inputs',
+    create: () => ({ pads: [] }),
+    // A kit's pads are calibrated once for every layout, unless that's turned off
+    syncCalibration: true,
+    pins: ({ pads }) =>
+      (pads ?? []).flatMap((pad) => (pad.input?.gpio ? [pad.input.gpio.pin] : [])),
+    formatStatus: () => '',
+    detail: ({ pads }) => i18next.t('drumKit.pad_count', { count: pads?.length ?? 0 }),
+  },
+  // One input as a device, so it can sync its calibration and be named by its pin's label
+  singleInput: {
+    category: 'inputs',
+    create: () => analogPinDevice(),
+    syncCalibration: true,
+    pins: ({ input }) => (input?.gpio ? [input.gpio.pin] : []),
+    // A pin is just there, so only show which one
+    formatStatus: () => '',
+  },
   gpioLedGroup: {
     category: 'lighting',
     create: () => ({ pins: [], analog: false }),
@@ -334,13 +361,13 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ spi, attPin }) => [spi.mosi, spi.miso, spi.sck, attPin],
   },
   matrix: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({ inPins: 0, outPins: 0 }),
     pins: (matrix) => matrixAllPins(matrix),
     formatStatus: () => '',
   },
   switchNetwork: {
-    category: 'expansion',
+    category: 'inputs',
     create: () => ({ pins: 0, buttons: [] }),
     pins: (network) => switchNetworkPins(network),
     formatStatus: () => '',
@@ -351,12 +378,12 @@ const deviceRegistry: DeviceDefinitions = {
     pins: ({ uart }) => [uart.tx, uart.rx],
   },
   cycle: {
-    category: 'other',
+    category: 'virtual',
     create: () => ({ type: proto.CycleType.slots, values: [0, 1] }),
     formatStatus: (status) => status.id,
   },
   toggle: {
-    category: 'other',
+    category: 'virtual',
     create: () => ({}),
     formatStatus: (status) => status.id,
   },
@@ -404,6 +431,20 @@ const deviceRegistry: DeviceDefinitions = {
 };
 
 export const deviceKinds = Object.keys(deviceRegistry) as DeviceKind[];
+
+// Kinds whose cover art is another kind's: console outputs look like the controllers they stand in for
+const SHARED_COVERS: Partial<Record<DeviceKind, string>> = {
+  bt: 'bluetooth',
+  wiiEmulation: 'wii',
+  psxEmulation: 'psx',
+  snesEmulation: 'snes',
+  joybusEmulation: 'joybus',
+  switchNetwork: 'matrix',
+};
+
+export function deviceCover(kind: DeviceKind): string {
+  return `covers/devices/${SHARED_COVERS[kind] ?? kind}.svg`;
+}
 
 export function getDeviceCategory(kind: DeviceKind): DeviceCategory {
   return deviceRegistry[kind].category;
@@ -502,6 +543,7 @@ export function createDeviceConfig(kind: DeviceKind, deviceid: number): proto.ID
   return {
     deviceid,
     [kind]: deviceRegistry[kind].create(),
+    ...(deviceRegistry[kind].syncCalibration && { syncCalibration: true }),
   } as proto.IDevice;
 }
 
